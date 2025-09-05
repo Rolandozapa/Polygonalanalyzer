@@ -572,8 +572,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             logger.info(f"🚀 IA1 analyzing {opportunity.symbol} - Technical filter PASSED")
             
-            # Get additional historical data if needed
+            # Get additional historical data if needed - VRAIES données uniquement
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
+            
+            if historical_data is None:
+                logger.info(f"❌ SKIPPING IA1 for {opportunity.symbol} - No real OHLCV data available")
+                return None  # Pas d'analyse sans vraies données
             
             # Calculate advanced technical indicators avec données étendues
             rsi = self._calculate_rsi(historical_data['Close'])
