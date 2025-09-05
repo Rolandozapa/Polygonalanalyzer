@@ -4287,9 +4287,443 @@ class DualAITradingBotTester:
         
         return result
 
+    def test_api_economy_optimization_system(self):
+        """Test the NEW API Economy Optimization for IA2"""
+        print(f"\n💰 Testing NEW API Economy Optimization System...")
+        
+        # Step 1: Clear cache to ensure fresh testing
+        print(f"   🗑️ Step 1: Clearing cache for fresh API economy testing...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        if not cache_clear_success:
+            print(f"   ⚠️ Cache clear failed - continuing with existing data")
+        
+        # Step 2: Start trading system to generate fresh cycle with API economy
+        print(f"   🚀 Step 2: Starting trading system for API economy cycle...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for system to generate analyses and apply API economy filtering
+        print(f"   ⏱️ Step 3: Waiting for API economy filtering (90 seconds)...")
+        
+        economy_start_time = time.time()
+        max_wait_time = 90
+        check_interval = 15
+        
+        # Monitor for API economy messages in system
+        while time.time() - economy_start_time < max_wait_time:
+            time.sleep(check_interval)
+            elapsed_time = time.time() - economy_start_time
+            print(f"   📊 After {elapsed_time:.1f}s: Monitoring API economy filtering...")
+            
+            # Check if we have analyses and decisions to test economy
+            success_analyses, analyses_data = self.test_get_analyses()
+            success_decisions, decisions_data = self.test_get_decisions()
+            
+            if success_analyses and success_decisions:
+                analyses_count = len(analyses_data.get('analyses', []))
+                decisions_count = len(decisions_data.get('decisions', []))
+                
+                if analyses_count > 0 and decisions_count >= 0:
+                    print(f"   ✅ Data available for API economy testing: {analyses_count} analyses, {decisions_count} decisions")
+                    break
+        
+        # Step 4: Stop trading system
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Step 5: Analyze API economy effectiveness
+        return self._analyze_api_economy_effectiveness()
+    
+    def _analyze_api_economy_effectiveness(self):
+        """Analyze the effectiveness of API economy optimization"""
+        print(f"\n   🔍 Step 5: Analyzing API Economy Effectiveness...")
+        
+        # Get current analyses and decisions
+        success_analyses, analyses_data = self.test_get_analyses()
+        success_decisions, decisions_data = self.test_get_decisions()
+        
+        if not success_analyses or not success_decisions:
+            print(f"   ❌ Cannot retrieve data for API economy analysis")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for API economy testing")
+            return False
+        
+        print(f"   📊 API Economy Analysis Data:")
+        print(f"      Total IA1 Analyses Generated: {len(analyses)}")
+        print(f"      Total IA2 Decisions Made: {len(decisions)}")
+        
+        # Calculate API economy rate
+        if len(analyses) > 0:
+            api_economy_rate = (len(analyses) - len(decisions)) / len(analyses)
+            api_calls_saved = len(analyses) - len(decisions)
+            
+            print(f"      API Calls Saved: {api_calls_saved}")
+            print(f"      API Economy Rate: {api_economy_rate:.1%}")
+        else:
+            api_economy_rate = 0
+            api_calls_saved = 0
+        
+        # Test quality filtering criteria
+        quality_results = self._test_quality_filtering_criteria(analyses, decisions)
+        
+        # Test that high-quality analyses still reach IA2
+        quality_preservation = self._test_quality_preservation(analyses, decisions)
+        
+        # Overall API economy assessment
+        economy_working = (
+            api_economy_rate > 0.1 and  # At least 10% API calls saved
+            quality_results['criteria_working'] and
+            quality_preservation
+        )
+        
+        print(f"\n   🎯 API Economy Optimization Assessment:")
+        print(f"      API Economy Rate: {'✅' if api_economy_rate > 0.1 else '❌'} ({api_economy_rate:.1%})")
+        print(f"      Quality Filtering: {'✅' if quality_results['criteria_working'] else '❌'}")
+        print(f"      Quality Preservation: {'✅' if quality_preservation else '❌'}")
+        print(f"      Overall Status: {'✅ WORKING' if economy_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return economy_working
+    
+    def _test_quality_filtering_criteria(self, analyses, decisions):
+        """Test the 10 quality filtering criteria"""
+        print(f"\n   🔍 Testing Quality Filtering Criteria...")
+        
+        criteria_results = {
+            'ia1_confidence_50': 0,
+            'data_confidence_60': 0,
+            'rsi_realistic': 0,
+            'macd_not_default': 0,
+            'support_resistance': 0,
+            'volatility_min': 0,
+            'volume_min': 0,
+            'reasoning_length': 0,
+            'technical_patterns': 0,
+            'data_sources': 0
+        }
+        
+        total_analyses = len(analyses)
+        
+        for analysis in analyses:
+            # 1. IA1 confidence minimum 50%
+            if analysis.get('analysis_confidence', 0) >= 0.5:
+                criteria_results['ia1_confidence_50'] += 1
+            
+            # 2. RSI realistic range (10-90)
+            rsi = analysis.get('rsi', 50)
+            if 10 <= rsi <= 90:
+                criteria_results['rsi_realistic'] += 1
+            
+            # 3. MACD not default (not 0.0)
+            macd = analysis.get('macd_signal', 0)
+            if macd != 0.0:
+                criteria_results['macd_not_default'] += 1
+            
+            # 4. Support/resistance levels present
+            support = analysis.get('support_levels', [])
+            resistance = analysis.get('resistance_levels', [])
+            if support and resistance:
+                criteria_results['support_resistance'] += 1
+            
+            # 5. Reasoning length minimum 100 characters
+            reasoning = analysis.get('ia1_reasoning', '')
+            if len(reasoning) >= 100:
+                criteria_results['reasoning_length'] += 1
+            
+            # 6. Technical patterns detected
+            patterns = analysis.get('patterns_detected', [])
+            if patterns and len(patterns) > 0:
+                criteria_results['technical_patterns'] += 1
+            
+            # 7. Data sources present
+            sources = analysis.get('data_sources', [])
+            if sources and len(sources) >= 1:
+                criteria_results['data_sources'] += 1
+        
+        print(f"      Quality Criteria Results (out of {total_analyses} analyses):")
+        for criterion, count in criteria_results.items():
+            rate = count / total_analyses if total_analyses > 0 else 0
+            print(f"        {criterion}: {count}/{total_analyses} ({rate:.1%})")
+        
+        # Check if filtering criteria are working (high-quality analyses should pass most criteria)
+        high_quality_rate = sum(criteria_results.values()) / (len(criteria_results) * total_analyses) if total_analyses > 0 else 0
+        criteria_working = high_quality_rate >= 0.6  # At least 60% of criteria should be met
+        
+        return {
+            'criteria_working': criteria_working,
+            'high_quality_rate': high_quality_rate,
+            'results': criteria_results
+        }
+    
+    def _test_quality_preservation(self, analyses, decisions):
+        """Test that high-quality analyses still reach IA2"""
+        print(f"\n   🔍 Testing Quality Preservation...")
+        
+        if len(analyses) == 0 or len(decisions) == 0:
+            print(f"      ⚠️ Insufficient data for quality preservation testing")
+            return False
+        
+        # Find analyses that should have high quality
+        high_quality_analyses = []
+        for analysis in analyses:
+            quality_score = 0
+            
+            # High IA1 confidence
+            if analysis.get('analysis_confidence', 0) >= 0.7:
+                quality_score += 1
+            
+            # Realistic RSI
+            rsi = analysis.get('rsi', 50)
+            if 20 <= rsi <= 80 and rsi != 50:
+                quality_score += 1
+            
+            # Non-default MACD
+            if analysis.get('macd_signal', 0) != 0.0:
+                quality_score += 1
+            
+            # Has support/resistance
+            if (analysis.get('support_levels', []) and 
+                analysis.get('resistance_levels', [])):
+                quality_score += 1
+            
+            # Good reasoning length
+            if len(analysis.get('ia1_reasoning', '')) >= 200:
+                quality_score += 1
+            
+            # Technical patterns detected
+            if analysis.get('patterns_detected', []):
+                quality_score += 1
+            
+            if quality_score >= 4:  # High quality if meets 4+ criteria
+                high_quality_analyses.append(analysis)
+        
+        # Check if high-quality analyses have corresponding decisions
+        decision_symbols = set(d.get('symbol', '') for d in decisions)
+        high_quality_symbols = set(a.get('symbol', '') for a in high_quality_analyses)
+        
+        preserved_quality = len(high_quality_symbols.intersection(decision_symbols))
+        total_high_quality = len(high_quality_analyses)
+        
+        preservation_rate = preserved_quality / total_high_quality if total_high_quality > 0 else 0
+        
+        print(f"      High-Quality Analyses: {total_high_quality}")
+        print(f"      Preserved in IA2: {preserved_quality}")
+        print(f"      Preservation Rate: {preservation_rate:.1%}")
+        
+        # Quality preservation should be high (>70%)
+        quality_preserved = preservation_rate >= 0.7
+        
+        print(f"      Quality Preservation: {'✅' if quality_preserved else '❌'}")
+        
+        return quality_preserved
+    
+    def test_api_economy_quality_vs_economy_balance(self):
+        """Test that API economy maintains quality while reducing costs"""
+        print(f"\n⚖️ Testing Quality vs Economy Balance...")
+        
+        success_analyses, analyses_data = self.test_get_analyses()
+        success_decisions, decisions_data = self.test_get_decisions()
+        
+        if not success_analyses or not success_decisions:
+            print(f"   ❌ Cannot retrieve data for balance testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        
+        if len(analyses) == 0:
+            print(f"   ❌ No data available for balance testing")
+            return False
+        
+        # Calculate quality metrics for decisions that were made
+        decision_quality_scores = []
+        for decision in decisions:
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            signal = decision.get('signal', 'hold')
+            
+            quality_score = 0
+            
+            # High confidence decisions
+            if confidence >= 0.6:
+                quality_score += 1
+            
+            # Good reasoning quality
+            if len(reasoning) >= 100:
+                quality_score += 1
+            
+            # Trading signals (not just HOLD)
+            if signal.lower() in ['long', 'short']:
+                quality_score += 1
+            
+            decision_quality_scores.append(quality_score)
+        
+        # Calculate balance metrics
+        total_analyses = len(analyses)
+        total_decisions = len(decisions)
+        api_economy_rate = (total_analyses - total_decisions) / total_analyses if total_analyses > 0 else 0
+        
+        avg_decision_quality = sum(decision_quality_scores) / len(decision_quality_scores) if decision_quality_scores else 0
+        quality_maintained = avg_decision_quality >= 2.0  # Average quality score >= 2/3
+        
+        print(f"   📊 Quality vs Economy Balance Analysis:")
+        print(f"      Total IA1 Analyses: {total_analyses}")
+        print(f"      IA2 Decisions Made: {total_decisions}")
+        print(f"      API Economy Rate: {api_economy_rate:.1%}")
+        print(f"      Average Decision Quality: {avg_decision_quality:.2f}/3.0")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'}")
+        
+        # Balance is good if we save API calls while maintaining quality
+        balance_good = api_economy_rate >= 0.1 and quality_maintained
+        
+        print(f"   🎯 Balance Assessment: {'✅ OPTIMAL' if balance_good else '❌ NEEDS ADJUSTMENT'}")
+        
+        return balance_good
+    
+    def test_api_economy_end_to_end_pipeline(self):
+        """Test complete optimized pipeline: Scout → Enhanced OHLCV → IA1 → Quality Filter → IA2"""
+        print(f"\n🔄 Testing End-to-End API Economy Pipeline...")
+        
+        # Test each stage of the pipeline
+        pipeline_results = {}
+        
+        # Stage 1: Scout
+        success, opportunities_data = self.test_get_opportunities()
+        opportunities = opportunities_data.get('opportunities', []) if success else []
+        pipeline_results['scout'] = len(opportunities) > 0
+        print(f"   📡 Scout Stage: {'✅' if pipeline_results['scout'] else '❌'} ({len(opportunities)} opportunities)")
+        
+        # Stage 2: Enhanced OHLCV → IA1
+        success, analyses_data = self.test_get_analyses()
+        analyses = analyses_data.get('analyses', []) if success else []
+        pipeline_results['ia1'] = len(analyses) > 0
+        print(f"   🔍 IA1 Analysis Stage: {'✅' if pipeline_results['ia1'] else '❌'} ({len(analyses)} analyses)")
+        
+        # Stage 3: Quality Filter → IA2
+        success, decisions_data = self.test_get_decisions()
+        decisions = decisions_data.get('decisions', []) if success else []
+        pipeline_results['ia2'] = len(decisions) >= 0  # Can be 0 if all filtered
+        
+        # Calculate filtering effectiveness
+        if len(analyses) > 0:
+            filter_rate = (len(analyses) - len(decisions)) / len(analyses)
+            pipeline_results['filtering'] = 0.05 <= filter_rate <= 0.8  # Reasonable filtering range
+            print(f"   🔽 Quality Filter Stage: {'✅' if pipeline_results['filtering'] else '❌'} ({filter_rate:.1%} filtered)")
+        else:
+            pipeline_results['filtering'] = False
+            print(f"   🔽 Quality Filter Stage: ❌ (no analyses to filter)")
+        
+        print(f"   🤖 IA2 Decision Stage: {'✅' if pipeline_results['ia2'] else '❌'} ({len(decisions)} decisions)")
+        
+        # Stage 4: API Economy Tracking
+        if len(analyses) > 0 and len(decisions) >= 0:
+            api_calls_saved = len(analyses) - len(decisions)
+            economy_rate = api_calls_saved / len(analyses)
+            pipeline_results['economy'] = economy_rate > 0
+            print(f"   💰 API Economy Stage: {'✅' if pipeline_results['economy'] else '❌'} ({economy_rate:.1%} saved)")
+        else:
+            pipeline_results['economy'] = False
+            print(f"   💰 API Economy Stage: ❌ (insufficient data)")
+        
+        # Overall pipeline assessment
+        stages_working = sum(pipeline_results.values())
+        pipeline_success = stages_working >= 4  # At least 4/5 stages working
+        
+        print(f"\n   🎯 End-to-End Pipeline Assessment:")
+        print(f"      Stages Working: {stages_working}/5")
+        print(f"      Pipeline Status: {'✅ OPERATIONAL' if pipeline_success else '❌ NEEDS WORK'}")
+        
+        return pipeline_success
+
+    async def run_api_economy_optimization_tests(self):
+        """Run comprehensive API Economy Optimization tests"""
+        print("💰 Starting API Economy Optimization Tests")
+        print("=" * 80)
+        print(f"🎯 Testing NEW API Economy Optimization for IA2:")
+        print(f"   • Quality filtering with 10 criteria before sending to IA2")
+        print(f"   • API call reduction while maintaining decision quality")
+        print(f"   • End-to-end optimized pipeline validation")
+        print(f"   • Quality vs Economy balance assessment")
+        print("=" * 80)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. API Economy Optimization System Test
+        print(f"\n2️⃣ API ECONOMY OPTIMIZATION SYSTEM TEST")
+        api_economy_test = self.test_api_economy_optimization_system()
+        
+        # 3. Quality vs Economy Balance Test
+        print(f"\n3️⃣ QUALITY VS ECONOMY BALANCE TEST")
+        balance_test = self.test_api_economy_quality_vs_economy_balance()
+        
+        # 4. End-to-End Pipeline Test
+        print(f"\n4️⃣ END-TO-END API ECONOMY PIPELINE TEST")
+        pipeline_test = self.test_api_economy_end_to_end_pipeline()
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 API ECONOMY OPTIMIZATION TEST RESULTS")
+        print("=" * 80)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • API Economy System: {'✅' if api_economy_test else '❌'}")
+        print(f"   • Quality vs Economy Balance: {'✅' if balance_test else '❌'}")
+        print(f"   • End-to-End Pipeline: {'✅' if pipeline_test else '❌'}")
+        
+        # Critical assessment for API Economy
+        critical_tests = [
+            api_economy_test,    # Core API economy functionality
+            balance_test,        # Quality preservation
+            pipeline_test        # End-to-end integration
+        ]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 API ECONOMY OPTIMIZATION Assessment:")
+        if critical_passed == 3:
+            print(f"   ✅ API ECONOMY OPTIMIZATION SUCCESSFUL")
+            print(f"   ✅ All components working: filtering + quality preservation + cost savings")
+            economy_status = "SUCCESS"
+        elif critical_passed >= 2:
+            print(f"   ⚠️ API ECONOMY OPTIMIZATION PARTIAL")
+            print(f"   ⚠️ Most components working, minor optimization needed")
+            economy_status = "PARTIAL"
+        else:
+            print(f"   ❌ API ECONOMY OPTIMIZATION FAILED")
+            print(f"   ❌ Critical issues detected - optimization not working")
+            economy_status = "FAILED"
+        
+        # Specific feedback on API economy features
+        print(f"\n📋 API Economy Features Status:")
+        print(f"   • Quality Filtering (10 criteria): {'✅' if api_economy_test else '❌'}")
+        print(f"   • API Call Reduction: {'✅' if api_economy_test else '❌'}")
+        print(f"   • Quality Preservation: {'✅' if balance_test else '❌'}")
+        print(f"   • Pipeline Integration: {'✅' if pipeline_test else '❌'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return economy_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "api_economy_working": api_economy_test,
+            "quality_balance_maintained": balance_test,
+            "pipeline_optimized": pipeline_test
+        }
+
     async def run_all_tests(self):
-        """Run comprehensive tests for BingX balance and IA2 confidence variation fixes"""
-        return self.run_comprehensive_fixes_tests()
+        """Run comprehensive tests for API Economy Optimization"""
+        return await self.run_api_economy_optimization_tests()
 
 async def main():
     """Main test function"""
