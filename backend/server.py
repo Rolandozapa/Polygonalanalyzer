@@ -1425,6 +1425,81 @@ class UltraProfessionalIA2DecisionAgent:
         self.live_trading_enabled = True  # Set to False for simulation only
         self.max_risk_per_trade = 0.02  # 2% risk per trade
     
+    async def _get_crypto_market_sentiment(self) -> dict:
+        """Get overall crypto market sentiment for leverage calculation"""
+        try:
+            import aiohttp
+            
+            # Get total crypto market cap and BTC dominance from CoinGecko
+            async with aiohttp.ClientSession() as session:
+                # Global crypto data
+                global_url = "https://api.coingecko.com/api/v3/global"
+                async with session.get(global_url) as response:
+                    if response.status == 200:
+                        global_data = await response.json()
+                        
+                        market_data = global_data.get('data', {})
+                        total_market_cap = market_data.get('total_market_cap', {}).get('usd', 0)
+                        total_volume = market_data.get('total_volume', {}).get('usd', 0)
+                        btc_dominance = market_data.get('market_cap_percentage', {}).get('btc', 0)
+                        
+                        # Calculate 24h market cap change (approximate via trending data)
+                        # Since CoinGecko doesn't provide direct 24h market cap change,
+                        # we'll use BTC price change as a proxy for overall market sentiment
+                        
+                        btc_url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true"
+                        async with session.get(btc_url) as btc_response:
+                            btc_change_24h = 0
+                            if btc_response.status == 200:
+                                btc_data = await btc_response.json()
+                                btc_change_24h = btc_data.get('bitcoin', {}).get('usd_24h_change', 0)
+                        
+                        # Market sentiment classification
+                        if btc_change_24h > 3:
+                            sentiment = "BULL_MARKET"
+                            sentiment_score = min(btc_change_24h / 10, 1.0)  # Max 1.0
+                        elif btc_change_24h < -3:
+                            sentiment = "BEAR_MARKET" 
+                            sentiment_score = min(abs(btc_change_24h) / 10, 1.0)
+                        else:
+                            sentiment = "NEUTRAL_MARKET"
+                            sentiment_score = 0.5
+                        
+                        return {
+                            "total_market_cap_usd": total_market_cap,
+                            "total_volume_24h": total_volume,
+                            "btc_dominance": btc_dominance,
+                            "btc_change_24h": btc_change_24h,
+                            "market_sentiment": sentiment,
+                            "sentiment_score": sentiment_score,
+                            "market_cap_change_proxy": btc_change_24h,  # Using BTC as proxy
+                            "data_source": "coingecko_global"
+                        }
+            
+            # Fallback data if API fails
+            return {
+                "total_market_cap_usd": 2500000000000,  # ~$2.5T fallback
+                "total_volume_24h": 100000000000,      # ~$100B fallback  
+                "btc_dominance": 50.0,
+                "btc_change_24h": 0.0,
+                "market_sentiment": "NEUTRAL_MARKET",
+                "sentiment_score": 0.5,
+                "market_cap_change_proxy": 0.0,
+                "data_source": "fallback_data"
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get market sentiment data: {e}")
+            return {
+                "total_market_cap_usd": 2500000000000,
+                "total_volume_24h": 100000000000,
+                "btc_dominance": 50.0,
+                "btc_change_24h": 0.0,
+                "market_sentiment": "NEUTRAL_MARKET", 
+                "sentiment_score": 0.5,
+                "market_cap_change_proxy": 0.0,
+                "data_source": "error_fallback"
+            }
     async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
         """Make ultra professional trading decision with advanced strategies and position inversion"""
         try:
