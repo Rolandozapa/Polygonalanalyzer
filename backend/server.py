@@ -2909,81 +2909,107 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"📊 IA1 PROCESSING RESULTS: {len(valid_analyses)} analyzed, {filtered_count} pattern-filtered, {rejected_no_data_count} data-rejected, {len(top_opportunities) - len(valid_analyses) - filtered_count - rejected_no_data_count} errors")
             logger.info(f"Completed {len(valid_analyses)} ultra professional analyses with REAL OHLCV data only")
             
-            # 3. Ultra professional IA2 decisions avec économie d'API (filtrage données)
-            decision_tasks = []
-            # Get performance stats for IA2 decisions
-            perf_stats = self.market_aggregator.get_performance_stats()
+            # ==========================================
+            # 3. SECTION IA2 - REDESIGNED & ROBUST
+            # ==========================================
             
-            # Filtrer les analyses avant d'appeler IA2 pour économiser les appels API
-            ia2_ready_analyses = []
-            skipped_for_data_quality = 0
+            logger.info(f"🚀 STARTING IA2 SECTION: Processing {len(valid_analyses)} validated analyses")
             
-            logger.info(f"🔍 DEBUG: About to filter {len(valid_analyses)} analyses for IA2")
-            
+            # Always store opportunities first (regardless of IA2 decisions)
+            opportunities_stored = 0
             for opportunity, analysis in valid_analyses:
-                # Debug logging
-                logger.info(f"🔍 DEBUG: Checking {analysis.symbol} - Confidence: {analysis.analysis_confidence:.2%}, Reasoning: {len(analysis.ia1_reasoning)} chars")
-                
-                # Vérifier la qualité des données avant d'appeler IA2
-                if self._should_send_to_ia2(analysis, opportunity):
-                    ia2_ready_analyses.append((opportunity, analysis))
-                    decision_tasks.append(self.ia2.make_decision(opportunity, analysis, perf_stats))
-                    logger.info(f"✅ DEBUG: {analysis.symbol} ACCEPTED for IA2")
-                else:
-                    skipped_for_data_quality += 1
-                    logger.info(f"❌ DEBUG: {analysis.symbol} REJECTED for IA2")
-                    logger.info(f"💰 API ÉCONOMIE: IA2 skipped pour {opportunity.symbol} - données insuffisantes")
-            
-            logger.info(f"💰 IA2 API OPTIMISATION: {len(ia2_ready_analyses)} analyses envoyées à IA2, {skipped_for_data_quality} skipped pour économie API")
-            
-            if not decision_tasks:
-                logger.info("Aucune analyse qualifiée pour IA2 - économie API totale, mais stockage des opportunités")
-                # Store opportunities même sans décisions IA2
-                for opportunity, analysis in valid_analyses:
+                try:
                     await db.market_opportunities.insert_one(opportunity.dict())
+                    opportunities_stored += 1
+                    logger.debug(f"📁 Stored opportunity: {opportunity.symbol}")
+                except Exception as e:
+                    logger.error(f"Failed to store opportunity {opportunity.symbol}: {e}")
+            
+            logger.info(f"✅ OPPORTUNITIES STORED: {opportunities_stored}/{len(valid_analyses)}")
+            
+            # Prepare IA2 decision making
+            perf_stats = self.market_aggregator.get_performance_stats()
+            decisions_to_make = []
+            decisions_skipped = 0
+            
+            # Filter analyses for IA2 (minimal filtering as requested)
+            for opportunity, analysis in valid_analyses:
+                should_process = self._should_send_to_ia2(analysis, opportunity)
                 
-                # Statistiques d'économie d'API
-                total_analyses = len(valid_analyses)
-                logger.info(f"💰 ÉCONOMIE API CLAUDE: {skipped_for_data_quality}/{total_analyses} analyses skipped (100% économie)")
-                logger.info(f"📊 RÉSULTATS FINAUX: 0 décisions IA2, {len(valid_analyses)} opportunités stockées (économie totale)")
-                return len(opportunities)
-            
-            # Execute decisions in parallel seulement pour les analyses de qualité
-            decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
-            
-            valid_decisions = 0
-            ia2_api_calls_made = len(decision_tasks)
-            
-            for i, decision in enumerate(decisions):
-                if isinstance(decision, TradingDecision):
-                    valid_decisions += 1
-                    
-                    # Store decision
-                    await db.trading_decisions.insert_one(decision.dict())
-                    
-                    # Broadcast decision
-                    await manager.broadcast({
-                        "type": "trading_decision",
-                        "data": decision.dict(),
-                        "ultra_professional": True,
-                        "trending_focused": True,
-                        "api_optimized": True
-                    })
-                    
-                    # Store opportunity (utilise ia2_ready_analyses au lieu de valid_analyses)
-                    opportunity = ia2_ready_analyses[i][0]
-                    await db.market_opportunities.insert_one(opportunity.dict())
-                    
-                    logger.info(f"Ultra professional trending decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
+                if should_process:
+                    decisions_to_make.append((opportunity, analysis))
+                    logger.debug(f"✅ IA2 QUEUE: {analysis.symbol} (confidence: {analysis.analysis_confidence:.2%})")
                 else:
-                    logger.warning(f"Decision failed: {decision}")
+                    decisions_skipped += 1
+                    logger.debug(f"⏭️ IA2 SKIP: {analysis.symbol} (low quality)")
             
-            # Statistiques d'économie d'API
+            logger.info(f"🎯 IA2 PROCESSING: {len(decisions_to_make)} analyses queued, {decisions_skipped} skipped")
+            
+            # Execute IA2 decisions if we have analyses to process
+            decisions_made = 0
+            decisions_failed = 0
+            
+            if decisions_to_make:
+                logger.info(f"🧠 EXECUTING IA2: Making decisions for {len(decisions_to_make)} analyses")
+                
+                # Create decision tasks
+                decision_tasks = []
+                for opportunity, analysis in decisions_to_make:
+                    task = self.ia2.make_decision(opportunity, analysis, perf_stats)
+                    decision_tasks.append(task)
+                
+                # Execute all IA2 decisions in parallel
+                try:
+                    decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
+                    
+                    # Process decision results
+                    for i, decision in enumerate(decisions):
+                        if isinstance(decision, TradingDecision) and decision.signal != "HOLD":
+                            # Store successful decision
+                            await db.trading_decisions.insert_one(decision.dict())
+                            decisions_made += 1
+                            
+                            # Broadcast decision to frontend
+                            await manager.broadcast({
+                                "type": "trading_decision",
+                                "data": decision.dict(),
+                                "ultra_professional": True,
+                                "trending_focused": True,
+                                "api_optimized": True
+                            })
+                            
+                            opportunity, analysis = decisions_to_make[i]
+                            logger.info(f"✅ IA2 DECISION: {decision.symbol} → {decision.signal} (confidence: {decision.confidence:.2%})")
+                        else:
+                            decisions_failed += 1
+                            if isinstance(decision, Exception):
+                                logger.error(f"❌ IA2 ERROR: {decisions_to_make[i][1].symbol} - {decision}")
+                            else:
+                                logger.debug(f"⚪ IA2 HOLD: {decisions_to_make[i][1].symbol}")
+                                
+                except Exception as e:
+                    logger.error(f"❌ IA2 BATCH ERROR: {e}")
+                    decisions_failed = len(decisions_to_make)
+            
+            else:
+                logger.info("💰 IA2 ECONOMY: No analyses qualified for IA2 processing (full API economy mode)")
+            
+            # ==========================================
+            # FINAL STATISTICS & REPORTING
+            # ==========================================
+            
             total_analyses = len(valid_analyses)
-            api_economy_rate = skipped_for_data_quality / total_analyses if total_analyses > 0 else 0
+            ia2_economy_rate = decisions_skipped / total_analyses if total_analyses > 0 else 0
+            ia2_success_rate = decisions_made / len(decisions_to_make) if decisions_to_make else 0
             
-            logger.info(f"💰 ÉCONOMIE API CLAUDE: {skipped_for_data_quality}/{total_analyses} analyses skipped ({api_economy_rate:.1%} économie)")
-            logger.info(f"📊 RÉSULTATS FINAUX: {valid_decisions} décisions valides avec {ia2_api_calls_made} appels IA2 (économie optimisée)")
+            logger.info(f"📊 CYCLE SUMMARY:")
+            logger.info(f"   • Opportunities found: {len(opportunities)}")
+            logger.info(f"   • IA1 analyses: {len(valid_analyses)}")
+            logger.info(f"   • Opportunities stored: {opportunities_stored}")
+            logger.info(f"   • IA2 decisions made: {decisions_made}")
+            logger.info(f"   • IA2 economy rate: {ia2_economy_rate:.1%}")
+            logger.info(f"   • IA2 success rate: {ia2_success_rate:.1%}")
+            
             return len(opportunities)
             
         except Exception as e:
