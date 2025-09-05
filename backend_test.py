@@ -2500,49 +2500,56 @@ class DualAITradingBotTester:
         """Test BingX balance retrieval - Debug why balance shows 0$ instead of 11$+"""
         print(f"\n💰 Testing BingX Balance Investigation...")
         
-        # Test the BingX account balance endpoint
-        success, balance_data = self.run_test("BingX Account Balance", "GET", "bingx/balance", 200)
+        # Test the actual BingX status endpoint which includes balance
+        success, bingx_data = self.run_test("BingX Status (includes balance)", "GET", "bingx-status", 200)
         
         if not success:
-            print(f"   ❌ BingX balance endpoint failed")
+            print(f"   ❌ BingX status endpoint failed")
             return False
         
-        if balance_data:
-            total_balance = balance_data.get('total_balance', 0)
-            available_balance = balance_data.get('available_balance', 0)
-            used_margin = balance_data.get('used_margin', 0)
-            unrealized_pnl = balance_data.get('unrealized_pnl', 0)
+        if bingx_data:
+            connectivity = bingx_data.get('connectivity', {})
+            account_balances = bingx_data.get('account_balances', [])
+            active_positions = bingx_data.get('active_positions', [])
+            live_trading_enabled = bingx_data.get('live_trading_enabled', False)
             
-            print(f"   📊 BingX Balance Details:")
-            print(f"      Total Balance: ${total_balance:.2f} USDT")
-            print(f"      Available Balance: ${available_balance:.2f} USDT")
-            print(f"      Used Margin: ${used_margin:.2f} USDT")
-            print(f"      Unrealized PnL: ${unrealized_pnl:.2f} USDT")
+            print(f"   📊 BingX Status Details:")
+            print(f"      Connectivity: {connectivity}")
+            print(f"      Live Trading Enabled: {live_trading_enabled}")
+            print(f"      Account Balances: {len(account_balances)} assets")
+            print(f"      Active Positions: {len(active_positions)} positions")
+            
+            # Look for USDT balance specifically
+            usdt_balance = 0.0
+            total_balance_value = 0.0
+            
+            for balance in account_balances:
+                asset = balance.get('asset', '')
+                available = balance.get('available', 0)
+                total = balance.get('total', 0)
+                
+                print(f"      {asset}: Available=${available:.2f}, Total=${total:.2f}")
+                
+                if asset == 'USDT':
+                    usdt_balance = available
+                    total_balance_value = total
             
             # Check if balance is showing 0 when it should be 11$+
-            balance_issue = total_balance == 0.0 and available_balance == 0.0
+            balance_issue = usdt_balance == 0.0 and total_balance_value == 0.0
             
             print(f"\n   🔍 Balance Investigation:")
-            print(f"      Balance Shows Zero: {'❌ ISSUE CONFIRMED' if balance_issue else '✅ Balance Present'}")
+            print(f"      USDT Balance Shows Zero: {'❌ ISSUE CONFIRMED' if balance_issue else '✅ Balance Present'}")
             print(f"      Expected: >$11 USDT")
-            print(f"      Actual: ${total_balance:.2f} USDT")
+            print(f"      Actual USDT Available: ${usdt_balance:.2f}")
+            print(f"      Actual USDT Total: ${total_balance_value:.2f}")
             
             if balance_issue:
                 print(f"   💡 POTENTIAL CAUSES:")
                 print(f"      1. API keys may be for spot trading, not futures")
-                print(f"      2. BingX API connection issue")
+                print(f"      2. BingX API connection issue: {connectivity}")
                 print(f"      3. Account configuration problem")
                 print(f"      4. API permissions insufficient")
-                
-                # Test BingX API connection directly
-                print(f"\n   🔧 Testing BingX API Connection...")
-                connection_success, connection_data = self.run_test("BingX API Connection Test", "GET", "bingx/test-connection", 200)
-                
-                if connection_success and connection_data:
-                    api_status = connection_data.get('status', 'unknown')
-                    api_message = connection_data.get('message', 'No message')
-                    print(f"      API Status: {api_status}")
-                    print(f"      API Message: {api_message}")
+                print(f"      5. Funds may be in different account type")
                 
                 return False
             else:
