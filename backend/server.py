@@ -1201,36 +1201,48 @@ class UltraProfessionalIA2DecisionAgent:
         """Evaluate trading decision with live trading risk management"""
         
         signal = SignalType.HOLD
-        confidence = (analysis.analysis_confidence + opportunity.data_confidence) / 2
-        reasoning = "Ultra professional live trading analysis: "
+        base_confidence = (analysis.analysis_confidence + opportunity.data_confidence) / 2
+        confidence = base_confidence
         
-        # LIVE TRADING GATES
+        # Start with LLM reasoning if available
+        llm_reasoning = ""
+        llm_confidence_boost = 0.0
+        if llm_decision:
+            llm_reasoning = llm_decision.get("reasoning", "")
+            llm_confidence = llm_decision.get("confidence", 0.0)
+            if 0.5 <= llm_confidence <= 1.0:  # Valid LLM confidence
+                llm_confidence_boost = min((llm_confidence - 0.5) * 0.2, 0.2)  # Up to 0.2 boost
+                confidence += llm_confidence_boost
+                
+        reasoning = f"IA2 Decision Analysis: {llm_reasoning[:500]} " if llm_reasoning else "Ultra professional live trading analysis: "
+        
+        # LIVE TRADING GATES (Less aggressive penalties)
         
         # Minimum balance gate
         if account_balance < 50:  # Minimum $50 USDT
             reasoning += "Insufficient account balance for live trading. "
-            confidence *= 0.3
+            confidence *= 0.5  # Less aggressive than 0.3
             return self._create_hold_decision(reasoning, confidence, opportunity.current_price)
         
-        # Data quality gates (stricter for live trading)
-        if opportunity.data_confidence < 0.8:
-            reasoning += "Data confidence too low for live trading. "
-            confidence *= 0.7
+        # Data quality gates (less punitive)
+        if opportunity.data_confidence < 0.7:  # Lowered from 0.8
+            reasoning += "Data confidence moderate - reduced position sizing. "
+            confidence *= 0.85  # Less aggressive than 0.7
         
-        if analysis.analysis_confidence < 0.7:
-            reasoning += "Analysis confidence too low for live trading. "
-            confidence *= 0.8
+        if analysis.analysis_confidence < 0.6:  # Lowered from 0.7
+            reasoning += "Analysis confidence moderate - conservative approach. "
+            confidence *= 0.90  # Less aggressive than 0.8
         
-        # Multi-source validation for larger trades
+        # Multi-source validation for larger trades (less strict)
         position_value = self.max_risk_per_trade * account_balance * 10  # Approx position value
-        if position_value > 100 and len(opportunity.data_sources) < 2:
-            reasoning += "Multi-source validation required for large trades. "
-            confidence *= 0.6
+        if position_value > 200 and len(opportunity.data_sources) < 2:  # Raised threshold from 100
+            reasoning += "Multi-source validation recommended for large trades. "
+            confidence *= 0.8  # Less aggressive than 0.6
         
-        # Market conditions gate
-        if opportunity.volatility > 0.15:  # 15% volatility threshold
-            reasoning += "Market too volatile for safe live trading. "
-            confidence *= 0.7
+        # Market conditions gate (less strict)
+        if opportunity.volatility > 0.20:  # Raised from 0.15
+            reasoning += "High market volatility - reduced position size. "
+            confidence *= 0.85  # Less aggressive than 0.7
         
         # Enhanced signal scoring for live trading
         bullish_signals = 0
