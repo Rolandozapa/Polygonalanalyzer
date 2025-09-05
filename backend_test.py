@@ -438,13 +438,14 @@ class DualAITradingBotTester:
         print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
         print(f"   • Market Status: {'✅' if market_success else '❌'}")
         print(f"   • Scout Functionality: {'✅' if scout_success else '❌'}")
-        print(f"   • IA1 Speed Optimization: {'✅' if speed_success else '❌'}")
+        print(f"   • IA1 Optimization Evidence: {'✅' if optimization_evidence else '❌'}")
+        print(f"   • IA1 Speed Test: {'✅' if speed_success else '❌'}")
         print(f"   • Scout->IA1 Integration: {'✅' if integration_success else '❌'}")
         print(f"   • Technical Analysis Quality: {'✅' if quality_success else '❌'}")
         print(f"   • IA2 Decision Making: {'✅' if decision_success else '❌'}")
         
         # Overall assessment
-        critical_tests = [scout_success, integration_success, quality_success]
+        critical_tests = [scout_success, optimization_evidence, integration_success, quality_success]
         critical_passed = sum(critical_tests)
         
         print(f"\n🎯 Overall Assessment:")
