@@ -1852,6 +1852,64 @@ async def get_market_status():
     except Exception as e:
         return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
 
+@api_router.get("/scout-trending-config")
+async def get_scout_trending_config():
+    """Get current trending-focused scout configuration"""
+    scout = orchestrator.scout
+    return {
+        "trending_focus_enabled": scout.focus_trending,
+        "trending_symbols": scout.trending_symbols,
+        "max_cryptos_analyzed": scout.max_cryptos_to_analyze,
+        "min_price_change_threshold": scout.min_price_change_threshold,
+        "volume_spike_multiplier": scout.volume_spike_multiplier,
+        "min_market_cap": scout.min_market_cap,
+        "min_volume_24h": scout.min_volume_24h
+    }
+
+@api_router.post("/scout-trending-config")
+async def update_scout_trending_config(config: dict):
+    """Update trending-focused scout configuration"""
+    try:
+        scout = orchestrator.scout
+        
+        if "trending_focus_enabled" in config:
+            scout.focus_trending = config["trending_focus_enabled"]
+        
+        if "trending_symbols" in config:
+            scout.trending_symbols = config["trending_symbols"]
+        
+        if "max_cryptos_analyzed" in config:
+            scout.max_cryptos_to_analyze = min(max(config["max_cryptos_analyzed"], 5), 50)
+        
+        if "min_price_change_threshold" in config:
+            scout.min_price_change_threshold = max(config["min_price_change_threshold"], 1.0)
+        
+        return {
+            "message": "Trending scout configuration updated successfully",
+            "config": {
+                "trending_focus_enabled": scout.focus_trending,
+                "trending_symbols": scout.trending_symbols,
+                "max_cryptos_analyzed": scout.max_cryptos_to_analyze,
+                "min_price_change_threshold": scout.min_price_change_threshold
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.get("/scout-config")
+async def get_scout_config():
+    """Get current scout configuration (legacy endpoint)"""
+    scout = orchestrator.scout
+    return {
+        "trending_focus_enabled": scout.focus_trending,
+        "trending_symbols": scout.trending_symbols,
+        "max_cryptos_analyzed": scout.max_cryptos_to_analyze,
+        "min_price_change_threshold": scout.min_price_change_threshold,
+        "volume_spike_multiplier": scout.volume_spike_multiplier,
+        "min_market_cap": scout.min_market_cap,
+        "min_volume_24h": scout.min_volume_24h
+    }
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
