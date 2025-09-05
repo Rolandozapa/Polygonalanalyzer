@@ -2238,6 +2238,10 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         
         # Claude decision integration (enhanced for advanced strategies)
         claude_reasoning = ""
+        dynamic_leverage = 2.0  # Default base leverage
+        calculated_leverage_data = {}
+        five_level_tp_data = {}
+        
         if claude_decision:
             claude_reasoning = claude_decision.get("reasoning", "")
             claude_confidence = claude_decision.get("confidence", 0.0)
@@ -2245,8 +2249,79 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 # Enhanced Claude boost for advanced strategies
                 claude_boost = min((claude_confidence - 0.5) * 0.4, 0.35)  # Up to 0.35 boost
                 confidence = max(confidence + claude_boost, 0.55)
+            
+            # DYNAMIC LEVERAGE PROCESSING - Extract leverage calculation from Claude
+            leverage_data = claude_decision.get("leverage", {})
+            if leverage_data and isinstance(leverage_data, dict):
+                calculated_leverage = leverage_data.get("calculated_leverage", 2.0)
+                base_leverage = leverage_data.get("base_leverage", 2.0)
+                confidence_bonus = leverage_data.get("confidence_bonus", 0.0)
+                sentiment_bonus = leverage_data.get("sentiment_bonus", 0.0)
+                market_alignment = leverage_data.get("market_alignment", "NEUTRAL")
                 
-        reasoning = f"IA2 Advanced Strategy Analysis: {claude_reasoning[:500]} " if claude_reasoning else "Ultra professional advanced trading analysis: "
+                # Apply dynamic leverage with caps (2x-10x range as per BingX API)
+                dynamic_leverage = min(max(calculated_leverage, 2.0), 10.0)
+                
+                calculated_leverage_data = {
+                    "applied_leverage": dynamic_leverage,
+                    "base_leverage": base_leverage,
+                    "confidence_bonus": confidence_bonus,
+                    "sentiment_bonus": sentiment_bonus,
+                    "market_alignment": market_alignment,
+                    "leverage_source": "claude_calculation"
+                }
+            else:
+                # Fallback dynamic leverage calculation if Claude doesn't provide it
+                base_leverage = 2.5
+                confidence_multiplier = max((confidence - 0.7) * 2.0, 0.0) if confidence > 0.7 else 0.0
+                dynamic_leverage = min(base_leverage + confidence_multiplier, 8.0)  # Conservative fallback
+                
+                calculated_leverage_data = {
+                    "applied_leverage": dynamic_leverage,
+                    "base_leverage": base_leverage,
+                    "confidence_bonus": confidence_multiplier,
+                    "sentiment_bonus": 0.0,
+                    "market_alignment": "UNKNOWN",
+                    "leverage_source": "fallback_calculation"
+                }
+            
+            # 5-LEVEL TAKE PROFIT PROCESSING - Extract TP strategy from Claude
+            tp_strategy = claude_decision.get("take_profit_strategy", {})
+            if tp_strategy and isinstance(tp_strategy, dict):
+                five_level_tp_data = {
+                    "tp1_percentage": tp_strategy.get("tp1_percentage", 1.5),
+                    "tp2_percentage": tp_strategy.get("tp2_percentage", 3.0),
+                    "tp3_percentage": tp_strategy.get("tp3_percentage", 5.0),
+                    "tp4_percentage": tp_strategy.get("tp4_percentage", 8.0),
+                    "tp5_percentage": tp_strategy.get("tp5_percentage", 12.0),
+                    "tp_distribution": tp_strategy.get("tp_distribution", [20, 25, 25, 20, 10]),
+                    "leverage_adjusted": tp_strategy.get("leverage_adjusted", True),
+                    "strategy_source": "claude_5_level"
+                }
+            else:
+                # Fallback 5-level TP strategy based on research
+                five_level_tp_data = {
+                    "tp1_percentage": 1.2,
+                    "tp2_percentage": 2.8,
+                    "tp3_percentage": 4.8,
+                    "tp4_percentage": 7.5,
+                    "tp5_percentage": 12.0,
+                    "tp_distribution": [20, 25, 25, 20, 10],
+                    "leverage_adjusted": True,
+                    "strategy_source": "fallback_5_level"
+                }
+                
+        reasoning = f"IA2 Advanced Strategy Analysis: {claude_reasoning[:300]} " if claude_reasoning else "Ultra professional advanced trading analysis: "
+        
+        # Add dynamic leverage info to reasoning
+        if calculated_leverage_data:
+            leverage_info = f"DYNAMIC LEVERAGE: {dynamic_leverage:.1f}x applied ({calculated_leverage_data['leverage_source']}). "
+            reasoning += leverage_info
+            
+        # Add 5-level TP info to reasoning  
+        if five_level_tp_data:
+            tp_info = f"5-LEVEL TP: TP1({five_level_tp_data['tp1_percentage']:.1f}%), TP2({five_level_tp_data['tp2_percentage']:.1f}%), TP3({five_level_tp_data['tp3_percentage']:.1f}%), TP4({five_level_tp_data['tp4_percentage']:.1f}%), TP5({five_level_tp_data['tp5_percentage']:.1f}%) with distribution {five_level_tp_data['tp_distribution']}. "
+            reasoning += tp_info
         
         # Advanced quality assessment system
         quality_score = 0.0
