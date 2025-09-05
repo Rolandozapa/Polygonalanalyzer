@@ -564,6 +564,106 @@ class DualAITradingBotTester:
             print(f"   💡 Expected: With 55% moderate threshold, should see some LONG/SHORT signals")
             return False
 
+    def test_ia2_signal_generation_rate(self):
+        """Test IA2 signal generation rate to ensure it's not 100% HOLD"""
+        print(f"\n🎲 Testing IA2 Signal Generation Rate...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for signal generation testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for signal generation testing")
+            return False
+        
+        print(f"   📊 Analyzing signal generation patterns of {len(decisions)} decisions...")
+        
+        # Analyze signal distribution across multiple symbols
+        signal_by_symbol = {}
+        confidence_by_signal = {'long': [], 'short': [], 'hold': []}
+        
+        for decision in decisions:
+            symbol = decision.get('symbol', 'Unknown')
+            signal = decision.get('signal', 'hold').lower()
+            confidence = decision.get('confidence', 0)
+            
+            if symbol not in signal_by_symbol:
+                signal_by_symbol[symbol] = {'long': 0, 'short': 0, 'hold': 0}
+            
+            if signal in signal_by_symbol[symbol]:
+                signal_by_symbol[symbol][signal] += 1
+                confidence_by_signal[signal].append(confidence)
+        
+        # Calculate overall statistics
+        total_long = len(confidence_by_signal['long'])
+        total_short = len(confidence_by_signal['short'])
+        total_hold = len(confidence_by_signal['hold'])
+        total_decisions = total_long + total_short + total_hold
+        
+        long_rate = total_long / total_decisions if total_decisions > 0 else 0
+        short_rate = total_short / total_decisions if total_decisions > 0 else 0
+        hold_rate = total_hold / total_decisions if total_decisions > 0 else 0
+        trading_rate = (total_long + total_short) / total_decisions if total_decisions > 0 else 0
+        
+        print(f"\n   📊 Signal Generation Analysis:")
+        print(f"      Total Decisions: {total_decisions}")
+        print(f"      LONG Signals: {total_long} ({long_rate*100:.1f}%)")
+        print(f"      SHORT Signals: {total_short} ({short_rate*100:.1f}%)")
+        print(f"      HOLD Signals: {total_hold} ({hold_rate*100:.1f}%)")
+        print(f"      Trading Rate: {trading_rate*100:.1f}% (target: >10%)")
+        
+        # Analyze confidence distribution by signal type
+        if confidence_by_signal['long']:
+            avg_long_conf = sum(confidence_by_signal['long']) / len(confidence_by_signal['long'])
+            print(f"      Avg LONG Confidence: {avg_long_conf:.3f}")
+        
+        if confidence_by_signal['short']:
+            avg_short_conf = sum(confidence_by_signal['short']) / len(confidence_by_signal['short'])
+            print(f"      Avg SHORT Confidence: {avg_short_conf:.3f}")
+        
+        if confidence_by_signal['hold']:
+            avg_hold_conf = sum(confidence_by_signal['hold']) / len(confidence_by_signal['hold'])
+            print(f"      Avg HOLD Confidence: {avg_hold_conf:.3f}")
+        
+        # Show symbol-level analysis
+        print(f"\n   🔍 Symbol-Level Signal Distribution:")
+        symbols_with_trades = 0
+        for symbol, signals in list(signal_by_symbol.items())[:5]:  # Show first 5 symbols
+            symbol_total = sum(signals.values())
+            symbol_trading_rate = (signals['long'] + signals['short']) / symbol_total if symbol_total > 0 else 0
+            print(f"      {symbol}: L:{signals['long']} S:{signals['short']} H:{signals['hold']} (Trade: {symbol_trading_rate*100:.0f}%)")
+            if symbol_trading_rate > 0:
+                symbols_with_trades += 1
+        
+        # Enhanced validation criteria
+        not_all_holds = hold_rate < 0.95  # Less than 95% HOLD signals
+        reasonable_trading_rate = trading_rate >= 0.10  # At least 10% trading rate
+        diverse_signals = (total_long > 0 or total_short > 0)  # At least some trading signals
+        multiple_symbols_trading = symbols_with_trades > 1  # Multiple symbols generating trades
+        
+        print(f"\n   ✅ Signal Generation Validation:")
+        print(f"      Not All HOLD (≤95%): {'✅' if not_all_holds else '❌'} ({hold_rate*100:.1f}% HOLD)")
+        print(f"      Trading Rate ≥10%: {'✅' if reasonable_trading_rate else '❌'} ({trading_rate*100:.1f}%)")
+        print(f"      Has Trading Signals: {'✅' if diverse_signals else '❌'} (L:{total_long}, S:{total_short})")
+        print(f"      Multiple Symbols Trading: {'✅' if multiple_symbols_trading else '❌'} ({symbols_with_trades} symbols)")
+        
+        signal_generation_working = (
+            not_all_holds and
+            reasonable_trading_rate and
+            diverse_signals and
+            multiple_symbols_trading
+        )
+        
+        print(f"\n   🎯 Signal Generation Assessment: {'✅ WORKING' if signal_generation_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        if not signal_generation_working:
+            print(f"   💡 Issue: IA2 may still be too conservative with new 55% threshold")
+            print(f"   💡 Expected: With industry-standard thresholds, should see >10% trading rate")
+        
+        return signal_generation_working
+
     def test_ia2_reasoning_quality(self):
         """Test IA2 reasoning field is properly populated and not null"""
         print(f"\n🧠 Testing IA2 Reasoning Quality...")
