@@ -2130,9 +2130,9 @@ async def clear_decisions():
     """Clear all cached decisions to force fresh generation with IA2 improvements"""
     try:
         # Clear all decisions, analyses, and opportunities to force fresh generation
-        decisions_deleted = await db.decisions.delete_many({})
-        analyses_deleted = await db.analyses.delete_many({})
-        opportunities_deleted = await db.opportunities.delete_many({})
+        decisions_deleted = await db.trading_decisions.delete_many({})
+        analyses_deleted = await db.technical_analyses.delete_many({})
+        opportunities_deleted = await db.market_opportunities.delete_many({})
         
         logger.info(f"Cache cleared: {decisions_deleted.deleted_count} decisions, {analyses_deleted.deleted_count} analyses, {opportunities_deleted.deleted_count} opportunities")
         
