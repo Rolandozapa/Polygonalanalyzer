@@ -916,8 +916,55 @@ async def get_performance():
     
     return {"performance": performance}
 
-@api_router.get("/market-status")
-async def get_market_status():
+@api_router.get("/scout-config")
+async def get_scout_config():
+    """Get current scout configuration"""
+    return {
+        "max_cryptos_to_analyze": orchestrator.scout.max_cryptos_to_analyze,
+        "min_market_cap": orchestrator.scout.min_market_cap,
+        "min_volume_24h": orchestrator.scout.min_volume_24h,
+        "supported_sources": ["coinmarketcap", "coingecko", "predefined"],
+        "max_supported_cryptos": 500
+    }
+
+@api_router.post("/scout-config")
+async def update_scout_config(config: dict):
+    """Update scout configuration"""
+    try:
+        if "max_cryptos_to_analyze" in config:
+            orchestrator.scout.max_cryptos_to_analyze = min(max(config["max_cryptos_to_analyze"], 1), 200)
+        
+        if "min_market_cap" in config:
+            orchestrator.scout.min_market_cap = max(config["min_market_cap"], 1_000_000)
+        
+        if "min_volume_24h" in config:
+            orchestrator.scout.min_volume_24h = max(config["min_volume_24h"], 100_000)
+        
+        return {
+            "message": "Scout configuration updated successfully",
+            "config": {
+                "max_cryptos_to_analyze": orchestrator.scout.max_cryptos_to_analyze,
+                "min_market_cap": orchestrator.scout.min_market_cap,
+                "min_volume_24h": orchestrator.scout.min_volume_24h
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.get("/top-cryptos/{limit}")
+async def get_top_cryptos(limit: int = 50):
+    """Get top cryptocurrencies by market cap (for preview)"""
+    try:
+        limit = min(max(limit, 1), 500)  # Between 1 and 500
+        top_cryptos = await market_data_service.get_top_cryptos_by_marketcap(limit=limit)
+        
+        return {
+            "cryptos": top_cryptos[:limit],
+            "total_available": len(top_cryptos),
+            "source": top_cryptos[0].get('source', 'unknown') if top_cryptos else 'none'
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     """Get current market status and API health"""
     try:
         sentiment = await market_data_service.get_market_sentiment()
