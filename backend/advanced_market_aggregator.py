@@ -174,6 +174,53 @@ class AdvancedMarketAggregator:
                 url="https://api.coingecko.com/api/v3/coins/list",
                 rate_limit=30,
                 priority=4
+            ),
+            # CoinGecko trending (free)
+            APIEndpoint(
+                name="coingecko_trending",
+                url="https://api.coingecko.com/api/v3/search/trending",
+                rate_limit=30,
+                priority=4
+            ),
+            # CoinGecko global data (free)
+            APIEndpoint(
+                name="coingecko_global",
+                url="https://api.coingecko.com/api/v3/global",
+                rate_limit=30,
+                priority=5
+            )
+        ])
+        
+        # CoinCap - Free alternative API
+        endpoints.extend([
+            APIEndpoint(
+                name="coincap_assets",
+                url="https://api.coincap.io/v2/assets",
+                rate_limit=100,
+                priority=4
+            ),
+            APIEndpoint(
+                name="coincap_markets",
+                url="https://api.coincap.io/v2/markets",
+                rate_limit=100, 
+                priority=4
+            )
+        ])
+        
+        # CryptoCompare - Free tier
+        endpoints.extend([
+            APIEndpoint(
+                name="cryptocompare_top",
+                url="https://min-api.cryptocompare.com/data/top/mktcapfull",
+                params={"limit": 100, "tsym": "USD"},
+                rate_limit=100,
+                priority=4
+            ),
+            APIEndpoint(
+                name="cryptocompare_price",
+                url="https://min-api.cryptocompare.com/data/pricemultifull",
+                rate_limit=100,
+                priority=4
             )
         ])
         
