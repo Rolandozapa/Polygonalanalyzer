@@ -1222,7 +1222,7 @@ class UltraProfessionalIA2DecisionAgent:
         # Minimum balance gate
         if account_balance < 50:  # Minimum $50 USDT
             reasoning += "Insufficient account balance for live trading. "
-            confidence *= 0.6  # Still restrictive but not too harsh
+            confidence = max(confidence * 0.6, 0.5)  # Maintain 50% minimum even with penalty
             return self._create_hold_decision(reasoning, confidence, opportunity.current_price)
         
         # Data quality assessment (adjust rather than penalize heavily)
