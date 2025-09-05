@@ -4152,6 +4152,15 @@ class DualAITradingBotTester:
         
         return data_quality_validated
 
+    def print_performance_summary(self):
+        """Print performance summary"""
+        print(f"\n📊 Performance Summary:")
+        print(f"   Tests Run: {self.tests_run}")
+        print(f"   Tests Passed: {self.tests_passed}")
+        if self.ia1_performance_times:
+            avg_time = sum(self.ia1_performance_times) / len(self.ia1_performance_times)
+            print(f"   Average IA1 Time: {avg_time:.2f}s")
+
     def run_comprehensive_fixes_tests(self):
         """Run comprehensive tests for major improvements and fixes"""
         print(f"🚀 Starting Comprehensive Enhancement Tests")
