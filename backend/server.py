@@ -262,7 +262,7 @@ class UltraProfessionalCryptoScout:
         self.min_data_confidence = 0.7
         
         # Focus trending configuration
-        self.trending_symbols = ['WLFI', 'EUL', 'PTB', 'PIN', 'PUMP', 'SOMI']  # Sera mis à jour auto
+        self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']  # Cryptos populaires avec activité
         self.focus_trending = True
         self.min_price_change_threshold = 3.0  # Focus sur les mouvements >3%
         self.volume_spike_multiplier = 2.0     # Volume >2x moyenne
