@@ -300,6 +300,9 @@ class TechnicalPatternDetector:
                 target_price=df['Close'].iloc[-1] * 1.05,
                 stop_loss=df['MA20'].iloc[-1] * 0.95,
                 volume_confirmation=self._check_volume_increase(df),
+                trading_direction="long",  # Position LONG pour Golden Cross
+                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                trend_strength_score=max(strength, 0.6),
                 additional_data={'ma20': df['MA20'].iloc[-1], 'ma50': df['MA50'].iloc[-1]}
             ))
         
