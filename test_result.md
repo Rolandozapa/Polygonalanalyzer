@@ -414,7 +414,7 @@
 
 ## test_plan:
   current_focus:
-    - "NEW Lateral Movement Filter Testing Complete"
+    - "Test Historical Data Fallback API System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
