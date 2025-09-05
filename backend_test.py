@@ -32,24 +32,34 @@ class DualAITradingBotTester:
         self.websocket_messages = []
         self.ia1_performance_times = []
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=10):
-        """Run a single API test"""
+    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30):
+        """Run a single API test with extended timeout for IA1 optimization testing"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
         headers = {'Content-Type': 'application/json'}
 
         self.tests_run += 1
         print(f"\n🔍 Testing {name}...")
         
+        start_time = time.time()
         try:
             if method == 'GET':
                 response = requests.get(url, headers=headers, timeout=timeout)
             elif method == 'POST':
                 response = requests.post(url, json=data, headers=headers, timeout=timeout)
 
+            end_time = time.time()
+            response_time = end_time - start_time
+            
             success = response.status_code == expected_status
             if success:
                 self.tests_passed += 1
-                print(f"✅ Passed - Status: {response.status_code}")
+                print(f"✅ Passed - Status: {response.status_code} - Time: {response_time:.2f}s")
+                
+                # Track IA1 performance times for optimization testing
+                if 'analyze' in endpoint:
+                    self.ia1_performance_times.append(response_time)
+                    print(f"   ⚡ IA1 Analysis Time: {response_time:.2f}s")
+                
                 try:
                     response_data = response.json()
                     # Show more relevant data for each endpoint
@@ -62,13 +72,15 @@ class DualAITradingBotTester:
                     elif 'performance' in response_data:
                         perf = response_data['performance']
                         print(f"   Performance: {perf.get('total_opportunities', 0)} opps, {perf.get('executed_trades', 0)} trades")
+                    elif 'status' in response_data:
+                        print(f"   System Status: {response_data['status']}")
                     else:
                         print(f"   Response: {json.dumps(response_data, indent=2)[:150]}...")
                     return True, response_data
                 except:
                     return True, {}
             else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                print(f"❌ Failed - Expected {expected_status}, got {response.status_code} - Time: {response_time:.2f}s")
                 try:
                     error_data = response.json()
                     print(f"   Error: {error_data}")
@@ -77,7 +89,9 @@ class DualAITradingBotTester:
                 return False, {}
 
         except Exception as e:
-            print(f"❌ Failed - Error: {str(e)}")
+            end_time = time.time()
+            response_time = end_time - start_time
+            print(f"❌ Failed - Error: {str(e)} - Time: {response_time:.2f}s")
             return False, {}
 
     async def test_websocket_connection(self):
