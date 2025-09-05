@@ -12,6 +12,7 @@ from typing import List, Dict, Any, Optional
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
+from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
