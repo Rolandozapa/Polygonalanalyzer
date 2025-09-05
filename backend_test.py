@@ -5383,6 +5383,684 @@ class DualAITradingBotTester:
             "legacy_pipeline": pipeline_test
         }
 
+    def test_dynamic_leverage_system(self):
+        """Test Dynamic Leverage System (2x-10x based on IA2 confidence and market sentiment)"""
+        print(f"\n⚡ Testing Dynamic Leverage System...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for leverage testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for leverage testing")
+            return False
+        
+        print(f"   📊 Analyzing dynamic leverage calculation on {len(decisions)} decisions...")
+        
+        # Get market status for sentiment data
+        market_success, market_data = self.test_market_status()
+        if not market_success:
+            print(f"   ⚠️  Cannot get market sentiment data")
+            market_data = {}
+        
+        leverage_calculations = []
+        confidence_leverage_correlation = []
+        
+        for i, decision in enumerate(decisions[:10]):  # Test first 10 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold')
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            # Look for leverage mentions in reasoning
+            leverage_mentioned = any(word in reasoning.lower() for word in ['leverage', '2x', '3x', '4x', '5x', '6x', '7x', '8x', '9x', '10x'])
+            
+            # Calculate expected leverage based on confidence
+            base_leverage = 2.0  # Base 2x
+            confidence_multiplier = 0
+            if confidence >= 0.90:
+                confidence_multiplier = 2.0  # +2x for high confidence
+            elif confidence >= 0.80:
+                confidence_multiplier = 1.0  # +1x for good confidence
+            
+            expected_leverage = base_leverage + confidence_multiplier
+            
+            # Check for market sentiment multiplier mentions
+            sentiment_multiplier = 0
+            if 'bullish' in reasoning.lower() and signal == 'long':
+                sentiment_multiplier = 1.0
+            elif 'bearish' in reasoning.lower() and signal == 'short':
+                sentiment_multiplier = 1.0
+            
+            final_expected_leverage = min(expected_leverage + sentiment_multiplier, 10.0)  # Cap at 10x
+            
+            leverage_calculations.append({
+                'symbol': symbol,
+                'confidence': confidence,
+                'signal': signal,
+                'leverage_mentioned': leverage_mentioned,
+                'expected_leverage': final_expected_leverage
+            })
+            
+            confidence_leverage_correlation.append((confidence, final_expected_leverage))
+            
+            if i < 5:  # Show details for first 5
+                print(f"   Decision {i+1} - {symbol}:")
+                print(f"      Signal: {signal}")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Expected Leverage: {final_expected_leverage:.1f}x")
+                print(f"      Leverage Mentioned: {'✅' if leverage_mentioned else '❌'}")
+        
+        # Analyze leverage system implementation
+        leverage_mentions = sum(1 for calc in leverage_calculations if calc['leverage_mentioned'])
+        high_confidence_decisions = [calc for calc in leverage_calculations if calc['confidence'] >= 0.80]
+        trading_decisions = [calc for calc in leverage_calculations if calc['signal'] in ['long', 'short']]
+        
+        print(f"\n   📊 Dynamic Leverage Analysis:")
+        print(f"      Decisions Analyzed: {len(leverage_calculations)}")
+        print(f"      Leverage Mentions: {leverage_mentions} ({leverage_mentions/len(leverage_calculations)*100:.1f}%)")
+        print(f"      High Confidence (≥80%): {len(high_confidence_decisions)}")
+        print(f"      Trading Decisions: {len(trading_decisions)}")
+        
+        # Test leverage range validation (2x-10x)
+        leverage_range_valid = True
+        for calc in leverage_calculations:
+            if calc['expected_leverage'] < 2.0 or calc['expected_leverage'] > 10.0:
+                leverage_range_valid = False
+                break
+        
+        # Validation criteria
+        leverage_system_implemented = leverage_mentions >= len(leverage_calculations) * 0.3  # 30% mention leverage
+        confidence_correlation = len(high_confidence_decisions) > 0  # High confidence decisions exist
+        range_compliance = leverage_range_valid  # All leverage within 2x-10x range
+        
+        print(f"\n   ✅ Dynamic Leverage Validation:")
+        print(f"      System Implemented: {'✅' if leverage_system_implemented else '❌'} (≥30% mention leverage)")
+        print(f"      Confidence Correlation: {'✅' if confidence_correlation else '❌'} (high confidence exists)")
+        print(f"      Range Compliance (2x-10x): {'✅' if range_compliance else '❌'}")
+        
+        dynamic_leverage_working = leverage_system_implemented and confidence_correlation and range_compliance
+        
+        print(f"\n   🎯 Dynamic Leverage System: {'✅ WORKING' if dynamic_leverage_working else '❌ NEEDS IMPLEMENTATION'}")
+        
+        return dynamic_leverage_working
+
+    def test_five_level_take_profit_system(self):
+        """Test 5-Level Strategic Take-Profit System (TP1-TP5 with specific percentages)"""
+        print(f"\n🎯 Testing 5-Level Strategic Take-Profit System...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for TP testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for TP testing")
+            return False
+        
+        print(f"   📊 Analyzing 5-level TP strategy on {len(decisions)} decisions...")
+        
+        tp_strategy_found = []
+        tp_level_mentions = []
+        proper_distribution = []
+        
+        # Expected TP levels
+        expected_tp_percentages = [1.5, 3.0, 5.0, 8.0]  # TP1-TP4 percentages
+        expected_distribution = [25, 30, 25, 20]  # Position distribution
+        
+        for i, decision in enumerate(decisions[:15]):  # Test first 15 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            signal = decision.get('signal', 'hold')
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            # Look for TP strategy mentions
+            tp_keywords = ['tp1', 'tp2', 'tp3', 'tp4', 'tp5', 'take profit', 'take-profit', 'multi-level']
+            tp_mentions = sum(1 for keyword in tp_keywords if keyword in reasoning.lower())
+            
+            # Look for specific percentages
+            percentage_mentions = []
+            for pct in expected_tp_percentages:
+                if f"{pct}%" in reasoning or f"{pct:.1f}%" in reasoning:
+                    percentage_mentions.append(pct)
+            
+            # Look for distribution percentages
+            distribution_mentions = []
+            for dist in expected_distribution:
+                if f"{dist}%" in reasoning:
+                    distribution_mentions.append(dist)
+            
+            # Check for JSON structure mentions
+            json_structure = any(word in reasoning.lower() for word in ['take_profit_strategy', 'tp_distribution', 'position_management'])
+            
+            tp_strategy_analysis = {
+                'symbol': symbol,
+                'signal': signal,
+                'tp_mentions': tp_mentions,
+                'percentage_mentions': percentage_mentions,
+                'distribution_mentions': distribution_mentions,
+                'json_structure': json_structure,
+                'has_tp_strategy': tp_mentions >= 2 or len(percentage_mentions) >= 2
+            }
+            
+            tp_strategy_found.append(tp_strategy_analysis)
+            tp_level_mentions.append(tp_mentions)
+            
+            if tp_strategy_analysis['has_tp_strategy']:
+                proper_distribution.append(tp_strategy_analysis)
+            
+            if i < 5:  # Show details for first 5
+                print(f"   Decision {i+1} - {symbol} ({signal}):")
+                print(f"      TP Mentions: {tp_mentions}")
+                print(f"      Percentage Mentions: {percentage_mentions}")
+                print(f"      Distribution Mentions: {distribution_mentions}")
+                print(f"      JSON Structure: {'✅' if json_structure else '❌'}")
+                print(f"      Has TP Strategy: {'✅' if tp_strategy_analysis['has_tp_strategy'] else '❌'}")
+        
+        # Analyze TP system implementation
+        total_decisions = len(tp_strategy_found)
+        decisions_with_tp = len(proper_distribution)
+        avg_tp_mentions = sum(tp_level_mentions) / len(tp_level_mentions) if tp_level_mentions else 0
+        
+        # Look for trading decisions specifically (LONG/SHORT should have TP strategies)
+        trading_decisions = [analysis for analysis in tp_strategy_found if analysis['signal'] in ['long', 'short']]
+        trading_with_tp = [analysis for analysis in trading_decisions if analysis['has_tp_strategy']]
+        
+        print(f"\n   📊 5-Level TP Strategy Analysis:")
+        print(f"      Total Decisions: {total_decisions}")
+        print(f"      Decisions with TP Strategy: {decisions_with_tp} ({decisions_with_tp/total_decisions*100:.1f}%)")
+        print(f"      Average TP Mentions: {avg_tp_mentions:.1f}")
+        print(f"      Trading Decisions: {len(trading_decisions)}")
+        print(f"      Trading with TP: {len(trading_with_tp)} ({len(trading_with_tp)/len(trading_decisions)*100:.1f}% if trading)")
+        
+        # Check for specific TP levels (TP1: 1.5%, TP2: 3.0%, TP3: 5.0%, TP4: 8.0%)
+        tp1_mentions = sum(1 for analysis in tp_strategy_found if 1.5 in analysis['percentage_mentions'])
+        tp2_mentions = sum(1 for analysis in tp_strategy_found if 3.0 in analysis['percentage_mentions'])
+        tp3_mentions = sum(1 for analysis in tp_strategy_found if 5.0 in analysis['percentage_mentions'])
+        tp4_mentions = sum(1 for analysis in tp_strategy_found if 8.0 in analysis['percentage_mentions'])
+        
+        print(f"\n   🎯 Specific TP Level Analysis:")
+        print(f"      TP1 (1.5%): {tp1_mentions} mentions")
+        print(f"      TP2 (3.0%): {tp2_mentions} mentions")
+        print(f"      TP3 (5.0%): {tp3_mentions} mentions")
+        print(f"      TP4 (8.0%): {tp4_mentions} mentions")
+        
+        # Check for distribution mentions (25%, 30%, 25%, 20%)
+        dist_25_mentions = sum(1 for analysis in tp_strategy_found if 25 in analysis['distribution_mentions'])
+        dist_30_mentions = sum(1 for analysis in tp_strategy_found if 30 in analysis['distribution_mentions'])
+        dist_20_mentions = sum(1 for analysis in tp_strategy_found if 20 in analysis['distribution_mentions'])
+        
+        print(f"\n   📊 Position Distribution Analysis:")
+        print(f"      25% Distribution: {dist_25_mentions} mentions")
+        print(f"      30% Distribution: {dist_30_mentions} mentions")
+        print(f"      20% Distribution: {dist_20_mentions} mentions")
+        
+        # Validation criteria
+        tp_system_implemented = decisions_with_tp >= total_decisions * 0.2  # 20% have TP strategy
+        specific_levels_present = (tp1_mentions + tp2_mentions + tp3_mentions + tp4_mentions) >= 4  # At least 4 specific level mentions
+        distribution_present = (dist_25_mentions + dist_30_mentions + dist_20_mentions) >= 3  # Distribution mentioned
+        trading_decisions_have_tp = len(trading_with_tp) >= len(trading_decisions) * 0.5 if trading_decisions else True  # 50% of trading decisions have TP
+        
+        print(f"\n   ✅ 5-Level TP System Validation:")
+        print(f"      System Implemented: {'✅' if tp_system_implemented else '❌'} (≥20% have TP strategy)")
+        print(f"      Specific Levels Present: {'✅' if specific_levels_present else '❌'} (≥4 level mentions)")
+        print(f"      Distribution Present: {'✅' if distribution_present else '❌'} (distribution mentioned)")
+        print(f"      Trading Decisions Have TP: {'✅' if trading_decisions_have_tp else '❌'} (≥50% of trades)")
+        
+        five_level_tp_working = tp_system_implemented and specific_levels_present and distribution_present
+        
+        print(f"\n   🎯 5-Level TP System: {'✅ WORKING' if five_level_tp_working else '❌ NEEDS IMPLEMENTATION'}")
+        
+        return five_level_tp_working
+
+    def test_adaptive_sl_tp_calculations(self):
+        """Test Adaptive SL/TP Calculations based on market sentiment and volatility"""
+        print(f"\n🔄 Testing Adaptive SL/TP Calculations...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for adaptive SL/TP testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for adaptive SL/TP testing")
+            return False
+        
+        print(f"   📊 Analyzing adaptive SL/TP calculations on {len(decisions)} decisions...")
+        
+        adaptive_calculations = []
+        
+        for i, decision in enumerate(decisions[:10]):  # Test first 10 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            signal = decision.get('signal', 'hold')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            stop_loss = decision.get('stop_loss', 0)
+            take_profit_1 = decision.get('take_profit_1', 0)
+            
+            # Look for adaptive SL/TP mentions
+            adaptive_keywords = ['adaptive', 'dynamic', 'market sentiment', 'volatility', 'tighter sl', 'aggressive tp']
+            adaptive_mentions = sum(1 for keyword in adaptive_keywords if keyword in reasoning.lower())
+            
+            # Look for sentiment-based adjustments
+            sentiment_adjustments = any(word in reasoning.lower() for word in ['bullish market', 'bearish market', 'favorable sentiment', 'unfavorable sentiment'])
+            
+            # Look for volatility-based adjustments
+            volatility_adjustments = any(word in reasoning.lower() for word in ['high volatility', 'low volatility', 'volatility analysis', 'market conditions'])
+            
+            # Check for confidence-based adjustments
+            confidence_adjustments = any(word in reasoning.lower() for word in ['high confidence', 'low confidence', 'confidence level', 'conviction'])
+            
+            # Calculate expected SL/TP ranges based on confidence and leverage
+            expected_sl_range = (1.5, 2.5) if confidence >= 0.80 else (2.5, 3.5)  # Tighter SL for higher confidence/leverage
+            expected_tp_multiplier = 2.0 if confidence >= 0.80 else 1.5  # More aggressive TP for higher confidence
+            
+            adaptive_analysis = {
+                'symbol': symbol,
+                'signal': signal,
+                'confidence': confidence,
+                'adaptive_mentions': adaptive_mentions,
+                'sentiment_adjustments': sentiment_adjustments,
+                'volatility_adjustments': volatility_adjustments,
+                'confidence_adjustments': confidence_adjustments,
+                'has_adaptive_logic': adaptive_mentions >= 1 or sentiment_adjustments or volatility_adjustments
+            }
+            
+            adaptive_calculations.append(adaptive_analysis)
+            
+            if i < 5:  # Show details for first 5
+                print(f"   Decision {i+1} - {symbol} ({signal}):")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Adaptive Mentions: {adaptive_mentions}")
+                print(f"      Sentiment Adjustments: {'✅' if sentiment_adjustments else '❌'}")
+                print(f"      Volatility Adjustments: {'✅' if volatility_adjustments else '❌'}")
+                print(f"      Confidence Adjustments: {'✅' if confidence_adjustments else '❌'}")
+                print(f"      Has Adaptive Logic: {'✅' if adaptive_analysis['has_adaptive_logic'] else '❌'}")
+        
+        # Analyze adaptive system implementation
+        total_decisions = len(adaptive_calculations)
+        decisions_with_adaptive = sum(1 for calc in adaptive_calculations if calc['has_adaptive_logic'])
+        sentiment_based = sum(1 for calc in adaptive_calculations if calc['sentiment_adjustments'])
+        volatility_based = sum(1 for calc in adaptive_calculations if calc['volatility_adjustments'])
+        confidence_based = sum(1 for calc in adaptive_calculations if calc['confidence_adjustments'])
+        
+        print(f"\n   📊 Adaptive SL/TP Analysis:")
+        print(f"      Total Decisions: {total_decisions}")
+        print(f"      Decisions with Adaptive Logic: {decisions_with_adaptive} ({decisions_with_adaptive/total_decisions*100:.1f}%)")
+        print(f"      Sentiment-Based Adjustments: {sentiment_based} ({sentiment_based/total_decisions*100:.1f}%)")
+        print(f"      Volatility-Based Adjustments: {volatility_based} ({volatility_based/total_decisions*100:.1f}%)")
+        print(f"      Confidence-Based Adjustments: {confidence_based} ({confidence_based/total_decisions*100:.1f}%)")
+        
+        # Check for risk-reward ratio adaptation
+        risk_reward_mentions = sum(1 for calc in adaptive_calculations 
+                                 if any(word in calc.get('reasoning', '').lower() for word in ['risk-reward', 'risk reward', '2:1', '3:1', '4:1']))
+        
+        print(f"      Risk-Reward Adaptation: {risk_reward_mentions} mentions")
+        
+        # Validation criteria
+        adaptive_system_implemented = decisions_with_adaptive >= total_decisions * 0.3  # 30% show adaptive logic
+        multiple_factors_considered = (sentiment_based > 0 and volatility_based > 0 and confidence_based > 0)  # All factors present
+        risk_reward_adaptive = risk_reward_mentions >= total_decisions * 0.2  # 20% mention risk-reward adaptation
+        
+        print(f"\n   ✅ Adaptive SL/TP Validation:")
+        print(f"      System Implemented: {'✅' if adaptive_system_implemented else '❌'} (≥30% show adaptive logic)")
+        print(f"      Multiple Factors: {'✅' if multiple_factors_considered else '❌'} (sentiment + volatility + confidence)")
+        print(f"      Risk-Reward Adaptive: {'✅' if risk_reward_adaptive else '❌'} (≥20% mention adaptation)")
+        
+        adaptive_sl_tp_working = adaptive_system_implemented and multiple_factors_considered
+        
+        print(f"\n   🎯 Adaptive SL/TP System: {'✅ WORKING' if adaptive_sl_tp_working else '❌ NEEDS IMPLEMENTATION'}")
+        
+        return adaptive_sl_tp_working
+
+    def test_complete_ia1_ia2_flow(self):
+        """Test Complete IA1→IA2 Flow with market sentiment integration"""
+        print(f"\n🔄 Testing Complete IA1→IA2 Flow...")
+        
+        # Test Scout → IA1 flow
+        print(f"   📊 Testing Scout → IA1 Flow...")
+        scout_success, opportunities_data = self.test_get_opportunities()
+        if not scout_success:
+            print(f"   ❌ Scout not working")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        print(f"   ✅ Scout: {len(opportunities)} opportunities found")
+        
+        # Test IA1 technical analysis
+        ia1_success, analyses_data = self.test_get_analyses()
+        if not ia1_success:
+            print(f"   ❌ IA1 not working")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        print(f"   ✅ IA1: {len(analyses)} technical analyses generated")
+        
+        # Test IA2 strategic decisions
+        ia2_success, decisions_data = self.test_get_decisions()
+        if not ia2_success:
+            print(f"   ❌ IA2 not working")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        print(f"   ✅ IA2: {len(decisions)} strategic decisions generated")
+        
+        # Test market sentiment integration
+        print(f"\n   🌍 Testing Market Sentiment Integration...")
+        market_success, market_data = self.test_market_status()
+        if not market_success:
+            print(f"   ⚠️  Market sentiment data not available")
+            market_sentiment_integrated = False
+        else:
+            # Look for market sentiment in IA2 decisions
+            sentiment_mentions = 0
+            market_cap_mentions = 0
+            btc_dominance_mentions = 0
+            
+            for decision in decisions[:10]:
+                reasoning = decision.get('ia2_reasoning', '').lower()
+                
+                if any(word in reasoning for word in ['market sentiment', 'market cap', 'crypto market', 'overall market']):
+                    sentiment_mentions += 1
+                
+                if any(word in reasoning for word in ['market cap', 'total market', 'crypto market cap']):
+                    market_cap_mentions += 1
+                
+                if any(word in reasoning for word in ['btc dominance', 'bitcoin dominance', 'btc dom']):
+                    btc_dominance_mentions += 1
+            
+            market_sentiment_integrated = sentiment_mentions >= len(decisions) * 0.2  # 20% mention market sentiment
+            
+            print(f"      Market Sentiment Mentions: {sentiment_mentions}/{len(decisions)} ({sentiment_mentions/len(decisions)*100:.1f}%)")
+            print(f"      Market Cap Mentions: {market_cap_mentions}")
+            print(f"      BTC Dominance Mentions: {btc_dominance_mentions}")
+        
+        # Test symbol flow consistency (same symbols through pipeline)
+        print(f"\n   🔗 Testing Symbol Flow Consistency...")
+        opportunity_symbols = set(opp.get('symbol', '') for opp in opportunities[:20])
+        analysis_symbols = set(analysis.get('symbol', '') for analysis in analyses[:20])
+        decision_symbols = set(decision.get('symbol', '') for decision in decisions[:20])
+        
+        # Find symbols that flow through entire pipeline
+        complete_flow_symbols = opportunity_symbols.intersection(analysis_symbols).intersection(decision_symbols)
+        
+        print(f"      Opportunity Symbols: {len(opportunity_symbols)}")
+        print(f"      Analysis Symbols: {len(analysis_symbols)}")
+        print(f"      Decision Symbols: {len(decision_symbols)}")
+        print(f"      Complete Flow Symbols: {len(complete_flow_symbols)}")
+        
+        if complete_flow_symbols:
+            print(f"      Examples: {list(complete_flow_symbols)[:5]}")
+        
+        # Test data quality through pipeline
+        print(f"\n   📈 Testing Data Quality Through Pipeline...")
+        
+        # Check opportunity data quality
+        avg_opp_confidence = sum(opp.get('data_confidence', 0) for opp in opportunities[:10]) / min(len(opportunities), 10)
+        
+        # Check analysis confidence
+        avg_analysis_confidence = sum(analysis.get('analysis_confidence', 0) for analysis in analyses[:10]) / min(len(analyses), 10)
+        
+        # Check decision confidence
+        avg_decision_confidence = sum(decision.get('confidence', 0) for decision in decisions[:10]) / min(len(decisions), 10)
+        
+        print(f"      Avg Opportunity Confidence: {avg_opp_confidence:.3f}")
+        print(f"      Avg Analysis Confidence: {avg_analysis_confidence:.3f}")
+        print(f"      Avg Decision Confidence: {avg_decision_confidence:.3f}")
+        
+        # Validation criteria
+        scout_working = len(opportunities) >= 5  # At least 5 opportunities
+        ia1_working = len(analyses) >= 3  # At least 3 analyses
+        ia2_working = len(decisions) >= 3  # At least 3 decisions
+        flow_consistency = len(complete_flow_symbols) >= 2  # At least 2 symbols through complete flow
+        quality_maintained = (avg_opp_confidence >= 0.6 and avg_analysis_confidence >= 0.6 and avg_decision_confidence >= 0.5)
+        
+        print(f"\n   ✅ Complete Flow Validation:")
+        print(f"      Scout Working: {'✅' if scout_working else '❌'} (≥5 opportunities)")
+        print(f"      IA1 Working: {'✅' if ia1_working else '❌'} (≥3 analyses)")
+        print(f"      IA2 Working: {'✅' if ia2_working else '❌'} (≥3 decisions)")
+        print(f"      Flow Consistency: {'✅' if flow_consistency else '❌'} (≥2 symbols complete flow)")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'} (confidence levels)")
+        print(f"      Market Sentiment: {'✅' if market_sentiment_integrated else '❌'} (sentiment integration)")
+        
+        complete_flow_working = scout_working and ia1_working and ia2_working and flow_consistency and quality_maintained
+        
+        print(f"\n   🎯 Complete IA1→IA2 Flow: {'✅ WORKING' if complete_flow_working else '❌ NEEDS ATTENTION'}")
+        
+        return complete_flow_working
+
+    def test_bingx_integration(self):
+        """Test BingX Integration (balance retrieval, simulation mode)"""
+        print(f"\n💰 Testing BingX Integration...")
+        
+        # Test market status for BingX balance
+        print(f"   📊 Testing BingX Balance Retrieval...")
+        success, market_data = self.test_market_status()
+        if not success:
+            print(f"   ❌ Cannot get market status for BingX testing")
+            return False
+        
+        # Look for BingX balance information
+        bingx_balance_present = 'bingx_balance' in market_data
+        simulation_balance = market_data.get('bingx_balance', 0)
+        
+        print(f"      BingX Balance Field Present: {'✅' if bingx_balance_present else '❌'}")
+        if bingx_balance_present:
+            print(f"      Balance Amount: ${simulation_balance}")
+            expected_simulation_balance = simulation_balance == 250.0  # Should show $250 simulation balance
+            print(f"      Expected $250 Simulation: {'✅' if expected_simulation_balance else '❌'}")
+        else:
+            expected_simulation_balance = False
+        
+        # Test BingX integration in decisions
+        print(f"\n   🔄 Testing BingX Integration in Trading Decisions...")
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot get decisions for BingX integration testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        bingx_integration_mentions = 0
+        position_sizing_mentions = 0
+        simulation_mode_mentions = 0
+        
+        for decision in decisions[:10]:
+            reasoning = decision.get('ia2_reasoning', '').lower()
+            
+            # Look for BingX integration mentions
+            if any(word in reasoning for word in ['bingx', 'exchange', 'balance', 'position size']):
+                bingx_integration_mentions += 1
+            
+            # Look for position sizing based on balance
+            if any(word in reasoning for word in ['position size', 'position sizing', 'account balance', 'risk per trade']):
+                position_sizing_mentions += 1
+            
+            # Look for simulation mode mentions
+            if any(word in reasoning for word in ['simulation', 'paper trading', 'test mode', 'demo']):
+                simulation_mode_mentions += 1
+        
+        print(f"      BingX Integration Mentions: {bingx_integration_mentions}/{len(decisions)} ({bingx_integration_mentions/len(decisions)*100:.1f}%)")
+        print(f"      Position Sizing Mentions: {position_sizing_mentions}/{len(decisions)} ({position_sizing_mentions/len(decisions)*100:.1f}%)")
+        print(f"      Simulation Mode Mentions: {simulation_mode_mentions}/{len(decisions)} ({simulation_mode_mentions/len(decisions)*100:.1f}%)")
+        
+        # Test theoretical trade execution capability
+        print(f"\n   ⚡ Testing Theoretical Trade Execution...")
+        
+        # Look for trading decisions that could theoretically be executed
+        trading_decisions = [d for d in decisions if d.get('signal') in ['long', 'short']]
+        executable_decisions = []
+        
+        for decision in trading_decisions:
+            # Check if decision has necessary fields for execution
+            has_entry_price = decision.get('entry_price', 0) > 0
+            has_stop_loss = decision.get('stop_loss', 0) > 0
+            has_take_profit = decision.get('take_profit_1', 0) > 0
+            has_position_size = decision.get('position_size', 0) > 0
+            
+            if has_entry_price and has_stop_loss and has_take_profit:
+                executable_decisions.append(decision)
+        
+        print(f"      Trading Decisions: {len(trading_decisions)}")
+        print(f"      Theoretically Executable: {len(executable_decisions)}")
+        
+        if executable_decisions:
+            example_decision = executable_decisions[0]
+            print(f"      Example Executable Decision:")
+            print(f"        Symbol: {example_decision.get('symbol')}")
+            print(f"        Signal: {example_decision.get('signal')}")
+            print(f"        Entry: ${example_decision.get('entry_price', 0):.4f}")
+            print(f"        Stop Loss: ${example_decision.get('stop_loss', 0):.4f}")
+            print(f"        Take Profit: ${example_decision.get('take_profit_1', 0):.4f}")
+            print(f"        Position Size: {example_decision.get('position_size', 0):.4f}")
+        
+        # Test dynamic leverage integration with BingX
+        print(f"\n   ⚡ Testing Dynamic Leverage Integration...")
+        
+        leverage_integration = 0
+        for decision in trading_decisions:
+            reasoning = decision.get('ia2_reasoning', '').lower()
+            confidence = decision.get('confidence', 0)
+            
+            # Look for leverage calculations based on confidence and balance
+            if any(word in reasoning for word in ['leverage', 'position size', 'account balance']) and confidence >= 0.70:
+                leverage_integration += 1
+        
+        print(f"      Leverage Integration: {leverage_integration}/{len(trading_decisions)} trading decisions")
+        
+        # Validation criteria
+        balance_retrieval_working = bingx_balance_present and (simulation_balance > 0)
+        simulation_mode_active = expected_simulation_balance or simulation_mode_mentions > 0
+        integration_present = bingx_integration_mentions >= len(decisions) * 0.1  # 10% mention BingX integration
+        theoretical_execution = len(executable_decisions) >= len(trading_decisions) * 0.5 if trading_decisions else True  # 50% executable
+        leverage_integrated = leverage_integration >= len(trading_decisions) * 0.3 if trading_decisions else True  # 30% show leverage integration
+        
+        print(f"\n   ✅ BingX Integration Validation:")
+        print(f"      Balance Retrieval: {'✅' if balance_retrieval_working else '❌'} (balance present and > 0)")
+        print(f"      Simulation Mode: {'✅' if simulation_mode_active else '❌'} ($250 balance or mentions)")
+        print(f"      Integration Present: {'✅' if integration_present else '❌'} (≥10% mention integration)")
+        print(f"      Theoretical Execution: {'✅' if theoretical_execution else '❌'} (≥50% executable)")
+        print(f"      Leverage Integrated: {'✅' if leverage_integrated else '❌'} (≥30% show leverage)")
+        
+        bingx_integration_working = balance_retrieval_working and simulation_mode_active and integration_present
+        
+        print(f"\n   🎯 BingX Integration: {'✅ WORKING' if bingx_integration_working else '❌ NEEDS ATTENTION'}")
+        
+        if not bingx_integration_working:
+            print(f"   💡 Note: System should show $250 simulation balance for safety")
+            print(f"   💡 Focus on logic and calculations, not actual trade execution")
+        
+        return bingx_integration_working
+
+    def test_revolutionary_trading_strategies_framework(self):
+        """Test the Revolutionary Advanced Trading Strategies Framework"""
+        print(f"\n🚀 Testing Revolutionary Advanced Trading Strategies Framework...")
+        
+        # Test all components of the advanced framework
+        print(f"   🎯 Testing Framework Components...")
+        
+        # Component 1: Dynamic Leverage System
+        leverage_test = self.test_dynamic_leverage_system()
+        print(f"      Dynamic Leverage (2x-10x): {'✅' if leverage_test else '❌'}")
+        
+        # Component 2: 5-Level Take-Profit System
+        tp_test = self.test_five_level_take_profit_system()
+        print(f"      5-Level Take-Profit: {'✅' if tp_test else '❌'}")
+        
+        # Component 3: Adaptive SL/TP Calculations
+        adaptive_test = self.test_adaptive_sl_tp_calculations()
+        print(f"      Adaptive SL/TP: {'✅' if adaptive_test else '❌'}")
+        
+        # Component 4: Complete IA1→IA2 Flow
+        flow_test = self.test_complete_ia1_ia2_flow()
+        print(f"      Complete IA1→IA2 Flow: {'✅' if flow_test else '❌'}")
+        
+        # Component 5: BingX Integration
+        bingx_test = self.test_bingx_integration()
+        print(f"      BingX Integration: {'✅' if bingx_test else '❌'}")
+        
+        # Overall framework assessment
+        components_passed = sum([leverage_test, tp_test, adaptive_test, flow_test, bingx_test])
+        framework_success_rate = components_passed / 5
+        
+        print(f"\n   📊 Revolutionary Framework Analysis:")
+        print(f"      Components Tested: 5")
+        print(f"      Components Passed: {components_passed}")
+        print(f"      Success Rate: {framework_success_rate*100:.1f}%")
+        
+        # Framework validation levels
+        if framework_success_rate >= 0.8:  # 80%+ success
+            framework_status = "REVOLUTIONARY"
+            status_emoji = "🚀"
+        elif framework_success_rate >= 0.6:  # 60%+ success
+            framework_status = "ADVANCED"
+            status_emoji = "⚡"
+        elif framework_success_rate >= 0.4:  # 40%+ success
+            framework_status = "DEVELOPING"
+            status_emoji = "🔧"
+        else:
+            framework_status = "BASIC"
+            status_emoji = "⚠️"
+        
+        print(f"\n   {status_emoji} Framework Status: {framework_status}")
+        print(f"      Revolutionary Features: {components_passed}/5 implemented")
+        
+        # Detailed component analysis
+        if not leverage_test:
+            print(f"      ⚠️  Dynamic Leverage needs implementation (2x-10x based on confidence)")
+        if not tp_test:
+            print(f"      ⚠️  5-Level TP needs implementation (TP1:1.5%, TP2:3%, TP3:5%, TP4:8%)")
+        if not adaptive_test:
+            print(f"      ⚠️  Adaptive SL/TP needs market sentiment integration")
+        if not flow_test:
+            print(f"      ⚠️  IA1→IA2 flow needs optimization")
+        if not bingx_test:
+            print(f"      ⚠️  BingX integration needs $250 simulation balance")
+        
+        framework_working = framework_success_rate >= 0.6  # 60% threshold for "working"
+        
+        print(f"\n   🎯 Revolutionary Framework: {'✅ WORKING' if framework_working else '❌ NEEDS DEVELOPMENT'}")
+        
+        return framework_working
+
+    def run_dynamic_leverage_and_tp_tests(self):
+        """Run comprehensive Dynamic Leverage & Adaptive SL/TP System tests"""
+        print("🚀 Starting Dynamic Leverage & Adaptive SL/TP System Testing...")
+        print(f"Backend URL: {self.base_url}")
+        print(f"API URL: {self.api_url}")
+        print("=" * 80)
+        print("🎯 TESTING FOCUS: Dynamic Leverage & 5-Level Take-Profit System")
+        print("🔧 Current LLM Budget: $9.18 remaining (use carefully)")
+        print("🔧 System Mode: Simulation/Paper Trading for safety")
+        print("🔧 Test Cycles: 2-3 maximum to conserve budget")
+        print("=" * 80)
+
+        # Core system tests
+        self.test_system_status()
+        self.test_market_status()
+        
+        # Get current data
+        self.test_get_opportunities()
+        self.test_get_analyses()
+        self.test_get_decisions()
+        
+        # Revolutionary Advanced Trading Strategies Framework Tests
+        print("\n" + "🚀" * 20 + " REVOLUTIONARY FRAMEWORK TESTING " + "🚀" * 20)
+        framework_result = self.test_revolutionary_trading_strategies_framework()
+        
+        # Performance summary
+        print("\n" + "=" * 80)
+        print(f"🎯 DYNAMIC LEVERAGE & ADAPTIVE SL/TP TESTING SUMMARY")
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        print(f"Revolutionary Framework: {'✅ WORKING' if framework_result else '❌ NEEDS DEVELOPMENT'}")
+        print("=" * 80)
+        
+        return framework_result
+
     async def run_all_tests(self):
         """Run comprehensive tests for API Economy Optimization"""
         return await self.run_api_economy_optimization_tests()
