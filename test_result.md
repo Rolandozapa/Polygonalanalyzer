@@ -513,10 +513,7 @@
     - "Trading Safety Configuration"
     - "Trailing Stop Live Integration"
     - "Pre-Trading Validation"
-  stuck_tasks:
-    - "BingX API Connection Verification"
-    - "Account Safety Assessment"
-    - "Trading Safety Configuration"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
