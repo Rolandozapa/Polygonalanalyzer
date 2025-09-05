@@ -3584,6 +3584,40 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
+@api_router.post("/test-bingx-connection")
+async def test_bingx_connection():
+    """Test BingX API connection and authentication"""
+    try:
+        from bingx_official_engine import BingXOfficialTradingEngine
+        
+        # Test connection with current API keys
+        engine = BingXOfficialTradingEngine()
+        
+        # Test balance retrieval
+        try:
+            balances = await engine.get_account_balance()
+            return {
+                "status": "success",
+                "connection": "connected",
+                "balances_count": len(balances),
+                "balances": [{"asset": b.asset, "balance": b.balance} for b in balances[:5]],
+                "api_keys_configured": bool(os.environ.get('BINGX_API_KEY') and os.environ.get('BINGX_SECRET_KEY'))
+            }
+        except Exception as balance_error:
+            return {
+                "status": "connection_ok_but_balance_failed",
+                "error": str(balance_error),
+                "api_keys_configured": bool(os.environ.get('BINGX_API_KEY') and os.environ.get('BINGX_SECRET_KEY')),
+                "api_key_preview": os.environ.get('BINGX_API_KEY', '')[:10] + "..." if os.environ.get('BINGX_API_KEY') else None
+            }
+            
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e),
+            "api_keys_configured": bool(os.environ.get('BINGX_API_KEY') and os.environ.get('BINGX_SECRET_KEY'))
+        }
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
