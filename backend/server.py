@@ -1548,6 +1548,116 @@ async def get_performance():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/bingx-status")
+async def get_bingx_status():
+    """Get BingX exchange status and account info"""
+    try:
+        # Test connectivity
+        connectivity = await bingx_trading_engine.test_connectivity()
+        
+        # Get account balance
+        balances = await bingx_trading_engine.get_account_balance()
+        
+        # Get open positions
+        positions = await bingx_trading_engine.get_positions()
+        
+        # Get performance stats
+        perf_stats = bingx_trading_engine.get_performance_stats()
+        
+        return {
+            "connectivity": connectivity,
+            "account_balances": [balance.__dict__ for balance in balances],
+            "active_positions": [pos.__dict__ for pos in positions],
+            "performance_stats": perf_stats,
+            "live_trading_enabled": orchestrator.ia2.live_trading_enabled,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/live-positions")
+async def get_live_positions():
+    """Get current live trading positions from database"""
+    try:
+        positions = await db.live_positions.find().sort("timestamp", -1).limit(20).to_list(20)
+        for pos in positions:
+            pos.pop('_id', None)
+        return {"positions": positions, "live_trading": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/bingx-orders")
+async def get_bingx_orders(symbol: Optional[str] = None):
+    """Get current open orders on BingX"""
+    try:
+        orders = await bingx_trading_engine.get_open_orders(symbol)
+        return {
+            "orders": [order.__dict__ for order in orders],
+            "total_orders": len(orders),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/close-position/{symbol}")
+async def close_position(symbol: str):
+    """Manually close a position on BingX"""
+    try:
+        result = await bingx_trading_engine.close_position(symbol)
+        return {
+            "success": result,
+            "message": f"Position closure {'successful' if result else 'failed'} for {symbol}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/toggle-live-trading")
+async def toggle_live_trading(enabled: bool):
+    """Enable or disable live trading"""
+    try:
+        orchestrator.ia2.live_trading_enabled = enabled
+        return {
+            "live_trading_enabled": enabled,
+            "message": f"Live trading {'enabled' if enabled else 'disabled'}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/trading-performance-live")
+async def get_live_trading_performance():
+    """Get live trading performance metrics"""
+    try:
+        # Get decisions with BingX integration
+        decisions = await db.trading_decisions.find(
+            {"bingx_order_id": {"$exists": True}}
+        ).sort("timestamp", -1).limit(100).to_list(100)
+        
+        # Calculate live trading stats
+        total_live_trades = len(decisions)
+        executed_trades = len([d for d in decisions if d.get('bingx_status') == 'FILLED'])
+        successful_orders = len([d for d in decisions if d.get('bingx_order_id')])
+        
+        # Get BingX performance
+        bingx_stats = bingx_trading_engine.get_performance_stats()
+        
+        performance = {
+            "total_live_trades": total_live_trades,
+            "executed_trades": executed_trades,
+            "successful_orders": successful_orders,
+            "order_success_rate": (successful_orders / total_live_trades * 100) if total_live_trades > 0 else 0,
+            "bingx_api_success_rate": bingx_stats.get('success_rate', 0),
+            "live_trading_enabled": orchestrator.ia2.live_trading_enabled,
+            "demo_mode": bingx_stats.get('demo_mode', False),
+            "last_api_response_time": bingx_stats.get('last_request_time', 0),
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return {"performance": performance}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/market-status")
 async def get_market_status():
     """Get ultra professional market status and API health"""
