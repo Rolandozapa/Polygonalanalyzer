@@ -726,28 +726,57 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return 50.0
     
     def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
-        """Calculate MACD indicator"""
+        """Calculate MACD indicator with improved validation and stability"""
         try:
-            if len(prices) < slow + signal:
+            # Need at least 50+ days for stable MACD (not just slow + signal)
+            min_required = max(50, slow + signal + 10)  # Add buffer for stability
+            if len(prices) < min_required:
+                logger.debug(f"MACD: Insufficient data ({len(prices)} < {min_required} days)")
                 return 0.0, 0.0, 0.0  # Neutral MACD
             
-            exp1 = prices.ewm(span=fast).mean()
-            exp2 = prices.ewm(span=slow).mean()
-            macd_line = exp1 - exp2
-            macd_signal = macd_line.ewm(span=signal).mean()
+            # Ensure prices are clean (no NaN, infinite values)
+            clean_prices = prices.dropna()
+            if len(clean_prices) < min_required:
+                logger.debug(f"MACD: Insufficient clean data ({len(clean_prices)} < {min_required} days)")
+                return 0.0, 0.0, 0.0
+            
+            # Calculate exponential moving averages
+            exp_fast = clean_prices.ewm(span=fast, adjust=False).mean()
+            exp_slow = clean_prices.ewm(span=slow, adjust=False).mean()
+            
+            # MACD line = Fast EMA - Slow EMA
+            macd_line = exp_fast - exp_slow
+            
+            # Signal line = EMA of MACD line
+            macd_signal = macd_line.ewm(span=signal, adjust=False).mean()
+            
+            # Histogram = MACD line - Signal line
             macd_histogram = macd_line - macd_signal
             
-            line_val = float(macd_line.iloc[-1])
+            # Get the latest values
+            macd_val = float(macd_line.iloc[-1])
             signal_val = float(macd_signal.iloc[-1])
             hist_val = float(macd_histogram.iloc[-1])
             
-            # Ensure values are valid
-            line_val = line_val if not pd.isna(line_val) else 0.0
-            signal_val = signal_val if not pd.isna(signal_val) else 0.0
-            hist_val = hist_val if not pd.isna(hist_val) else 0.0
+            # Validate results
+            if any(pd.isna([macd_val, signal_val, hist_val])):
+                logger.debug("MACD: NaN values detected in results")
+                return 0.0, 0.0, 0.0
             
-            return round(line_val, 6), round(signal_val, 6), round(hist_val, 6)
-        except:
+            # Scale values for better visibility (prices can be very high)
+            price_level = float(clean_prices.iloc[-1])
+            scale_factor = 1000 / price_level if price_level > 1000 else 1
+            
+            macd_scaled = round(macd_val * scale_factor, 6)
+            signal_scaled = round(signal_val * scale_factor, 6)  
+            hist_scaled = round(hist_val * scale_factor, 6)
+            
+            logger.debug(f"MACD calculated: line={macd_scaled}, signal={signal_scaled}, hist={hist_scaled}")
+            
+            return macd_scaled, signal_scaled, hist_scaled
+            
+        except Exception as e:
+            logger.debug(f"MACD calculation error: {e}")
             return 0.0, 0.0, 0.0
     
     def _calculate_bollinger_bands(self, prices: pd.Series, period: int = 20, std_dev: float = 2):
