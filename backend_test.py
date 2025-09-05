@@ -4153,8 +4153,8 @@ class DualAITradingBotTester:
         return data_quality_validated
 
     def run_comprehensive_fixes_tests(self):
-        """Run comprehensive tests for BingX balance and IA2 confidence fixes"""
-        print(f"🚀 Starting Comprehensive Fixes Tests")
+        """Run comprehensive tests for major improvements and fixes"""
+        print(f"🚀 Starting Comprehensive Enhancement Tests")
         print(f"Backend URL: {self.base_url}")
         print(f"API URL: {self.api_url}")
         print(f"=" * 80)
@@ -4168,9 +4168,26 @@ class DualAITradingBotTester:
         self.test_get_analyses()
         self.test_get_decisions()
         
-        # NEW: BingX Balance and IA2 Confidence Variation Tests
+        # NEW: Major Improvements Tests
         print(f"\n" + "=" * 60)
-        print(f"🎯 TESTING COMPREHENSIVE FIXES")
+        print(f"🎯 TESTING MAJOR IMPROVEMENTS")
+        print(f"=" * 60)
+        
+        # 1. Claude Integration for IA2
+        claude_test = self.test_claude_ia2_integration()
+        
+        # 2. Enhanced OHLCV Fetching and MACD Fix
+        ohlcv_test = self.test_enhanced_ohlcv_fetching()
+        
+        # 3. End-to-End Enhanced Pipeline
+        pipeline_test = self.test_end_to_end_enhanced_pipeline()
+        
+        # 4. Data Quality Validation
+        quality_test = self.test_data_quality_validation()
+        
+        # Original BingX Balance and IA2 Confidence Variation Tests
+        print(f"\n" + "=" * 60)
+        print(f"🔧 TESTING PREVIOUS FIXES")
         print(f"=" * 60)
         
         # 1. BingX Official API Balance Test
@@ -4180,7 +4197,7 @@ class DualAITradingBotTester:
         variation_test = self.test_ia2_confidence_real_variation()
         
         # 3. Enhanced Quality Scoring Validation
-        quality_test = self.test_enhanced_quality_scoring_validation()
+        quality_scoring_test = self.test_enhanced_quality_scoring_validation()
         
         # 4. Real Market Data Integration
         market_data_test = self.test_real_market_data_integration()
