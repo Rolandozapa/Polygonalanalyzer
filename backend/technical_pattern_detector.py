@@ -286,34 +286,46 @@ class TechnicalPatternDetector:
         return df.sort_index()
     
     def _detect_all_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte tous les patterns techniques incluant les tendances soutenues"""
+        """Détecte tous les patterns techniques incluant les figures chartistes classiques"""
         patterns = []
         
-        # 1. Détection de tendances soutenues (nouvelles méthodes)
+        # 1. NOUVELLES FIGURES CHARTISTES CLASSIQUES (priorité haute)
+        patterns.extend(self._detect_classic_chart_patterns(symbol, df))
+        
+        # 2. PATTERNS DE RETOURNEMENT (double top/bottom, head & shoulders)
+        patterns.extend(self._detect_reversal_patterns(symbol, df))
+        
+        # 3. TRIANGLES ET WEDGES
+        patterns.extend(self._detect_triangle_wedge_patterns(symbol, df))
+        
+        # 4. FLAGS ET PENNANTS (continuation patterns)
+        patterns.extend(self._detect_flag_pennant_patterns(symbol, df))
+        
+        # 5. Détection de tendances soutenues (existant)
         patterns.extend(self._detect_sustained_trends(symbol, df))
         
-        # 2. Détection d'alignements de moyennes mobiles multiples
+        # 6. Détection d'alignements de moyennes mobiles multiples (existant)
         patterns.extend(self._detect_multiple_ma_alignment(symbol, df))
         
-        # 3. Détection de canaux directionnels
+        # 7. Détection de canaux directionnels (existant)
         patterns.extend(self._detect_directional_channels(symbol, df))
         
-        # 4. Détection de momentum continuation patterns
+        # 8. Détection de momentum continuation patterns (existant)
         patterns.extend(self._detect_momentum_continuation(symbol, df))
         
-        # 5. Détection de tendances (Golden/Death Cross) - existant
+        # 9. Détection de tendances (Golden/Death Cross) - existant
         patterns.extend(self._detect_moving_average_patterns(symbol, df))
         
-        # 6. Détection de breakouts - existant
+        # 10. Détection de breakouts - existant
         patterns.extend(self._detect_breakout_patterns(symbol, df))
         
-        # 7. Détection de figures chartistes - existant
+        # 11. Détection de figures chartistes - existant (simple)
         patterns.extend(self._detect_chart_patterns(symbol, df))
         
-        # 8. Détection de signaux volume - existant
+        # 12. Détection de signaux volume - existant
         patterns.extend(self._detect_volume_patterns(symbol, df))
         
-        # 9. Détection RSI/MACD - existant
+        # 13. Détection RSI/MACD - existant
         patterns.extend(self._detect_oscillator_patterns(symbol, df))
         
         return patterns
