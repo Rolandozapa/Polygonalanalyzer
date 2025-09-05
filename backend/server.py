@@ -3329,6 +3329,10 @@ class UltraProfessionalTradingOrchestrator:
         self.is_running = False
         self.cycle_count = 0
         self._initialized = False
+        
+        # Background monitoring task for trailing stops
+        self.trailing_stop_monitor_active = False
+        self.trailing_stop_task = None
     
     async def initialize(self):
         """Initialize the trading orchestrator with trending system"""
