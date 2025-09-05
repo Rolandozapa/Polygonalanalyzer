@@ -20,6 +20,11 @@ class EnhancedOHLCVFetcher:
         self.coingecko_key = os.environ.get('COINGECKO_API_KEY') 
         self.twelvedata_key = os.environ.get('TWELVEDATA_KEY')
         
+        # Historical Data Fallback APIs
+        self.alpha_vantage_key = os.environ.get('ALPHA_VANTAGE_KEY')
+        self.polygon_key = os.environ.get('POLYGON_KEY')
+        self.iex_cloud_key = os.environ.get('IEX_CLOUD_KEY')
+        
         # Enhanced symbol mapping
         self.symbol_mappings = {
             # Binance format
