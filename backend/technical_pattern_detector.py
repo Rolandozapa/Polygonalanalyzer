@@ -357,6 +357,9 @@ class TechnicalPatternDetector:
                 target_price=current_price * 1.08,
                 stop_loss=recent_high * 0.98,
                 volume_confirmation=True,
+                trading_direction="long",  # Position LONG pour breakout haussier
+                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                trend_strength_score=max(strength, 0.7),
                 additional_data={'resistance_level': recent_high, 'volume_ratio': current_volume/avg_volume}
             ))
         
@@ -372,6 +375,9 @@ class TechnicalPatternDetector:
                 target_price=current_price * 0.92,
                 stop_loss=recent_low * 1.02,
                 volume_confirmation=True,
+                trading_direction="short",  # Position SHORT pour breakdown baissier
+                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                trend_strength_score=max(strength, 0.7),
                 additional_data={'support_level': recent_low, 'volume_ratio': current_volume/avg_volume}
             ))
         
