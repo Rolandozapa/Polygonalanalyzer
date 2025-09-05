@@ -263,7 +263,12 @@ class UltraProfessionalCryptoScout:
         self.min_data_confidence = 0.7
         
         # Focus trending configuration
-        self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']  # Cryptos populaires avec activité
+        self.trending_symbols = [
+            # TOP 25 cryptomonnaies par market cap pour analyse technique complète
+            'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC', 
+            'LINK', 'LTC', 'BCH', 'UNI', 'ATOM', 'FIL', 'APT', 'NEAR', 'VET', 'ICP',
+            'HBAR', 'ALGO', 'ETC', 'MANA', 'SAND'
+        ]  # Top 25 pour analyse patterns techniques
         self.focus_trending = True
         self.min_price_change_threshold = 3.0  # Focus sur les mouvements >3%
         self.volume_spike_multiplier = 2.0     # Volume >2x moyenne
