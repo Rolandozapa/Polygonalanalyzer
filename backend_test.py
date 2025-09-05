@@ -5206,9 +5206,14 @@ class DualAITradingBotTester:
             "tests_passed": self.tests_passed,
             "tests_total": self.tests_run,
             "system_working": system_success,
-            "api_economy_working": api_economy_test,
-            "quality_balance_maintained": balance_test,
-            "pipeline_optimized": pipeline_test
+            "balanced_filtering": balanced_filtering_test,
+            "threshold_adjustments": threshold_adjustments_test,
+            "priority_bonus_system": priority_bonus_test,
+            "economy_rate_optimal": economy_rate_test,
+            "system_effectiveness": system_effectiveness_test,
+            "legacy_api_economy": api_economy_test,
+            "legacy_quality_balance": balance_test,
+            "legacy_pipeline": pipeline_test
         }
 
     async def run_all_tests(self):
