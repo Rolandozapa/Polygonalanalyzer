@@ -1135,7 +1135,7 @@ class UltraProfessionalIA2DecisionAgent:
         self.live_trading_enabled = True  # Set to False for simulation only
         self.max_risk_per_trade = 0.02  # 2% risk per trade
     
-    async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> TradingDecision:
+    async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
         """Ultra professional trading decision with BingX live trading integration"""
         try:
             logger.info(f"IA2 making ultra professional decision for {opportunity.symbol}")
