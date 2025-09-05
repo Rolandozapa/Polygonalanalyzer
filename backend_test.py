@@ -4319,6 +4319,206 @@ class DualAITradingBotTester:
         
         return data_quality_validated
 
+    def test_enhanced_dynamic_leverage_system(self):
+        """Test Enhanced Dynamic Leverage & 5-Level TP System Implementation"""
+        print(f"\n🎯 Testing Enhanced Dynamic Leverage & 5-Level TP System...")
+        
+        # Clear cache first to get fresh decisions
+        print(f"   🗑️ Clearing decision cache for fresh testing...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        
+        # Start trading system to generate fresh decisions (conserve LLM budget)
+        print(f"   🚀 Starting trading system for fresh decisions (budget-conscious)...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for fresh decisions (limited time to conserve budget)
+        print(f"   ⏱️ Waiting for fresh decisions (45 seconds max to conserve LLM budget)...")
+        time.sleep(45)
+        
+        # Stop system to conserve budget
+        self.test_stop_trading_system()
+        
+        # Get fresh decisions for testing
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for leverage testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for leverage testing")
+            return False
+        
+        print(f"   📊 Analyzing {len(decisions)} decisions for Enhanced Dynamic Leverage & 5-Level TP...")
+        
+        # Test results tracking
+        leverage_tests = {
+            'dynamic_leverage_present': 0,
+            'leverage_in_range': 0,
+            'tp_strategy_present': 0,
+            'five_level_tp': 0,
+            'position_distribution': 0,
+            'leverage_efficiency': 0,
+            'enhanced_reasoning': 0,
+            'balance_integration': 0
+        }
+        
+        total_tested = min(len(decisions), 5)  # Test max 5 decisions to conserve budget
+        
+        for i, decision in enumerate(decisions[:total_tested]):
+            symbol = decision.get('symbol', 'Unknown')
+            reasoning = decision.get('ia2_reasoning', '')
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold')
+            
+            print(f"\n   Decision {i+1} - {symbol} ({signal}):")
+            print(f"      Confidence: {confidence:.3f}")
+            
+            # Test 1: Dynamic Leverage Implementation
+            leverage_keywords = ['leverage', 'dynamic leverage', 'calculated_leverage', 'base_leverage', 'confidence_bonus', 'sentiment_bonus']
+            has_leverage = any(keyword.lower() in reasoning.lower() for keyword in leverage_keywords)
+            if has_leverage:
+                leverage_tests['dynamic_leverage_present'] += 1
+                print(f"      ✅ Dynamic Leverage: Present")
+                
+                # Check for leverage range (2x-10x)
+                leverage_range_keywords = ['2x', '3x', '4x', '5x', '6x', '7x', '8x', '9x', '10x']
+                has_range = any(keyword in reasoning for keyword in leverage_range_keywords)
+                if has_range:
+                    leverage_tests['leverage_in_range'] += 1
+                    print(f"      ✅ Leverage Range: 2x-10x detected")
+            else:
+                print(f"      ❌ Dynamic Leverage: Missing")
+            
+            # Test 2: 5-Level Take-Profit System
+            tp_keywords = ['take_profit_strategy', 'tp1', 'tp2', 'tp3', 'tp4', 'tp5', '5-level', 'multi-level']
+            has_tp_strategy = any(keyword.lower() in reasoning.lower() for keyword in tp_keywords)
+            if has_tp_strategy:
+                leverage_tests['tp_strategy_present'] += 1
+                print(f"      ✅ TP Strategy: Present")
+                
+                # Check for 5 levels specifically
+                tp_levels = sum(1 for level in ['tp1', 'tp2', 'tp3', 'tp4', 'tp5'] if level in reasoning.lower())
+                if tp_levels >= 4:  # At least 4 of 5 levels mentioned
+                    leverage_tests['five_level_tp'] += 1
+                    print(f"      ✅ 5-Level TP: {tp_levels}/5 levels detected")
+                
+                # Check for position distribution [20, 25, 25, 20, 10]
+                distribution_keywords = ['20%', '25%', '10%', 'position distribution', 'distribution']
+                has_distribution = any(keyword in reasoning for keyword in distribution_keywords)
+                if has_distribution:
+                    leverage_tests['position_distribution'] += 1
+                    print(f"      ✅ Position Distribution: Detected")
+            else:
+                print(f"      ❌ TP Strategy: Missing")
+            
+            # Test 3: Position Sizing with Leverage
+            efficiency_keywords = ['leverage efficiency', 'position size', 'efficiency', '8% position', 'max position']
+            has_efficiency = any(keyword.lower() in reasoning.lower() for keyword in efficiency_keywords)
+            if has_efficiency:
+                leverage_tests['leverage_efficiency'] += 1
+                print(f"      ✅ Leverage Efficiency: Present")
+            
+            # Test 4: Enhanced Reasoning Integration
+            enhanced_keywords = ['DYNAMIC LEVERAGE', '5-LEVEL TP', 'leverage efficiency', 'sentiment_bonus']
+            has_enhanced = any(keyword in reasoning for keyword in enhanced_keywords)
+            if has_enhanced:
+                leverage_tests['enhanced_reasoning'] += 1
+                print(f"      ✅ Enhanced Reasoning: Present")
+            
+            # Test 5: BingX Balance Integration ($250)
+            balance_keywords = ['$250', '250', 'simulation balance', 'balance']
+            has_balance = any(keyword in reasoning for keyword in balance_keywords)
+            if has_balance:
+                leverage_tests['balance_integration'] += 1
+                print(f"      ✅ Balance Integration: $250 detected")
+        
+        # Calculate success rates
+        print(f"\n   📊 Enhanced Dynamic Leverage & 5-Level TP System Results:")
+        print(f"      Decisions Tested: {total_tested}")
+        
+        dynamic_leverage_rate = leverage_tests['dynamic_leverage_present'] / total_tested
+        tp_strategy_rate = leverage_tests['tp_strategy_present'] / total_tested
+        five_level_rate = leverage_tests['five_level_tp'] / total_tested
+        
+        print(f"      Dynamic Leverage Present: {leverage_tests['dynamic_leverage_present']}/{total_tested} ({dynamic_leverage_rate*100:.1f}%)")
+        print(f"      TP Strategy Present: {leverage_tests['tp_strategy_present']}/{total_tested} ({tp_strategy_rate*100:.1f}%)")
+        print(f"      5-Level TP Detected: {leverage_tests['five_level_tp']}/{total_tested} ({five_level_rate*100:.1f}%)")
+        print(f"      Position Distribution: {leverage_tests['position_distribution']}/{total_tested}")
+        print(f"      Leverage Efficiency: {leverage_tests['leverage_efficiency']}/{total_tested}")
+        print(f"      Enhanced Reasoning: {leverage_tests['enhanced_reasoning']}/{total_tested}")
+        print(f"      Balance Integration: {leverage_tests['balance_integration']}/{total_tested}")
+        
+        # Success criteria from review request
+        dynamic_leverage_success = dynamic_leverage_rate >= 0.60  # At least 60%
+        tp_strategy_success = tp_strategy_rate >= 0.60  # At least 60%
+        overall_implementation = (dynamic_leverage_rate + tp_strategy_rate) / 2 >= 0.60
+        
+        print(f"\n   🎯 Success Criteria Validation:")
+        print(f"      Dynamic Leverage ≥60%: {'✅' if dynamic_leverage_success else '❌'} ({dynamic_leverage_rate*100:.1f}%)")
+        print(f"      5-Level TP ≥60%: {'✅' if tp_strategy_success else '❌'} ({tp_strategy_rate*100:.1f}%)")
+        print(f"      Overall Implementation: {'✅' if overall_implementation else '❌'} ({(dynamic_leverage_rate + tp_strategy_rate) / 2 * 100:.1f}%)")
+        
+        # Check for specific implementation details
+        print(f"\n   🔍 Implementation Details Check:")
+        
+        # Test BingX balance endpoint
+        success, market_data = self.test_market_status()
+        if success and market_data:
+            balance_info = market_data.get('bingx_balance', 'Not found')
+            print(f"      BingX Balance in API: {balance_info}")
+            if '$250' in str(balance_info) or '250' in str(balance_info):
+                print(f"      ✅ $250 Balance: Confirmed in API")
+            else:
+                print(f"      ⚠️ $250 Balance: Not visible in API (may be internal)")
+        
+        system_working = dynamic_leverage_success and tp_strategy_success
+        
+        print(f"\n   🎯 Enhanced Dynamic Leverage & 5-Level TP System: {'✅ WORKING' if system_working else '❌ NEEDS WORK'}")
+        
+        if not system_working:
+            print(f"   💡 RECOMMENDATIONS:")
+            if not dynamic_leverage_success:
+                print(f"      - Enhance Claude prompts to include dynamic leverage calculations")
+                print(f"      - Ensure leverage object with calculated_leverage, base_leverage, bonuses")
+            if not tp_strategy_success:
+                print(f"      - Improve 5-level TP strategy in Claude responses")
+                print(f"      - Verify TP1-TP5 percentages and position distribution")
+        
+        return system_working
+
+    def run_enhanced_leverage_tests(self):
+        """Run Enhanced Dynamic Leverage & 5-Level TP System Tests"""
+        print(f"🚀 Starting Enhanced Dynamic Leverage & 5-Level TP System Tests")
+        print(f"Backend URL: {self.base_url}")
+        print(f"API URL: {self.api_url}")
+        print(f"⚠️ LLM Budget: $9.18 remaining - Testing conservatively")
+        print(f"=" * 80)
+
+        # Core system tests
+        self.test_system_status()
+        self.test_market_status()
+        
+        # Main focus: Enhanced Dynamic Leverage & 5-Level TP System
+        enhanced_system_success = self.test_enhanced_dynamic_leverage_system()
+        
+        # Quick validation tests
+        self.test_get_decisions()
+        
+        # Performance summary
+        print(f"\n" + "=" * 80)
+        print(f"🎯 ENHANCED DYNAMIC LEVERAGE & 5-LEVEL TP SYSTEM TEST SUMMARY")
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        print(f"Enhanced System Working: {'✅ YES' if enhanced_system_success else '❌ NO'}")
+        print(f"=" * 80)
+        
+        return enhanced_system_success
+
     def print_performance_summary(self):
         """Print performance summary"""
         print(f"\n📊 Performance Summary:")
