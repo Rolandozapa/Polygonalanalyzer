@@ -158,6 +158,9 @@
         - working: "NA"
         - agent: "main"
         - comment: "FURTHER IMPROVED: Based on industry research, lowered moderate thresholds to confidence >0.55 and signal_strength >0.35. Changed confidence calculation from multiplicative penalties to additive adjustments. Added multi-source bonuses. Lowered R:R to 1.2:1."
+        - working: "NA"
+        - agent: "main"
+        - comment: "CRITICAL FIX: Enforced 50% minimum confidence after ALL penalties. Fixed lines 1244, 1225, 1400 to maintain confidence ≥0.5 even with penalties. This should resolve the 100% HOLD signal issue."
         - working: false
         - agent: "testing"
         - comment: "TESTED: IA2 trading thresholds still too conservative. All 30 decisions are HOLD signals (0% trading rate). Despite confidence improvements and lowered thresholds, no LONG/SHORT signals generated. May need further threshold reduction or market conditions analysis."
