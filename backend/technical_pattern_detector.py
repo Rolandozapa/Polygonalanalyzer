@@ -844,5 +844,153 @@ class TechnicalPatternDetector:
         
         return duration
 
+    async def _fetch_binance_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Récupère OHLCV depuis Binance API (1,200 req/min - ULTRA GÉNÉREUX!)"""
+        try:
+            # Format du symbole pour Binance
+            binance_symbol = symbol.replace('USDT', 'USDT')  # Déjà au bon format
+            
+            url = "https://api.binance.com/api/v3/klines"
+            params = {
+                "symbol": binance_symbol,
+                "interval": "1d",
+                "limit": self.lookback_days
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_binance_ohlcv(data)
+                    else:
+                        logger.debug(f"Binance OHLCV failed for {symbol}: {response.status}")
+                        
+        except Exception as e:
+            logger.debug(f"Binance OHLCV error for {symbol}: {e}")
+        
+        return None
+
+    async def _fetch_coingecko_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Récupère OHLCV depuis CoinGecko API (10,000 appels/mois, 10 req/sec)"""
+        try:
+            # Convertit le symbole pour CoinGecko (nécessite l'ID de la coin)
+            # Pour simplifier, on utilise les principales cryptos
+            symbol_map = {
+                'BTCUSDT': 'bitcoin',
+                'ETHUSDT': 'ethereum', 
+                'BNBUSDT': 'binancecoin',
+                'SOLUSDT': 'solana',
+                'XRPUSDT': 'ripple',
+                'ADAUSDT': 'cardano',
+                'DOGEUSDT': 'dogecoin',
+                'AVAXUSDT': 'avalanche-2',
+                'DOTUSDT': 'polkadot',
+                'MATICUSDT': 'matic-network'
+            }
+            
+            if symbol not in symbol_map:
+                return None
+            
+            coin_id = symbol_map[symbol]
+            url = f"https://api.coingecko.com/api/v3/coins/{coin_id}/ohlc"
+            params = {
+                "vs_currency": "usd",
+                "days": str(self.lookback_days)
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_coingecko_ohlcv(data)
+                    else:
+                        logger.debug(f"CoinGecko OHLCV failed for {symbol}: {response.status}")
+                        
+        except Exception as e:
+            logger.debug(f"CoinGecko OHLCV error for {symbol}: {e}")
+        
+        return None
+
+    async def _fetch_cryptocompare_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Récupère OHLCV depuis CryptoCompare API (100,000 appels/mois)"""
+        try:
+            # Format pour CryptoCompare
+            base_symbol = symbol.replace('USDT', '')
+            
+            url = "https://min-api.cryptocompare.com/data/v2/histoday"
+            params = {
+                "fsym": base_symbol,
+                "tsym": "USD",
+                "limit": self.lookback_days
+            }
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cryptocompare_ohlcv_historical(data)
+                    else:
+                        logger.debug(f"CryptoCompare OHLCV failed for {symbol}: {response.status}")
+                        
+        except Exception as e:
+            logger.debug(f"CryptoCompare OHLCV error for {symbol}: {e}")
+        
+        return None
+
+    def _parse_binance_ohlcv(self, data: List) -> pd.DataFrame:
+        """Parse les données OHLCV de Binance"""
+        df_data = []
+        for item in data:
+            df_data.append({
+                'timestamp': pd.to_datetime(item[0], unit='ms'),
+                'Open': float(item[1]),
+                'High': float(item[2]),
+                'Low': float(item[3]),
+                'Close': float(item[4]),
+                'Volume': float(item[5])
+            })
+        
+        df = pd.DataFrame(df_data)
+        df.set_index('timestamp', inplace=True)
+        return df
+
+    def _parse_coingecko_ohlcv(self, data: List) -> pd.DataFrame:
+        """Parse les données OHLCV de CoinGecko"""
+        df_data = []
+        for item in data:
+            df_data.append({
+                'timestamp': pd.to_datetime(item[0], unit='ms'),
+                'Open': float(item[1]),
+                'High': float(item[2]),
+                'Low': float(item[3]),
+                'Close': float(item[4])
+            })
+        
+        df = pd.DataFrame(df_data)
+        df.set_index('timestamp', inplace=True)
+        # CoinGecko OHLC n'inclut pas le volume, on l'estime
+        df['Volume'] = 1000000  # Volume par défaut
+        return df
+
+    def _parse_cryptocompare_ohlcv_historical(self, data: Dict) -> pd.DataFrame:
+        """Parse les données OHLCV historiques de CryptoCompare"""
+        if 'Data' not in data or 'Data' not in data['Data']:
+            return pd.DataFrame()
+        
+        df_data = []
+        for item in data['Data']['Data']:
+            df_data.append({
+                'timestamp': pd.to_datetime(item['time'], unit='s'),
+                'Open': float(item['open']),
+                'High': float(item['high']),
+                'Low': float(item['low']),
+                'Close': float(item['close']),
+                'Volume': float(item['volumeto'])  # Volume en USD
+            })
+        
+        df = pd.DataFrame(df_data)
+        df.set_index('timestamp', inplace=True)
+        return df.sort_index()
+
 # Global instance
 technical_pattern_detector = TechnicalPatternDetector()
