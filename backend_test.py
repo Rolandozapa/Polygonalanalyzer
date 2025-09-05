@@ -831,8 +831,8 @@ class DualAITradingBotTester:
         }
 
     async def run_all_tests(self):
-        """Run all tests including IA1 optimization focus"""
-        return await self.run_ia1_optimization_tests()
+        """Run all tests including IA2 decision agent focus"""
+        return await self.run_ia2_decision_agent_tests()
 
 async def main():
     """Main test function"""
