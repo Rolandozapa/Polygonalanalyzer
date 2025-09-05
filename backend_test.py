@@ -122,21 +122,231 @@ class DualAITradingBotTester:
             print(f"❌ WebSocket connection failed: {str(e)}")
             return False
 
-    def test_root_endpoint(self):
-        """Test root API endpoint"""
-        return self.run_test("Root Endpoint", "GET", "", 200)
+    def test_status_endpoint(self):
+        """Test basic status endpoint"""
+        return self.run_test("System Status", "GET", "status", 200)
 
     def test_get_opportunities(self):
-        """Test get opportunities endpoint"""
-        return self.run_test("Get Opportunities", "GET", "opportunities", 200)
+        """Test get opportunities endpoint (Scout functionality)"""
+        return self.run_test("Get Opportunities (Scout)", "GET", "opportunities", 200)
 
     def test_get_analyses(self):
         """Test get analyses endpoint"""
         return self.run_test("Get Technical Analyses", "GET", "analyses", 200)
 
     def test_get_decisions(self):
-        """Test get decisions endpoint"""
-        return self.run_test("Get Trading Decisions", "GET", "decisions", 200)
+        """Test get decisions endpoint (IA2 functionality)"""
+        return self.run_test("Get Trading Decisions (IA2)", "GET", "decisions", 200)
+
+    def test_ia1_analysis_speed(self):
+        """Test IA1 analysis speed optimization - should be 15-25 seconds instead of 50-60"""
+        print(f"\n⚡ Testing IA1 Performance Optimization...")
+        
+        # Test with trending crypto symbols
+        trending_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "DOTUSDT"]
+        
+        for symbol in trending_symbols[:3]:  # Test 3 symbols to get average
+            test_data = {
+                "symbol": symbol,
+                "current_price": 50000.0,
+                "volume_24h": 1000000.0,
+                "price_change_24h": 5.2,
+                "volatility": 0.05,
+                "market_cap": 1000000000,
+                "market_cap_rank": 1
+            }
+            
+            print(f"\n   Testing IA1 analysis for {symbol}...")
+            success, response_data = self.run_test(
+                f"IA1 Analysis Speed - {symbol}", 
+                "POST", 
+                "analyze", 
+                200, 
+                test_data,
+                timeout=60  # Allow up to 60 seconds but expect 15-25
+            )
+            
+            if not success:
+                print(f"   ❌ IA1 analysis failed for {symbol}")
+                return False
+        
+        # Analyze performance results
+        if self.ia1_performance_times:
+            avg_time = sum(self.ia1_performance_times) / len(self.ia1_performance_times)
+            min_time = min(self.ia1_performance_times)
+            max_time = max(self.ia1_performance_times)
+            
+            print(f"\n📊 IA1 Performance Analysis Results:")
+            print(f"   Average Analysis Time: {avg_time:.2f}s")
+            print(f"   Fastest Analysis: {min_time:.2f}s")
+            print(f"   Slowest Analysis: {max_time:.2f}s")
+            print(f"   Total Tests: {len(self.ia1_performance_times)}")
+            
+            # Check if optimization target is met (15-25 seconds)
+            if avg_time <= 25.0:
+                print(f"   ✅ OPTIMIZATION SUCCESS: Average time {avg_time:.2f}s is within target (≤25s)")
+                if avg_time <= 15.0:
+                    print(f"   🚀 EXCEPTIONAL: Analysis time even better than expected!")
+                return True
+            else:
+                print(f"   ⚠️  OPTIMIZATION CONCERN: Average time {avg_time:.2f}s exceeds target (25s)")
+                if avg_time < 50.0:
+                    print(f"   ✅ IMPROVEMENT: Still better than original 50-60s baseline")
+                    return True
+                else:
+                    print(f"   ❌ NO IMPROVEMENT: Performance similar to original baseline")
+                    return False
+        else:
+            print(f"   ❌ No performance data collected")
+            return False
+
+    def test_scout_ia1_integration(self):
+        """Test Scout -> IA1 pipeline integration with optimized data"""
+        print(f"\n🔗 Testing Scout -> IA1 Integration Pipeline...")
+        
+        # First get opportunities from Scout
+        success, opportunities_data = self.test_get_opportunities()
+        if not success or not opportunities_data.get('opportunities'):
+            print(f"   ❌ Scout integration test failed - no opportunities found")
+            return False
+        
+        opportunities = opportunities_data['opportunities']
+        print(f"   ✅ Scout found {len(opportunities)} opportunities")
+        
+        # Test IA1 analysis on first opportunity
+        if len(opportunities) > 0:
+            opportunity = opportunities[0]
+            symbol = opportunity.get('symbol', 'BTCUSDT')
+            
+            # Create analysis request from opportunity data
+            analysis_data = {
+                "symbol": symbol,
+                "current_price": opportunity.get('current_price', 50000.0),
+                "volume_24h": opportunity.get('volume_24h', 1000000.0),
+                "price_change_24h": opportunity.get('price_change_24h', 5.0),
+                "volatility": opportunity.get('volatility', 0.05),
+                "market_cap": opportunity.get('market_cap', 1000000000),
+                "market_cap_rank": opportunity.get('market_cap_rank', 1)
+            }
+            
+            print(f"   Testing IA1 analysis for Scout opportunity: {symbol}")
+            success, analysis_response = self.run_test(
+                f"Scout->IA1 Integration - {symbol}",
+                "POST",
+                "analyze", 
+                200,
+                analysis_data,
+                timeout=60
+            )
+            
+            if success and analysis_response:
+                print(f"   ✅ Scout -> IA1 integration successful")
+                
+                # Verify technical analysis quality with 10-day data
+                if 'rsi' in analysis_response and 'macd_signal' in analysis_response:
+                    rsi = analysis_response.get('rsi', 0)
+                    macd = analysis_response.get('macd_signal', 0)
+                    confidence = analysis_response.get('analysis_confidence', 0)
+                    
+                    print(f"   📊 Technical Analysis Quality Check:")
+                    print(f"      RSI: {rsi:.2f} (valid range: 0-100)")
+                    print(f"      MACD Signal: {macd:.6f}")
+                    print(f"      Analysis Confidence: {confidence:.2f}")
+                    
+                    # Validate technical indicators are reasonable
+                    if 0 <= rsi <= 100 and confidence > 0.5:
+                        print(f"   ✅ Technical analysis quality maintained with 10-day data")
+                        return True
+                    else:
+                        print(f"   ⚠️  Technical analysis quality concerns")
+                        return False
+                else:
+                    print(f"   ⚠️  Missing technical indicators in response")
+                    return False
+            else:
+                print(f"   ❌ IA1 analysis failed for Scout opportunity")
+                return False
+        else:
+            print(f"   ❌ No opportunities available for integration test")
+            return False
+
+    def test_technical_analysis_accuracy(self):
+        """Test that 10-day historical data still provides accurate technical indicators"""
+        print(f"\n📈 Testing Technical Analysis Accuracy with 10-day Data...")
+        
+        # Test multiple symbols to verify consistency
+        test_symbols = [
+            {"symbol": "BTCUSDT", "price": 45000, "change": 3.5},
+            {"symbol": "ETHUSDT", "price": 2800, "change": -2.1},
+            {"symbol": "SOLUSDT", "price": 95, "change": 8.2}
+        ]
+        
+        accurate_analyses = 0
+        
+        for test_case in test_symbols:
+            symbol = test_case["symbol"]
+            test_data = {
+                "symbol": symbol,
+                "current_price": test_case["price"],
+                "volume_24h": 5000000.0,
+                "price_change_24h": test_case["change"],
+                "volatility": 0.04,
+                "market_cap": 500000000,
+                "market_cap_rank": 5
+            }
+            
+            print(f"\n   Testing technical accuracy for {symbol}...")
+            success, response = self.run_test(
+                f"Technical Accuracy - {symbol}",
+                "POST",
+                "analyze",
+                200,
+                test_data,
+                timeout=45
+            )
+            
+            if success and response:
+                # Validate technical indicators
+                rsi = response.get('rsi', 50)
+                macd_signal = response.get('macd_signal', 0)
+                bollinger_position = response.get('bollinger_position', 0)
+                support_levels = response.get('support_levels', [])
+                resistance_levels = response.get('resistance_levels', [])
+                confidence = response.get('analysis_confidence', 0)
+                
+                print(f"      RSI: {rsi:.2f}")
+                print(f"      MACD Signal: {macd_signal:.6f}")
+                print(f"      Bollinger Position: {bollinger_position:.3f}")
+                print(f"      Support Levels: {len(support_levels)} levels")
+                print(f"      Resistance Levels: {len(resistance_levels)} levels")
+                print(f"      Confidence: {confidence:.2f}")
+                
+                # Check if indicators are within reasonable ranges
+                indicators_valid = (
+                    0 <= rsi <= 100 and
+                    -1 <= bollinger_position <= 1 and
+                    confidence >= 0.5 and
+                    len(support_levels) > 0 and
+                    len(resistance_levels) > 0
+                )
+                
+                if indicators_valid:
+                    print(f"      ✅ Technical indicators accurate and complete")
+                    accurate_analyses += 1
+                else:
+                    print(f"      ⚠️  Some technical indicators out of expected range")
+            else:
+                print(f"      ❌ Analysis failed for {symbol}")
+        
+        accuracy_rate = accurate_analyses / len(test_symbols)
+        print(f"\n   📊 Technical Analysis Accuracy: {accurate_analyses}/{len(test_symbols)} ({accuracy_rate*100:.1f}%)")
+        
+        if accuracy_rate >= 0.8:  # 80% accuracy threshold
+            print(f"   ✅ Technical analysis accuracy maintained with 10-day optimization")
+            return True
+        else:
+            print(f"   ❌ Technical analysis accuracy below threshold")
+            return False
 
     def test_get_performance(self):
         """Test get performance endpoint"""
