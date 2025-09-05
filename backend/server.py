@@ -2479,8 +2479,11 @@ class UltraProfessionalTradingOrchestrator:
             
             # 3. Ultra professional IA2 decisions (parallel processing)
             decision_tasks = []
+            # Get performance stats for IA2 decisions
+            perf_stats = self.market_aggregator.get_performance_stats()
+            
             for opportunity, analysis in valid_analyses:
-                decision_tasks.append(self.ia2.make_decision(opportunity, analysis))
+                decision_tasks.append(self.ia2.make_decision(opportunity, analysis, perf_stats))
             
             # Execute decisions in parallel
             decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
