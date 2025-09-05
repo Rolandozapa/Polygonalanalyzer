@@ -564,88 +564,105 @@ class DualAITradingBotTester:
             print(f"   💡 Expected: With 55% moderate threshold, should see some LONG/SHORT signals")
             return False
 
-    def test_ia2_reasoning_quality(self):
-        """Test IA2 reasoning field is properly populated and not null"""
-        print(f"\n🧠 Testing IA2 Reasoning Quality...")
+    def test_ia2_signal_generation_rate(self):
+        """Test IA2 signal generation rate to ensure it's not 100% HOLD"""
+        print(f"\n🎲 Testing IA2 Signal Generation Rate...")
         
         success, decisions_data = self.test_get_decisions()
         if not success:
-            print(f"   ❌ Cannot retrieve decisions for reasoning testing")
+            print(f"   ❌ Cannot retrieve decisions for signal generation testing")
             return False
         
         decisions = decisions_data.get('decisions', [])
         if len(decisions) == 0:
-            print(f"   ❌ No decisions available for reasoning testing")
+            print(f"   ❌ No decisions available for signal generation testing")
             return False
         
-        print(f"   📊 Analyzing reasoning quality of {len(decisions)} decisions...")
+        print(f"   📊 Analyzing signal generation patterns of {len(decisions)} decisions...")
         
-        reasoning_stats = {
-            'total': len(decisions),
-            'has_reasoning': 0,
-            'null_reasoning': 0,
-            'empty_reasoning': 0,
-            'quality_reasoning': 0
-        }
+        # Analyze signal distribution across multiple symbols
+        signal_by_symbol = {}
+        confidence_by_signal = {'long': [], 'short': [], 'hold': []}
         
-        for i, decision in enumerate(decisions[:5]):  # Analyze first 5 in detail
-            symbol = decision.get('symbol', 'Unknown')
-            reasoning = decision.get('ia2_reasoning', '')
-            confidence = decision.get('confidence', 0)
-            signal = decision.get('signal', 'hold')
-            
-            print(f"\n   Decision {i+1} - {symbol} ({signal}):")
-            
-            if reasoning is None or reasoning == "null" or reasoning == "None":
-                reasoning_stats['null_reasoning'] += 1
-                print(f"      Reasoning: ❌ NULL")
-            elif len(reasoning.strip()) == 0:
-                reasoning_stats['empty_reasoning'] += 1
-                print(f"      Reasoning: ❌ EMPTY")
-            else:
-                reasoning_stats['has_reasoning'] += 1
-                print(f"      Reasoning: ✅ Present ({len(reasoning)} chars)")
-                print(f"      Preview: {reasoning[:100]}...")
-                
-                # Check for quality indicators
-                quality_indicators = 0
-                if 'analysis' in reasoning.lower(): quality_indicators += 1
-                if 'confidence' in reasoning.lower(): quality_indicators += 1
-                if any(word in reasoning.lower() for word in ['rsi', 'macd', 'technical', 'signal']): quality_indicators += 1
-                if len(reasoning) >= 50: quality_indicators += 1
-                
-                if quality_indicators >= 3:
-                    reasoning_stats['quality_reasoning'] += 1
-                    print(f"      Quality: ✅ HIGH ({quality_indicators}/4 indicators)")
-                else:
-                    print(f"      Quality: ⚠️  MODERATE ({quality_indicators}/4 indicators)")
-        
-        # Calculate overall statistics for all decisions
         for decision in decisions:
-            reasoning = decision.get('ia2_reasoning', '')
-            if reasoning and reasoning != "null" and reasoning != "None" and len(reasoning.strip()) > 0:
-                reasoning_stats['has_reasoning'] += 1
-                if len(reasoning) >= 50 and any(word in reasoning.lower() for word in ['analysis', 'confidence', 'rsi', 'macd']):
-                    reasoning_stats['quality_reasoning'] += 1
+            symbol = decision.get('symbol', 'Unknown')
+            signal = decision.get('signal', 'hold').lower()
+            confidence = decision.get('confidence', 0)
+            
+            if symbol not in signal_by_symbol:
+                signal_by_symbol[symbol] = {'long': 0, 'short': 0, 'hold': 0}
+            
+            if signal in signal_by_symbol[symbol]:
+                signal_by_symbol[symbol][signal] += 1
+                confidence_by_signal[signal].append(confidence)
         
-        reasoning_rate = reasoning_stats['has_reasoning'] / reasoning_stats['total']
-        quality_rate = reasoning_stats['quality_reasoning'] / reasoning_stats['total']
+        # Calculate overall statistics
+        total_long = sum(len(confidence_by_signal['long']))
+        total_short = sum(len(confidence_by_signal['short']))
+        total_hold = sum(len(confidence_by_signal['hold']))
+        total_decisions = total_long + total_short + total_hold
         
-        print(f"\n   📊 Overall Reasoning Statistics:")
-        print(f"      Total Decisions: {reasoning_stats['total']}")
-        print(f"      Has Reasoning: {reasoning_stats['has_reasoning']} ({reasoning_rate*100:.1f}%)")
-        print(f"      Quality Reasoning: {reasoning_stats['quality_reasoning']} ({quality_rate*100:.1f}%)")
-        print(f"      Null/Empty: {reasoning_stats['null_reasoning'] + reasoning_stats['empty_reasoning']}")
+        long_rate = total_long / total_decisions if total_decisions > 0 else 0
+        short_rate = total_short / total_decisions if total_decisions > 0 else 0
+        hold_rate = total_hold / total_decisions if total_decisions > 0 else 0
+        trading_rate = (total_long + total_short) / total_decisions if total_decisions > 0 else 0
         
-        # Validation: Reasoning should be fixed (not null) and of good quality
-        reasoning_fixed = reasoning_rate >= 0.8  # 80% should have reasoning
-        quality_good = quality_rate >= 0.6  # 60% should be quality reasoning
+        print(f"\n   📊 Signal Generation Analysis:")
+        print(f"      Total Decisions: {total_decisions}")
+        print(f"      LONG Signals: {total_long} ({long_rate*100:.1f}%)")
+        print(f"      SHORT Signals: {total_short} ({short_rate*100:.1f}%)")
+        print(f"      HOLD Signals: {total_hold} ({hold_rate*100:.1f}%)")
+        print(f"      Trading Rate: {trading_rate*100:.1f}% (target: >10%)")
         
-        print(f"\n   🎯 Reasoning Fix Validation:")
-        print(f"      Reasoning Present: {'✅' if reasoning_fixed else '❌'} (≥80%)")
-        print(f"      Quality Reasoning: {'✅' if quality_good else '❌'} (≥60%)")
+        # Analyze confidence distribution by signal type
+        if confidence_by_signal['long']:
+            avg_long_conf = sum(confidence_by_signal['long']) / len(confidence_by_signal['long'])
+            print(f"      Avg LONG Confidence: {avg_long_conf:.3f}")
         
-        return reasoning_fixed and quality_good
+        if confidence_by_signal['short']:
+            avg_short_conf = sum(confidence_by_signal['short']) / len(confidence_by_signal['short'])
+            print(f"      Avg SHORT Confidence: {avg_short_conf:.3f}")
+        
+        if confidence_by_signal['hold']:
+            avg_hold_conf = sum(confidence_by_signal['hold']) / len(confidence_by_signal['hold'])
+            print(f"      Avg HOLD Confidence: {avg_hold_conf:.3f}")
+        
+        # Show symbol-level analysis
+        print(f"\n   🔍 Symbol-Level Signal Distribution:")
+        symbols_with_trades = 0
+        for symbol, signals in list(signal_by_symbol.items())[:5]:  # Show first 5 symbols
+            symbol_total = sum(signals.values())
+            symbol_trading_rate = (signals['long'] + signals['short']) / symbol_total if symbol_total > 0 else 0
+            print(f"      {symbol}: L:{signals['long']} S:{signals['short']} H:{signals['hold']} (Trade: {symbol_trading_rate*100:.0f}%)")
+            if symbol_trading_rate > 0:
+                symbols_with_trades += 1
+        
+        # Enhanced validation criteria
+        not_all_holds = hold_rate < 0.95  # Less than 95% HOLD signals
+        reasonable_trading_rate = trading_rate >= 0.10  # At least 10% trading rate
+        diverse_signals = (total_long > 0 or total_short > 0)  # At least some trading signals
+        multiple_symbols_trading = symbols_with_trades > 1  # Multiple symbols generating trades
+        
+        print(f"\n   ✅ Signal Generation Validation:")
+        print(f"      Not All HOLD (≤95%): {'✅' if not_all_holds else '❌'} ({hold_rate*100:.1f}% HOLD)")
+        print(f"      Trading Rate ≥10%: {'✅' if reasonable_trading_rate else '❌'} ({trading_rate*100:.1f}%)")
+        print(f"      Has Trading Signals: {'✅' if diverse_signals else '❌'} (L:{total_long}, S:{total_short})")
+        print(f"      Multiple Symbols Trading: {'✅' if multiple_symbols_trading else '❌'} ({symbols_with_trades} symbols)")
+        
+        signal_generation_working = (
+            not_all_holds and
+            reasonable_trading_rate and
+            diverse_signals and
+            multiple_symbols_trading
+        )
+        
+        print(f"\n   🎯 Signal Generation Assessment: {'✅ WORKING' if signal_generation_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        if not signal_generation_working:
+            print(f"   💡 Issue: IA2 may still be too conservative with new 55% threshold")
+            print(f"   💡 Expected: With industry-standard thresholds, should see >10% trading rate")
+        
+        return signal_generation_working
 
     async def test_ia2_end_to_end_flow(self):
         """Test complete IA2 decision-making flow"""
