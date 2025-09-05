@@ -1405,11 +1405,12 @@ class UltraProfessionalIA2DecisionAgent:
             reward = abs(tp1 - current_price)
             risk_reward = reward / risk if risk > 0 else 1.0
             
-            # Minimum 1.2:1 R:R for live trading (more accessible)
+            # Minimum 1.2:1 R:R for live trading (maintain confidence floor)
             if risk_reward < 1.2:
                 signal = SignalType.HOLD
                 reasoning += "Risk-reward ratio too low for live trading (min 1.2:1 required). "
-                confidence = max(confidence * 0.9, 0.5)  # Maintain 50% minimum
+                # Maintain confidence floor even with R:R penalty
+                confidence = max(confidence * 0.95, 0.5)
         else:
             risk_reward = 1.0
         
