@@ -965,6 +965,31 @@ async def get_top_cryptos(limit: int = 50):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/market-status")
+async def get_market_status():
+    """Get current market status and API health"""
+    try:
+        sentiment = await market_data_service.get_market_sentiment()
+        return {
+            "market_sentiment": sentiment,
+            "api_status": {
+                "binance": "active",
+                "coinapi": "active" if market_data_service.coinapi_key else "not configured",
+                "yahoo_finance": "active",
+                "cmc": "active" if market_data_service.cmc_api_key else "not configured",
+                "coingecko": "active (free)"
+            },
+            "system_status": "professional",
+            "scout_config": {
+                "max_cryptos": orchestrator.scout.max_cryptos_to_analyze,
+                "min_market_cap": orchestrator.scout.min_market_cap,
+                "min_volume": orchestrator.scout.min_volume_24h
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
     """Get current market status and API health"""
     try:
         sentiment = await market_data_service.get_market_sentiment()
