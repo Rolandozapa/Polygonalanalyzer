@@ -1913,6 +1913,27 @@ async def get_analyses_debug():
     except Exception as e:
         return {"error": str(e), "type": str(type(e))}
 
+@api_router.get("/analyses-simple")
+async def get_analyses_simple():
+    """Version simplifiée des analyses pour debug"""
+    try:
+        analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(10).to_list(10)
+        
+        simple_analyses = []
+        for analysis in analyses:
+            simple_analyses.append({
+                "symbol": analysis.get('symbol', 'UNKNOWN'),
+                "rsi": float(analysis.get('rsi', 50.0)) if analysis.get('rsi') is not None else 50.0,
+                "confidence": float(analysis.get('analysis_confidence', 0.5)) if analysis.get('analysis_confidence') is not None else 0.5,
+                "patterns": analysis.get('patterns_detected', [])[:3],  # Max 3 patterns
+                "timestamp": analysis.get('timestamp').isoformat() if isinstance(analysis.get('timestamp'), datetime) else str(analysis.get('timestamp', ''))
+            })
+        
+        return {"analyses": simple_analyses, "count": len(simple_analyses)}
+        
+    except Exception as e:
+        return {"error": str(e), "analyses": []}
+
 @api_router.get("/analyses")
 async def get_analyses():
     """Get recent technical analyses avec validation JSON"""
