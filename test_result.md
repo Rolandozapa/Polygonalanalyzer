@@ -145,8 +145,8 @@
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 1
-    priority: "medium"
+    stuck_count: 2
+    priority: "high"
     needs_retesting: false
     status_history:
         - working: "NA"
@@ -161,6 +161,9 @@
         - working: false
         - agent: "testing"
         - comment: "TESTED: IA2 trading thresholds still too conservative. All 30 decisions are HOLD signals (0% trading rate). Despite confidence improvements and lowered thresholds, no LONG/SHORT signals generated. May need further threshold reduction or market conditions analysis."
+        - working: false
+        - agent: "testing"
+        - comment: "COMPREHENSIVE TESTING COMPLETED: Enhanced IA2 improvements tested with 30 decisions. CRITICAL ISSUES FOUND: (1) Confidence system NOT working - avg 36.4% (below 40.9% target), only 26.7% meet 50% base, (2) 100% HOLD signals (0% trading rate vs >10% target), (3) Enhanced thresholds ineffective. ROOT CAUSE: Confidence penalties still applied after 50% base set (lines 1244, 1225, 1257, 1260, 1400 multiply/subtract confidence). The 50% base is overridden by penalties. REASONING QUALITY: ✅ Fixed (100% have proper reasoning, 1500 chars each)."
 
 ## frontend:
   - task: "Frontend changes for IA1 optimization"
