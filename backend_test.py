@@ -69,7 +69,7 @@ class DualAITradingBotTester:
         self.tests_run += 1
         
         try:
-            async with websockets.connect(self.ws_url, timeout=10) as websocket:
+            async with websockets.connect(self.ws_url) as websocket:
                 print("✅ WebSocket connected successfully")
                 
                 # Send a test message
