@@ -99,6 +99,37 @@ class TradingDecision(BaseModel):
     ia1_analysis_id: str
     ia2_reasoning: str
     status: TradingStatus = TradingStatus.PENDING
+    # BingX integration fields
+    bingx_order_id: Optional[str] = None
+    bingx_position_id: Optional[str] = None
+    actual_entry_price: Optional[float] = None
+    actual_quantity: Optional[float] = None
+    bingx_status: Optional[str] = None
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LiveTradingPosition(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    symbol: str
+    position_side: str
+    position_amount: float
+    entry_price: float
+    current_price: float
+    pnl: float
+    pnl_percentage: float
+    margin_used: float
+    leverage: int
+    stop_loss_order_id: Optional[str] = None
+    take_profit_order_id: Optional[str] = None
+    decision_id: str
+    status: str = "OPEN"
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BingXAccountInfo(BaseModel):
+    total_balance: float
+    available_balance: float
+    used_margin: float
+    unrealized_pnl: float
+    total_positions: int
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class AIConversation(BaseModel):
