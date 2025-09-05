@@ -414,11 +414,9 @@
 
 ## test_plan:
   current_focus:
-    - "Advanced Trading Strategies IA2 Testing Complete"
+    - "Advanced Trading Strategies Implementation COMPLETE"
   stuck_tasks: 
-    - "Claude Integration Verification Needed"
-    - "Advanced TP Strategy Implementation Needed"
-    - "Position Inversion Logic Implementation Needed"
+    - "LLM Budget Exceeded - Preventing Fresh Decision Generation"
   test_all: false
   test_priority: "high_first"
 
