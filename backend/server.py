@@ -1803,13 +1803,21 @@ class UltraProfessionalTradingOrchestrator:
                     })
                 else:
                     if analysis is None:
-                        filtered_count += 1
-                        logger.debug(f"⚪ TECHNICAL FILTER: {top_opportunities[i].symbol} - No strong patterns, skipped IA1")
+                        # Vérifier si c'est un rejet pour pattern ou pour données
+                        symbol = top_opportunities[i].symbol
+                        should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(symbol)
+                        
+                        if should_analyze:
+                            rejected_no_data_count += 1
+                            logger.debug(f"❌ DATA REJECTION: {symbol} - Pattern detected but no real OHLCV data")
+                        else:
+                            filtered_count += 1
+                            logger.debug(f"⚪ PATTERN FILTER: {symbol} - No strong patterns, skipped IA1")
                     else:
                         logger.warning(f"Analysis failed for {top_opportunities[i].symbol}: {analysis}")
             
-            logger.info(f"📊 TECHNICAL FILTERING RESULTS: {len(valid_analyses)} analyzed, {filtered_count} filtered out, {len(top_opportunities) - len(valid_analyses) - filtered_count} errors")
-            logger.info(f"Completed {len(valid_analyses)} ultra professional trending analyses with pattern pre-filtering")
+            logger.info(f"📊 IA1 PROCESSING RESULTS: {len(valid_analyses)} analyzed, {filtered_count} pattern-filtered, {rejected_no_data_count} data-rejected, {len(top_opportunities) - len(valid_analyses) - filtered_count - rejected_no_data_count} errors")
+            logger.info(f"Completed {len(valid_analyses)} ultra professional analyses with REAL OHLCV data only")
             
             # 3. Ultra professional IA2 decisions (parallel processing)
             decision_tasks = []
