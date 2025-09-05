@@ -715,10 +715,109 @@ class DualAITradingBotTester:
         flow_success = components_passed >= 3  # At least 3/4 components working
         
         print(f"\n   🎯 End-to-End Flow Assessment:")
-        print(f"      Components Passed: {components_passed}/3")
+        print(f"      Components Passed: {components_passed}/4")
         print(f"      Flow Status: {'✅ SUCCESS' if flow_success else '❌ FAILED'}")
         
         return flow_success
+
+    async def run_ia2_enhanced_decision_agent_tests(self):
+        """Run comprehensive IA2 Enhanced Decision Agent tests for new improvements"""
+        print("🤖 Starting IA2 Enhanced Decision Agent Tests")
+        print("=" * 70)
+        print(f"🎯 Testing IA2 Enhanced Improvements:")
+        print(f"   • Improved Confidence Calculation (50% base, additive adjustments)")
+        print(f"   • Industry-Standard Thresholds (55% moderate, 65% strong)")
+        print(f"   • Enhanced Signal Generation (>10% trading rate)")
+        print(f"   • Risk-Reward Optimization (1.2:1 ratio)")
+        print("=" * 70)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. IA2 Decision availability test
+        print(f"\n2️⃣ IA2 DECISION AVAILABILITY TEST")
+        decision_success, _ = self.test_get_decisions()
+        
+        # 3. Enhanced IA2 Confidence calculation test
+        print(f"\n3️⃣ IA2 ENHANCED CONFIDENCE CALCULATION TEST")
+        enhanced_confidence_test = self.test_ia2_enhanced_confidence_calculation()
+        
+        # 4. Enhanced IA2 Trading thresholds test
+        print(f"\n4️⃣ IA2 ENHANCED TRADING THRESHOLDS TEST")
+        enhanced_threshold_test = self.test_ia2_enhanced_trading_thresholds()
+        
+        # 5. IA2 Signal generation rate test
+        print(f"\n5️⃣ IA2 SIGNAL GENERATION RATE TEST")
+        signal_generation_test = self.test_ia2_signal_generation_rate()
+        
+        # 6. IA2 Reasoning quality test
+        print(f"\n6️⃣ IA2 REASONING QUALITY TEST")
+        reasoning_test = self.test_ia2_reasoning_quality()
+        
+        # 7. IA2 End-to-end flow test
+        print(f"\n7️⃣ IA2 ENHANCED END-TO-END FLOW TEST")
+        flow_test = await self.test_ia2_end_to_end_flow()
+        
+        # Results Summary
+        print("\n" + "=" * 70)
+        print("📊 IA2 ENHANCED DECISION AGENT TEST RESULTS")
+        print("=" * 70)
+        
+        print(f"\n🔍 Enhanced Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • IA2 Decision Availability: {'✅' if decision_success else '❌'}")
+        print(f"   • Enhanced Confidence Calculation: {'✅' if enhanced_confidence_test else '❌'}")
+        print(f"   • Enhanced Trading Thresholds: {'✅' if enhanced_threshold_test else '❌'}")
+        print(f"   • Signal Generation Rate: {'✅' if signal_generation_test else '❌'}")
+        print(f"   • Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        print(f"   • Enhanced End-to-End Flow: {'✅' if flow_test else '❌'}")
+        
+        # Overall assessment for enhanced features
+        critical_enhanced_tests = [
+            enhanced_confidence_test, 
+            enhanced_threshold_test, 
+            signal_generation_test, 
+            reasoning_test
+        ]
+        critical_passed = sum(critical_enhanced_tests)
+        
+        print(f"\n🎯 Enhanced IA2 Assessment:")
+        if critical_passed == 4:
+            print(f"   ✅ IA2 ENHANCED IMPROVEMENTS SUCCESSFUL - All enhanced features working")
+            ia2_status = "SUCCESS"
+        elif critical_passed >= 3:
+            print(f"   ⚠️  IA2 ENHANCED IMPROVEMENTS PARTIAL - Most features working")
+            ia2_status = "PARTIAL"
+        elif critical_passed >= 2:
+            print(f"   ⚠️  IA2 ENHANCED IMPROVEMENTS LIMITED - Some features working")
+            ia2_status = "LIMITED"
+        else:
+            print(f"   ❌ IA2 ENHANCED IMPROVEMENTS FAILED - Major issues detected")
+            ia2_status = "FAILED"
+        
+        # Specific feedback on key improvements
+        print(f"\n📋 Key Enhancement Status:")
+        print(f"   • Confidence System (50% base + additive): {'✅' if enhanced_confidence_test else '❌'}")
+        print(f"   • Industry Thresholds (55%/65%): {'✅' if enhanced_threshold_test else '❌'}")
+        print(f"   • Signal Generation (>10% rate): {'✅' if signal_generation_test else '❌'}")
+        print(f"   • LLM Response Parsing: {'✅' if reasoning_test else '❌'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return ia2_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "ia2_available": decision_success,
+            "enhanced_confidence_working": enhanced_confidence_test,
+            "enhanced_thresholds_working": enhanced_threshold_test,
+            "signal_generation_working": signal_generation_test,
+            "reasoning_quality": reasoning_test,
+            "enhanced_end_to_end_working": flow_test
+        }
 
     async def run_ia2_decision_agent_tests(self):
         """Run comprehensive IA2 Decision Agent tests"""
