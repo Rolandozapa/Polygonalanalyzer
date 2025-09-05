@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "IA1 Performance Optimization - Reduce analysis time from 50-60 seconds to 15-20 seconds by reducing historical data window from 30 days to 10 days for faster trend analysis while maintaining accuracy"
+## user_problem_statement: "IA2 Decision Agent Critical Issues - IA2 has very low confidence (37.3%) and reasoning field is null, preventing proper trading decisions"
 
 ## backend:
   - task: "Optimize IA1 historical data retrieval"
