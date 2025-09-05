@@ -657,22 +657,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
             return self._create_fallback_analysis(opportunity)
     
-    async def _get_enhanced_historical_data(self, symbol: str, days: int = 50) -> pd.DataFrame:
-        """Get enhanced historical data avec vraies APIs OHLCV - 50 jours pour RSI/MACD complets"""
+    async def _get_enhanced_historical_data(self, symbol: str, days: int = 50) -> Optional[pd.DataFrame]:
+        """Get enhanced historical data - VRAIES données seulement, pas de synthétique"""
         try:
             # Utilise le système OHLCV du technical_pattern_detector (Binance, CoinGecko, etc.)
             real_data = await technical_pattern_detector._get_ohlcv_data(symbol)
             
-            if real_data is not None and len(real_data) >= 26:  # Minimum pour MACD (26 jours, pas 35)
+            if real_data is not None and len(real_data) >= 26:  # Minimum pour MACD
                 logger.info(f"✅ IA1 using REAL OHLCV data for {symbol}: {len(real_data)} days")
                 return real_data.tail(days)  # Garde les X derniers jours
             else:
-                logger.warning(f"⚠️ IA1 fallback to synthetic data for {symbol} (real data insufficient: {len(real_data) if real_data is not None else 0} days)")
-                return self._generate_enhanced_synthetic_ohlcv(days)
+                logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient real data: {len(real_data) if real_data is not None else 0} days")
+                return None  # Pas de données synthétiques
                 
         except Exception as e:
-            logger.warning(f"⚠️ IA1 OHLCV error for {symbol}, using synthetic: {e}")
-            return self._generate_enhanced_synthetic_ohlcv(days)
+            logger.warning(f"❌ IA1 REJECTING {symbol} - OHLCV API error: {e}")
+            return None  # Pas de fallback synthétique
     
     def _generate_enhanced_synthetic_ohlcv(self, days: int = 50) -> pd.DataFrame:
         """Generate enhanced synthetic OHLCV data - 50 jours pour calculs techniques complets"""
