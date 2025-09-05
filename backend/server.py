@@ -3713,6 +3713,80 @@ async def test_bingx_futures():
             "error": str(e),
             "message": "Futures account test completely failed"
         }
+
+@api_router.post("/execute-futures-test-trade")
+async def execute_futures_test_trade():
+    """Execute a REAL futures test trade on BingX (requires IP whitelist + funds)"""
+    try:
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
+        
+        logger.warning("🚨 ATTEMPTING REAL FUTURES TRADE!")
+        
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
+            
+            # Step 1: Get futures account balance
+            futures_account = await client.swap.query_account_data()
+            balance = float(getattr(futures_account.data, 'balance', 0))
+            
+            if balance < 10:
+                return {
+                    "status": "insufficient_futures_balance",
+                    "balance": balance,
+                    "message": f"Need at least $10 for futures trade (found: ${balance})"
+                }
+            
+            # Step 2: Get BTC-USDT futures price
+            btc_ticker = await client.swap.symbol_price_ticker(symbol="BTC-USDT")
+            current_price = float(btc_ticker.data.price)
+            
+            # Step 3: Calculate small futures position (0.001 BTC = ~$95)
+            quantity = 0.001  # Small BTC amount for futures
+            
+            logger.warning(f"🚀 EXECUTING FUTURES TRADE: {quantity} BTC at ${current_price}")
+            
+            # Step 4: EXECUTE REAL FUTURES TRADE
+            order_result = await client.swap.place_order(
+                symbol="BTC-USDT",
+                side="Buy",  # or "Sell"
+                positionSide="Long",
+                type="Market",
+                quantity=str(quantity)
+            )
+            
+            logger.info(f"✅ FUTURES TRADE EXECUTED: {order_result}")
+            
+            return {
+                "status": "futures_trade_executed", 
+                "message": "✅ FUTURES TRADE SUCCESSFUL - BingX FUTURES CONTROL CONFIRMED!",
+                "trade_details": {
+                    "symbol": "BTC-USDT",
+                    "side": "Buy",
+                    "position_side": "Long",
+                    "quantity": quantity,
+                    "price": current_price,
+                    "value_usdt": quantity * current_price
+                },
+                "order_result": str(order_result),
+                "futures_control": "CONFIRMED"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ FUTURES TRADE FAILED: {e}")
+        return {
+            "status": "futures_trade_failed",
+            "error": str(e),
+            "message": "Futures trade failed - check IP whitelist and permissions"
+        }
+
+@api_router.post("/test-bingx-trade")
 async def test_bingx_trade():
     """Test BingX trading capabilities with correct async context"""
     try:
