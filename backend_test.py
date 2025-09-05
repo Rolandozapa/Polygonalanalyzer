@@ -3814,6 +3814,344 @@ class DualAITradingBotTester:
         
         return integration_success
 
+    def test_claude_ia2_integration(self):
+        """Test Claude integration for IA2 decision agent"""
+        print(f"\n🤖 Testing Claude Integration for IA2...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for Claude testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for Claude testing")
+            return False
+        
+        print(f"   📊 Analyzing Claude IA2 integration on {len(decisions)} decisions...")
+        
+        # Test for Claude-specific improvements
+        claude_indicators = 0
+        sophisticated_reasoning = 0
+        enhanced_analysis = 0
+        
+        for i, decision in enumerate(decisions[:10]):  # Test first 10 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            reasoning = decision.get('ia2_reasoning', '')
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold')
+            
+            if i < 3:  # Show details for first 3
+                print(f"\n   Decision {i+1} - {symbol} ({signal}):")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Reasoning length: {len(reasoning)} chars")
+                print(f"      Reasoning preview: {reasoning[:150]}...")
+            
+            # Check for Claude-specific sophisticated reasoning patterns
+            claude_keywords = [
+                'comprehensive analysis', 'technical confluence', 'market context',
+                'risk assessment', 'strategic timing', 'behavioral factors',
+                'nuanced', 'sophisticated', 'multi-factor', 'confluence'
+            ]
+            
+            sophisticated_keywords = [
+                'alignment', 'confirmation', 'validation', 'convergence',
+                'momentum', 'sentiment', 'contrarian', 'strategic'
+            ]
+            
+            # Check for Claude indicators
+            if any(keyword in reasoning.lower() for keyword in claude_keywords):
+                claude_indicators += 1
+            
+            # Check for sophisticated reasoning
+            if (len(reasoning) > 200 and 
+                any(keyword in reasoning.lower() for keyword in sophisticated_keywords) and
+                reasoning.count('.') > 3):  # Multiple sentences
+                sophisticated_reasoning += 1
+            
+            # Check for enhanced analysis structure
+            if ('technical' in reasoning.lower() and 
+                'confidence' in reasoning.lower() and
+                len(reasoning) > 100):
+                enhanced_analysis += 1
+        
+        total_tested = min(len(decisions), 10)
+        claude_rate = claude_indicators / total_tested
+        sophistication_rate = sophisticated_reasoning / total_tested
+        enhancement_rate = enhanced_analysis / total_tested
+        
+        print(f"\n   📊 Claude Integration Analysis:")
+        print(f"      Claude Indicators: {claude_indicators}/{total_tested} ({claude_rate*100:.1f}%)")
+        print(f"      Sophisticated Reasoning: {sophisticated_reasoning}/{total_tested} ({sophistication_rate*100:.1f}%)")
+        print(f"      Enhanced Analysis: {enhanced_analysis}/{total_tested} ({enhancement_rate*100:.1f}%)")
+        
+        # Validation criteria for Claude integration
+        claude_present = claude_rate >= 0.3  # 30% should show Claude patterns
+        sophistication_improved = sophistication_rate >= 0.5  # 50% should be sophisticated
+        analysis_enhanced = enhancement_rate >= 0.7  # 70% should be enhanced
+        
+        print(f"\n   ✅ Claude Integration Validation:")
+        print(f"      Claude Patterns Present: {'✅' if claude_present else '❌'} (≥30%)")
+        print(f"      Sophisticated Reasoning: {'✅' if sophistication_improved else '❌'} (≥50%)")
+        print(f"      Enhanced Analysis: {'✅' if analysis_enhanced else '❌'} (≥70%)")
+        
+        claude_integration_working = claude_present and sophistication_improved and analysis_enhanced
+        
+        print(f"\n   🎯 Claude IA2 Integration: {'✅ SUCCESS' if claude_integration_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return claude_integration_working
+
+    def test_enhanced_ohlcv_fetching(self):
+        """Test enhanced OHLCV fetching and MACD calculation improvements"""
+        print(f"\n📈 Testing Enhanced OHLCV Fetching and MACD Calculations...")
+        
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for OHLCV testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for OHLCV testing")
+            return False
+        
+        print(f"   📊 Analyzing enhanced OHLCV data quality on {len(analyses)} analyses...")
+        
+        # Test MACD calculation improvements
+        macd_working_count = 0
+        rsi_working_count = 0
+        data_quality_count = 0
+        multi_source_count = 0
+        
+        for i, analysis in enumerate(analyses[:15]):  # Test first 15 analyses
+            symbol = analysis.get('symbol', 'Unknown')
+            rsi = analysis.get('rsi', 0)
+            macd_signal = analysis.get('macd_signal', 0)
+            data_sources = analysis.get('data_sources', [])
+            confidence = analysis.get('analysis_confidence', 0)
+            
+            if i < 5:  # Show details for first 5
+                print(f"\n   Analysis {i+1} - {symbol}:")
+                print(f"      RSI: {rsi:.2f}")
+                print(f"      MACD Signal: {macd_signal:.6f}")
+                print(f"      Data Sources: {data_sources}")
+                print(f"      Confidence: {confidence:.3f}")
+            
+            # Check MACD calculation (should NOT be 0.000 uniformly)
+            if abs(macd_signal) > 0.000001:  # Not exactly zero
+                macd_working_count += 1
+                if i < 5:
+                    print(f"      MACD Status: ✅ Working (non-zero: {macd_signal:.6f})")
+            else:
+                if i < 5:
+                    print(f"      MACD Status: ❌ Zero value detected")
+            
+            # Check RSI calculation (should be realistic)
+            if 0 < rsi < 100 and rsi != 50.0:  # Not default value
+                rsi_working_count += 1
+                if i < 5:
+                    print(f"      RSI Status: ✅ Working (realistic: {rsi:.2f})")
+            else:
+                if i < 5:
+                    print(f"      RSI Status: ❌ Default/invalid value")
+            
+            # Check data quality
+            if confidence > 0.6 and len(data_sources) > 0:
+                data_quality_count += 1
+            
+            # Check for multiple data sources (enhanced fetching)
+            if len(data_sources) >= 2:
+                multi_source_count += 1
+        
+        total_tested = min(len(analyses), 15)
+        macd_rate = macd_working_count / total_tested
+        rsi_rate = rsi_working_count / total_tested
+        quality_rate = data_quality_count / total_tested
+        multi_source_rate = multi_source_count / total_tested
+        
+        print(f"\n   📊 Enhanced OHLCV Analysis:")
+        print(f"      MACD Working: {macd_working_count}/{total_tested} ({macd_rate*100:.1f}%)")
+        print(f"      RSI Working: {rsi_working_count}/{total_tested} ({rsi_rate*100:.1f}%)")
+        print(f"      Data Quality: {data_quality_count}/{total_tested} ({quality_rate*100:.1f}%)")
+        print(f"      Multi-Source: {multi_source_count}/{total_tested} ({multi_source_rate*100:.1f}%)")
+        
+        # Validation criteria for enhanced OHLCV
+        macd_fixed = macd_rate >= 0.7  # 70% should have working MACD
+        rsi_working = rsi_rate >= 0.8  # 80% should have working RSI
+        quality_enhanced = quality_rate >= 0.6  # 60% should have good quality
+        sources_enhanced = multi_source_rate >= 0.3  # 30% should have multiple sources
+        
+        print(f"\n   ✅ Enhanced OHLCV Validation:")
+        print(f"      MACD Calculations Fixed: {'✅' if macd_fixed else '❌'} (≥70% non-zero)")
+        print(f"      RSI Calculations Working: {'✅' if rsi_working else '❌'} (≥80% realistic)")
+        print(f"      Data Quality Enhanced: {'✅' if quality_enhanced else '❌'} (≥60% good quality)")
+        print(f"      Multi-Source Fetching: {'✅' if sources_enhanced else '❌'} (≥30% multi-source)")
+        
+        ohlcv_enhanced = macd_fixed and rsi_working and quality_enhanced
+        
+        print(f"\n   🎯 Enhanced OHLCV System: {'✅ SUCCESS' if ohlcv_enhanced else '❌ NEEDS WORK'}")
+        
+        return ohlcv_enhanced
+
+    def test_end_to_end_enhanced_pipeline(self):
+        """Test the complete enhanced pipeline: Scout → Enhanced OHLCV → IA1 → IA2 (Claude)"""
+        print(f"\n🔄 Testing End-to-End Enhanced Pipeline...")
+        
+        # Test each component of the pipeline
+        print(f"   🔍 Testing pipeline components...")
+        
+        # 1. Scout (opportunities)
+        scout_success, opportunities_data = self.test_get_opportunities()
+        opportunities_count = len(opportunities_data.get('opportunities', [])) if scout_success else 0
+        print(f"      Scout: {'✅' if scout_success and opportunities_count > 0 else '❌'} ({opportunities_count} opportunities)")
+        
+        # 2. Enhanced OHLCV → IA1 (analyses)
+        ia1_success, analyses_data = self.test_get_analyses()
+        analyses_count = len(analyses_data.get('analyses', [])) if ia1_success else 0
+        print(f"      IA1 + Enhanced OHLCV: {'✅' if ia1_success and analyses_count > 0 else '❌'} ({analyses_count} analyses)")
+        
+        # 3. IA2 Claude (decisions)
+        ia2_success, decisions_data = self.test_get_decisions()
+        decisions_count = len(decisions_data.get('decisions', [])) if ia2_success else 0
+        print(f"      IA2 Claude: {'✅' if ia2_success and decisions_count > 0 else '❌'} ({decisions_count} decisions)")
+        
+        if not (scout_success and ia1_success and ia2_success):
+            print(f"   ❌ Pipeline components not all working")
+            return False
+        
+        # Test pipeline integration
+        print(f"\n   🔗 Testing pipeline integration...")
+        
+        # Check if opportunities lead to analyses
+        opportunity_symbols = set()
+        if opportunities_data and 'opportunities' in opportunities_data:
+            opportunity_symbols = set(opp.get('symbol', '') for opp in opportunities_data['opportunities'])
+        
+        analysis_symbols = set()
+        if analyses_data and 'analyses' in analyses_data:
+            analysis_symbols = set(analysis.get('symbol', '') for analysis in analyses_data['analyses'])
+        
+        decision_symbols = set()
+        if decisions_data and 'decisions' in decisions_data:
+            decision_symbols = set(decision.get('symbol', '') for decision in decisions_data['decisions'])
+        
+        # Integration metrics
+        scout_to_ia1 = len(opportunity_symbols.intersection(analysis_symbols))
+        ia1_to_ia2 = len(analysis_symbols.intersection(decision_symbols))
+        end_to_end = len(opportunity_symbols.intersection(decision_symbols))
+        
+        print(f"      Scout → IA1 Integration: {scout_to_ia1} common symbols")
+        print(f"      IA1 → IA2 Integration: {ia1_to_ia2} common symbols")
+        print(f"      End-to-End Integration: {end_to_end} common symbols")
+        
+        # Test enhanced features in pipeline
+        enhanced_ohlcv_working = self.test_enhanced_ohlcv_fetching()
+        claude_integration_working = self.test_claude_ia2_integration()
+        
+        print(f"\n   🎯 Enhanced Pipeline Features:")
+        print(f"      Enhanced OHLCV: {'✅' if enhanced_ohlcv_working else '❌'}")
+        print(f"      Claude IA2: {'✅' if claude_integration_working else '❌'}")
+        
+        # Pipeline validation
+        integration_working = scout_to_ia1 > 0 and ia1_to_ia2 > 0
+        enhancements_working = enhanced_ohlcv_working and claude_integration_working
+        
+        pipeline_success = integration_working and enhancements_working
+        
+        print(f"\n   🎯 Enhanced Pipeline Assessment: {'✅ SUCCESS' if pipeline_success else '❌ NEEDS WORK'}")
+        
+        return pipeline_success
+
+    def test_data_quality_validation(self):
+        """Test enhanced data quality validation and multiple source integration"""
+        print(f"\n🔍 Testing Data Quality Validation...")
+        
+        # Test opportunities data quality
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for data quality testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities available for data quality testing")
+            return False
+        
+        print(f"   📊 Analyzing data quality of {len(opportunities)} opportunities...")
+        
+        # Data quality metrics
+        high_confidence_count = 0
+        multi_source_count = 0
+        complete_data_count = 0
+        validated_symbols = []
+        
+        for i, opp in enumerate(opportunities[:10]):  # Test first 10
+            symbol = opp.get('symbol', 'Unknown')
+            confidence = opp.get('data_confidence', 0)
+            sources = opp.get('data_sources', [])
+            price = opp.get('current_price', 0)
+            volume = opp.get('volume_24h', 0)
+            market_cap = opp.get('market_cap', 0)
+            
+            if i < 3:  # Show details for first 3
+                print(f"\n   Opportunity {i+1} - {symbol}:")
+                print(f"      Data Confidence: {confidence:.3f}")
+                print(f"      Data Sources: {sources}")
+                print(f"      Price: ${price:,.2f}")
+                print(f"      Volume 24h: ${volume:,.0f}")
+                print(f"      Market Cap: ${market_cap:,.0f}" if market_cap else "      Market Cap: N/A")
+            
+            # Check data quality criteria
+            if confidence >= 0.7:
+                high_confidence_count += 1
+                if i < 3:
+                    print(f"      Quality: ✅ High confidence")
+            
+            if len(sources) >= 2:
+                multi_source_count += 1
+                if i < 3:
+                    print(f"      Sources: ✅ Multi-source ({len(sources)} sources)")
+            
+            if price > 0 and volume > 0:
+                complete_data_count += 1
+                if i < 3:
+                    print(f"      Completeness: ✅ Complete data")
+            
+            # Check for enhanced data sources
+            enhanced_sources = ['Binance Enhanced', 'CoinGecko Enhanced', 'Enhanced']
+            if any(source for source in sources if any(enhanced in source for enhanced in enhanced_sources)):
+                validated_symbols.append(symbol)
+        
+        total_tested = min(len(opportunities), 10)
+        confidence_rate = high_confidence_count / total_tested
+        multi_source_rate = multi_source_count / total_tested
+        completeness_rate = complete_data_count / total_tested
+        enhanced_rate = len(validated_symbols) / total_tested
+        
+        print(f"\n   📊 Data Quality Analysis:")
+        print(f"      High Confidence (≥70%): {high_confidence_count}/{total_tested} ({confidence_rate*100:.1f}%)")
+        print(f"      Multi-Source Data: {multi_source_count}/{total_tested} ({multi_source_rate*100:.1f}%)")
+        print(f"      Complete Data: {complete_data_count}/{total_tested} ({completeness_rate*100:.1f}%)")
+        print(f"      Enhanced Sources: {len(validated_symbols)}/{total_tested} ({enhanced_rate*100:.1f}%)")
+        
+        # Validation criteria
+        quality_high = confidence_rate >= 0.6  # 60% should have high confidence
+        sources_diverse = multi_source_rate >= 0.4  # 40% should have multiple sources
+        data_complete = completeness_rate >= 0.8  # 80% should have complete data
+        enhancement_present = enhanced_rate >= 0.3  # 30% should use enhanced sources
+        
+        print(f"\n   ✅ Data Quality Validation:")
+        print(f"      High Confidence Rate: {'✅' if quality_high else '❌'} (≥60%)")
+        print(f"      Multi-Source Rate: {'✅' if sources_diverse else '❌'} (≥40%)")
+        print(f"      Data Completeness: {'✅' if data_complete else '❌'} (≥80%)")
+        print(f"      Enhanced Sources: {'✅' if enhancement_present else '❌'} (≥30%)")
+        
+        data_quality_validated = quality_high and sources_diverse and data_complete
+        
+        print(f"\n   🎯 Data Quality Assessment: {'✅ SUCCESS' if data_quality_validated else '❌ NEEDS IMPROVEMENT'}")
+        
+        return data_quality_validated
+
     def run_comprehensive_fixes_tests(self):
         """Run comprehensive tests for BingX balance and IA2 confidence fixes"""
         print(f"🚀 Starting Comprehensive Fixes Tests")
