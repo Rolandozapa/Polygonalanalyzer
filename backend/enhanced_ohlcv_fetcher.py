@@ -15,7 +15,7 @@ class EnhancedOHLCVFetcher:
     """Enhanced OHLCV data fetcher with improved symbol resolution and multiple sources"""
     
     def __init__(self):
-        self.lookback_days = 100  # Increased for better technical indicators
+        self.lookback_days = 150  # Increased for better technical indicators (especially MACD)
         self.coinapi_key = os.environ.get('COINAPI_KEY')
         self.coingecko_key = os.environ.get('COINGECKO_API_KEY') 
         self.twelvedata_key = os.environ.get('TWELVEDATA_KEY')
