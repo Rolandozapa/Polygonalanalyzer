@@ -692,12 +692,23 @@ class UltraProfessionalIA1TechnicalAnalyst:
     def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
         """Calculate RSI indicator"""
         try:
+            if len(prices) < period + 1:
+                return 50.0  # Neutral RSI
+            
             delta = prices.diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
             loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+            
             rs = gain / loss
             rsi = 100 - (100 / (1 + rs))
-            return float(rsi.iloc[-1])
+            
+            rsi_value = float(rsi.iloc[-1])
+            
+            # Ensure RSI is within valid range
+            if pd.isna(rsi_value) or not (0 <= rsi_value <= 100):
+                return 50.0
+            
+            return round(rsi_value, 2)
         except:
             return 50.0
     
