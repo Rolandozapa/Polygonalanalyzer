@@ -687,6 +687,196 @@ class EnhancedOHLCVFetcher:
         logger.error(f"🚨 COMPLETE FAILURE: No historical data available for {original_symbol} from any source")
         return None
     
+    def _parse_alpha_vantage_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse Alpha Vantage digital currency data"""
+        try:
+            time_series = data.get('Time Series (Digital Currency Daily)', {})
+            if not time_series:
+                return None
+            
+            records = []
+            for date_str, values in time_series.items():
+                records.append({
+                    'timestamp': pd.to_datetime(date_str),
+                    'Open': float(values.get('1a. open (USD)', 0)),
+                    'High': float(values.get('2a. high (USD)', 0)),
+                    'Low': float(values.get('3a. low (USD)', 0)),
+                    'Close': float(values.get('4a. close (USD)', 0)),
+                    'Volume': float(values.get('5. volume', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing Alpha Vantage data for {symbol}: {e}")
+            return None
+    
+    def _parse_polygon_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse Polygon aggregates data"""
+        try:
+            results = data.get('results', [])
+            if not results:
+                return None
+            
+            records = []
+            for item in results:
+                records.append({
+                    'timestamp': pd.to_datetime(item['t'], unit='ms'),
+                    'Open': float(item['o']),
+                    'High': float(item['h']),
+                    'Low': float(item['l']),
+                    'Close': float(item['c']),
+                    'Volume': float(item.get('v', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing Polygon data for {symbol}: {e}")
+            return None
+    
+    def _parse_iex_cloud_data(self, data: List, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse IEX Cloud crypto data"""
+        try:
+            if not data:
+                return None
+            
+            records = []
+            for item in data:
+                records.append({
+                    'timestamp': pd.to_datetime(item['date']),
+                    'Open': float(item.get('open', item.get('close', 0))),
+                    'High': float(item.get('high', item.get('close', 0))),
+                    'Low': float(item.get('low', item.get('close', 0))),
+                    'Close': float(item['close']),
+                    'Volume': float(item.get('volume', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing IEX Cloud data for {symbol}: {e}")
+            return None
+    
+    def _parse_coincap_historical_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CoinCap historical data"""
+        try:
+            history_data = data.get('data', [])
+            if not history_data:
+                return None
+            
+            records = []
+            for item in history_data:
+                price = float(item['priceUsd'])
+                records.append({
+                    'timestamp': pd.to_datetime(item['time']),
+                    'Open': price,  # CoinCap only provides price, not OHLC
+                    'High': price,
+                    'Low': price,
+                    'Close': price,
+                    'Volume': 1000000  # Synthetic volume
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CoinCap historical data for {symbol}: {e}")
+            return None
+    
+    def _parse_messari_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse Messari time series data"""
+        try:
+            time_series = data.get('data', {}).get('values', [])
+            if not time_series:
+                return None
+            
+            records = []
+            for item in time_series:
+                timestamp = pd.to_datetime(item[0], unit='ms')
+                price = float(item[1]) if item[1] is not None else None
+                
+                if price is not None:
+                    records.append({
+                        'timestamp': timestamp,
+                        'Open': price,  # Messari provides price points, not full OHLC
+                        'High': price,
+                        'Low': price,
+                        'Close': price,
+                        'Volume': 1000000  # Synthetic volume
+                    })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing Messari data for {symbol}: {e}")
+            return None
+    
+    def _parse_cryptocompare_historical_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CryptoCompare historical data"""
+        try:
+            time_series = data.get('Data', {}).get('Data', [])
+            if not time_series:
+                return None
+            
+            records = []
+            for item in time_series:
+                records.append({
+                    'timestamp': pd.to_datetime(item['time'], unit='s'),
+                    'Open': float(item['open']),
+                    'High': float(item['high']),
+                    'Low': float(item['low']),
+                    'Close': float(item['close']),
+                    'Volume': float(item.get('volumeto', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CryptoCompare historical data for {symbol}: {e}")
+            return None
+    
     def _combine_multi_source_data(self, successful_data: List[Tuple[str, pd.DataFrame]], symbol: str) -> pd.DataFrame:
         """Combine and validate data from multiple sources"""
         try:
