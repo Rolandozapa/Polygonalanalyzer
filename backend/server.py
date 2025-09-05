@@ -1170,7 +1170,7 @@ IA1 TECHNICAL ANALYSIS:
 - Resistance Levels: {', '.join([f'${level:.6f}' for level in analysis.resistance_levels])}
 - Patterns Detected: {', '.join(analysis.patterns_detected)}
 - IA1 Confidence: {analysis.analysis_confidence:.2%}
-- IA1 Reasoning: {analysis.reasoning[:500]}...
+- IA1 Reasoning: {analysis.ia1_reasoning[:500]}...
 
 ADVANCED STRATEGY REQUIREMENTS:
 1. Create multi-level take profit strategy (4 levels with position distribution)
