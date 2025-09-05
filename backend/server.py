@@ -3342,6 +3342,136 @@ class UltraProfessionalTradingOrchestrator:
             self._initialized = True
             logger.info("✅ Trading orchestrator initialized with auto-trending system")
     
+    async def start_trailing_stop_monitor(self):
+        """Start background monitoring of trailing stops"""
+        if self.trailing_stop_monitor_active:
+            logger.info("🎯 Trailing stop monitor already active")
+            return
+            
+        self.trailing_stop_monitor_active = True
+        self.trailing_stop_task = asyncio.create_task(self._trailing_stop_monitor_loop())
+        logger.info("🚀 Trailing stop monitor started")
+    
+    async def stop_trailing_stop_monitor(self):
+        """Stop background monitoring of trailing stops"""
+        self.trailing_stop_monitor_active = False
+        if self.trailing_stop_task:
+            self.trailing_stop_task.cancel()
+            try:
+                await self.trailing_stop_task
+            except asyncio.CancelledError:
+                pass
+        logger.info("🛑 Trailing stop monitor stopped")
+    
+    async def _trailing_stop_monitor_loop(self):
+        """Background loop to monitor and update trailing stops"""
+        logger.info("🔄 Starting trailing stop monitoring loop...")
+        
+        while self.trailing_stop_monitor_active:
+            try:
+                # Get current prices for all active trailing stops
+                if trailing_stop_manager.active_trailing_stops:
+                    symbols_to_check = list(set(ts.symbol for ts in trailing_stop_manager.active_trailing_stops.values()))
+                    
+                    if symbols_to_check:
+                        # Fetch current prices from market aggregator
+                        current_prices = await self._get_current_prices(symbols_to_check)
+                        
+                        if current_prices:
+                            # Update trailing stops based on current prices
+                            await trailing_stop_manager.check_and_update_trailing_stops(current_prices)
+                        
+                        logger.debug(f"🔍 Checked {len(symbols_to_check)} symbols for trailing stop updates")
+                
+                # Check every 30 seconds (adjustable based on your needs)
+                await asyncio.sleep(30)
+                
+            except asyncio.CancelledError:
+                logger.info("🛑 Trailing stop monitor cancelled")
+                break
+            except Exception as e:
+                logger.error(f"❌ Error in trailing stop monitor: {e}")
+                await asyncio.sleep(60)  # Wait longer if there's an error
+        
+        logger.info("🛑 Trailing stop monitoring loop ended")
+    
+    async def _get_current_prices(self, symbols: List[str]) -> Dict[str, float]:
+        """Get current prices for specified symbols"""
+        try:
+            current_prices = {}
+            
+            for symbol in symbols:
+                # Use market aggregator to get current price
+                try:
+                    # Remove USDT suffix for API calls if present
+                    clean_symbol = symbol.replace('USDT', '').upper()
+                    
+                    # Get price from market aggregator
+                    response = await self.scout.market_aggregator.get_comprehensive_market_data(clean_symbol)
+                    if response and response.current_price:
+                        current_prices[symbol] = response.current_price
+                        logger.debug(f"💰 {symbol}: ${response.current_price:.6f}")
+                    
+                except Exception as e:
+                    logger.warning(f"❌ Failed to get price for {symbol}: {e}")
+                    continue
+            
+            return current_prices
+            
+        except Exception as e:
+            logger.error(f"❌ Error getting current prices: {e}")
+            return {}
+    
+    async def start_trading_system(self):
+        """Start the ultra professional trading system with trailing stops"""
+        if self.is_running:
+            return {"status": "already_running", "message": "Trading system is already active"}
+        
+        try:
+            # Initialize if not already done
+            if not self._initialized:
+                await self.initialize()
+            
+            # Start main trading system
+            self.is_running = True
+            
+            # Start trailing stop monitor
+            await self.start_trailing_stop_monitor()
+            
+            # Start main trading loop in background
+            asyncio.create_task(self._run_continuous_trading())
+            
+            logger.info("🚀 Ultra Professional Trading System started with trailing stops!")
+            return {"status": "started", "message": "Ultra Professional Trading System activated with trailing stop monitoring"}
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to start trading system: {e}")
+            self.is_running = False
+            return {"status": "error", "message": f"Failed to start system: {str(e)}"}
+    
+    async def stop_trading_system(self):
+        """Stop the ultra professional trading system and trailing stops"""
+        if not self.is_running:
+            return {"status": "not_running", "message": "Trading system is not active"}
+        
+        try:
+            # Stop main trading system
+            self.is_running = False
+            
+            # Stop trailing stop monitor
+            await self.stop_trailing_stop_monitor()
+            
+            logger.info("🛑 Ultra Professional Trading System stopped")
+            return {"status": "stopped", "message": "Trading system and trailing stops deactivated"}
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to stop trading system: {e}")
+            return {"status": "error", "message": f"Failed to stop system: {str(e)}"}
+    
+    async def start(self):
+        """Legacy start method - redirects to start_trading_system"""
+        return await self.start_trading_system()
+    
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """
         Filtrage IA1→IA2 MINIMAL : Si IA1 a produit une analyse, elle est valable pour IA2
