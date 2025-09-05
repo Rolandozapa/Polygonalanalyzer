@@ -50,6 +50,7 @@ class MarketDataResponse:
     price: float
     volume_24h: float
     price_change_24h: float
+    volatility: float = 0.02  # Default volatility estimate
     market_cap: Optional[float] = None
     market_cap_rank: Optional[int] = None
     source: str = ""
