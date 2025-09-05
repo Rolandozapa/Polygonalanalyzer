@@ -1072,6 +1072,488 @@ class DualAITradingBotTester:
         
         return distribution_healthy
 
+    def test_decision_cache_clear_endpoint(self):
+        """Test the new /api/decisions/clear endpoint"""
+        print(f"\n🗑️ Testing Decision Cache Clear Endpoint...")
+        
+        # First, check current decision count
+        success, initial_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot get initial decisions")
+            return False
+        
+        initial_count = len(initial_data.get('decisions', []))
+        print(f"   📊 Initial decisions count: {initial_count}")
+        
+        # Test the clear endpoint
+        success, clear_result = self.run_test("Clear Decision Cache", "POST", "decisions/clear", 200)
+        
+        if not success:
+            print(f"   ❌ Clear endpoint failed")
+            return False
+        
+        # Verify the clear result
+        if clear_result:
+            cleared_decisions = clear_result.get('cleared_decisions', 0)
+            cleared_analyses = clear_result.get('cleared_analyses', 0)
+            cleared_opportunities = clear_result.get('cleared_opportunities', 0)
+            
+            print(f"   ✅ Cache cleared successfully:")
+            print(f"      Decisions cleared: {cleared_decisions}")
+            print(f"      Analyses cleared: {cleared_analyses}")
+            print(f"      Opportunities cleared: {cleared_opportunities}")
+            
+            # Verify decisions are actually cleared
+            success, after_data = self.test_get_decisions()
+            if success:
+                after_count = len(after_data.get('decisions', []))
+                print(f"   📊 After clear: {after_count} decisions (was {initial_count})")
+                
+                cache_cleared = after_count < initial_count
+                print(f"   🎯 Cache Clear Validation: {'✅' if cache_cleared else '❌'}")
+                return cache_cleared
+        
+        return False
+
+    def test_fresh_ia2_decision_generation(self):
+        """Test fresh IA2 decision generation after cache clear"""
+        print(f"\n🔄 Testing Fresh IA2 Decision Generation...")
+        
+        # Step 1: Clear the decision cache
+        print(f"   🗑️ Step 1: Clearing decision cache...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        if not cache_clear_success:
+            print(f"   ❌ Failed to clear cache - cannot test fresh generation")
+            return False
+        
+        # Step 2: Start trading system to generate fresh decisions
+        print(f"   🚀 Step 2: Starting trading system for fresh decisions...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for fresh decisions to be generated
+        print(f"   ⏱️ Step 3: Waiting for fresh IA2 decisions (90 seconds max)...")
+        
+        fresh_start_time = time.time()
+        max_wait_time = 90  # Extended wait for fresh generation
+        check_interval = 10
+        fresh_decisions_found = False
+        
+        while time.time() - fresh_start_time < max_wait_time:
+            time.sleep(check_interval)
+            
+            success, current_data = self.test_get_decisions()
+            if success:
+                current_count = len(current_data.get('decisions', []))
+                elapsed_time = time.time() - fresh_start_time
+                
+                print(f"   📈 After {elapsed_time:.1f}s: {current_count} fresh decisions")
+                
+                if current_count > 0:
+                    print(f"   ✅ Fresh IA2 decisions generated!")
+                    fresh_decisions_found = True
+                    break
+        
+        # Step 4: Stop trading system
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        if not fresh_decisions_found:
+            print(f"   ❌ No fresh decisions generated within {max_wait_time}s")
+            return False
+        
+        # Step 5: Validate fresh decisions meet the fixes
+        print(f"   🔍 Step 5: Validating fresh decisions meet IA2 fixes...")
+        
+        success, fresh_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve fresh decisions for validation")
+            return False
+        
+        fresh_decisions = fresh_data.get('decisions', [])
+        if len(fresh_decisions) == 0:
+            print(f"   ❌ No fresh decisions available for validation")
+            return False
+        
+        # Validate 50% minimum confidence
+        confidence_violations = 0
+        reasoning_quality = 0
+        trading_signals = 0
+        
+        for decision in fresh_decisions:
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            signal = decision.get('signal', 'hold')
+            
+            # Check 50% minimum confidence
+            if confidence < 0.50:
+                confidence_violations += 1
+            
+            # Check reasoning quality
+            if reasoning and reasoning != "null" and len(reasoning) > 50:
+                reasoning_quality += 1
+            
+            # Check trading signals
+            if signal.lower() in ['long', 'short']:
+                trading_signals += 1
+        
+        total_fresh = len(fresh_decisions)
+        confidence_rate = (total_fresh - confidence_violations) / total_fresh
+        reasoning_rate = reasoning_quality / total_fresh
+        trading_rate = trading_signals / total_fresh
+        
+        print(f"\n   📊 Fresh Decision Validation:")
+        print(f"      Total Fresh Decisions: {total_fresh}")
+        print(f"      50% Confidence Compliance: {confidence_rate*100:.1f}% ({total_fresh - confidence_violations}/{total_fresh})")
+        print(f"      Reasoning Quality: {reasoning_rate*100:.1f}% ({reasoning_quality}/{total_fresh})")
+        print(f"      Trading Rate: {trading_rate*100:.1f}% ({trading_signals}/{total_fresh})")
+        
+        # Validation criteria for fresh decisions
+        confidence_fix_working = confidence_violations == 0  # NO violations allowed
+        reasoning_fix_working = reasoning_rate >= 0.8  # 80% should have proper reasoning
+        trading_signals_working = trading_rate > 0.05  # At least 5% trading signals
+        
+        print(f"\n   ✅ Fresh Decision Fix Validation:")
+        print(f"      50% Minimum Enforced: {'✅' if confidence_fix_working else f'❌ {confidence_violations} violations'}")
+        print(f"      Reasoning Fixed: {'✅' if reasoning_fix_working else '❌'}")
+        print(f"      Trading Signals Generated: {'✅' if trading_signals_working else '❌'}")
+        
+        fresh_generation_success = confidence_fix_working and reasoning_fix_working and trading_signals_working
+        
+        print(f"\n   🎯 Fresh IA2 Generation: {'✅ SUCCESS' if fresh_generation_success else '❌ FAILED'}")
+        
+        return fresh_generation_success
+
+    def test_ia2_improvements_with_fresh_data(self):
+        """Test IA2 improvements specifically with fresh data after cache clear"""
+        print(f"\n🎯 Testing IA2 Improvements with Fresh Data...")
+        
+        # Clear cache and generate fresh decisions
+        fresh_success = self.test_fresh_ia2_decision_generation()
+        if not fresh_success:
+            print(f"   ❌ Cannot generate fresh decisions for testing")
+            return False
+        
+        # Get fresh decisions for detailed analysis
+        success, fresh_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve fresh decisions")
+            return False
+        
+        fresh_decisions = fresh_data.get('decisions', [])
+        if len(fresh_decisions) == 0:
+            print(f"   ❌ No fresh decisions available")
+            return False
+        
+        print(f"   📊 Analyzing {len(fresh_decisions)} fresh decisions...")
+        
+        # Detailed analysis of fresh decisions
+        confidences = []
+        signals = {'long': 0, 'short': 0, 'hold': 0}
+        reasoning_lengths = []
+        
+        for i, decision in enumerate(fresh_decisions):
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold').lower()
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            confidences.append(confidence)
+            reasoning_lengths.append(len(reasoning) if reasoning else 0)
+            
+            if signal in signals:
+                signals[signal] += 1
+            
+            # Show first 5 fresh decisions in detail
+            if i < 5:
+                print(f"\n   Fresh Decision {i+1} - {symbol}:")
+                print(f"      Signal: {signal.upper()}")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      50% Check: {'✅' if confidence >= 0.50 else '❌ VIOLATION'}")
+                print(f"      Reasoning: {'✅' if reasoning and len(reasoning) > 50 else '❌'} ({len(reasoning)} chars)")
+        
+        # Calculate fresh decision statistics
+        if confidences:
+            avg_confidence = sum(confidences) / len(confidences)
+            min_confidence = min(confidences)
+            max_confidence = max(confidences)
+            
+            # Confidence distribution
+            conf_50_plus = sum(1 for c in confidences if c >= 0.50)
+            conf_55_plus = sum(1 for c in confidences if c >= 0.55)
+            conf_65_plus = sum(1 for c in confidences if c >= 0.65)
+            
+            total = len(confidences)
+            trading_rate = (signals['long'] + signals['short']) / total
+            
+            print(f"\n   📊 Fresh Decision Statistics:")
+            print(f"      Average Confidence: {avg_confidence:.3f}")
+            print(f"      Min Confidence: {min_confidence:.3f}")
+            print(f"      Max Confidence: {max_confidence:.3f}")
+            print(f"      Trading Rate: {trading_rate*100:.1f}%")
+            
+            print(f"\n   🎯 Fresh Confidence Distribution:")
+            print(f"      ≥50% (Base): {conf_50_plus}/{total} ({conf_50_plus/total*100:.1f}%)")
+            print(f"      ≥55% (Moderate): {conf_55_plus}/{total} ({conf_55_plus/total*100:.1f}%)")
+            print(f"      ≥65% (Strong): {conf_65_plus}/{total} ({conf_65_plus/total*100:.1f}%)")
+            
+            print(f"\n   📈 Fresh Signal Distribution:")
+            print(f"      LONG: {signals['long']} ({signals['long']/total*100:.1f}%)")
+            print(f"      SHORT: {signals['short']} ({signals['short']/total*100:.1f}%)")
+            print(f"      HOLD: {signals['hold']} ({signals['hold']/total*100:.1f}%)")
+            
+            # Validation of fresh improvements
+            confidence_minimum_enforced = min_confidence >= 0.50
+            average_improved = avg_confidence >= 0.50
+            realistic_distribution = conf_55_plus > 0
+            trading_signals_present = trading_rate > 0.10
+            
+            print(f"\n   ✅ Fresh IA2 Improvements Validation:")
+            print(f"      50% Minimum Enforced: {'✅' if confidence_minimum_enforced else '❌'}")
+            print(f"      Average ≥50%: {'✅' if average_improved else '❌'}")
+            print(f"      Realistic Distribution: {'✅' if realistic_distribution else '❌'}")
+            print(f"      Trading Rate >10%: {'✅' if trading_signals_present else '❌'}")
+            
+            fresh_improvements_working = (
+                confidence_minimum_enforced and
+                average_improved and
+                realistic_distribution and
+                trading_signals_present
+            )
+            
+            print(f"\n   🎯 Fresh IA2 Improvements: {'✅ SUCCESS' if fresh_improvements_working else '❌ FAILED'}")
+            
+            return fresh_improvements_working
+        
+        return False
+
+    def test_end_to_end_fresh_pipeline(self):
+        """Test complete fresh pipeline: Scout → IA1 → IA2 with cleared cache"""
+        print(f"\n🔄 Testing End-to-End Fresh Pipeline...")
+        
+        # Step 1: Clear all caches
+        print(f"   🗑️ Step 1: Clearing decision cache...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        if not cache_clear_success:
+            print(f"   ❌ Failed to clear cache")
+            return False
+        
+        # Step 2: Start trading system for complete pipeline
+        print(f"   🚀 Step 2: Starting complete trading pipeline...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Monitor pipeline progression
+        print(f"   ⏱️ Step 3: Monitoring fresh pipeline progression (120 seconds)...")
+        
+        pipeline_start_time = time.time()
+        max_wait_time = 120
+        check_interval = 15
+        
+        opportunities_found = False
+        analyses_found = False
+        decisions_found = False
+        
+        while time.time() - pipeline_start_time < max_wait_time:
+            elapsed_time = time.time() - pipeline_start_time
+            
+            # Check Scout (opportunities)
+            if not opportunities_found:
+                success, opp_data = self.test_get_opportunities()
+                if success and len(opp_data.get('opportunities', [])) > 0:
+                    opportunities_found = True
+                    print(f"   ✅ Scout: {len(opp_data['opportunities'])} opportunities found at {elapsed_time:.1f}s")
+            
+            # Check IA1 (analyses)
+            if not analyses_found:
+                success, ana_data = self.test_get_analyses()
+                if success and len(ana_data.get('analyses', [])) > 0:
+                    analyses_found = True
+                    print(f"   ✅ IA1: {len(ana_data['analyses'])} analyses found at {elapsed_time:.1f}s")
+            
+            # Check IA2 (decisions)
+            if not decisions_found:
+                success, dec_data = self.test_get_decisions()
+                if success and len(dec_data.get('decisions', [])) > 0:
+                    decisions_found = True
+                    print(f"   ✅ IA2: {len(dec_data['decisions'])} decisions found at {elapsed_time:.1f}s")
+                    break  # Pipeline complete
+            
+            time.sleep(check_interval)
+            print(f"   📊 Pipeline progress at {elapsed_time:.1f}s: Scout:{'✅' if opportunities_found else '⏳'} IA1:{'✅' if analyses_found else '⏳'} IA2:{'✅' if decisions_found else '⏳'}")
+        
+        # Step 4: Stop trading system
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Step 5: Validate complete pipeline
+        pipeline_complete = opportunities_found and analyses_found and decisions_found
+        
+        print(f"\n   📊 Fresh Pipeline Results:")
+        print(f"      Scout (Opportunities): {'✅' if opportunities_found else '❌'}")
+        print(f"      IA1 (Analyses): {'✅' if analyses_found else '❌'}")
+        print(f"      IA2 (Decisions): {'✅' if decisions_found else '❌'}")
+        
+        if pipeline_complete:
+            # Validate the quality of fresh pipeline output
+            success, final_decisions = self.test_get_decisions()
+            if success:
+                decisions = final_decisions.get('decisions', [])
+                if decisions:
+                    # Quick quality check
+                    confidences = [d.get('confidence', 0) for d in decisions]
+                    avg_confidence = sum(confidences) / len(confidences)
+                    min_confidence = min(confidences)
+                    
+                    signals = [d.get('signal', 'hold') for d in decisions]
+                    trading_signals = sum(1 for s in signals if s.lower() in ['long', 'short'])
+                    trading_rate = trading_signals / len(signals)
+                    
+                    print(f"\n   🎯 Fresh Pipeline Quality:")
+                    print(f"      Decisions Generated: {len(decisions)}")
+                    print(f"      Average Confidence: {avg_confidence:.3f}")
+                    print(f"      Min Confidence: {min_confidence:.3f}")
+                    print(f"      Trading Rate: {trading_rate*100:.1f}%")
+                    
+                    quality_good = min_confidence >= 0.50 and avg_confidence >= 0.50 and trading_rate > 0.05
+                    
+                    print(f"   🎯 Fresh Pipeline: {'✅ SUCCESS' if quality_good else '⚠️ QUALITY ISSUES'}")
+                    return quality_good
+        
+        print(f"   🎯 Fresh Pipeline: {'❌ INCOMPLETE' if not pipeline_complete else '❌ FAILED'}")
+        return False
+
+    async def run_decision_cache_and_fresh_generation_tests(self):
+        """Run comprehensive decision cache clearing and fresh IA2 decision generation tests"""
+        print("🗑️ Starting Decision Cache Clearing and Fresh IA2 Generation Tests")
+        print("=" * 80)
+        print(f"🎯 Testing Request: Decision cache clearing and fresh IA2 decision generation")
+        print(f"🔧 Expected: Clear cache → Generate fresh decisions with 50% confidence fix")
+        print(f"🔧 Expected: Fresh decisions show LONG/SHORT signals (not 100% HOLD)")
+        print(f"🔧 Expected: Fresh decisions demonstrate all IA2 improvements")
+        print("=" * 80)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. Test decision cache clear endpoint
+        print(f"\n2️⃣ DECISION CACHE CLEAR ENDPOINT TEST")
+        cache_clear_test = self.test_decision_cache_clear_endpoint()
+        
+        # 3. Test fresh IA2 decision generation
+        print(f"\n3️⃣ FRESH IA2 DECISION GENERATION TEST")
+        fresh_generation_test = self.test_fresh_ia2_decision_generation()
+        
+        # 4. Test IA2 improvements with fresh data
+        print(f"\n4️⃣ IA2 IMPROVEMENTS WITH FRESH DATA TEST")
+        fresh_improvements_test = self.test_ia2_improvements_with_fresh_data()
+        
+        # 5. Test end-to-end fresh pipeline
+        print(f"\n5️⃣ END-TO-END FRESH PIPELINE TEST")
+        fresh_pipeline_test = self.test_end_to_end_fresh_pipeline()
+        
+        # 6. Validate fresh decisions meet industry standards
+        print(f"\n6️⃣ FRESH DECISIONS INDUSTRY STANDARDS VALIDATION")
+        
+        # Get final fresh decisions for comprehensive validation
+        success, final_data = self.test_get_decisions()
+        industry_standards_met = False
+        
+        if success:
+            decisions = final_data.get('decisions', [])
+            if decisions:
+                confidences = [d.get('confidence', 0) for d in decisions]
+                signals = [d.get('signal', 'hold') for d in decisions]
+                reasoning_quality = [len(d.get('ia2_reasoning', '')) > 50 for d in decisions]
+                
+                avg_confidence = sum(confidences) / len(confidences)
+                min_confidence = min(confidences)
+                trading_rate = sum(1 for s in signals if s.lower() in ['long', 'short']) / len(signals)
+                reasoning_rate = sum(reasoning_quality) / len(reasoning_quality)
+                
+                print(f"   📊 Industry Standards Validation:")
+                print(f"      Average Confidence: {avg_confidence:.3f} (target: ≥50%)")
+                print(f"      Minimum Confidence: {min_confidence:.3f} (target: ≥50%)")
+                print(f"      Trading Rate: {trading_rate*100:.1f}% (target: >10%)")
+                print(f"      Reasoning Quality: {reasoning_rate*100:.1f}% (target: >90%)")
+                
+                industry_standards_met = (
+                    avg_confidence >= 0.50 and
+                    min_confidence >= 0.50 and
+                    trading_rate > 0.10 and
+                    reasoning_rate > 0.90
+                )
+                
+                print(f"   🎯 Industry Standards: {'✅ MET' if industry_standards_met else '❌ NOT MET'}")
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 DECISION CACHE CLEARING AND FRESH GENERATION TEST RESULTS")
+        print("=" * 80)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • Cache Clear Endpoint: {'✅' if cache_clear_test else '❌'}")
+        print(f"   • Fresh Decision Generation: {'✅' if fresh_generation_test else '❌'}")
+        print(f"   • Fresh IA2 Improvements: {'✅' if fresh_improvements_test else '❌'}")
+        print(f"   • Fresh Pipeline E2E: {'✅' if fresh_pipeline_test else '❌'}")
+        print(f"   • Industry Standards: {'✅' if industry_standards_met else '❌'}")
+        
+        # Critical assessment for the specific request
+        critical_tests = [
+            cache_clear_test,           # Must be able to clear cache
+            fresh_generation_test,      # Must generate fresh decisions
+            fresh_improvements_test,    # Fresh decisions must show improvements
+            industry_standards_met      # Must meet industry standards
+        ]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 CACHE CLEARING & FRESH GENERATION Assessment:")
+        if critical_passed == 4:
+            print(f"   ✅ CACHE CLEARING & FRESH GENERATION SUCCESSFUL")
+            print(f"   ✅ All components working: cache clear + fresh decisions with fixes")
+            test_status = "SUCCESS"
+        elif critical_passed >= 3:
+            print(f"   ⚠️ CACHE CLEARING & FRESH GENERATION PARTIAL")
+            print(f"   ⚠️ Most components working, minor issues detected")
+            test_status = "PARTIAL"
+        elif critical_passed >= 2:
+            print(f"   ⚠️ CACHE CLEARING & FRESH GENERATION LIMITED")
+            print(f"   ⚠️ Some components working, significant issues remain")
+            test_status = "LIMITED"
+        else:
+            print(f"   ❌ CACHE CLEARING & FRESH GENERATION FAILED")
+            print(f"   ❌ Critical issues detected - fixes not working with fresh data")
+            test_status = "FAILED"
+        
+        # Specific feedback on the request
+        print(f"\n📋 Specific Request Validation:")
+        print(f"   • Cache Clear Endpoint Working: {'✅' if cache_clear_test else '❌'}")
+        print(f"   • Fresh Decisions Generated: {'✅' if fresh_generation_test else '❌'}")
+        print(f"   • 50% Confidence Fix Applied: {'✅' if fresh_improvements_test else '❌'}")
+        print(f"   • LONG/SHORT Signals Present: {'✅' if industry_standards_met else '❌'}")
+        print(f"   • IA2 Improvements Demonstrated: {'✅' if fresh_improvements_test else '❌'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return test_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "cache_clear_working": cache_clear_test,
+            "fresh_generation_working": fresh_generation_test,
+            "fresh_improvements_working": fresh_improvements_test,
+            "fresh_pipeline_working": fresh_pipeline_test,
+            "industry_standards_met": industry_standards_met
+        }
+
     async def run_ia2_confidence_minimum_fix_tests(self):
         """Run comprehensive IA2 confidence minimum fix tests"""
         print("🎯 Starting IA2 Confidence Minimum Fix Tests")
