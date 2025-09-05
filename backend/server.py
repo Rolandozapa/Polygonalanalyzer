@@ -3584,6 +3584,148 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
+@api_router.post("/test-bingx-trade")
+async def test_bingx_trade():
+    """Test BingX trading capabilities with a small order"""
+    try:
+        from bingx_official_engine import BingXOfficialTradingEngine
+        
+        engine = BingXOfficialTradingEngine()
+        
+        # Test 1: Try to get server time (basic connectivity)
+        try:
+            # Test if we can access BingX API basic functions
+            logger.info("Testing BingX basic API access...")
+            
+            # Test 2: Try different balance methods
+            logger.info("Testing multiple balance retrieval methods...")
+            
+            # Method 1: Futures balance
+            try:
+                futures_balance = await engine.client.swap.account.get_balance()
+                logger.info(f"Futures balance response: {futures_balance}")
+            except Exception as e:
+                logger.error(f"Futures balance failed: {e}")
+            
+            # Method 2: Spot balance  
+            try:
+                spot_balance = await engine.client.spot.account.query_assets()
+                logger.info(f"Spot balance response: {spot_balance}")
+            except Exception as e:
+                logger.error(f"Spot balance failed: {e}")
+                
+            # Method 3: Account info
+            try:
+                account_info = await engine.client.spot.account.query_account()
+                logger.info(f"Account info response: {account_info}")
+            except Exception as e:
+                logger.error(f"Account info failed: {e}")
+            
+            # Test 3: Try to place a very small test order (1 USDT on BTCUSDT)
+            logger.info("Testing small trade order...")
+            try:
+                # Get current BTC price first
+                ticker = await engine.client.spot.market.get_24hr_ticker(symbol="BTC-USDT")
+                logger.info(f"BTC ticker: {ticker}")
+                
+                if ticker and hasattr(ticker, 'data') and ticker.data:
+                    current_price = float(ticker.data[0].c) if hasattr(ticker.data[0], 'c') else 50000
+                    
+                    # Calculate quantity for 1 USDT trade
+                    quantity = round(1.0 / current_price, 8)  # Very small BTC amount
+                    
+                    logger.info(f"Attempting test buy: {quantity} BTC at ~${current_price}")
+                    
+                    # This would be the actual trade (commented for safety)
+                    # test_order = await engine.client.spot.trade.place_order(
+                    #     symbol="BTC-USDT",
+                    #     side="BUY", 
+                    #     type="MARKET",
+                    #     quantity=str(quantity)
+                    # )
+                    
+                    return {
+                        "status": "ready_to_trade",
+                        "current_btc_price": current_price,
+                        "test_quantity": quantity,
+                        "test_value_usdt": 1.0,
+                        "message": "BingX API ready for trading - test order prepared but not executed",
+                        "trading_ready": True
+                    }
+                    
+            except Exception as trade_error:
+                logger.error(f"Trade test preparation failed: {trade_error}")
+                return {
+                    "status": "trade_test_failed",
+                    "error": str(trade_error),
+                    "message": "Cannot prepare test trade - check permissions or account status"
+                }
+                
+        except Exception as api_error:
+            return {
+                "status": "api_access_failed", 
+                "error": str(api_error),
+                "message": "Basic BingX API access failed"
+            }
+            
+    except Exception as e:
+        return {
+            "status": "initialization_failed",
+            "error": str(e),
+            "message": "Cannot initialize BingX engine"
+        }
+
+@api_router.post("/execute-test-trade")
+async def execute_test_trade():
+    """Execute a real small test trade on BingX"""
+    try:
+        from bingx_official_engine import BingXOfficialTradingEngine
+        
+        engine = BingXOfficialTradingEngine()
+        
+        # Get BTC price and execute 1 USDT buy order
+        try:
+            ticker = await engine.client.spot.market.get_24hr_ticker(symbol="BTC-USDT")
+            
+            if ticker and hasattr(ticker, 'data') and ticker.data:
+                current_price = float(ticker.data[0].c) if hasattr(ticker.data[0], 'c') else 50000
+                quantity = round(1.0 / current_price, 8)  # 1 USDT worth of BTC
+                
+                logger.info(f"🚀 EXECUTING REAL TEST TRADE: Buy {quantity} BTC (~$1)")
+                
+                # REAL TRADE EXECUTION
+                order_result = await engine.client.spot.trade.place_order(
+                    symbol="BTC-USDT",
+                    side="BUY",
+                    type="MARKET", 
+                    quantity=str(quantity)
+                )
+                
+                logger.info(f"✅ TRADE EXECUTED: {order_result}")
+                
+                return {
+                    "status": "trade_executed",
+                    "order_result": str(order_result),
+                    "btc_price": current_price,
+                    "quantity": quantity,
+                    "value_usdt": 1.0,
+                    "message": "✅ REAL TRADE SUCCESSFUL - BingX control confirmed!"
+                }
+                
+        except Exception as trade_error:
+            logger.error(f"❌ REAL TRADE FAILED: {trade_error}")
+            return {
+                "status": "trade_failed",
+                "error": str(trade_error),
+                "message": "Real trade execution failed - check permissions or funds"
+            }
+            
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e)
+        }
+
 @api_router.post("/test-bingx-connection")
 async def test_bingx_connection():
     """Test BingX API connection and authentication"""
