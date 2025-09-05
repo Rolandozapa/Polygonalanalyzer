@@ -2540,6 +2540,69 @@ class UltraProfessionalTradingOrchestrator:
             self._initialized = True
             logger.info("✅ Trading orchestrator initialized with auto-trending system")
     
+    def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
+        """Vérifie si l'analyse IA1 a suffisamment de données de qualité pour justifier un appel IA2 (économie API)"""
+        try:
+            # Critères de qualité pour économiser les appels API Claude
+            
+            # 1. Vérifier la confiance d'analyse IA1
+            if analysis.analysis_confidence < 0.5:  # Moins de 50% de confiance
+                logger.debug(f"⚠️ IA1 confiance trop faible pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
+                return False
+            
+            # 2. Vérifier la qualité des données de marché
+            if opportunity.data_confidence < 0.6:  # Moins de 60% de confiance données
+                logger.debug(f"⚠️ Données marché insuffisantes pour {analysis.symbol}: {opportunity.data_confidence:.2%}")
+                return False
+            
+            # 3. Vérifier que les indicateurs techniques sont calculés (pas par défaut)
+            if analysis.rsi == 50.0 and analysis.macd_signal == 0.0:  # Valeurs par défaut = pas de vraies données
+                logger.debug(f"⚠️ Indicateurs techniques par défaut pour {analysis.symbol} - pas de vraies données OHLCV")
+                return False
+            
+            # 4. Vérifier que RSI est dans une plage réaliste
+            if not (10 <= analysis.rsi <= 90):  # RSI irréaliste
+                logger.debug(f"⚠️ RSI irréaliste pour {analysis.symbol}: {analysis.rsi}")
+                return False
+            
+            # 5. Vérifier les niveaux support/résistance
+            if not analysis.support_levels or not analysis.resistance_levels:
+                logger.debug(f"⚠️ Niveaux support/résistance manquants pour {analysis.symbol}")
+                return False
+            
+            # 6. Vérifier la volatilité du marché (trop faible = pas d'opportunité)
+            if opportunity.volatility < 0.01:  # Moins de 1% de volatilité
+                logger.debug(f"⚠️ Volatilité trop faible pour {analysis.symbol}: {opportunity.volatility:.3%}")
+                return False
+            
+            # 7. Vérifier le volume de trading
+            if opportunity.volume_24h < 100_000:  # Moins de 100K$ de volume
+                logger.debug(f"⚠️ Volume insuffisant pour {analysis.symbol}: ${opportunity.volume_24h:,.0f}")
+                return False
+            
+            # 8. Vérifier que le raisonnement IA1 n'est pas trop court (signe de problème)
+            if len(analysis.ia1_reasoning) < 100:
+                logger.debug(f"⚠️ Raisonnement IA1 trop court pour {analysis.symbol}: {len(analysis.ia1_reasoning)} chars")
+                return False
+            
+            # 9. Bonus: analyse avec pattern technique détecté
+            if analysis.patterns_detected and len(analysis.patterns_detected) > 0:
+                logger.debug(f"✅ Pattern technique détecté pour {analysis.symbol}: {analysis.patterns_detected}")
+                return True  # Priorité aux patterns
+            
+            # 10. Vérifier que nous avons des sources de données multiples
+            if len(opportunity.data_sources) < 1:
+                logger.debug(f"⚠️ Aucune source de données pour {analysis.symbol}")
+                return False
+            
+            # Si tous les critères sont remplis, c'est bon pour IA2
+            logger.debug(f"✅ Analyse qualifiée pour IA2: {analysis.symbol} (IA1: {analysis.analysis_confidence:.2%}, Data: {opportunity.data_confidence:.2%})")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Erreur vérification qualité IA2 pour {analysis.symbol}: {e}")
+            return False  # En cas d'erreur, ne pas envoyer pour économiser API
+    
     async def run_trading_cycle(self):
         """Execute ultra professional trading cycle with auto-updated trends"""
         try:
