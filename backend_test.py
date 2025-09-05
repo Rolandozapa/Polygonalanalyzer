@@ -6071,16 +6071,54 @@ async def main():
     return await tester.run_all_tests()
 
 if __name__ == "__main__":
-    try:
-        result = asyncio.run(main())
-        print(f"\nFinal result: {result}")
-        sys.exit(0 if result[0] in ["SUCCESS", "PARTIAL"] else 1)
-    except KeyboardInterrupt:
-        print("\n🛑 Tests interrupted by user")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n💥 Test execution failed: {str(e)}")
-        sys.exit(1)
+    import asyncio
+    
+    tester = DualAITradingBotTester()
+    
+    # Check if we have command line arguments for specific test types
+    import sys
+    if len(sys.argv) > 1:
+        test_type = sys.argv[1].lower()
+        
+        if test_type == "enhanced_leverage":
+            # Run Enhanced Dynamic Leverage & 5-Level TP System tests
+            tester.run_enhanced_leverage_tests()
+        elif test_type == "ia1":
+            # Run IA1 optimization tests
+            asyncio.run(tester.run_ia1_optimization_tests())
+        elif test_type == "ia2":
+            # Run IA2 decision agent tests
+            asyncio.run(tester.run_ia2_decision_agent_tests())
+        elif test_type == "ia2_enhanced":
+            # Run IA2 enhanced decision agent tests
+            asyncio.run(tester.run_ia2_enhanced_decision_agent_tests())
+        elif test_type == "ia2_confidence":
+            # Run IA2 confidence minimum fix tests
+            asyncio.run(tester.run_ia2_confidence_minimum_fix_tests())
+        elif test_type == "ia2_robust":
+            # Run ROBUST IA2 confidence calculation system tests
+            asyncio.run(tester.run_robust_ia2_confidence_tests())
+        elif test_type == "cache_clear":
+            # Run decision cache clearing and fresh generation tests
+            tester.run_decision_cache_clearing_and_fresh_generation_tests()
+        elif test_type == "debug":
+            # Run debug tests for BingX balance and IA2 confidence uniformity
+            asyncio.run(tester.run_debug_tests())
+        elif test_type == "fixes":
+            # Run BingX and IA2 fixes tests
+            tester.run_bingx_and_ia2_fixes_tests()
+        elif test_type == "comprehensive":
+            # Run comprehensive fixes tests
+            tester.run_comprehensive_fixes_tests()
+        elif test_type == "api_economy":
+            # Run API economy optimization tests
+            asyncio.run(tester.run_api_economy_optimization_tests())
+        else:
+            print(f"Unknown test type: {test_type}")
+            print(f"Available types: enhanced_leverage, ia1, ia2, ia2_enhanced, ia2_confidence, ia2_robust, cache_clear, debug, fixes, comprehensive, api_economy")
+    else:
+        # Run Enhanced Dynamic Leverage & 5-Level TP System tests by default
+        tester.run_enhanced_leverage_tests()
     def test_enhanced_dynamic_leverage_system(self):
         """Test Enhanced Dynamic Leverage & 5-Level TP System Implementation"""
         print(f"\n🎯 Testing Enhanced Dynamic Leverage & 5-Level TP System...")
