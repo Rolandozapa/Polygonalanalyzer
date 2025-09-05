@@ -692,11 +692,17 @@ class UltraProfessionalIA2DecisionAgent:
     def __init__(self):
         self.chat = get_ia2_chat()
         self.market_aggregator = advanced_market_aggregator
+        self.bingx_engine = bingx_trading_engine
+        self.live_trading_enabled = True  # Set to False for simulation only
+        self.max_risk_per_trade = 0.02  # 2% risk per trade
     
     async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> TradingDecision:
-        """Ultra professional trading decision with multi-source validation"""
+        """Ultra professional trading decision with BingX live trading integration"""
         try:
             logger.info(f"IA2 making ultra professional decision for {opportunity.symbol}")
+            
+            # Get BingX account info for risk management
+            account_balance = await self._get_account_balance()
             
             # Get aggregator performance stats
             perf_stats = self.market_aggregator.get_performance_stats()
@@ -705,7 +711,12 @@ class UltraProfessionalIA2DecisionAgent:
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
             prompt = f"""
-            ULTRA PROFESSIONAL TRADING DECISION - Multi-Source Data Validation
+            ULTRA PROFESSIONAL TRADING DECISION - BingX Live Trading Integration
+            
+            LIVE TRADING ACCOUNT STATUS:
+            - Available Balance: ${account_balance:,.2f} USDT
+            - Live Trading: {'ENABLED' if self.live_trading_enabled else 'SIMULATION ONLY'}
+            - Max Risk Per Trade: {self.max_risk_per_trade * 100}% ({self.max_risk_per_trade * account_balance:,.2f} USDT)
             
             MARKET DATA VALIDATION:
             Symbol: {opportunity.symbol}
@@ -734,19 +745,21 @@ class UltraProfessionalIA2DecisionAgent:
             - Market Sentiment: {analysis.market_sentiment}
             - IA1 Reasoning: {analysis.ia1_reasoning}
             
-            MULTI-SOURCE VALIDATION REQUIREMENTS:
-            - Minimum 2 data sources for major decisions
-            - Data confidence threshold: 0.7
-            - Analysis confidence threshold: 0.6
+            LIVE TRADING REQUIREMENTS:
+            - Minimum position size: $10 USDT
+            - Maximum position size: {self.max_risk_per_trade * account_balance:,.2f} USDT
+            - Required confidence for live execution: >0.75
+            - Multi-source validation required for trades >$100
             
-            Make ultra professional trading decision with advanced risk management.
+            Make ultra professional trading decision for LIVE EXECUTION on BingX.
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
-            # Generate ultra professional decision
-            decision_logic = self._evaluate_ultra_professional_decision(opportunity, analysis, perf_stats)
+            # Generate ultra professional decision with live trading considerations
+            decision_logic = await self._evaluate_live_trading_decision(opportunity, analysis, perf_stats, account_balance)
             
+            # Create trading decision
             decision = TradingDecision(
                 symbol=opportunity.symbol,
                 signal=decision_logic["signal"],
@@ -760,8 +773,12 @@ class UltraProfessionalIA2DecisionAgent:
                 risk_reward_ratio=decision_logic["risk_reward"],
                 ia1_analysis_id=analysis.id,
                 ia2_reasoning=response[:1500] if response else decision_logic["reasoning"],
-                status=TradingStatus.EXECUTED if decision_logic["signal"] != SignalType.HOLD else TradingStatus.REJECTED
+                status=TradingStatus.PENDING
             )
+            
+            # Execute live trading if enabled and signal is not HOLD
+            if self.live_trading_enabled and decision.signal != SignalType.HOLD:
+                await self._execute_live_trade(decision)
             
             logger.info(f"IA2 ultra professional decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
             return decision
@@ -769,6 +786,349 @@ class UltraProfessionalIA2DecisionAgent:
         except Exception as e:
             logger.error(f"IA2 ultra decision error for {opportunity.symbol}: {e}")
             return self._create_fallback_decision(opportunity, analysis)
+    
+    async def _get_account_balance(self) -> float:
+        """Get current account balance from BingX"""
+        try:
+            balances = await self.bingx_engine.get_account_balance()
+            usdt_balance = next((balance for balance in balances if balance.asset == 'USDT'), None)
+            return usdt_balance.available if usdt_balance else 0.0
+        except Exception as e:
+            logger.error(f"Failed to get account balance: {e}")
+            return 1000.0  # Fallback balance
+    
+    async def _evaluate_live_trading_decision(self, 
+                                            opportunity: MarketOpportunity, 
+                                            analysis: TechnicalAnalysis, 
+                                            perf_stats: Dict,
+                                            account_balance: float) -> Dict[str, Any]:
+        """Evaluate trading decision with live trading risk management"""
+        
+        signal = SignalType.HOLD
+        confidence = (analysis.analysis_confidence + opportunity.data_confidence) / 2
+        reasoning = "Ultra professional live trading analysis: "
+        
+        # LIVE TRADING GATES
+        
+        # Minimum balance gate
+        if account_balance < 50:  # Minimum $50 USDT
+            reasoning += "Insufficient account balance for live trading. "
+            confidence *= 0.3
+            return self._create_hold_decision(reasoning, confidence, opportunity.current_price)
+        
+        # Data quality gates (stricter for live trading)
+        if opportunity.data_confidence < 0.8:
+            reasoning += "Data confidence too low for live trading. "
+            confidence *= 0.7
+        
+        if analysis.analysis_confidence < 0.7:
+            reasoning += "Analysis confidence too low for live trading. "
+            confidence *= 0.8
+        
+        # Multi-source validation for larger trades
+        position_value = self.max_risk_per_trade * account_balance * 10  # Approx position value
+        if position_value > 100 and len(opportunity.data_sources) < 2:
+            reasoning += "Multi-source validation required for large trades. "
+            confidence *= 0.6
+        
+        # Market conditions gate
+        if opportunity.volatility > 0.15:  # 15% volatility threshold
+            reasoning += "Market too volatile for safe live trading. "
+            confidence *= 0.7
+        
+        # Enhanced signal scoring for live trading
+        bullish_signals = 0
+        bearish_signals = 0
+        signal_strength = 0
+        
+        # RSI analysis (more conservative for live trading)
+        if analysis.rsi < 20:  # Extremely oversold
+            bullish_signals += 4
+            signal_strength += 0.4
+            reasoning += "RSI extremely oversold - strong live buy signal. "
+        elif analysis.rsi < 30:
+            bullish_signals += 2
+            signal_strength += 0.25
+            reasoning += "RSI oversold - live buy signal. "
+        elif analysis.rsi > 80:  # Extremely overbought
+            bearish_signals += 4
+            signal_strength += 0.4
+            reasoning += "RSI extremely overbought - strong live sell signal. "
+        elif analysis.rsi > 70:
+            bearish_signals += 2
+            signal_strength += 0.25
+            reasoning += "RSI overbought - live sell signal. "
+        
+        # MACD analysis (enhanced for live trading)
+        if analysis.macd_signal > 0.01:  # Strong bullish momentum
+            bullish_signals += 3
+            signal_strength += 0.3
+            reasoning += "Strong MACD bullish momentum - live trading confirmed. "
+        elif analysis.macd_signal > 0:
+            bullish_signals += 1
+            signal_strength += 0.15
+            reasoning += "MACD bullish momentum. "
+        elif analysis.macd_signal < -0.01:  # Strong bearish momentum
+            bearish_signals += 3
+            signal_strength += 0.3
+            reasoning += "Strong MACD bearish momentum - live short confirmed. "
+        elif analysis.macd_signal < 0:
+            bearish_signals += 1
+            signal_strength += 0.15
+            reasoning += "MACD bearish momentum. "
+        
+        # Volume validation (critical for live trading)
+        if opportunity.volume_24h > 50_000_000:  # High volume for safety
+            signal_strength += 0.2
+            reasoning += "High volume validation for live trading. "
+        elif opportunity.volume_24h < 1_000_000:  # Too low volume
+            signal_strength -= 0.3
+            reasoning += "Low volume - risky for live trading. "
+        
+        # Pattern confirmation
+        bullish_patterns = ["Golden Cross", "Bullish", "Breakout", "Support", "Bounce"]
+        bearish_patterns = ["Death Cross", "Bearish", "Breakdown", "Resistance", "Rejection"]
+        
+        for pattern in analysis.patterns_detected:
+            if any(bp in pattern for bp in bullish_patterns):
+                bullish_signals += 2
+                signal_strength += 0.15
+                reasoning += f"Bullish pattern confirmed: {pattern}. "
+            elif any(bp in pattern for bp in bearish_patterns):
+                bearish_signals += 2
+                signal_strength += 0.15
+                reasoning += f"Bearish pattern confirmed: {pattern}. "
+        
+        # Live trading decision logic (more conservative)
+        net_signals = bullish_signals - bearish_signals
+        
+        # Higher thresholds for live trading
+        if net_signals >= 4 and confidence > 0.85 and signal_strength > 0.6:
+            signal = SignalType.LONG
+            confidence = min(confidence + 0.1, 0.98)
+            reasoning += "LIVE LONG: Ultra strong bullish signals confirmed for live execution. "
+        elif net_signals >= 3 and confidence > 0.8 and signal_strength > 0.5:
+            signal = SignalType.LONG
+            confidence = min(confidence + 0.05, 0.95)
+            reasoning += "LIVE LONG: Strong bullish signals for live execution. "
+        elif net_signals <= -4 and confidence > 0.85 and signal_strength > 0.6:
+            signal = SignalType.SHORT
+            confidence = min(confidence + 0.1, 0.98)
+            reasoning += "LIVE SHORT: Ultra strong bearish signals confirmed for live execution. "
+        elif net_signals <= -3 and confidence > 0.8 and signal_strength > 0.5:
+            signal = SignalType.SHORT
+            confidence = min(confidence + 0.05, 0.95)
+            reasoning += "LIVE SHORT: Strong bearish signals for live execution. "
+        else:
+            signal = SignalType.HOLD
+            reasoning += f"LIVE HOLD: Insufficient signal strength for live trading (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
+        
+        # Calculate live trading levels with enhanced risk management
+        current_price = opportunity.current_price
+        atr_estimate = current_price * max(opportunity.volatility, 0.02)
+        
+        if signal == SignalType.LONG:
+            # Conservative stop-loss for live trading
+            stop_loss_distance = max(atr_estimate * 2, current_price * 0.03)  # Min 3% stop
+            stop_loss = current_price - stop_loss_distance
+            
+            # Conservative take-profits
+            tp1 = current_price + (stop_loss_distance * 2)  # 2:1 R:R minimum
+            tp2 = current_price + (stop_loss_distance * 3)  # 3:1 R:R
+            tp3 = current_price + (stop_loss_distance * 4)  # 4:1 R:R
+            
+        elif signal == SignalType.SHORT:
+            # Conservative stop-loss for live trading
+            stop_loss_distance = max(atr_estimate * 2, current_price * 0.03)  # Min 3% stop
+            stop_loss = current_price + stop_loss_distance
+            
+            # Conservative take-profits
+            tp1 = current_price - (stop_loss_distance * 2)  # 2:1 R:R minimum
+            tp2 = current_price - (stop_loss_distance * 3)  # 3:1 R:R
+            tp3 = current_price - (stop_loss_distance * 4)  # 4:1 R:R
+            
+        else:
+            stop_loss = current_price
+            tp1 = tp2 = tp3 = current_price
+        
+        # Live trading risk-reward calculation
+        if signal != SignalType.HOLD:
+            risk = abs(current_price - stop_loss)
+            reward = abs(tp1 - current_price)
+            risk_reward = reward / risk if risk > 0 else 1.0
+            
+            # Minimum 2:1 R:R for live trading
+            if risk_reward < 2.0:
+                signal = SignalType.HOLD
+                reasoning += "Risk-reward ratio too low for live trading (min 2:1 required). "
+                confidence *= 0.6
+        else:
+            risk_reward = 1.0
+        
+        # Live trading position sizing (more conservative)
+        if signal != SignalType.HOLD:
+            # Calculate position size based on risk
+            risk_amount = account_balance * self.max_risk_per_trade
+            stop_distance = abs(current_price - stop_loss)
+            calculated_quantity = risk_amount / stop_distance
+            
+            # Apply additional safety limits
+            max_position_value = account_balance * 0.3  # Max 30% of balance
+            max_quantity = max_position_value / current_price
+            
+            position_size_percentage = min(
+                (calculated_quantity * current_price) / account_balance,
+                0.05  # Max 5% for live trading
+            )
+        else:
+            position_size_percentage = 0.0
+        
+        return {
+            "signal": signal,
+            "confidence": confidence,
+            "stop_loss": stop_loss,
+            "tp1": tp1,
+            "tp2": tp2,
+            "tp3": tp3,
+            "position_size": position_size_percentage,
+            "risk_reward": risk_reward,
+            "reasoning": reasoning,
+            "signal_strength": signal_strength,
+            "net_signals": net_signals,
+            "live_trading_ready": signal != SignalType.HOLD and confidence > 0.75
+        }
+    
+    def _create_hold_decision(self, reasoning: str, confidence: float, current_price: float) -> Dict[str, Any]:
+        """Create a HOLD decision"""
+        return {
+            "signal": SignalType.HOLD,
+            "confidence": confidence,
+            "stop_loss": current_price,
+            "tp1": current_price,
+            "tp2": current_price,
+            "tp3": current_price,
+            "position_size": 0.0,
+            "risk_reward": 1.0,
+            "reasoning": reasoning,
+            "signal_strength": 0.0,
+            "net_signals": 0,
+            "live_trading_ready": False
+        }
+    
+    async def _execute_live_trade(self, decision: TradingDecision):
+        """Execute live trade on BingX"""
+        try:
+            if decision.signal == SignalType.HOLD:
+                return
+            
+            logger.info(f"Executing LIVE TRADE on BingX: {decision.signal} {decision.symbol}")
+            
+            # Get account balance for position sizing
+            account_balance = await self._get_account_balance()
+            
+            # Calculate actual quantity
+            position_value = account_balance * decision.position_size
+            quantity = position_value / decision.entry_price
+            
+            # Minimum quantity check
+            if quantity < 0.001:  # Minimum 0.001 for most futures
+                logger.warning(f"Position size too small for live trading: {quantity}")
+                decision.bingx_status = "REJECTED_MIN_SIZE"
+                return
+            
+            # Set leverage (default 10x for futures)
+            await self.bingx_engine.set_leverage(decision.symbol, 10)
+            
+            # Determine order side
+            side = BingXOrderSide.BUY if decision.signal == SignalType.LONG else BingXOrderSide.SELL
+            position_side = BingXPositionSide.LONG if decision.signal == SignalType.LONG else BingXPositionSide.SHORT
+            
+            # Place market order
+            order = await self.bingx_engine.place_order(
+                symbol=decision.symbol,
+                side=side,
+                order_type=BingXOrderType.MARKET,
+                quantity=quantity,
+                position_side=position_side
+            )
+            
+            if order:
+                # Update decision with BingX order info
+                decision.bingx_order_id = order.order_id
+                decision.actual_entry_price = order.price or decision.entry_price
+                decision.actual_quantity = order.executed_qty
+                decision.bingx_status = order.status
+                decision.status = TradingStatus.EXECUTED
+                
+                logger.info(f"LIVE ORDER EXECUTED: {order.order_id} - {side} {quantity:.6f} {decision.symbol}")
+                
+                # Place stop-loss and take-profit orders
+                await self._place_stop_orders(decision, quantity, position_side)
+                
+            else:
+                decision.bingx_status = "ORDER_FAILED"
+                decision.status = TradingStatus.REJECTED
+                logger.error(f"Failed to execute live order for {decision.symbol}")
+                
+        except Exception as e:
+            logger.error(f"Live trading execution error: {e}")
+            decision.bingx_status = f"ERROR: {str(e)}"
+            decision.status = TradingStatus.REJECTED
+    
+    async def _place_stop_orders(self, decision: TradingDecision, quantity: float, position_side: BingXPositionSide):
+        """Place stop-loss and take-profit orders"""
+        try:
+            # Determine opposite side for closing orders
+            close_side = BingXOrderSide.SELL if decision.signal == SignalType.LONG else BingXOrderSide.BUY
+            
+            # Place stop-loss order
+            if decision.stop_loss != decision.entry_price:
+                sl_order = await self.bingx_engine.place_order(
+                    symbol=decision.symbol,
+                    side=close_side,
+                    order_type=BingXOrderType.STOP_MARKET,
+                    quantity=quantity,
+                    stop_price=decision.stop_loss,
+                    position_side=position_side
+                )
+                
+                if sl_order:
+                    logger.info(f"Stop-loss order placed: {sl_order.order_id} at {decision.stop_loss}")
+            
+            # Place take-profit order (first level)
+            if decision.take_profit_1 != decision.entry_price:
+                tp_order = await self.bingx_engine.place_order(
+                    symbol=decision.symbol,
+                    side=close_side,
+                    order_type=BingXOrderType.TAKE_PROFIT_MARKET,
+                    quantity=quantity * 0.5,  # Close 50% at first TP
+                    stop_price=decision.take_profit_1,
+                    position_side=position_side
+                )
+                
+                if tp_order:
+                    logger.info(f"Take-profit order placed: {tp_order.order_id} at {decision.take_profit_1}")
+                    
+        except Exception as e:
+            logger.error(f"Failed to place stop orders: {e}")
+    
+    def _create_fallback_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> TradingDecision:
+        """Create ultra professional fallback decision"""
+        return TradingDecision(
+            symbol=opportunity.symbol,
+            signal=SignalType.HOLD,
+            confidence=0.6,
+            entry_price=opportunity.current_price,
+            stop_loss=opportunity.current_price,
+            take_profit_1=opportunity.current_price,
+            take_profit_2=opportunity.current_price,
+            take_profit_3=opportunity.current_price,
+            position_size=0.0,
+            risk_reward_ratio=1.0,
+            ia1_analysis_id=analysis.id,
+            ia2_reasoning=f"Ultra professional fallback decision for {opportunity.symbol} - live trading system temporarily unavailable",
+            bingx_status="FALLBACK"
+        )
     
     def _evaluate_ultra_professional_decision(self, opportunity: MarketOpportunity, 
                                             analysis: TechnicalAnalysis, 
