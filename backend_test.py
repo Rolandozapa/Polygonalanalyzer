@@ -111,6 +111,10 @@ class DualAITradingBotTester:
         """Test get performance endpoint"""
         return self.run_test("Get Performance Metrics", "GET", "performance", 200)
 
+    def test_market_status(self):
+        """Test market status endpoint (Professional Edition feature)"""
+        return self.run_test("Get Market Status", "GET", "market-status", 200)
+
     def test_start_trading(self):
         """Test start trading endpoint"""
         return self.run_test("Start Trading System", "POST", "start-trading", 200)
