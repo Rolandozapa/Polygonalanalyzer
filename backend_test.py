@@ -5176,25 +5176,29 @@ class DualAITradingBotTester:
         critical_passed = sum(critical_tests)
         
         print(f"\n🎯 API ECONOMY OPTIMIZATION Assessment:")
-        if critical_passed == 3:
+        if critical_passed >= 4:
             print(f"   ✅ API ECONOMY OPTIMIZATION SUCCESSFUL")
-            print(f"   ✅ All components working: filtering + quality preservation + cost savings")
+            print(f"   ✅ Balanced thresholds working: 20-50% API savings with quality preservation")
             economy_status = "SUCCESS"
-        elif critical_passed >= 2:
+        elif critical_passed >= 3:
             print(f"   ⚠️ API ECONOMY OPTIMIZATION PARTIAL")
-            print(f"   ⚠️ Most components working, minor optimization needed")
+            print(f"   ⚠️ Most components working, minor threshold tuning needed")
             economy_status = "PARTIAL"
         else:
             print(f"   ❌ API ECONOMY OPTIMIZATION FAILED")
-            print(f"   ❌ Critical issues detected - optimization not working")
+            print(f"   ❌ Critical issues detected - balanced filtering not working")
             economy_status = "FAILED"
         
-        # Specific feedback on API economy features
+        # Specific feedback on NEW API economy features
         print(f"\n📋 API Economy Features Status:")
-        print(f"   • Quality Filtering (10 criteria): {'✅' if api_economy_test else '❌'}")
-        print(f"   • API Call Reduction: {'✅' if api_economy_test else '❌'}")
-        print(f"   • Quality Preservation: {'✅' if balance_test else '❌'}")
-        print(f"   • Pipeline Integration: {'✅' if pipeline_test else '❌'}")
+        print(f"   • Balanced Filtering (20-50%): {'✅' if balanced_filtering_test else '❌'}")
+        print(f"   • Adjusted Thresholds: {'✅' if threshold_adjustments_test else '❌'}")
+        print(f"   • Priority Bonus System: {'✅' if priority_bonus_test else '❌'}")
+        print(f"   • Optimal Economy Rate: {'✅' if economy_rate_test else '❌'}")
+        print(f"   • System Effectiveness: {'✅' if system_effectiveness_test else '❌'}")
+        print(f"   • Legacy Quality Filtering: {'✅' if api_economy_test else '❌'}")
+        print(f"   • Legacy Quality Preservation: {'✅' if balance_test else '❌'}")
+        print(f"   • Legacy Pipeline Integration: {'✅' if pipeline_test else '❌'}")
         
         print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
         
