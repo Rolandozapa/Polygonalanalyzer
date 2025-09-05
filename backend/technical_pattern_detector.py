@@ -62,7 +62,7 @@ class TechnicalPatternDetector:
     def __init__(self):
         self.coinapi_key = os.getenv('COINAPI_KEY')
         self.twelvedata_key = os.getenv('TWELVEDATA_KEY')
-        self.min_pattern_strength = 0.6  # Seuil minimum pour déclencher IA1
+        self.min_pattern_strength = 0.5  # Seuil minimum pour déclencher IA1 (réduit pour plus de réactivité aux tendances)
         self.lookback_days = 30  # Période d'analyse
         
         logger.info("TechnicalPatternDetector initialized - Pre-filtering for IA1")
