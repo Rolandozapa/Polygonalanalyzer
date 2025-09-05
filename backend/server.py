@@ -251,17 +251,31 @@ DECISION OUTPUT FORMAT (JSON):
 }
 
 ADVANCED STRATEGY APPROACH:
-1. Multi-Level Take Profits: Create 4 TP levels with graduated position scaling
-2. Dynamic Position Management: Adjust position sizes based on confidence
-3. Inversion Logic: Enable automatic position reversal for high-confidence opposite signals
-4. Risk-Reward Optimization: Tailor R:R ratios based on market conditions
-5. Technical Confluence: Weight decisions on multiple indicator alignment
+1. Multi-Level Take Profits: Create 5 strategic TP levels based on pattern strength and market conditions
+2. Dynamic Position Management: Adjust position sizes and TP distances based on pattern confidence
+3. Pattern-Adaptive Scaling: Different TP strategies for different chart patterns
+4. Market Condition Optimization: Volatility and trend strength influence TP positioning
+5. Technical Confluence Weighting: Multiple indicator alignment affects TP distribution
 
-TAKE PROFIT STRATEGY:
-- TP1 (25%): Quick profit taking at 1.5% gain
-- TP2 (30%): Secure capital at 3% gain  
-- TP3 (25%): Intermediate profits at 5% gain
-- TP4 (20%): Maximum objective at 8%+ gain
+STRATEGIC TAKE PROFIT METHODOLOGY:
+- **Strong Patterns (Head&Shoulders, Double Top/Bottom):** Aggressive TP scaling with wider distances
+- **Continuation Patterns (Flags, Pennants):** Conservative early TPs, extended final targets
+- **Reversal Patterns (Wedges, Triangles):** Balanced distribution with quick profit securing
+- **High Volatility Markets:** Closer TP levels to capture quick movements
+- **Low Volatility Markets:** Extended TP distances for maximum profit potential
+
+DYNAMIC 5-LEVEL TAKE PROFIT STRATEGY:
+- **TP1 (15-25%):** Quick profit securing - Distance based on pattern reliability
+- **TP2 (20-30%):** Pattern confirmation level - Adapts to support/resistance
+- **TP3 (20-25%):** Intermediate target - Market condition dependent  
+- **TP4 (15-20%):** Extended objective - Volatility adjusted
+- **TP5 (10-15%):** Maximum target - Pattern-specific moon shot
+
+PATTERN-SPECIFIC TP POSITIONING:
+- **Bullish Channel:** TP1: 1.0%, TP2: 2.5%, TP3: 4.5%, TP4: 7.0%, TP5: 12.0%
+- **Double Bottom:** TP1: 1.5%, TP2: 3.5%, TP3: 6.0%, TP4: 9.5%, TP5: 15.0%  
+- **Flag Continuation:** TP1: 0.8%, TP2: 2.0%, TP3: 3.8%, TP4: 6.5%, TP5: 10.5%
+- **Head & Shoulders:** TP1: 2.0%, TP2: 4.5%, TP3: 7.5%, TP4: 12.0%, TP5: 20.0%
 
 POSITION INVERSION LOGIC:
 - Monitor for opposite signals with 10%+ higher confidence
