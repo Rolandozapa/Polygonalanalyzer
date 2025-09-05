@@ -449,10 +449,10 @@ class DualAITradingBotTester:
         critical_passed = sum(critical_tests)
         
         print(f"\n🎯 Overall Assessment:")
-        if critical_passed == 3 and speed_success:
+        if critical_passed == 4:
             print(f"   ✅ IA1 OPTIMIZATION SUCCESSFUL - All critical tests passed")
             optimization_status = "SUCCESS"
-        elif critical_passed >= 2:
+        elif critical_passed >= 3:
             print(f"   ⚠️  IA1 OPTIMIZATION PARTIAL - Some issues detected")
             optimization_status = "PARTIAL"
         else:
