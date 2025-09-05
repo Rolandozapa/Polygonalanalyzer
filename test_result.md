@@ -237,12 +237,11 @@
 
 ## test_plan:
   current_focus:
-    - "IA2 Decision Agent Frontend Display Testing"
+    - "ROBUST IA2 Confidence System Validation"
   stuck_tasks:
-    - "Adjust IA2 Trading Signal Thresholds"
-    - "IA2 Decision Agent Frontend Display Testing"
+    []
   test_all: false
-  test_priority: "stuck_first"
+  test_priority: "high_first"
 
 ## agent_communication:
     - agent: "main"
