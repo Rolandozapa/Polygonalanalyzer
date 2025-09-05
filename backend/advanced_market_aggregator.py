@@ -303,6 +303,16 @@ class AdvancedMarketAggregator:
         # 6. Yahoo Finance for major cryptos
         tasks.append(self._fetch_yahoo_finance_crypto())
         
+        # 7. CoinCap data (free alternative)
+        tasks.append(self._fetch_coincap_data())
+        
+        # 8. CryptoCompare data (free tier)
+        tasks.append(self._fetch_cryptocompare_data())
+        
+        # 9. CoinGecko trending (additional data)
+        if self._can_make_request("coingecko_trending"):
+            tasks.append(self._fetch_coingecko_trending())
+        
         # Exécuter toutes les tâches en parallèle
         try:
             results = await asyncio.gather(*tasks, return_exceptions=True)
