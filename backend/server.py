@@ -1550,7 +1550,13 @@ CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
 - Market Sentiment: {market_sentiment['market_sentiment']}
 - Sentiment Score: {market_sentiment['sentiment_score']:.2f}
 
-STRATEGIC 5-LEVEL TP REQUIREMENTS WITH DYNAMIC LEVERAGE:
+PERFORMANCE CONTEXT:
+- Current P&L: ${perf_stats.get('total_pnl', 0):.2f}
+- Win Rate: {perf_stats.get('win_rate', 0):.1%}
+- Avg R:R Ratio: {perf_stats.get('avg_risk_reward', 1.5):.2f}
+- Recent Trades: {perf_stats.get('total_trades', 0)}
+
+DYNAMIC LEVERAGE & RISK CALCULATION REQUIREMENTS:
 1. **Calculate optimal leverage** based on trade confidence and market sentiment
 2. **Analyze crypto market conditions** (total market cap change, BTC dominance, volume trends)
 3. **Adapt Stop Loss levels** based on leverage used (higher leverage = tighter SL for same $ risk)
