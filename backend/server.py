@@ -663,7 +663,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Utilise le système OHLCV du technical_pattern_detector (Binance, CoinGecko, etc.)
             real_data = await technical_pattern_detector._get_ohlcv_data(symbol)
             
-            if real_data is not None and len(real_data) >= 35:  # Minimum pour MACD (26+9)
+            if real_data is not None and len(real_data) >= 26:  # Minimum pour MACD (26 jours, pas 35)
                 logger.info(f"✅ IA1 using REAL OHLCV data for {symbol}: {len(real_data)} days")
                 return real_data.tail(days)  # Garde les X derniers jours
             else:
