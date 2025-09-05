@@ -374,9 +374,9 @@ class DualAITradingBotTester:
             print(f"   ⚠️  Limited evidence of IA1 optimization")
             return optimization_rate > 0
 
-    def test_ia2_decision_confidence_levels(self):
-        """Test IA2 decision confidence levels are more balanced"""
-        print(f"\n🎯 Testing IA2 Decision Confidence Levels...")
+    def test_ia2_enhanced_confidence_calculation(self):
+        """Test IA2 enhanced confidence calculation system"""
+        print(f"\n🎯 Testing IA2 Enhanced Confidence Calculation System...")
         
         success, decisions_data = self.test_get_decisions()
         if not success:
@@ -388,12 +388,13 @@ class DualAITradingBotTester:
             print(f"   ❌ No decisions available for confidence testing")
             return False
         
-        print(f"   📊 Analyzing confidence levels of {len(decisions)} decisions...")
+        print(f"   📊 Analyzing enhanced confidence system of {len(decisions)} decisions...")
         
         confidences = []
         reasoning_quality = []
+        base_confidence_check = []
         
-        for i, decision in enumerate(decisions[:10]):  # Test up to 10 most recent
+        for i, decision in enumerate(decisions[:15]):  # Test up to 15 most recent
             symbol = decision.get('symbol', 'Unknown')
             confidence = decision.get('confidence', 0)
             reasoning = decision.get('ia2_reasoning', '')
@@ -402,32 +403,52 @@ class DualAITradingBotTester:
             confidences.append(confidence)
             reasoning_quality.append(len(reasoning) > 0 and reasoning != "null")
             
-            print(f"   Decision {i+1} - {symbol}:")
-            print(f"      Signal: {signal}")
-            print(f"      Confidence: {confidence:.3f}")
-            print(f"      Reasoning: {'✅ Present' if reasoning and reasoning != 'null' else '❌ Missing/Null'}")
+            # Check if confidence meets new minimum 50% base requirement
+            base_confidence_check.append(confidence >= 0.50)
+            
+            if i < 5:  # Show details for first 5
+                print(f"   Decision {i+1} - {symbol}:")
+                print(f"      Signal: {signal}")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Base ≥50%: {'✅' if confidence >= 0.50 else '❌'}")
+                print(f"      Reasoning: {'✅ Present' if reasoning and reasoning != 'null' else '❌ Missing/Null'}")
         
         if confidences:
             avg_confidence = sum(confidences) / len(confidences)
             min_confidence = min(confidences)
             max_confidence = max(confidences)
             reasoning_rate = sum(reasoning_quality) / len(reasoning_quality)
+            base_confidence_rate = sum(base_confidence_check) / len(base_confidence_check)
             
-            print(f"\n   📊 Confidence Analysis:")
-            print(f"      Average Confidence: {avg_confidence:.3f}")
-            print(f"      Min Confidence: {min_confidence:.3f}")
+            # Check confidence distribution for new additive system
+            confidence_50_plus = sum(1 for c in confidences if c >= 0.50)
+            confidence_55_plus = sum(1 for c in confidences if c >= 0.55)
+            confidence_65_plus = sum(1 for c in confidences if c >= 0.65)
+            
+            print(f"\n   📊 Enhanced Confidence Analysis:")
+            print(f"      Average Confidence: {avg_confidence:.3f} (target: >40.9%)")
+            print(f"      Min Confidence: {min_confidence:.3f} (target: ≥50% base)")
             print(f"      Max Confidence: {max_confidence:.3f}")
             print(f"      Reasoning Present: {reasoning_rate*100:.1f}%")
             
-            # Check if confidence is higher than the problematic 37.3% (0.373)
-            confidence_improved = avg_confidence > 0.40  # Should be significantly higher than 37.3%
+            print(f"\n   🎯 New Confidence System Validation:")
+            print(f"      Confidence ≥50% (base): {confidence_50_plus}/{len(confidences)} ({base_confidence_rate*100:.1f}%)")
+            print(f"      Confidence ≥55% (moderate): {confidence_55_plus}/{len(confidences)} ({confidence_55_plus/len(confidences)*100:.1f}%)")
+            print(f"      Confidence ≥65% (strong): {confidence_65_plus}/{len(confidences)} ({confidence_65_plus/len(confidences)*100:.1f}%)")
+            
+            # Enhanced validation criteria
+            confidence_improved = avg_confidence > 0.409  # Better than previous 40.9%
+            base_system_working = base_confidence_rate >= 0.7  # 70% should meet 50% base
             reasoning_fixed = reasoning_rate > 0.8  # 80% should have proper reasoning
+            distribution_realistic = confidence_55_plus > 0  # Some should reach moderate threshold
             
-            print(f"\n   🎯 IA2 Fix Validation:")
-            print(f"      Confidence > 40%: {'✅' if confidence_improved else '❌'} (was 37.3%)")
+            print(f"\n   ✅ Enhanced System Validation:")
+            print(f"      Avg > 40.9%: {'✅' if confidence_improved else '❌'} (was 40.9%)")
+            print(f"      Base ≥50% System: {'✅' if base_system_working else '❌'} (≥70% compliance)")
             print(f"      Reasoning Fixed: {'✅' if reasoning_fixed else '❌'} (was null)")
+            print(f"      Realistic Distribution: {'✅' if distribution_realistic else '❌'} (some ≥55%)")
             
-            return confidence_improved and reasoning_fixed
+            return confidence_improved and base_system_working and reasoning_fixed and distribution_realistic
         
         return False
 
