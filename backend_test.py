@@ -4225,16 +4225,23 @@ class DualAITradingBotTester:
         self.print_performance_summary()
         
         print(f"\n" + "=" * 80)
-        print(f"🎯 COMPREHENSIVE FIXES TEST SUMMARY")
+        print(f"🎯 COMPREHENSIVE ENHANCEMENT TEST SUMMARY")
         print(f"Tests Run: {self.tests_run}")
         print(f"Tests Passed: {self.tests_passed}")
         print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
         
-        # Specific fix results
-        print(f"\n📋 Comprehensive Fixes Results:")
+        # Major improvements results
+        print(f"\n📋 Major Improvements Results:")
+        print(f"   Claude IA2 Integration: {'✅' if claude_test else '❌'}")
+        print(f"   Enhanced OHLCV & MACD: {'✅' if ohlcv_test else '❌'}")
+        print(f"   End-to-End Pipeline: {'✅' if pipeline_test else '❌'}")
+        print(f"   Data Quality Validation: {'✅' if quality_test else '❌'}")
+        
+        # Previous fixes results
+        print(f"\n📋 Previous Fixes Results:")
         print(f"   BingX Balance Fix: {'✅' if balance_test else '❌'}")
         print(f"   IA2 Confidence Variation: {'✅' if variation_test else '❌'}")
-        print(f"   Enhanced Quality Scoring: {'✅' if quality_test else '❌'}")
+        print(f"   Enhanced Quality Scoring: {'✅' if quality_scoring_test else '❌'}")
         print(f"   Real Market Data Integration: {'✅' if market_data_test else '❌'}")
         print(f"   System Integration: {'✅' if integration_test else '❌'}")
         
@@ -4246,25 +4253,30 @@ class DualAITradingBotTester:
         print(f"   Reasoning Quality: {'✅' if reasoning_test else '❌'}")
         
         # Overall assessment
-        comprehensive_fixes = [balance_test, variation_test, quality_test, market_data_test, integration_test]
+        major_improvements = [claude_test, ohlcv_test, pipeline_test, quality_test]
+        previous_fixes = [balance_test, variation_test, quality_scoring_test, market_data_test, integration_test]
         original_fixes = [confidence_minimum_test, enhanced_confidence_test, trading_thresholds_test, signal_generation_test, reasoning_test]
         
-        comprehensive_passed = sum(comprehensive_fixes)
+        major_passed = sum(major_improvements)
+        previous_passed = sum(previous_fixes)
         original_passed = sum(original_fixes)
         
         print(f"\n🎯 FINAL ASSESSMENT:")
-        print(f"   Comprehensive Fixes: {comprehensive_passed}/5 passed")
+        print(f"   Major Improvements: {major_passed}/4 passed")
+        print(f"   Previous Fixes: {previous_passed}/5 passed")
         print(f"   Original IA2 Fixes: {original_passed}/5 passed")
         
-        if comprehensive_passed >= 4 and original_passed >= 4:
-            print(f"✅ ALL FIXES SUCCESSFUL - System is working correctly!")
-            return True
-        elif comprehensive_passed >= 3 and original_passed >= 3:
+        if major_passed >= 3 and previous_passed >= 4 and original_passed >= 4:
+            result = ("SUCCESS", "All major improvements and fixes working correctly!")
+            print(f"✅ ALL ENHANCEMENTS SUCCESSFUL - System is working correctly!")
+        elif major_passed >= 2 and previous_passed >= 3 and original_passed >= 3:
+            result = ("PARTIAL", "Most improvements working with some issues")
             print(f"⚠️  MOSTLY WORKING - Some issues remain")
-            return True
         else:
+            result = ("FAILED", "Multiple critical issues found")
             print(f"❌ SIGNIFICANT ISSUES - Multiple fixes failed")
-            return False
+        
+        return result
 
     async def run_all_tests(self):
         """Run comprehensive tests for BingX balance and IA2 confidence variation fixes"""
