@@ -1461,7 +1461,7 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
 {{
     "signal": "LONG",
     "confidence": 0.75,
-    "reasoning": "Comprehensive analysis: Technical confluence shows RSI oversold at 28.5 with MACD bullish crossover. Multi-level TP strategy: TP1 at 1.5%% (25%% position), TP2 at 3.0%% (30%% position), TP3 at 5.0%% (25%% position), TP4 at 8.0%% (20%% position). Position inversion enabled due to high volatility. Risk-reward optimized at 2.5:1.",
+    "reasoning": "Comprehensive analysis: Technical confluence shows RSI oversold at 28.5 with MACD bullish crossover. STRATEGIC 5-LEVEL TP: Double bottom pattern detected with high reliability (strength 1.00) - implementing pattern-adaptive scaling. Market volatility at 4.2%% suggests moderate TP distances. TP1 at 1.5%% (20%% position) for quick profit securing, TP2 at 3.0%% (25%% position) at pattern confirmation level, TP3 at 5.0%% (25%% position) targeting key resistance, TP4 at 8.0%% (20%% position) extended objective, TP5 at 12.0%% (10%% position) maximum pattern target. Position inversion enabled due to high volatility. Risk-reward optimized at 3.5:1 with pattern-specific positioning.",
     "risk_level": "MEDIUM",
     "strategy_type": "ADVANCED_TP",
     "take_profit_strategy": {{
