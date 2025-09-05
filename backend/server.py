@@ -3703,55 +3703,81 @@ async def test_bingx_trade():
             "message": "Complete BingX test failure"
         }
 
-@api_router.post("/execute-test-trade")
-async def execute_test_trade():
-    """Execute a real small test trade on BingX"""
+@api_router.post("/execute-real-test-trade")
+async def execute_real_test_trade():
+    """Execute a REAL small test trade on BingX (requires funds)"""
     try:
-        from bingx_official_engine import BingXOfficialTradingEngine
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
         
-        engine = BingXOfficialTradingEngine()
+        # Safety check
+        logger.warning("🚨 ATTEMPTING REAL TRADE WITH REAL MONEY!")
         
-        # Get BTC price and execute 1 USDT buy order
-        try:
-            ticker = await engine.client.spot.market.get_24hr_ticker(symbol="BTC-USDT")
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False  # REAL TRADING!
+        ) as client:
             
-            if ticker and hasattr(ticker, 'data') and ticker.data:
-                current_price = float(ticker.data[0].c) if hasattr(ticker.data[0], 'c') else 50000
-                quantity = round(1.0 / current_price, 8)  # 1 USDT worth of BTC
-                
-                logger.info(f"🚀 EXECUTING REAL TEST TRADE: Buy {quantity} BTC (~$1)")
-                
-                # REAL TRADE EXECUTION
-                order_result = await engine.client.spot.trade.place_order(
-                    symbol="BTC-USDT",
-                    side="BUY",
-                    type="MARKET", 
-                    quantity=str(quantity)
-                )
-                
-                logger.info(f"✅ TRADE EXECUTED: {order_result}")
-                
+            # Step 1: Get current funds
+            spot_assets = await client.spot.query_assets()
+            usdt_balance = 0
+            
+            if spot_assets and hasattr(spot_assets, 'data'):
+                for asset in spot_assets.data:
+                    if hasattr(asset, 'coin') and asset.coin == 'USDT':
+                        usdt_balance = float(getattr(asset, 'free', 0))
+                        break
+            
+            if usdt_balance < 1.0:
                 return {
-                    "status": "trade_executed",
-                    "order_result": str(order_result),
-                    "btc_price": current_price,
-                    "quantity": quantity,
-                    "value_usdt": 1.0,
-                    "message": "✅ REAL TRADE SUCCESSFUL - BingX control confirmed!"
+                    "status": "insufficient_funds",
+                    "usdt_balance": usdt_balance,
+                    "message": f"Need at least 1 USDT for test trade (found: {usdt_balance})"
                 }
-                
-        except Exception as trade_error:
-            logger.error(f"❌ REAL TRADE FAILED: {trade_error}")
+            
+            # Step 2: Get BTC price
+            btc_ticker = await client.spot.get_symbol_price_ticker(symbol="BTC-USDT")
+            current_price = float(btc_ticker.data.price)
+            
+            # Step 3: Calculate trade size (1 USDT worth)
+            quantity = round(1.0 / current_price, 8)
+            
+            logger.warning(f"🚀 EXECUTING REAL TRADE: Buy {quantity} BTC (~$1) at ${current_price}")
+            
+            # Step 4: EXECUTE REAL TRADE
+            order_result = await client.spot.place_order(
+                symbol="BTC-USDT",
+                side="BUY",
+                type="MARKET",
+                quantity=str(quantity)
+            )
+            
+            logger.info(f"✅ REAL TRADE EXECUTED: {order_result}")
+            
             return {
-                "status": "trade_failed",
-                "error": str(trade_error),
-                "message": "Real trade execution failed - check permissions or funds"
+                "status": "trade_executed",
+                "message": "✅ REAL TRADE SUCCESSFUL - BingX control CONFIRMED!",
+                "trade_details": {
+                    "symbol": "BTC-USDT",
+                    "side": "BUY",
+                    "quantity": quantity,
+                    "price": current_price,
+                    "value_usdt": 1.0
+                },
+                "order_result": str(order_result),
+                "bingx_control": "CONFIRMED"
             }
             
     except Exception as e:
+        logger.error(f"❌ REAL TRADE FAILED: {e}")
         return {
-            "status": "failed",
-            "error": str(e)
+            "status": "trade_failed",
+            "error": str(e),
+            "message": "Real trade execution failed"
         }
 
 @api_router.post("/test-bingx-connection")
