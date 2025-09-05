@@ -1114,8 +1114,11 @@ class UltraProfessionalIA2DecisionAgent:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
+            # Parse LLM JSON response
+            llm_decision = await self._parse_llm_response(response)
+            
             # Generate ultra professional decision with live trading considerations
-            decision_logic = await self._evaluate_live_trading_decision(opportunity, analysis, perf_stats, account_balance)
+            decision_logic = await self._evaluate_live_trading_decision(opportunity, analysis, perf_stats, account_balance, llm_decision)
             
             # Create trading decision
             decision = TradingDecision(
@@ -1130,7 +1133,7 @@ class UltraProfessionalIA2DecisionAgent:
                 position_size=decision_logic["position_size"],
                 risk_reward_ratio=decision_logic["risk_reward"],
                 ia1_analysis_id=analysis.id,
-                ia2_reasoning=response[:1500] if response else decision_logic["reasoning"],
+                ia2_reasoning=decision_logic["reasoning"][:1500] if decision_logic["reasoning"] else "IA2 analysis completed",
                 status=TradingStatus.PENDING
             )
             
