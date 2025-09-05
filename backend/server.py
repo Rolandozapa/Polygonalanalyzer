@@ -1589,9 +1589,14 @@ class UltraProfessionalTradingOrchestrator:
                         "trending_focused": True
                     })
                 else:
-                    logger.warning(f"Analysis failed for {top_opportunities[i].symbol}: {analysis}")
+                    if analysis is None:
+                        filtered_count += 1
+                        logger.debug(f"⚪ TECHNICAL FILTER: {top_opportunities[i].symbol} - No strong patterns, skipped IA1")
+                    else:
+                        logger.warning(f"Analysis failed for {top_opportunities[i].symbol}: {analysis}")
             
-            logger.info(f"Completed {len(valid_analyses)} ultra professional trending analyses")
+            logger.info(f"📊 TECHNICAL FILTERING RESULTS: {len(valid_analyses)} analyzed, {filtered_count} filtered out, {len(top_opportunities) - len(valid_analyses) - filtered_count} errors")
+            logger.info(f"Completed {len(valid_analyses)} ultra professional trending analyses with pattern pre-filtering")
             
             # 3. Ultra professional IA2 decisions (parallel processing)
             decision_tasks = []
