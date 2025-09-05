@@ -3584,6 +3584,126 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
+@api_router.get("/check-our-ip")
+async def check_our_ip():
+    """Check what IP address BingX sees from our server"""
+    try:
+        import aiohttp
+        
+        # Method 1: Check via multiple IP services
+        ip_services = [
+            "https://api.ipify.org?format=json",
+            "https://ipinfo.io/json", 
+            "https://httpbin.org/ip",
+            "https://api.myip.com"
+        ]
+        
+        ips_found = []
+        
+        for service in ip_services:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(service, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            
+                            # Extract IP from different response formats
+                            ip = None
+                            if 'ip' in data:
+                                ip = data['ip']
+                            elif 'origin' in data:
+                                ip = data['origin']
+                            
+                            if ip:
+                                ips_found.append({
+                                    "service": service,
+                                    "ip": ip,
+                                    "response": data
+                                })
+                                logger.info(f"IP from {service}: {ip}")
+            except Exception as e:
+                logger.error(f"Failed to get IP from {service}: {e}")
+        
+        # Method 2: Try to make a test request to BingX and see what error we get
+        bingx_ip_test = None
+        try:
+            import os
+            from bingx_py.asyncio import BingXAsyncClient
+            
+            # This should fail with IP error if IP is wrong, or succeed if IP is right
+            api_key = os.environ.get('BINGX_API_KEY')
+            secret_key = os.environ.get('BINGX_SECRET_KEY')
+            
+            async with BingXAsyncClient(
+                api_key=api_key,
+                api_secret=secret_key,
+                demo_trading=False
+            ) as client:
+                # Try a simple API call
+                test_response = await client.swap.query_account_data()
+                bingx_ip_test = {
+                    "status": "success",
+                    "message": "BingX accepts our IP - no IP restriction error"
+                }
+        except Exception as e:
+            error_msg = str(e)
+            if "IP" in error_msg or "whitelist" in error_msg.lower():
+                # Extract IP from error message if present
+                if "your current request IP is" in error_msg:
+                    import re
+                    ip_match = re.search(r'your current request IP is (\d+\.\d+\.\d+\.\d+)', error_msg)
+                    if ip_match:
+                        actual_ip = ip_match.group(1)
+                        bingx_ip_test = {
+                            "status": "ip_error",
+                            "actual_ip_bingx_sees": actual_ip,
+                            "error": error_msg
+                        }
+                    else:
+                        bingx_ip_test = {
+                            "status": "ip_error", 
+                            "error": error_msg
+                        }
+                else:
+                    bingx_ip_test = {
+                        "status": "ip_error",
+                        "error": error_msg
+                    }
+            else:
+                bingx_ip_test = {
+                    "status": "other_error",
+                    "error": error_msg
+                }
+        
+        # Find the most common IP
+        ip_counts = {}
+        for ip_data in ips_found:
+            ip = ip_data['ip']
+            if ip in ip_counts:
+                ip_counts[ip] += 1
+            else:
+                ip_counts[ip] = 1
+        
+        most_common_ip = max(ip_counts.keys(), key=ip_counts.get) if ip_counts else None
+        
+        return {
+            "our_detected_ips": ips_found,
+            "most_common_ip": most_common_ip,
+            "ip_consensus": most_common_ip if len(ip_counts) == 1 or (most_common_ip and ip_counts[most_common_ip] > 1) else "conflicting_ips",
+            "bingx_test": bingx_ip_test,
+            "recommendation": {
+                "ip_to_whitelist": bingx_ip_test.get("actual_ip_bingx_sees") or most_common_ip,
+                "confidence": "high" if bingx_ip_test.get("actual_ip_bingx_sees") else "medium"
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e),
+            "message": "Could not determine our IP address"
+        }
+
 @api_router.post("/scan-all-bingx-accounts")
 async def scan_all_bingx_accounts():
     """Scan ALL BingX account types to find where user's funds are located"""
