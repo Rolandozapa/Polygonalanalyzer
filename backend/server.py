@@ -678,34 +678,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.warning(f"❌ IA1 REJECTING {symbol} - OHLCV API error: {e}")
             return None  # Pas de fallback synthétique
     
-    def _generate_enhanced_synthetic_ohlcv(self, days: int = 50) -> pd.DataFrame:
-        """Generate enhanced synthetic OHLCV data - 50 jours pour calculs techniques complets"""
-        dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
-        
-        # More realistic price movement with trends
-        base_price = 50000
-        prices = []
-        trend = np.random.choice([-1, 0, 1], p=[0.3, 0.4, 0.3])  # Bear, sideways, bull
-        
-        for i in range(days):
-            if i == 0:
-                prices.append(base_price)
-            else:
-                # Trend-following random walk
-                daily_trend = trend * 0.005  # 0.5% daily trend
-                noise = np.random.normal(0, 0.02)  # 2% daily volatility
-                change = daily_trend + noise
-                new_price = prices[-1] * (1 + change)
-                prices.append(max(new_price, base_price * 0.3))  # Floor at 30% of base
-        
-        df = pd.DataFrame(index=dates)
-        df['Close'] = prices
-        df['Open'] = df['Close'].shift(1).fillna(df['Close'])
-        df['High'] = df[['Open', 'Close']].max(axis=1) * np.random.uniform(1.001, 1.03, days)
-        df['Low'] = df[['Open', 'Close']].min(axis=1) * np.random.uniform(0.97, 0.999, days)
-        df['Volume'] = np.random.lognormal(15, 0.5, days)  # More realistic volume distribution
-        
-        return df
+    # Note: Synthetic data generation removed - using REAL OHLCV data only
     
     def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
         """Calculate RSI indicator"""
