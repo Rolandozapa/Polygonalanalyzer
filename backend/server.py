@@ -2872,9 +2872,14 @@ class UltraProfessionalTradingOrchestrator:
             filtered_count = 0
             rejected_no_data_count = 0
             
+            logger.info(f"🔍 DEBUG: Processing {len(analyses)} analyses from IA1")
+            
             for i, analysis in enumerate(analyses):
+                logger.info(f"🔍 DEBUG: Analysis {i}: Type={type(analysis)}, Is TechnicalAnalysis? {isinstance(analysis, TechnicalAnalysis)}")
+                
                 if isinstance(analysis, TechnicalAnalysis):
                     valid_analyses.append((top_opportunities[i], analysis))
+                    logger.info(f"🔍 DEBUG: Added {analysis.symbol} to valid_analyses")
                     
                     # Store analysis
                     await db.technical_analyses.insert_one(analysis.dict())
