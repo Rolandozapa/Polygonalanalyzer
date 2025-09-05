@@ -392,11 +392,15 @@ class DualAITradingBotTester:
         scout_success, _ = self.test_get_opportunities()
         
         # 3. IA1 Analysis Speed Test (MAIN TEST)
-        print(f"\n3️⃣ IA1 ANALYSIS SPEED TEST (MAIN OPTIMIZATION)")
+        print(f"\n3️⃣ IA1 OPTIMIZATION EVIDENCE TEST")
+        optimization_evidence = self.test_ia1_optimization_evidence()
+        
+        # 4. IA1 Analysis Speed Test (System Workflow)
+        print(f"\n4️⃣ IA1 ANALYSIS SPEED TEST (SYSTEM WORKFLOW)")
         speed_success = self.test_ia1_analysis_speed_via_system()
         
-        # 4. Scout -> IA1 Integration Test
-        print(f"\n4️⃣ SCOUT -> IA1 INTEGRATION TEST")
+        # 5. Scout -> IA1 Integration Test
+        print(f"\n5️⃣ SCOUT -> IA1 INTEGRATION TEST")
         integration_success = self.test_scout_ia1_integration_via_system()
         
         # 5. Technical Analysis Quality Test
