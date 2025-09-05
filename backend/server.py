@@ -728,16 +728,27 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return current_price * 1.02, current_price, current_price * 0.98
     
     def _calculate_fibonacci_retracement(self, historical_data: pd.DataFrame) -> float:
-        """Calculate Fibonacci retracement level"""
+        """Calcule le niveau de retracement Fibonacci actuel"""
         try:
+            if len(historical_data) < 20:
+                return 0.618  # Niveau par défaut
+            
             high = historical_data['High'].max()
             low = historical_data['Low'].min()
             current = historical_data['Close'].iloc[-1]
             
-            retracement = (current - low) / (high - low)
-            return float(retracement)
+            if high == low:  # Évite division par zéro
+                return 0.618
+            
+            fib_level = (current - low) / (high - low)
+            
+            # S'assure que la valeur est valide pour JSON
+            if not (0 <= fib_level <= 2):  # Valeur raisonnable
+                return 0.618
+            
+            return round(fib_level, 3)
         except:
-            return 0.5
+            return 0.618
     
     def _find_support_levels(self, historical_data: pd.DataFrame, current_price: float) -> List[float]:
         """Find key support levels"""
