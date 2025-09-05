@@ -374,6 +374,108 @@ class DualAITradingBotTester:
             print(f"   ⚠️  Limited evidence of IA1 optimization")
             return optimization_rate > 0
 
+    def test_ia2_critical_confidence_minimum_fix(self):
+        """Test CRITICAL IA2 50% confidence minimum enforcement fix"""
+        print(f"\n🎯 Testing CRITICAL IA2 50% Confidence Minimum Fix...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for confidence testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for confidence testing")
+            return False
+        
+        print(f"   📊 Analyzing 50% minimum confidence enforcement on {len(decisions)} decisions...")
+        
+        confidences = []
+        below_minimum_count = 0
+        reasoning_quality = []
+        
+        for i, decision in enumerate(decisions[:30]):  # Test up to 30 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            signal = decision.get('signal', 'hold')
+            
+            confidences.append(confidence)
+            reasoning_quality.append(len(reasoning) > 0 and reasoning != "null")
+            
+            # Critical check: confidence should NEVER be below 50%
+            if confidence < 0.50:
+                below_minimum_count += 1
+                if i < 10:  # Show first 10 violations
+                    print(f"   ❌ VIOLATION {below_minimum_count} - {symbol}: {confidence:.3f} < 0.50")
+            
+            if i < 5:  # Show details for first 5
+                print(f"   Decision {i+1} - {symbol}:")
+                print(f"      Signal: {signal}")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Min 50% Check: {'✅' if confidence >= 0.50 else '❌ CRITICAL VIOLATION'}")
+                print(f"      Reasoning: {'✅ Present' if reasoning and reasoning != 'null' else '❌ Missing/Null'}")
+        
+        if confidences:
+            avg_confidence = sum(confidences) / len(confidences)
+            min_confidence = min(confidences)
+            max_confidence = max(confidences)
+            reasoning_rate = sum(reasoning_quality) / len(reasoning_quality)
+            
+            # Critical validation: ALL decisions should have confidence ≥ 50%
+            minimum_enforced = below_minimum_count == 0
+            
+            # Check confidence distribution
+            confidence_50_plus = sum(1 for c in confidences if c >= 0.50)
+            confidence_55_plus = sum(1 for c in confidences if c >= 0.55)
+            confidence_65_plus = sum(1 for c in confidences if c >= 0.65)
+            
+            print(f"\n   📊 CRITICAL 50% Minimum Analysis:")
+            print(f"      Total Decisions: {len(confidences)}")
+            print(f"      Below 50% Count: {below_minimum_count} (MUST be 0)")
+            print(f"      Average Confidence: {avg_confidence:.3f}")
+            print(f"      Min Confidence: {min_confidence:.3f} (MUST be ≥0.50)")
+            print(f"      Max Confidence: {max_confidence:.3f}")
+            print(f"      Reasoning Present: {reasoning_rate*100:.1f}%")
+            
+            print(f"\n   🎯 Confidence Distribution Analysis:")
+            print(f"      Confidence ≥50%: {confidence_50_plus}/{len(confidences)} ({confidence_50_plus/len(confidences)*100:.1f}%)")
+            print(f"      Confidence ≥55%: {confidence_55_plus}/{len(confidences)} ({confidence_55_plus/len(confidences)*100:.1f}%)")
+            print(f"      Confidence ≥65%: {confidence_65_plus}/{len(confidences)} ({confidence_65_plus/len(confidences)*100:.1f}%)")
+            
+            # CRITICAL validation criteria
+            minimum_strictly_enforced = minimum_enforced and min_confidence >= 0.50
+            avg_significantly_higher = avg_confidence >= 0.50  # Average should be at least 50%
+            reasoning_fixed = reasoning_rate >= 0.90  # 90% should have proper reasoning
+            realistic_distribution = confidence_55_plus >= len(confidences) * 0.3  # At least 30% reach moderate
+            
+            print(f"\n   ✅ CRITICAL FIX VALIDATION:")
+            print(f"      50% Minimum ENFORCED: {'✅' if minimum_strictly_enforced else '❌ CRITICAL FAILURE'}")
+            print(f"      No Violations: {'✅' if below_minimum_count == 0 else f'❌ {below_minimum_count} violations'}")
+            print(f"      Min Confidence ≥50%: {'✅' if min_confidence >= 0.50 else '❌ CRITICAL FAILURE'}")
+            print(f"      Avg Confidence ≥50%: {'✅' if avg_significantly_higher else '❌'}")
+            print(f"      Reasoning Quality: {'✅' if reasoning_fixed else '❌'}")
+            print(f"      Realistic Distribution: {'✅' if realistic_distribution else '❌'}")
+            
+            # Overall critical fix assessment
+            critical_fix_working = (
+                minimum_strictly_enforced and
+                below_minimum_count == 0 and
+                avg_significantly_higher and
+                reasoning_fixed
+            )
+            
+            print(f"\n   🎯 CRITICAL 50% MINIMUM FIX: {'✅ SUCCESS' if critical_fix_working else '❌ FAILED'}")
+            
+            if not critical_fix_working:
+                print(f"   💡 ISSUE: The 50% minimum confidence fix is NOT working properly")
+                print(f"   💡 Expected: ALL decisions should have confidence ≥ 50% after penalties")
+                print(f"   💡 Found: {below_minimum_count} decisions below 50%, min: {min_confidence:.3f}")
+            
+            return critical_fix_working
+        
+        return False
+
     def test_ia2_enhanced_confidence_calculation(self):
         """Test IA2 enhanced confidence calculation system"""
         print(f"\n🎯 Testing IA2 Enhanced Confidence Calculation System...")
