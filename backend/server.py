@@ -2607,75 +2607,54 @@ class UltraProfessionalTradingOrchestrator:
             logger.info("✅ Trading orchestrator initialized with auto-trending system")
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """Vérifie si l'analyse IA1 a suffisamment de données de qualité pour justifier un appel IA2 (économie API optimisée)"""
+        """Filtrage IA2 simplifié - IA1 ne fournit que des analyses de qualité"""
         try:
-            # Critères d'économie API OPTIMISÉS selon les meilleures pratiques 2025
+            # Puisque IA1 n'est appelé que si données OHLCV validées, filtrage minimal nécessaire
             
-            # PRIORITÉ ABSOLUE: Bypass pour analyses exceptionnelles
+            # PRIORITÉ ABSOLUE: Toujours envoyer les analyses avec patterns techniques
             if analysis.patterns_detected and len(analysis.patterns_detected) > 0:
-                logger.debug(f"🎯 PATTERN PRIORITY - Bypass IA2 pour {analysis.symbol}: {analysis.patterns_detected}")
-                return True  # Patterns techniques = priorité absolue
+                logger.debug(f"🎯 PATTERN PRIORITY - IA2 pour {analysis.symbol}: {analysis.patterns_detected}")
+                return True
             
-            if analysis.analysis_confidence >= 0.80:  # Confiance exceptionnelle
-                logger.debug(f"🎯 HIGH CONFIDENCE PRIORITY - Bypass IA2 pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
-                return True  # Confiance élevée = priorité
+            # PRIORITÉ HAUTE: Confiance IA1 élevée (déjà validé par pré-check)
+            if analysis.analysis_confidence >= 0.70:
+                logger.debug(f"🎯 HIGH CONFIDENCE - IA2 pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
+                return True
             
-            if opportunity.volatility > 0.08:  # Volatilité élevée = opportunité
-                logger.debug(f"🎯 HIGH VOLATILITY PRIORITY - Bypass IA2 pour {analysis.symbol}: {opportunity.volatility:.2%}")
-                return True  # Marchés volatils = opportunités importantes
-            
-            # FILTRES DE BASE (très permissifs pour équilibre 20-50%)
+            # ÉCONOMIE ÉQUILIBRÉE: Filtrage léger pour balance 30-50%
+            # Seuls critères restants après validation IA1 stricte
             filters_failed = 0
-            filter_messages = []
             
-            # 1. Confiance IA1 minimale (très permissive)
-            if analysis.analysis_confidence < 0.25:  # Seulement 25% minimum
+            # Vérification confiance minimale (déjà pre-validé, mais double-check)
+            if analysis.analysis_confidence < 0.50:
                 filters_failed += 1
-                filter_messages.append(f"Confiance IA1 faible: {analysis.analysis_confidence:.2%}")
             
-            # 2. Confiance données minimale (très permissive)
-            if opportunity.data_confidence < 0.30:  # Seulement 30% minimum
+            # Vérification raisonnement minimal
+            if len(analysis.ia1_reasoning) < 100:
                 filters_failed += 1
-                filter_messages.append(f"Confiance données faible: {opportunity.data_confidence:.2%}")
             
-            # 3. Volume minimal (très accessible)
-            if opportunity.volume_24h < 10_000:  # Seulement 10K minimum
-                filters_failed += 1
-                filter_messages.append(f"Volume faible: ${opportunity.volume_24h:,.0f}")
-            
-            # 4. Volatilité minimale (très permissive)
-            if opportunity.volatility < 0.002:  # Seulement 0.2% minimum
-                filters_failed += 1
-                filter_messages.append(f"Volatilité très faible: {opportunity.volatility:.3%}")
-            
-            # 5. Raisonnement minimal (très court acceptable)
-            if len(analysis.ia1_reasoning) < 20:  # Seulement 20 caractères
-                filters_failed += 1
-                filter_messages.append(f"Raisonnement trop court: {len(analysis.ia1_reasoning)} chars")
-            
-            # 6. Indicateurs techniques basiques (permissif)
+            # Vérification indicateurs techniques cohérents
             if analysis.rsi == 50.0 and abs(analysis.macd_signal) < 0.00001:
                 filters_failed += 1
-                filter_messages.append("Indicateurs par défaut")
             
-            # ÉCONOMIE ÉQUILIBRÉE: Filter seulement si PLUSIEURS critères échouent
-            if filters_failed >= 4:  # Échec de 4+ critères = rejet
-                logger.debug(f"⚠️ MULTIPLE CRITERIA FAILED pour {analysis.symbol}: {filter_messages}")
+            # Économie équilibrée: filtrer 30% des analyses moyennes pour économie
+            if filters_failed >= 2:
+                logger.debug(f"💰 BASIC ECONOMY FILTER - Skip IA2 pour {analysis.symbol}")
                 return False
-            
-            elif filters_failed >= 2:  # 2-3 critères échoués = aléatoirement filtrer pour économie
+            elif filters_failed == 1:
+                # 40% chance de filtrer pour économie équilibrée
                 import random
-                if random.random() < 0.3:  # 30% chance de filtrer
-                    logger.debug(f"💰 RANDOM ECONOMY FILTER pour {analysis.symbol}: {filter_messages}")
+                if random.random() < 0.4:
+                    logger.debug(f"💰 BALANCED ECONOMY FILTER - Skip IA2 pour {analysis.symbol}")
                     return False
             
-            # Par défaut: envoyer à IA2 (économie équilibrée)
-            logger.debug(f"✅ IA2 QUALIFIÉ: {analysis.symbol} (critères échoués: {filters_failed}/6)")
+            # Par défaut: envoyer à IA2 (analyses pré-validées par IA1)
+            logger.debug(f"✅ IA2 VALIDATED - {analysis.symbol} qualifié")
             return True
             
         except Exception as e:
-            logger.error(f"Erreur vérification IA2 pour {analysis.symbol}: {e}")
-            return True  # En cas d'erreur, envoyer à IA2 pour éviter de perdre des opportunités
+            logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
+            return True  # En cas d'erreur, envoyer à IA2 (analyses déjà pré-validées)
     
     async def run_trading_cycle(self):
         """Execute ultra professional trading cycle with auto-updated trends"""
