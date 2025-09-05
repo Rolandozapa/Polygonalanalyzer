@@ -105,6 +105,18 @@
 ## user_problem_statement: "IA2 Decision Agent Critical Issues - IA2 has very low confidence (37.3%) and reasoning field is null, preventing proper trading decisions"
 
 ## backend:
+  - task: "Implement Historical Data Fallback API System"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/enhanced_ohlcv_fetcher.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Added comprehensive historical data fallback system with 6 new APIs (Alpha Vantage, Polygon, IEX Cloud, CoinCap, Messari, CryptoCompare) to ensure minimum 20 days of data when primary OHLCV sources fail. Added relaxed primary source fallback as last resort. Enhanced with proper error handling, logging, and metadata tracking."
+
   - task: "Test Claude Integration for IA2"
     implemented: true
     working: false
