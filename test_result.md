@@ -106,7 +106,7 @@
 
 ## backend:
   - task: "Fix IA2 LLM Response Parsing"
-    implemented: false
+    implemented: true
     working: false
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -116,9 +116,12 @@
         - working: "NA"
         - agent: "main"
         - comment: "PROBLEM IDENTIFIED: IA2 not parsing LLM JSON response properly. Using raw response text instead of parsed reasoning field, leading to null reasoning."
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Added _parse_llm_response() method to properly parse JSON from IA2 LLM and extract reasoning field. Updated make_decision() to use parsed response."
 
   - task: "Fix IA2 Confidence Calculation Logic"
-    implemented: false
+    implemented: true
     working: false
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -128,9 +131,12 @@
         - working: "NA"
         - agent: "main"
         - comment: "PROBLEM IDENTIFIED: IA2 confidence constantly reduced by multiple penalty factors (0.3x, 0.7x, 0.8x), causing average 37.3% confidence. Need to balance penalty system."
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Reduced penalty factors (0.3->0.5, 0.7->0.85, 0.8->0.9). Added LLM confidence boost up to +0.2. More balanced confidence calculation."
 
   - task: "Adjust IA2 Trading Signal Thresholds"
-    implemented: false
+    implemented: true
     working: false
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -140,6 +146,9 @@
         - working: "NA"
         - agent: "main"
         - comment: "PROBLEM IDENTIFIED: IA2 requires confidence >0.85 AND signal_strength >0.6 for trades, too strict after confidence penalties. Need more realistic thresholds."
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Lowered thresholds - LONG/SHORT at confidence >0.75 (was 0.85), signal_strength >0.5 (was 0.6). Added moderate signals at confidence >0.65. Lowered risk-reward from 2:1 to 1.5:1."
 
 ## frontend:
   - task: "Frontend changes for IA1 optimization"
