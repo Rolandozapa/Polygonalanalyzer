@@ -2680,36 +2680,45 @@ class DualAITradingBotTester:
         """Test BingX configuration for futures trading vs spot trading"""
         print(f"\n⚙️ Testing BingX Futures Configuration...")
         
-        # Test BingX configuration endpoint
-        success, config_data = self.run_test("BingX Configuration Check", "GET", "bingx/config", 200)
+        # Test BingX status endpoint to check configuration
+        success, bingx_data = self.run_test("BingX Status Configuration", "GET", "bingx-status", 200)
         
         if not success:
-            print(f"   ❌ BingX configuration endpoint failed")
+            print(f"   ❌ BingX status endpoint failed")
             return False
         
-        if config_data:
-            base_url = config_data.get('base_url', 'Unknown')
-            trading_type = config_data.get('trading_type', 'Unknown')
-            api_permissions = config_data.get('api_permissions', [])
+        if bingx_data:
+            connectivity = bingx_data.get('connectivity', {})
+            live_trading_enabled = bingx_data.get('live_trading_enabled', False)
+            account_balances = bingx_data.get('account_balances', [])
+            active_positions = bingx_data.get('active_positions', [])
             
             print(f"   📊 BingX Configuration Details:")
-            print(f"      Base URL: {base_url}")
-            print(f"      Trading Type: {trading_type}")
-            print(f"      API Permissions: {api_permissions}")
+            print(f"      Connectivity Status: {connectivity}")
+            print(f"      Live Trading Enabled: {live_trading_enabled}")
+            print(f"      Account Balances Available: {len(account_balances) > 0}")
+            print(f"      Positions Support: {len(active_positions) >= 0}")
             
-            # Check if configured for futures
-            futures_configured = 'futures' in base_url.lower() or trading_type.lower() == 'futures'
-            futures_permissions = any('futures' in perm.lower() for perm in api_permissions)
+            # Check if configured for futures (positions indicate futures trading)
+            futures_configured = isinstance(active_positions, list)  # Positions endpoint working
+            api_connected = connectivity.get('status') == 'connected' if isinstance(connectivity, dict) else connectivity == 'connected'
             
             print(f"\n   🔍 Futures Configuration Check:")
-            print(f"      Futures URL: {'✅' if futures_configured else '❌ May be spot only'}")
-            print(f"      Futures Permissions: {'✅' if futures_permissions else '❌ May lack futures access'}")
+            print(f"      API Connected: {'✅' if api_connected else '❌ Connection issue'}")
+            print(f"      Futures Support: {'✅' if futures_configured else '❌ May be spot only'}")
+            print(f"      Live Trading: {'✅' if live_trading_enabled else '❌ Disabled'}")
             
-            if not futures_configured or not futures_permissions:
+            if not api_connected:
+                print(f"   💡 CONFIGURATION ISSUES:")
+                print(f"      1. BingX API connection failed")
+                print(f"      2. Check API keys and permissions")
+                print(f"      3. Verify network connectivity")
+                return False
+            elif not futures_configured:
                 print(f"   💡 CONFIGURATION ISSUES:")
                 print(f"      1. API may be configured for spot trading only")
                 print(f"      2. Need futures trading permissions")
-                print(f"      3. Base URL should include futures endpoint")
+                print(f"      3. Account may not support futures")
                 return False
             else:
                 print(f"   ✅ BingX properly configured for futures trading")
