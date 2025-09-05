@@ -2552,31 +2552,74 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             signal = SignalType.HOLD
             reasoning += f"ADVANCED HOLD: Signals below advanced threshold (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
         
-        # Calculate advanced multi-level take profits
+        # Calculate advanced multi-level take profits with DYNAMIC LEVERAGE & 5-LEVEL TP
         current_price = opportunity.current_price
         atr_estimate = current_price * max(opportunity.volatility, 0.015)  # Minimum 1.5% ATR
         
+        # Apply dynamic leverage to stop-loss calculation (higher leverage = tighter SL)
+        leverage_multiplier = 1.0
+        if calculated_leverage_data:
+            applied_leverage = calculated_leverage_data.get("applied_leverage", 2.0)
+            # Tighter SL with higher leverage: 10x leverage = 0.5x SL distance, 2x leverage = 1.0x SL distance
+            leverage_multiplier = max(0.4, 2.0 / applied_leverage)  # 0.4x to 1.0x multiplier
+            reasoning += f"LEVERAGE-ADJUSTED SL: {leverage_multiplier:.2f}x tighter due to {applied_leverage:.1f}x leverage. "
+        
         if signal == SignalType.LONG:
-            # Advanced stop-loss calculation
-            stop_loss_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            # Dynamic leverage-adjusted stop-loss calculation
+            base_stop_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            stop_loss_distance = base_stop_distance * leverage_multiplier  # Tighter with higher leverage
             stop_loss = current_price - stop_loss_distance
             
-            # Multi-level take profits for advanced strategy
-            tp1 = current_price + (stop_loss_distance * 1.5)  # 1.5:1 R:R (25% position)
-            tp2 = current_price + (stop_loss_distance * 3.0)  # 3:1 R:R (30% position)
-            tp3 = current_price + (stop_loss_distance * 5.0)  # 5:1 R:R (25% position)
-            # tp4 would be calculated in the advanced strategy manager (20% position)
-            
+            # 5-LEVEL TAKE PROFITS (leverage and sentiment adjusted)
+            if five_level_tp_data:
+                tp1_pct = five_level_tp_data["tp1_percentage"] / 100.0
+                tp2_pct = five_level_tp_data["tp2_percentage"] / 100.0  
+                tp3_pct = five_level_tp_data["tp3_percentage"] / 100.0
+                tp4_pct = five_level_tp_data["tp4_percentage"] / 100.0
+                tp5_pct = five_level_tp_data["tp5_percentage"] / 100.0
+                
+                tp1 = current_price * (1 + tp1_pct)  # TP1: typically 1.2-1.5%
+                tp2 = current_price * (1 + tp2_pct)  # TP2: typically 2.8-3.0%
+                tp3 = current_price * (1 + tp3_pct)  # TP3: typically 4.8-5.0%
+                # Store TP4 and TP5 for advanced strategy manager
+                tp4 = current_price * (1 + tp4_pct)  # TP4: typically 7.5-8.0%
+                tp5 = current_price * (1 + tp5_pct)  # TP5: typically 12.0%
+                
+                reasoning += f"5-LEVEL TP LONG: TP1=${tp1:.6f}({tp1_pct:.1%}), TP2=${tp2:.6f}({tp2_pct:.1%}), TP3=${tp3:.6f}({tp3_pct:.1%}), TP4=${tp4:.6f}({tp4_pct:.1%}), TP5=${tp5:.6f}({tp5_pct:.1%}). "
+            else:
+                # Fallback to ATR-based calculation
+                tp1 = current_price + (stop_loss_distance * 1.5)  # 1.5:1 R:R
+                tp2 = current_price + (stop_loss_distance * 3.0)  # 3:1 R:R
+                tp3 = current_price + (stop_loss_distance * 5.0)  # 5:1 R:R
+                
         elif signal == SignalType.SHORT:
-            # Advanced stop-loss calculation
-            stop_loss_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            # Dynamic leverage-adjusted stop-loss calculation
+            base_stop_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            stop_loss_distance = base_stop_distance * leverage_multiplier  # Tighter with higher leverage
             stop_loss = current_price + stop_loss_distance
             
-            # Multi-level take profits for advanced strategy
-            tp1 = current_price - (stop_loss_distance * 1.5)  # 1.5:1 R:R (25% position)
-            tp2 = current_price - (stop_loss_distance * 3.0)  # 3:1 R:R (30% position)
-            tp3 = current_price - (stop_loss_distance * 5.0)  # 5:1 R:R (25% position)
-            
+            # 5-LEVEL TAKE PROFITS (leverage and sentiment adjusted)
+            if five_level_tp_data:
+                tp1_pct = five_level_tp_data["tp1_percentage"] / 100.0
+                tp2_pct = five_level_tp_data["tp2_percentage"] / 100.0
+                tp3_pct = five_level_tp_data["tp3_percentage"] / 100.0
+                tp4_pct = five_level_tp_data["tp4_percentage"] / 100.0
+                tp5_pct = five_level_tp_data["tp5_percentage"] / 100.0
+                
+                tp1 = current_price * (1 - tp1_pct)  # TP1: typically 1.2-1.5% down
+                tp2 = current_price * (1 - tp2_pct)  # TP2: typically 2.8-3.0% down
+                tp3 = current_price * (1 - tp3_pct)  # TP3: typically 4.8-5.0% down
+                # Store TP4 and TP5 for advanced strategy manager
+                tp4 = current_price * (1 - tp4_pct)  # TP4: typically 7.5-8.0% down
+                tp5 = current_price * (1 - tp5_pct)  # TP5: typically 12.0% down
+                
+                reasoning += f"5-LEVEL TP SHORT: TP1=${tp1:.6f}({tp1_pct:.1%}), TP2=${tp2:.6f}({tp2_pct:.1%}), TP3=${tp3:.6f}({tp3_pct:.1%}), TP4=${tp4:.6f}({tp4_pct:.1%}), TP5=${tp5:.6f}({tp5_pct:.1%}). "
+            else:
+                # Fallback to ATR-based calculation
+                tp1 = current_price - (stop_loss_distance * 1.5)  # 1.5:1 R:R
+                tp2 = current_price - (stop_loss_distance * 3.0)  # 3:1 R:R
+                tp3 = current_price - (stop_loss_distance * 5.0)  # 5:1 R:R
+                
         else:
             stop_loss = current_price
             tp1 = tp2 = tp3 = current_price
