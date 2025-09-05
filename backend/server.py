@@ -655,13 +655,20 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return self._create_fallback_analysis(opportunity)
     
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 10) -> pd.DataFrame:
-        """Get enhanced historical data with fallback"""
+        """Get enhanced historical data avec vraies APIs OHLCV"""
         try:
-            # Try to get real historical data (implementation depends on available APIs)
-            # For now, generate enhanced synthetic data
-            return self._generate_enhanced_synthetic_ohlcv(days)
+            # Utilise le système OHLCV du technical_pattern_detector (Binance, CoinGecko, etc.)
+            real_data = await technical_pattern_detector._get_ohlcv_data(symbol)
+            
+            if real_data is not None and len(real_data) >= 10:
+                logger.info(f"✅ IA1 using REAL OHLCV data for {symbol}: {len(real_data)} days")
+                return real_data.tail(days)  # Garde les X derniers jours
+            else:
+                logger.warning(f"⚠️ IA1 fallback to synthetic data for {symbol} (real data insufficient)")
+                return self._generate_enhanced_synthetic_ohlcv(days)
+                
         except Exception as e:
-            logger.warning(f"Enhanced historical data failed for {symbol}: {e}")
+            logger.warning(f"⚠️ IA1 OHLCV error for {symbol}, using synthetic: {e}")
             return self._generate_enhanced_synthetic_ohlcv(days)
     
     def _generate_enhanced_synthetic_ohlcv(self, days: int) -> pd.DataFrame:
