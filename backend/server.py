@@ -546,10 +546,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
         self.chat = get_ia1_chat()
         self.market_aggregator = advanced_market_aggregator
     
-    async def analyze_opportunity(self, opportunity: MarketOpportunity) -> TechnicalAnalysis:
-        """Ultra professional technical analysis with multi-source data validation"""
+    async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
+        """Ultra professional technical analysis with OHLCV pattern pre-filtering"""
         try:
-            logger.info(f"IA1 performing ultra professional analysis of {opportunity.symbol}")
+            logger.info(f"🔍 TECHNICAL PRE-FILTER: Checking {opportunity.symbol} for chartist patterns...")
+            
+            # Pré-filtrage technique avec OHLCV
+            should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
+            
+            if not should_analyze:
+                logger.info(f"⚪ SKIPPED IA1: {opportunity.symbol} - No significant technical patterns detected")
+                return None
+            
+            if detected_pattern:
+                logger.info(f"✅ PATTERN DETECTED: {opportunity.symbol} - {detected_pattern.pattern_type.value} (strength: {detected_pattern.strength:.2f})")
+            
+            logger.info(f"🚀 IA1 analyzing {opportunity.symbol} - Technical filter PASSED")
             
             # Get additional historical data if needed
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
