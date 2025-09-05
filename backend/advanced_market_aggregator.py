@@ -533,6 +533,7 @@ class AdvancedMarketAggregator:
                     price=crypto.get('current_price', 0),
                     volume_24h=crypto.get('total_volume', 0),
                     price_change_24h=crypto.get('price_change_percentage_24h', 0),
+                    volatility=abs(crypto.get('price_change_percentage_24h', 0)) / 100.0,  # Estimate volatility from 24h change
                     market_cap=crypto.get('market_cap', 0),
                     market_cap_rank=crypto.get('market_cap_rank'),
                     source="coingecko",
