@@ -204,9 +204,10 @@
 
 ## test_plan:
   current_focus:
-    - "Adjust IA2 Trading Signal Thresholds"
+    - "IA2 Decision Agent Frontend Display Testing"
   stuck_tasks:
     - "Adjust IA2 Trading Signal Thresholds"
+    - "IA2 Decision Agent Frontend Display Testing"
   test_all: false
   test_priority: "stuck_first"
 
