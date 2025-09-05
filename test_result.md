@@ -162,17 +162,13 @@
 
 ## test_plan:
   current_focus:
-    - "Optimize IA1 historical data retrieval"
-    - "Optimize IA1 prompt structure" 
-    - "Optimize market data service historical data"
+    - "Fix IA2 LLM Response Parsing"
+    - "Fix IA2 Confidence Calculation Logic"
+    - "Adjust IA2 Trading Signal Thresholds"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 ## agent_communication:
     - agent: "main"
-    - message: "Starting IA1 performance optimization by reducing historical data window from 30 days to 10 days. This should significantly reduce analysis time while maintaining quality for trend analysis."
-    - agent: "main"
-    - message: "COMPLETED: All IA1 optimizations implemented - 10-day data window, streamlined prompt, updated market data service. Ready for testing."
-    - agent: "testing"
-    - message: "TESTING COMPLETED: IA1 optimization successful! All critical tests passed (23/23). Key findings: (1) High-quality analyses generated with RSI 47-52, MACD signals accurate, confidence 0.75+. (2) Technical analysis quality maintained at 100% with 10-day data. (3) Scout->IA1 integration working with 2 common symbols processed. (4) System generating 8 analyses and 7 decisions with proper technical indicators. (5) Market aggregator active with 12/12 endpoints. Minor: Real-time speed measurement limited by system architecture, but optimization evidence confirmed through analysis quality and structure."
+    - message: "CRITICAL IA2 ISSUES IDENTIFIED: (1) IA2 not parsing LLM JSON responses correctly, (2) Confidence penalties too aggressive causing 37.3% average, (3) Trading thresholds too strict after penalties. Starting fixes for proper decision-making."
