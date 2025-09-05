@@ -16,9 +16,10 @@ import pandas as pd
 import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-# Import our advanced market aggregator and BingX trading engine
+# Import our advanced market aggregator, BingX trading engine, and trending auto-updater
 from advanced_market_aggregator import advanced_market_aggregator, MarketDataResponse
 from bingx_trading_engine import bingx_trading_engine, BingXOrderSide, BingXOrderType, BingXPositionSide
+from trending_auto_updater import trending_auto_updater
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
