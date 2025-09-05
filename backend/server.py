@@ -738,6 +738,64 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced multi-source OHLCV fetch error: {e}")
             return None  # No fallback - real data only
     
+    def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
+        """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
+        try:
+            if historical_data is None or len(historical_data) < 50:
+                logger.debug(f"❌ OHLCV insuffisant pour {symbol}: {len(historical_data) if historical_data is not None else 0} jours")
+                return False
+            
+            # Vérifier que les colonnes essentielles existent
+            required_columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+            missing_columns = [col for col in required_columns if col not in historical_data.columns]
+            if missing_columns:
+                logger.debug(f"❌ Colonnes manquantes pour {symbol}: {missing_columns}")
+                return False
+            
+            # Vérifier qu'il n'y a pas trop de valeurs nulles
+            null_percentage = historical_data[required_columns].isnull().sum().sum() / (len(historical_data) * len(required_columns))
+            if null_percentage > 0.1:  # Plus de 10% de valeurs nulles
+                logger.debug(f"❌ Trop de valeurs nulles pour {symbol}: {null_percentage:.1%}")
+                return False
+            
+            # Vérifier que les prix sont réalistes (pas de zéros, pas de valeurs négatives)
+            price_columns = ['Open', 'High', 'Low', 'Close']
+            for col in price_columns:
+                if (historical_data[col] <= 0).any():
+                    logger.debug(f"❌ Prix invalides dans {col} pour {symbol}")
+                    return False
+            
+            # Vérifier que High >= Low pour chaque jour
+            invalid_highs_lows = (historical_data['High'] < historical_data['Low']).sum()
+            if invalid_highs_lows > 0:
+                logger.debug(f"❌ High < Low détecté pour {symbol}: {invalid_highs_lows} occurrences")
+                return False
+            
+            # Vérifier la variabilité des prix (pas de prix constants)
+            price_std = historical_data['Close'].std()
+            price_mean = historical_data['Close'].mean()
+            if price_mean > 0:
+                coefficient_variation = price_std / price_mean
+                if coefficient_variation < 0.001:  # Moins de 0.1% de variation
+                    logger.debug(f"❌ Prix trop constants pour {symbol}: CV={coefficient_variation:.5f}")
+                    return False
+            
+            # Vérifier que nous avons des données récentes
+            last_date = historical_data.index[-1]
+            import datetime
+            days_old = (datetime.datetime.now() - last_date.to_pydatetime()).days
+            if days_old > 7:  # Données de plus de 7 jours
+                logger.debug(f"❌ Données trop anciennes pour {symbol}: {days_old} jours")
+                return False
+            
+            # Si toutes les vérifications passent
+            logger.debug(f"✅ Qualité OHLCV validée pour {symbol}: {len(historical_data)} jours, CV={coefficient_variation:.5f}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erreur validation OHLCV pour {symbol}: {e}")
+            return False
+    
     # Note: Synthetic data generation removed - using REAL OHLCV data only
     
     def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
