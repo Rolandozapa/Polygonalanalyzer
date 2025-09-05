@@ -1397,7 +1397,7 @@ class UltraProfessionalIA2DecisionAgent:
             if risk_reward < 1.2:
                 signal = SignalType.HOLD
                 reasoning += "Risk-reward ratio too low for live trading (min 1.2:1 required). "
-                confidence *= 0.9  # Less aggressive penalty
+                confidence = max(confidence * 0.9, 0.5)  # Maintain 50% minimum
         else:
             risk_reward = 1.0
         
