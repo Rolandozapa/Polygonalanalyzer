@@ -1524,31 +1524,45 @@ class UltraProfessionalIA2DecisionAgent:
 class UltraProfessionalTradingOrchestrator:
     def __init__(self):
         self.scout = UltraProfessionalCryptoScout()
-        self.ia1 = UltraProfessionalIA1TechnicalAnalyst()
+        self.ia1 = UltraProfessionalIA1TechnicalAnalyst()  
         self.ia2 = UltraProfessionalIA2DecisionAgent()
         self.is_running = False
         self.cycle_count = 0
+        self._initialized = False
+    
+    async def initialize(self):
+        """Initialize the trading orchestrator with trending system"""
+        if not self._initialized:
+            logger.info("🚀 Initializing Ultra Professional Trading Orchestrator...")
+            await self.scout.initialize_trending_system()
+            self._initialized = True
+            logger.info("✅ Trading orchestrator initialized with auto-trending system")
     
     async def run_trading_cycle(self):
-        """Execute ultra professional trading cycle with multi-source data"""
+        """Execute ultra professional trading cycle with auto-updated trends"""
         try:
-            self.cycle_count += 1
-            logger.info(f"Starting ultra professional trading cycle #{self.cycle_count}")
+            # Ensure system is initialized
+            if not self._initialized:
+                await self.initialize()
             
-            # 1. Ultra professional market scan
+            self.cycle_count += 1
+            logger.info(f"Starting ultra professional trading cycle #{self.cycle_count} with auto-trending")
+            
+            # 1. Ultra professional market scan with auto-updated trends
             opportunities = await self.scout.scan_opportunities()
-            logger.info(f"Ultra scan found {len(opportunities)} high-quality opportunities")
+            logger.info(f"Ultra scan found {len(opportunities)} high-quality trending opportunities")
             
             if not opportunities:
-                logger.warning("No opportunities found in ultra professional scan")
+                logger.warning("No opportunities found in ultra professional trending scan")
                 return 0
             
             # Broadcast to frontend
             await manager.broadcast({
-                "type": "opportunities_found",
+                "type": "opportunities_found", 
                 "data": [opp.dict() for opp in opportunities],
                 "cycle": self.cycle_count,
-                "ultra_professional": True
+                "ultra_professional": True,
+                "trending_auto_updated": True
             })
             
             # 2. Ultra professional IA1 analysis (parallel processing for top opportunities)
@@ -1573,12 +1587,13 @@ class UltraProfessionalTradingOrchestrator:
                     await manager.broadcast({
                         "type": "technical_analysis",
                         "data": analysis.dict(),
-                        "ultra_professional": True
+                        "ultra_professional": True,
+                        "trending_focused": True
                     })
                 else:
                     logger.warning(f"Analysis failed for {top_opportunities[i].symbol}: {analysis}")
             
-            logger.info(f"Completed {len(valid_analyses)} ultra professional analyses")
+            logger.info(f"Completed {len(valid_analyses)} ultra professional trending analyses")
             
             # 3. Ultra professional IA2 decisions (parallel processing)
             decision_tasks = []
@@ -1600,22 +1615,23 @@ class UltraProfessionalTradingOrchestrator:
                     await manager.broadcast({
                         "type": "trading_decision",
                         "data": decision.dict(),
-                        "ultra_professional": True
+                        "ultra_professional": True,
+                        "trending_focused": True
                     })
                     
                     # Store opportunity
                     opportunity = valid_analyses[i][0]
                     await db.market_opportunities.insert_one(opportunity.dict())
                     
-                    logger.info(f"Ultra professional decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
+                    logger.info(f"Ultra professional trending decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
                 else:
                     logger.warning(f"Decision failed: {decision}")
             
-            logger.info(f"Ultra professional trading cycle #{self.cycle_count} complete: {valid_decisions} decisions generated")
+            logger.info(f"Ultra professional trending cycle #{self.cycle_count} complete: {valid_decisions} decisions generated")
             return len(opportunities)
             
         except Exception as e:
-            logger.error(f"Ultra professional trading cycle error: {e}")
+            logger.error(f"Ultra professional trending cycle error: {e}")
             return 0
 
 # Global orchestrator instance
