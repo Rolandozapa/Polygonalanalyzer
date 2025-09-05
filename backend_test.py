@@ -7,10 +7,10 @@ import websockets
 from datetime import datetime
 
 class DualAITradingBotTester:
-    def __init__(self, base_url="https://dual-ai-trader-1.preview.emergentagent.com"):
+    def __init__(self, base_url="http://localhost:8001"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
-        self.ws_url = f"{base_url.replace('https', 'wss')}/api/ws"
+        self.ws_url = f"{base_url.replace('http', 'ws')}/api/ws"
         self.tests_run = 0
         self.tests_passed = 0
         self.websocket_messages = []
