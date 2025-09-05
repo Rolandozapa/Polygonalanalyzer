@@ -809,5 +809,151 @@ class AdvancedMarketAggregator:
         
         return stats
 
+    async def _fetch_coincap_data(self) -> List[MarketDataResponse]:
+        """Fetch data from CoinCap API (free alternative)"""
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                start_time = time.time()
+                async with session.get("https://api.coincap.io/v2/assets", 
+                                     params={"limit": 100}) as response:
+                    self._update_request_stats("coincap_assets", time.time() - start_time, response.status == 200)
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_coincap_data(data)
+                    else:
+                        return []
+                        
+        except Exception as e:
+            self._update_request_stats("coincap_assets", 30, False)
+            logger.error(f"Error fetching CoinCap data: {e}")
+            return []
+
+    async def _fetch_cryptocompare_data(self) -> List[MarketDataResponse]:
+        """Fetch data from CryptoCompare API (free tier)"""
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                start_time = time.time()
+                async with session.get("https://min-api.cryptocompare.com/data/top/mktcapfull", 
+                                     params={"limit": 50, "tsym": "USD"}) as response:
+                    self._update_request_stats("cryptocompare_top", time.time() - start_time, response.status == 200)
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cryptocompare_data(data)
+                    else:
+                        return []
+                        
+        except Exception as e:
+            self._update_request_stats("cryptocompare_top", 30, False)
+            logger.error(f"Error fetching CryptoCompare data: {e}")
+            return []
+
+    async def _fetch_coingecko_trending(self) -> List[MarketDataResponse]:
+        """Fetch trending data from CoinGecko"""
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                start_time = time.time()
+                async with session.get("https://api.coingecko.com/api/v3/search/trending") as response:
+                    self._update_request_stats("coingecko_trending", time.time() - start_time, response.status == 200)
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_coingecko_trending_data(data)
+                    else:
+                        return []
+                        
+        except Exception as e:
+            self._update_request_stats("coingecko_trending", 30, False)
+            logger.error(f"Error fetching CoinGecko trending data: {e}")
+            return []
+
+    def _parse_coincap_data(self, data: Dict) -> List[MarketDataResponse]:
+        """Parse CoinCap response"""
+        parsed_data = []
+        
+        for asset in data.get('data', []):
+            try:
+                price_change = float(asset.get('changePercent24Hr', 0))
+                parsed_data.append(MarketDataResponse(
+                    symbol=f"{asset.get('symbol')}USDT",
+                    price=float(asset.get('priceUsd', 0)),
+                    volume_24h=float(asset.get('volumeUsd24Hr', 0)),
+                    price_change_24h=price_change,
+                    volatility=abs(price_change) / 100.0,
+                    market_cap=float(asset.get('marketCapUsd', 0)),
+                    market_cap_rank=int(asset.get('rank', 999)),
+                    source="coincap",
+                    confidence=0.85,
+                    additional_data={
+                        'name': asset.get('name'),
+                        'supply': asset.get('supply')
+                    }
+                ))
+            except Exception as e:
+                logger.debug(f"Error parsing CoinCap asset data: {e}")
+                continue
+        
+        return parsed_data
+
+    def _parse_cryptocompare_data(self, data: Dict) -> List[MarketDataResponse]:
+        """Parse CryptoCompare response"""
+        parsed_data = []
+        
+        for crypto in data.get('Data', []):
+            try:
+                coin_info = crypto.get('CoinInfo', {})
+                raw_data = crypto.get('RAW', {}).get('USD', {})
+                
+                if raw_data:
+                    parsed_data.append(MarketDataResponse(
+                        symbol=f"{coin_info.get('Name')}USDT",
+                        price=float(raw_data.get('PRICE', 0)),
+                        volume_24h=float(raw_data.get('VOLUME24HOURTO', 0)),
+                        price_change_24h=float(raw_data.get('CHANGEPCT24HOUR', 0)),
+                        volatility=abs(float(raw_data.get('CHANGEPCT24HOUR', 0))) / 100.0,
+                        market_cap=float(raw_data.get('MKTCAP', 0)),
+                        source="cryptocompare",
+                        confidence=0.85,
+                        additional_data={
+                            'name': coin_info.get('FullName'),
+                            'algorithm': coin_info.get('Algorithm')
+                        }
+                    ))
+            except Exception as e:
+                logger.debug(f"Error parsing CryptoCompare crypto data: {e}")
+                continue
+        
+        return parsed_data
+
+    def _parse_coingecko_trending_data(self, data: Dict) -> List[MarketDataResponse]:
+        """Parse CoinGecko trending response"""
+        parsed_data = []
+        
+        for coin in data.get('coins', []):
+            try:
+                coin_data = coin.get('item', {})
+                # Note: trending endpoint doesn't provide price data, so we'll use placeholder values
+                parsed_data.append(MarketDataResponse(
+                    symbol=f"{coin_data.get('symbol', '').upper()}USDT",
+                    price=0.0,  # Not available in trending endpoint
+                    volume_24h=0.0,  # Not available in trending endpoint
+                    price_change_24h=0.0,  # Not available in trending endpoint
+                    volatility=0.05,  # Default trending volatility
+                    market_cap_rank=coin_data.get('market_cap_rank'),
+                    source="coingecko_trending",
+                    confidence=0.7,  # Lower confidence as no price data
+                    additional_data={
+                        'name': coin_data.get('name'),
+                        'score': coin_data.get('score'),
+                        'trending_rank': coin_data.get('score')
+                    }
+                ))
+            except Exception as e:
+                logger.debug(f"Error parsing CoinGecko trending data: {e}")
+                continue
+        
+        return parsed_data
+
 # Global instance
 advanced_market_aggregator = AdvancedMarketAggregator()
