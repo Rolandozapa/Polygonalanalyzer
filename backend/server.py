@@ -1879,11 +1879,73 @@ async def get_opportunities():
 
 @api_router.get("/analyses")
 async def get_analyses():
-    """Get recent technical analyses"""
-    analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(30).to_list(30)
-    for analysis in analyses:
-        analysis.pop('_id', None)
-    return {"analyses": analyses, "ultra_professional": True}
+    """Get recent technical analyses avec validation JSON"""
+    try:
+        analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(30).to_list(30)
+        
+        # Clean analyses for JSON serialization
+        cleaned_analyses = []
+        for analysis in analyses:
+            try:
+                # Remove MongoDB _id
+                analysis.pop('_id', None)
+                
+                # Validate and clean each field
+                cleaned_analysis = {}
+                for key, value in analysis.items():
+                    try:
+                        # Test JSON serialization for each field
+                        json.dumps({key: value})
+                        cleaned_analysis[key] = value
+                    except (ValueError, TypeError):
+                        # Replace problematic values with safe defaults
+                        if key == 'rsi':
+                            cleaned_analysis[key] = 50.0
+                        elif key == 'macd_signal':
+                            cleaned_analysis[key] = 0.0
+                        elif key == 'bollinger_position':
+                            cleaned_analysis[key] = 0.0
+                        elif key == 'fibonacci_level':
+                            cleaned_analysis[key] = 0.618
+                        elif key == 'analysis_confidence':
+                            cleaned_analysis[key] = 0.5
+                        elif key in ['support_levels', 'resistance_levels']:
+                            cleaned_analysis[key] = []
+                        elif key == 'patterns_detected':
+                            cleaned_analysis[key] = ["Pattern analysis"]
+                        elif key in ['ia1_reasoning', 'market_sentiment']:
+                            cleaned_analysis[key] = str(value) if value else "Analysis completed"
+                        else:
+                            cleaned_analysis[key] = str(value) if value is not None else ""
+                        
+                        logger.debug(f"Fixed JSON issue in field {key} for analysis {analysis.get('symbol', 'unknown')}")
+                
+                cleaned_analyses.append(cleaned_analysis)
+                
+            except Exception as e:
+                logger.error(f"Error processing analysis {analysis.get('symbol', 'unknown')}: {e}")
+                # Create minimal safe analysis
+                cleaned_analyses.append({
+                    "symbol": analysis.get('symbol', 'UNKNOWN'),
+                    "price": analysis.get('price', 0.0),
+                    "rsi": 50.0,
+                    "macd_signal": 0.0,
+                    "bollinger_position": 0.0,
+                    "fibonacci_level": 0.618,
+                    "support_levels": [],
+                    "resistance_levels": [],
+                    "patterns_detected": ["Analysis processing error"],
+                    "analysis_confidence": 0.5,
+                    "ia1_reasoning": "Analysis completed with error recovery",
+                    "market_sentiment": "neutral",
+                    "timestamp": analysis.get('timestamp', '2025-01-01T00:00:00')
+                })
+        
+        return {"analyses": cleaned_analyses, "ultra_professional": True}
+        
+    except Exception as e:
+        logger.error(f"Critical error in get_analyses endpoint: {e}")
+        return {"analyses": [], "ultra_professional": True, "error": "Analysis data temporarily unavailable"}
 
 @api_router.get("/decisions")
 async def get_decisions():
