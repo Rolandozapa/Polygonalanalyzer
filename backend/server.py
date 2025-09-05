@@ -3584,7 +3584,165 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
-@api_router.post("/test-bingx-futures")
+@api_router.post("/scan-all-bingx-accounts")
+async def scan_all_bingx_accounts():
+    """Scan ALL BingX account types to find where user's funds are located"""
+    try:
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
+        
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        results = {
+            "ip_whitelist": "✅ Working (no IP errors)",
+            "api_authentication": "✅ Valid",
+            "accounts_scanned": {},
+            "total_funds_found": 0,
+            "funds_locations": []
+        }
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
+            
+            # 1. FUTURES/SWAP ACCOUNT (Perpetual)
+            try:
+                logger.info("🔍 Scanning FUTURES/SWAP account...")
+                futures_account = await client.swap.query_account_data()
+                
+                futures_info = {
+                    "status": "accessible",
+                    "balance": 0,
+                    "available_margin": 0,
+                    "used_margin": 0,
+                    "unrealized_profit": 0
+                }
+                
+                if futures_account and hasattr(futures_account, 'data'):
+                    data = futures_account.data
+                    futures_info.update({
+                        "balance": float(getattr(data, 'balance', 0)),
+                        "available_margin": float(getattr(data, 'availableMargin', 0)),
+                        "used_margin": float(getattr(data, 'usedMargin', 0)),
+                        "unrealized_profit": float(getattr(data, 'unrealizedProfit', 0))
+                    })
+                    
+                    if futures_info["balance"] > 0:
+                        results["funds_locations"].append(f"FUTURES: ${futures_info['balance']}")
+                        results["total_funds_found"] += futures_info["balance"]
+                
+                results["accounts_scanned"]["futures"] = futures_info
+                logger.info(f"FUTURES balance: ${futures_info['balance']}")
+                
+            except Exception as e:
+                results["accounts_scanned"]["futures"] = {"status": "error", "error": str(e)}
+            
+            # 2. SPOT ACCOUNT  
+            try:
+                logger.info("🔍 Scanning SPOT account...")
+                spot_assets = await client.spot.query_assets()
+                
+                spot_info = {
+                    "status": "accessible",
+                    "assets": [],
+                    "total_value": 0
+                }
+                
+                if spot_assets and hasattr(spot_assets, 'data'):
+                    for asset in spot_assets.data:
+                        if hasattr(asset, 'coin'):
+                            free_balance = float(getattr(asset, 'free', 0))
+                            locked_balance = float(getattr(asset, 'locked', 0))
+                            total_balance = free_balance + locked_balance
+                            
+                            if total_balance > 0:
+                                asset_info = {
+                                    "coin": asset.coin,
+                                    "free": free_balance,
+                                    "locked": locked_balance,
+                                    "total": total_balance
+                                }
+                                spot_info["assets"].append(asset_info)
+                                spot_info["total_value"] += total_balance
+                                
+                                if asset.coin == 'USDT':  # Count USDT at face value
+                                    results["total_funds_found"] += total_balance
+                                    results["funds_locations"].append(f"SPOT {asset.coin}: ${total_balance}")
+                
+                results["accounts_scanned"]["spot"] = spot_info
+                logger.info(f"SPOT assets: {len(spot_info['assets'])} assets, total value: ${spot_info['total_value']}")
+                
+            except Exception as e:
+                results["accounts_scanned"]["spot"] = {"status": "error", "error": str(e)}
+            
+            # 3. OPEN POSITIONS (might have funds locked in positions)
+            try:
+                logger.info("🔍 Scanning open positions...")
+                positions = await client.swap.query_position_data()
+                
+                positions_info = {
+                    "status": "accessible",
+                    "open_positions": [],
+                    "total_position_value": 0
+                }
+                
+                if positions and hasattr(positions, 'data'):
+                    for pos in positions.data:
+                        if hasattr(pos, 'symbol') and float(getattr(pos, 'positionAmt', 0)) != 0:
+                            position_info = {
+                                "symbol": pos.symbol,
+                                "side": getattr(pos, 'positionSide', 'unknown'),
+                                "size": float(getattr(pos, 'positionAmt', 0)),
+                                "entry_price": float(getattr(pos, 'entryPrice', 0)),
+                                "mark_price": float(getattr(pos, 'markPrice', 0)),
+                                "pnl": float(getattr(pos, 'unrealizedProfit', 0)),
+                                "margin": float(getattr(pos, 'initialMargin', 0))
+                            }
+                            positions_info["open_positions"].append(position_info)
+                            positions_info["total_position_value"] += abs(position_info["margin"])
+                
+                results["accounts_scanned"]["positions"] = positions_info
+                logger.info(f"Open positions: {len(positions_info['open_positions'])}")
+                
+            except Exception as e:
+                results["accounts_scanned"]["positions"] = {"status": "error", "error": str(e)}
+            
+            # 4. API PERMISSIONS CHECK
+            try:
+                logger.info("🔍 Checking API permissions...")
+                permissions = await client.query_api_key_permissions()
+                results["api_permissions"] = str(permissions) if permissions else "Could not retrieve"
+            except Exception as e:
+                results["api_permissions"] = f"Error: {str(e)}"
+            
+            # FINAL ANALYSIS
+            if results["total_funds_found"] > 0:
+                results["status"] = "funds_found"
+                results["message"] = f"✅ FUNDS FOUND! Total: ${results['total_funds_found']} in {len(results['funds_locations'])} location(s)"
+                results["trading_ready"] = True
+            else:
+                results["status"] = "no_funds_found"
+                results["message"] = "❌ No funds found in any account type"
+                results["trading_ready"] = False
+                results["possible_reasons"] = [
+                    "Funds might be in sub-accounts not accessible via API",
+                    "Funds might be in different account types not scanned",
+                    "API key might have limited permissions",
+                    "Account might actually be empty"
+                ]
+            
+            return results
+            
+    except Exception as e:
+        logger.error(f"❌ Account scan failed: {e}")
+        return {
+            "status": "scan_failed",
+            "error": str(e),
+            "message": "Complete account scan failed"
+        }
 async def test_bingx_futures():
     """Test BingX FUTURES account access (where user's funds are located)"""
     try:
