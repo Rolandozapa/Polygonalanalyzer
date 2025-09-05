@@ -16,12 +16,13 @@ import pandas as pd
 import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-# Import our advanced market aggregator, BingX trading engine, trending auto-updater, technical pattern detector, and enhanced OHLCV fetcher
+# Import our advanced market aggregator, BingX trading engine, trending auto-updater, technical pattern detector, enhanced OHLCV fetcher, and advanced trading strategies
 from advanced_market_aggregator import advanced_market_aggregator, MarketDataResponse
 from bingx_official_engine import bingx_official_engine, BingXOrderSide, BingXOrderType, BingXPositionSide
 from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+from advanced_trading_strategies import advanced_strategy_manager, PositionDirection
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
