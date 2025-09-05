@@ -1934,9 +1934,571 @@ class DualAITradingBotTester:
             "ia2_working": decision_success
         }
 
+    def test_robust_ia2_confidence_system(self):
+        """Test the ROBUST IA2 confidence calculation system with 50% minimum enforcement"""
+        print(f"\n🎯 Testing ROBUST IA2 Confidence Calculation System...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for robust confidence testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for robust confidence testing")
+            return False
+        
+        print(f"   📊 Analyzing robust confidence system on {len(decisions)} decisions...")
+        
+        # Analyze confidence enforcement
+        confidences = []
+        violations = []
+        quality_scores = []
+        
+        for i, decision in enumerate(decisions):
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            signal = decision.get('signal', 'hold')
+            
+            confidences.append(confidence)
+            
+            # Critical check: ROBUST system should NEVER allow confidence < 50%
+            if confidence < 0.50:
+                violations.append({
+                    'symbol': symbol,
+                    'confidence': confidence,
+                    'signal': signal,
+                    'index': i
+                })
+            
+            # Quality assessment
+            quality_score = 0
+            if confidence >= 0.50: quality_score += 1  # Base requirement
+            if confidence >= 0.55: quality_score += 1  # Moderate threshold
+            if confidence >= 0.65: quality_score += 1  # Strong threshold
+            if reasoning and len(reasoning) > 100: quality_score += 1  # Good reasoning
+            quality_scores.append(quality_score)
+        
+        # Calculate statistics
+        avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+        min_confidence = min(confidences) if confidences else 0
+        max_confidence = max(confidences) if confidences else 0
+        
+        # Confidence distribution within 50-95% bounds
+        conf_50_55 = sum(1 for c in confidences if 0.50 <= c < 0.55)
+        conf_55_65 = sum(1 for c in confidences if 0.55 <= c < 0.65)
+        conf_65_75 = sum(1 for c in confidences if 0.65 <= c < 0.75)
+        conf_75_plus = sum(1 for c in confidences if c >= 0.75)
+        
+        total = len(confidences)
+        
+        print(f"\n   📊 ROBUST Confidence System Analysis:")
+        print(f"      Total Decisions: {total}")
+        print(f"      Average Confidence: {avg_confidence:.3f}")
+        print(f"      Min Confidence: {min_confidence:.3f} (MUST be ≥0.50)")
+        print(f"      Max Confidence: {max_confidence:.3f} (SHOULD be ≤0.95)")
+        print(f"      Violations (<50%): {len(violations)} (MUST be 0)")
+        
+        print(f"\n   🎯 Confidence Distribution (50-95% bounds):")
+        print(f"      50-55% (Base): {conf_50_55} ({conf_50_55/total*100:.1f}%)")
+        print(f"      55-65% (Moderate): {conf_55_65} ({conf_55_65/total*100:.1f}%)")
+        print(f"      65-75% (Strong): {conf_65_75} ({conf_65_75/total*100:.1f}%)")
+        print(f"      75%+ (Very Strong): {conf_75_plus} ({conf_75_plus/total*100:.1f}%)")
+        
+        # Show violations if any
+        if violations:
+            print(f"\n   ❌ CRITICAL VIOLATIONS FOUND:")
+            for i, violation in enumerate(violations[:5]):  # Show first 5
+                print(f"      {i+1}. {violation['symbol']}: {violation['confidence']:.3f} ({violation['signal']})")
+        
+        # ROBUST system validation
+        robust_minimum_enforced = len(violations) == 0 and min_confidence >= 0.50
+        realistic_distribution = conf_55_65 > 0 or conf_65_75 > 0  # Some above base
+        bounded_maximum = max_confidence <= 0.95  # Within upper bound
+        quality_maintained = sum(quality_scores) / len(quality_scores) >= 2.0  # Avg quality ≥2/4
+        
+        print(f"\n   ✅ ROBUST System Validation:")
+        print(f"      50% Minimum ENFORCED: {'✅' if robust_minimum_enforced else '❌ CRITICAL FAILURE'}")
+        print(f"      Realistic Distribution: {'✅' if realistic_distribution else '❌'}")
+        print(f"      95% Maximum Bounded: {'✅' if bounded_maximum else '❌'}")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'}")
+        
+        robust_system_working = (
+            robust_minimum_enforced and
+            realistic_distribution and
+            bounded_maximum and
+            quality_maintained
+        )
+        
+        print(f"\n   🎯 ROBUST IA2 Confidence System: {'✅ SUCCESS' if robust_system_working else '❌ FAILED'}")
+        
+        return robust_system_working
+
+    def test_quality_assessment_system(self):
+        """Test the new quality-based confidence calculation system"""
+        print(f"\n🔍 Testing Quality Assessment System...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for quality testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for quality testing")
+            return False
+        
+        print(f"   📊 Analyzing quality assessment on {len(decisions)} decisions...")
+        
+        # Analyze quality indicators
+        multi_source_decisions = []
+        high_quality_decisions = []
+        volatility_adjusted = []
+        
+        for decision in decisions:
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            # Check for multi-source validation indicators in reasoning
+            multi_source_indicators = ['multiple', 'sources', 'validated', 'confirmed', 'cross-source']
+            has_multi_source = any(indicator in reasoning.lower() for indicator in multi_source_indicators)
+            
+            if has_multi_source:
+                multi_source_decisions.append({
+                    'symbol': symbol,
+                    'confidence': confidence,
+                    'reasoning_length': len(reasoning)
+                })
+            
+            # Check for quality bonuses (confidence should be higher with quality indicators)
+            quality_indicators = ['high', 'quality', 'strong', 'validated', 'confirmed']
+            has_quality = any(indicator in reasoning.lower() for indicator in quality_indicators)
+            
+            if has_quality and confidence >= 0.55:
+                high_quality_decisions.append({
+                    'symbol': symbol,
+                    'confidence': confidence
+                })
+            
+            # Check for volatility assessment
+            volatility_indicators = ['volatility', 'stable', 'volatile', 'uncertainty']
+            has_volatility_assessment = any(indicator in reasoning.lower() for indicator in volatility_indicators)
+            
+            if has_volatility_assessment:
+                volatility_adjusted.append({
+                    'symbol': symbol,
+                    'confidence': confidence
+                })
+        
+        total = len(decisions)
+        multi_source_rate = len(multi_source_decisions) / total
+        quality_rate = len(high_quality_decisions) / total
+        volatility_rate = len(volatility_adjusted) / total
+        
+        print(f"\n   📊 Quality Assessment Analysis:")
+        print(f"      Multi-Source Validation: {len(multi_source_decisions)} ({multi_source_rate*100:.1f}%)")
+        print(f"      High Quality Decisions: {len(high_quality_decisions)} ({quality_rate*100:.1f}%)")
+        print(f"      Volatility Assessed: {len(volatility_adjusted)} ({volatility_rate*100:.1f}%)")
+        
+        # Check confidence bonuses for quality
+        if multi_source_decisions:
+            avg_multi_source_conf = sum(d['confidence'] for d in multi_source_decisions) / len(multi_source_decisions)
+            print(f"      Avg Multi-Source Confidence: {avg_multi_source_conf:.3f}")
+        
+        if high_quality_decisions:
+            avg_quality_conf = sum(d['confidence'] for d in high_quality_decisions) / len(high_quality_decisions)
+            print(f"      Avg High-Quality Confidence: {avg_quality_conf:.3f}")
+        
+        # Quality system validation
+        has_multi_source_bonuses = multi_source_rate >= 0.20  # At least 20% show multi-source
+        has_quality_scoring = quality_rate >= 0.30  # At least 30% show quality indicators
+        has_volatility_assessment = volatility_rate >= 0.40  # At least 40% assess volatility
+        maintains_50_floor = all(d['confidence'] >= 0.50 for d in multi_source_decisions + high_quality_decisions)
+        
+        print(f"\n   ✅ Quality System Validation:")
+        print(f"      Multi-Source Bonuses: {'✅' if has_multi_source_bonuses else '❌'}")
+        print(f"      Quality Scoring Active: {'✅' if has_quality_scoring else '❌'}")
+        print(f"      Volatility Assessment: {'✅' if has_volatility_assessment else '❌'}")
+        print(f"      Maintains 50% Floor: {'✅' if maintains_50_floor else '❌'}")
+        
+        quality_system_working = (
+            has_multi_source_bonuses and
+            has_quality_scoring and
+            has_volatility_assessment and
+            maintains_50_floor
+        )
+        
+        print(f"\n   🎯 Quality Assessment System: {'✅ WORKING' if quality_system_working else '❌ NEEDS WORK'}")
+        
+        return quality_system_working
+
+    def test_fresh_decision_generation_with_robust_system(self):
+        """Test fresh decision generation with the robust confidence system"""
+        print(f"\n🔄 Testing Fresh Decision Generation with Robust System...")
+        
+        # Step 1: Clear cache
+        print(f"   🗑️ Step 1: Clearing decision cache...")
+        success, clear_result = self.run_test("Clear Decision Cache", "POST", "decisions/clear", 200)
+        if not success:
+            print(f"   ❌ Failed to clear cache")
+            return False
+        
+        print(f"   ✅ Cache cleared successfully")
+        
+        # Step 2: Start system for fresh generation
+        print(f"   🚀 Step 2: Starting system for fresh robust decisions...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for fresh decisions with robust confidence
+        print(f"   ⏱️ Step 3: Waiting for fresh robust decisions (120 seconds max)...")
+        
+        start_time = time.time()
+        max_wait = 120
+        check_interval = 15
+        fresh_found = False
+        
+        while time.time() - start_time < max_wait:
+            time.sleep(check_interval)
+            
+            success, data = self.test_get_decisions()
+            if success:
+                decisions = data.get('decisions', [])
+                elapsed = time.time() - start_time
+                
+                print(f"   📈 After {elapsed:.1f}s: {len(decisions)} fresh decisions")
+                
+                if len(decisions) >= 5:  # Wait for at least 5 decisions
+                    fresh_found = True
+                    break
+        
+        # Step 4: Stop system
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        if not fresh_found:
+            print(f"   ❌ Insufficient fresh decisions generated")
+            return False
+        
+        # Step 5: Validate fresh decisions with robust system
+        print(f"   🔍 Step 5: Validating fresh decisions with robust confidence...")
+        
+        success, fresh_data = self.test_get_decisions()
+        if not success:
+            return False
+        
+        fresh_decisions = fresh_data.get('decisions', [])
+        if len(fresh_decisions) < 5:
+            print(f"   ❌ Not enough fresh decisions for validation")
+            return False
+        
+        # Analyze fresh decisions
+        confidences = [d.get('confidence', 0) for d in fresh_decisions]
+        violations = [c for c in confidences if c < 0.50]
+        
+        avg_conf = sum(confidences) / len(confidences)
+        min_conf = min(confidences)
+        max_conf = max(confidences)
+        
+        # Check trading signals
+        signals = [d.get('signal', 'hold').lower() for d in fresh_decisions]
+        trading_signals = [s for s in signals if s in ['long', 'short']]
+        trading_rate = len(trading_signals) / len(signals)
+        
+        print(f"\n   📊 Fresh Robust Decision Analysis:")
+        print(f"      Total Fresh Decisions: {len(fresh_decisions)}")
+        print(f"      Average Confidence: {avg_conf:.3f}")
+        print(f"      Min Confidence: {min_conf:.3f}")
+        print(f"      Max Confidence: {max_conf:.3f}")
+        print(f"      Violations (<50%): {len(violations)}")
+        print(f"      Trading Rate: {trading_rate*100:.1f}%")
+        
+        # Robust system validation on fresh data
+        robust_minimum_enforced = len(violations) == 0 and min_conf >= 0.50
+        realistic_average = avg_conf >= 0.55
+        enables_trading = trading_rate >= 0.10
+        bounded_confidence = max_conf <= 0.95
+        
+        print(f"\n   ✅ Fresh Robust System Validation:")
+        print(f"      50% Minimum Enforced: {'✅' if robust_minimum_enforced else '❌'}")
+        print(f"      Realistic Average ≥55%: {'✅' if realistic_average else '❌'}")
+        print(f"      Enables Trading ≥10%: {'✅' if enables_trading else '❌'}")
+        print(f"      Bounded ≤95%: {'✅' if bounded_confidence else '❌'}")
+        
+        fresh_robust_working = (
+            robust_minimum_enforced and
+            realistic_average and
+            enables_trading and
+            bounded_confidence
+        )
+        
+        print(f"\n   🎯 Fresh Robust System: {'✅ SUCCESS' if fresh_robust_working else '❌ FAILED'}")
+        
+        return fresh_robust_working
+
+    def test_trading_signal_effectiveness_with_robust_confidence(self):
+        """Test if robust confidence enables effective trading signal generation"""
+        print(f"\n📈 Testing Trading Signal Effectiveness with Robust Confidence...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for trading effectiveness testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for trading effectiveness testing")
+            return False
+        
+        print(f"   📊 Analyzing trading effectiveness on {len(decisions)} decisions...")
+        
+        # Categorize signals by confidence thresholds
+        moderate_signals = []  # 55% threshold
+        strong_signals = []    # 65% threshold
+        all_signals = {'long': 0, 'short': 0, 'hold': 0}
+        
+        for decision in decisions:
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold').lower()
+            symbol = decision.get('symbol', 'Unknown')
+            
+            if signal in all_signals:
+                all_signals[signal] += 1
+            
+            # Test moderate threshold (55%)
+            if confidence >= 0.55 and signal in ['long', 'short']:
+                moderate_signals.append({
+                    'symbol': symbol,
+                    'signal': signal,
+                    'confidence': confidence
+                })
+            
+            # Test strong threshold (65%)
+            if confidence >= 0.65 and signal in ['long', 'short']:
+                strong_signals.append({
+                    'symbol': symbol,
+                    'signal': signal,
+                    'confidence': confidence
+                })
+        
+        total = len(decisions)
+        overall_trading_rate = (all_signals['long'] + all_signals['short']) / total
+        moderate_rate = len(moderate_signals) / total
+        strong_rate = len(strong_signals) / total
+        
+        print(f"\n   📊 Trading Signal Analysis:")
+        print(f"      Total LONG: {all_signals['long']} ({all_signals['long']/total*100:.1f}%)")
+        print(f"      Total SHORT: {all_signals['short']} ({all_signals['short']/total*100:.1f}%)")
+        print(f"      Total HOLD: {all_signals['hold']} ({all_signals['hold']/total*100:.1f}%)")
+        print(f"      Overall Trading Rate: {overall_trading_rate*100:.1f}%")
+        
+        print(f"\n   🎯 Threshold Effectiveness:")
+        print(f"      Moderate Signals (≥55%): {len(moderate_signals)} ({moderate_rate*100:.1f}%)")
+        print(f"      Strong Signals (≥65%): {len(strong_signals)} ({strong_rate*100:.1f}%)")
+        
+        # Show examples of trading signals
+        if moderate_signals:
+            print(f"\n   📋 Moderate Signal Examples (≥55%):")
+            for i, sig in enumerate(moderate_signals[:3]):
+                print(f"      {i+1}. {sig['symbol']}: {sig['signal'].upper()} @ {sig['confidence']:.3f}")
+        
+        if strong_signals:
+            print(f"\n   📋 Strong Signal Examples (≥65%):")
+            for i, sig in enumerate(strong_signals[:3]):
+                print(f"      {i+1}. {sig['symbol']}: {sig['signal'].upper()} @ {sig['confidence']:.3f}")
+        
+        # Trading effectiveness validation
+        not_all_holds = all_signals['hold'] < total * 0.90  # Less than 90% HOLD
+        moderate_threshold_works = len(moderate_signals) > 0  # Some moderate signals
+        strong_threshold_works = len(strong_signals) > 0  # Some strong signals
+        realistic_trading_rate = overall_trading_rate >= 0.10  # At least 10% trading
+        
+        print(f"\n   ✅ Trading Effectiveness Validation:")
+        print(f"      Not All HOLD (<90%): {'✅' if not_all_holds else '❌'}")
+        print(f"      Moderate Threshold Works: {'✅' if moderate_threshold_works else '❌'}")
+        print(f"      Strong Threshold Works: {'✅' if strong_threshold_works else '❌'}")
+        print(f"      Realistic Trading Rate: {'✅' if realistic_trading_rate else '❌'}")
+        
+        trading_effectiveness = (
+            not_all_holds and
+            moderate_threshold_works and
+            realistic_trading_rate
+        )
+        
+        print(f"\n   🎯 Trading Signal Effectiveness: {'✅ WORKING' if trading_effectiveness else '❌ NEEDS IMPROVEMENT'}")
+        
+        return trading_effectiveness
+
+    def test_end_to_end_robust_ia2_validation(self):
+        """Complete end-to-end validation of the robust IA2 system"""
+        print(f"\n🎯 END-TO-END ROBUST IA2 SYSTEM VALIDATION...")
+        
+        print(f"   🔍 Running comprehensive robust IA2 validation tests...")
+        
+        # Test 1: Robust confidence system
+        robust_confidence = self.test_robust_ia2_confidence_system()
+        print(f"      Robust Confidence System: {'✅' if robust_confidence else '❌'}")
+        
+        # Test 2: Quality assessment system
+        quality_system = self.test_quality_assessment_system()
+        print(f"      Quality Assessment System: {'✅' if quality_system else '❌'}")
+        
+        # Test 3: Fresh decision generation
+        fresh_generation = self.test_fresh_decision_generation_with_robust_system()
+        print(f"      Fresh Decision Generation: {'✅' if fresh_generation else '❌'}")
+        
+        # Test 4: Trading signal effectiveness
+        trading_effectiveness = self.test_trading_signal_effectiveness_with_robust_confidence()
+        print(f"      Trading Signal Effectiveness: {'✅' if trading_effectiveness else '❌'}")
+        
+        # Test 5: Reasoning quality (existing test)
+        reasoning_quality = self.test_ia2_reasoning_quality()
+        print(f"      Reasoning Quality: {'✅' if reasoning_quality else '❌'}")
+        
+        # Overall assessment
+        components_passed = sum([
+            robust_confidence,
+            quality_system,
+            fresh_generation,
+            trading_effectiveness,
+            reasoning_quality
+        ])
+        
+        overall_success = components_passed >= 4  # At least 4/5 must pass
+        
+        print(f"\n   📊 End-to-End Validation Summary:")
+        print(f"      Components Passed: {components_passed}/5")
+        print(f"      Success Threshold: ≥4/5")
+        print(f"      Overall Status: {'✅ SUCCESS' if overall_success else '❌ FAILED'}")
+        
+        if not overall_success:
+            print(f"\n   💡 CRITICAL ISSUE: Robust IA2 confidence system needs further work")
+            print(f"   💡 The 50% minimum confidence enforcement is not working properly")
+            print(f"   💡 Expected: ALL decisions maintain confidence ≥50% with quality scoring")
+        else:
+            print(f"\n   🎉 SUCCESS: Robust IA2 confidence system is working properly!")
+            print(f"   🎉 50% minimum is enforced and trading signals are being generated")
+        
+        return overall_success
+
+    async def run_robust_ia2_confidence_tests(self):
+        """Run comprehensive ROBUST IA2 confidence calculation system tests"""
+        print("🎯 Starting ROBUST IA2 Confidence Calculation System Tests")
+        print("=" * 80)
+        print(f"🔧 Testing ROBUST IA2 confidence calculation with 50% minimum enforcement")
+        print(f"🎯 Expected: ALL decisions maintain confidence ≥50% with quality-based scoring")
+        print(f"🎯 Expected: Quality bonuses (+0.05, +0.08) work within 50-95% bounds")
+        print(f"🎯 Expected: Trading signals generated at 55% and 65% thresholds")
+        print(f"🎯 Expected: Fresh decisions demonstrate robust system effectiveness")
+        print("=" * 80)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. IA2 Decision availability test
+        print(f"\n2️⃣ IA2 DECISION AVAILABILITY TEST")
+        decision_success, _ = self.test_get_decisions()
+        
+        # 3. ROBUST: Confidence system validation
+        print(f"\n3️⃣ ROBUST CONFIDENCE SYSTEM VALIDATION")
+        robust_confidence_test = self.test_robust_ia2_confidence_system()
+        
+        # 4. Quality assessment system test
+        print(f"\n4️⃣ QUALITY ASSESSMENT SYSTEM TEST")
+        quality_system_test = self.test_quality_assessment_system()
+        
+        # 5. Fresh decision generation with robust system
+        print(f"\n5️⃣ FRESH DECISION GENERATION WITH ROBUST SYSTEM")
+        fresh_robust_test = self.test_fresh_decision_generation_with_robust_system()
+        
+        # 6. Trading signal effectiveness test
+        print(f"\n6️⃣ TRADING SIGNAL EFFECTIVENESS TEST")
+        trading_effectiveness_test = self.test_trading_signal_effectiveness_with_robust_confidence()
+        
+        # 7. End-to-end robust validation
+        print(f"\n7️⃣ END-TO-END ROBUST IA2 VALIDATION")
+        end_to_end_test = self.test_end_to_end_robust_ia2_validation()
+        
+        # 8. Legacy confidence tests for comparison
+        print(f"\n8️⃣ LEGACY CONFIDENCE TESTS (FOR COMPARISON)")
+        legacy_minimum_test = self.test_ia2_critical_confidence_minimum_fix()
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 ROBUST IA2 CONFIDENCE CALCULATION SYSTEM TEST RESULTS")
+        print("=" * 80)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • IA2 Decision Availability: {'✅' if decision_success else '❌'}")
+        print(f"   • ROBUST Confidence System: {'✅' if robust_confidence_test else '❌'}")
+        print(f"   • Quality Assessment System: {'✅' if quality_system_test else '❌'}")
+        print(f"   • Fresh Robust Generation: {'✅' if fresh_robust_test else '❌'}")
+        print(f"   • Trading Signal Effectiveness: {'✅' if trading_effectiveness_test else '❌'}")
+        print(f"   • End-to-End Robust Validation: {'✅' if end_to_end_test else '❌'}")
+        print(f"   • Legacy Minimum Test: {'✅' if legacy_minimum_test else '❌'}")
+        
+        # Critical assessment for ROBUST system
+        robust_critical_tests = [
+            robust_confidence_test,     # Most critical - 50% minimum enforcement
+            quality_system_test,        # Quality-based scoring system
+            fresh_robust_test,          # Fresh generation with robust system
+            trading_effectiveness_test, # Trading signal generation
+            end_to_end_test            # Overall system validation
+        ]
+        robust_passed = sum(robust_critical_tests)
+        
+        print(f"\n🎯 ROBUST IA2 CONFIDENCE SYSTEM Assessment:")
+        if robust_passed == 5:
+            print(f"   ✅ ROBUST IA2 CONFIDENCE SYSTEM SUCCESSFUL")
+            print(f"   ✅ All robust components working: 50% minimum + quality scoring + trading")
+            robust_status = "SUCCESS"
+        elif robust_passed >= 4:
+            print(f"   ⚠️ ROBUST IA2 CONFIDENCE SYSTEM PARTIAL")
+            print(f"   ⚠️ Most robust components working, minor issues detected")
+            robust_status = "PARTIAL"
+        elif robust_passed >= 3:
+            print(f"   ⚠️ ROBUST IA2 CONFIDENCE SYSTEM LIMITED")
+            print(f"   ⚠️ Some robust components working, significant issues remain")
+            robust_status = "LIMITED"
+        else:
+            print(f"   ❌ ROBUST IA2 CONFIDENCE SYSTEM FAILED")
+            print(f"   ❌ Critical issues detected - robust system not working")
+            robust_status = "FAILED"
+        
+        # Specific feedback on the robust system
+        print(f"\n📋 Robust System Status:")
+        print(f"   • 50% Minimum ENFORCED: {'✅' if robust_confidence_test else '❌ CRITICAL FAILURE'}")
+        print(f"   • Quality Scoring Active: {'✅' if quality_system_test else '❌'}")
+        print(f"   • Fresh Generation Works: {'✅' if fresh_robust_test else '❌'}")
+        print(f"   • Trading Signals Generated: {'✅' if trading_effectiveness_test else '❌'}")
+        print(f"   • End-to-End Validation: {'✅' if end_to_end_test else '❌'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return robust_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "ia2_available": decision_success,
+            "robust_confidence_enforced": robust_confidence_test,
+            "quality_system_working": quality_system_test,
+            "fresh_robust_generation": fresh_robust_test,
+            "trading_effectiveness": trading_effectiveness_test,
+            "end_to_end_validation": end_to_end_test,
+            "legacy_minimum_test": legacy_minimum_test
+        }
+
     async def run_all_tests(self):
-        """Run all tests focusing on IA2 confidence minimum fix"""
-        return await self.run_ia2_confidence_minimum_fix_tests()
+        """Run all tests focusing on ROBUST IA2 confidence system"""
+        return await self.run_robust_ia2_confidence_tests()
 
 async def main():
     """Main test function"""
