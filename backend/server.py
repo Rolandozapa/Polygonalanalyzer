@@ -2681,7 +2681,16 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             "signal_strength": signal_strength,
             "net_signals": net_signals,
             "advanced_strategy_ready": signal != SignalType.HOLD and confidence > 0.70,
-            "claude_decision": claude_decision
+            "claude_decision": claude_decision,
+            # DYNAMIC LEVERAGE DATA
+            "dynamic_leverage": calculated_leverage_data,
+            # 5-LEVEL TAKE PROFIT DATA
+            "five_level_tp": five_level_tp_data,
+            # Additional TP levels for advanced strategy
+            "tp4": locals().get('tp4', tp3),  # TP4 if calculated
+            "tp5": locals().get('tp5', tp3),  # TP5 if calculated
+            "leverage_applied": calculated_leverage_data.get("applied_leverage", 2.0) if calculated_leverage_data else 2.0,
+            "strategy_enhanced": bool(calculated_leverage_data and five_level_tp_data)
         }
     
     async def _create_and_execute_advanced_strategy(self, decision: TradingDecision, claude_decision: Dict, analysis: TechnicalAnalysis):
