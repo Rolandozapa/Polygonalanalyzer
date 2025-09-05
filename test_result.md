@@ -194,5 +194,7 @@
     - message: "CRITICAL IA2 ISSUES IDENTIFIED: (1) IA2 not parsing LLM JSON responses correctly, (2) Confidence penalties too aggressive causing 37.3% average, (3) Trading thresholds too strict after penalties. Starting fixes for proper decision-making."
     - agent: "main"
     - message: "IMPLEMENTED IA2 FIXES: (1) Added proper JSON parsing for LLM responses with reasoning extraction, (2) Reduced confidence penalty factors and added LLM confidence boost, (3) Lowered trading thresholds for more realistic signal generation. Ready for testing."
+    - agent: "main"
+    - message: "ENHANCED IA2 FURTHER: Based on industry research (60% min threshold standard), improved confidence calculation with additive adjustments instead of multiplicative penalties. Lowered moderate thresholds to 55% confidence and 35% signal strength. Multi-source bonuses added. R:R lowered to 1.2:1."
     - agent: "testing"
     - message: "TESTING COMPLETED: IA2 Decision Agent fixes tested with 30 decisions sample. Results: (1) LLM Response Parsing ✅ FIXED - reasoning field populated (1500 chars, no null values), (2) Confidence Calculation ⚠️ PARTIAL - average 40.9% (improved from 37.3% but some decisions still 27-29%), (3) Trading Thresholds ❌ ISSUE - 100% HOLD signals (0% trading rate, may be too conservative), (4) Reasoning Quality ✅ FIXED - all decisions have proper reasoning. Overall: 2/3 critical fixes successful, threshold tuning needed."
