@@ -590,30 +590,38 @@ class UltraProfessionalIA1TechnicalAnalyst:
         self.market_aggregator = advanced_market_aggregator
     
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
-        """Ultra professional technical analysis with OHLCV pattern pre-filtering"""
+        """Ultra professional technical analysis avec vérification données AVANT appel IA1 (économie API totale)"""
         try:
-            logger.info(f"🔍 TECHNICAL PRE-FILTER: Checking {opportunity.symbol} for chartist patterns...")
+            logger.info(f"🔍 PRE-CHECK: Vérification données disponibles pour {opportunity.symbol}...")
             
-            # Pré-filtrage technique avec OHLCV
+            # ÉTAPE 1: Vérification disponibilité données OHLCV AVANT tout appel IA
+            logger.info(f"📊 DATA PRE-CHECK: Test récupération OHLCV pour {opportunity.symbol}")
+            historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
+            
+            if historical_data is None or len(historical_data) < 50:
+                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - Données OHLCV insuffisantes ({len(historical_data) if historical_data is not None else 0} jours)")
+                return None  # Économie API totale - pas d'appel IA1 ni IA2
+            
+            # ÉTAPE 2: Validation qualité des données récupérées
+            if not self._validate_ohlcv_quality(historical_data, opportunity.symbol):
+                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - Qualité données OHLCV insuffisante")
+                return None  # Économie API totale
+            
+            # ÉTAPE 3: Pré-filtrage technique avec OHLCV (seulement si données OK)
+            logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
             should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
             
             if not should_analyze:
-                logger.info(f"⚪ SKIPPED IA1: {opportunity.symbol} - No significant technical patterns detected")
-                return None
+                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - Pas de patterns techniques significatifs")
+                return None  # Économie API - pas d'intérêt technique
             
             if detected_pattern:
-                logger.info(f"✅ PATTERN DETECTED: {opportunity.symbol} - {detected_pattern.pattern_type.value} (strength: {detected_pattern.strength:.2f})")
+                logger.info(f"✅ PATTERN DÉTECTÉ: {opportunity.symbol} - {detected_pattern.pattern_type.value} (force: {detected_pattern.strength:.2f})")
             
-            logger.info(f"🚀 IA1 analyzing {opportunity.symbol} - Technical filter PASSED")
+            # ÉTAPE 4: Toutes les vérifications passées - APPEL IA1 justifié
+            logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données et patterns validés")
             
-            # Get additional historical data if needed - VRAIES données uniquement
-            historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
-            
-            if historical_data is None:
-                logger.info(f"❌ SKIPPING IA1 for {opportunity.symbol} - No real OHLCV data available")
-                return None  # Pas d'analyse sans vraies données
-            
-            # Calculate advanced technical indicators avec données étendues
+            # Calculate advanced technical indicators avec données validées
             rsi = self._calculate_rsi(historical_data['Close'])
             macd_line, macd_signal, macd_histogram = self._calculate_macd(historical_data['Close'])
             bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(historical_data['Close'])
