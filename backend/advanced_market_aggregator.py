@@ -334,6 +334,13 @@ class AdvancedMarketAggregator:
         if self._can_make_request("coingecko_trending"):
             tasks.append(self._fetch_coingecko_trending())
         
+        # 10. Enhanced DEX data from CoinMarketCap v4
+        if include_dex:
+            if self._can_make_request("cmc_dex_info"):
+                tasks.append(self._fetch_cmc_dex_info())
+            if self._can_make_request("cmc_dex_trades"):
+                tasks.append(self._fetch_cmc_dex_trades())
+        
         # Exécuter toutes les tâches en parallèle
         try:
             results = await asyncio.gather(*tasks, return_exceptions=True)
