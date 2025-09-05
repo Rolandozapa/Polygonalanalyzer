@@ -266,6 +266,7 @@ Respond in JSON format:
 class UltraProfessionalCryptoScout:
     def __init__(self):
         self.market_aggregator = advanced_market_aggregator
+        self.trending_updater = trending_auto_updater
         self.max_cryptos_to_analyze = 15  # Réduit mais focus sur trending
         self.min_market_cap = 1_000_000    # $1M minimum (plus bas pour trending coins)
         self.min_volume_24h = 100_000      # $100K minimum (plus accessible)
@@ -273,15 +274,41 @@ class UltraProfessionalCryptoScout:
         self.min_data_confidence = 0.7
         
         # Focus trending configuration
-        self.trending_symbols = ['WLFI', 'EUL', 'PTB', 'PIN', 'PUMP', 'SOMI']  # From your trend list
+        self.trending_symbols = ['WLFI', 'EUL', 'PTB', 'PIN', 'PUMP', 'SOMI']  # Sera mis à jour auto
         self.focus_trending = True
         self.min_price_change_threshold = 3.0  # Focus sur les mouvements >3%
         self.volume_spike_multiplier = 2.0     # Volume >2x moyenne
+        self.auto_update_trending = True       # Auto-update depuis Readdy
+    
+    async def initialize_trending_system(self):
+        """Initialise le système de trending auto-update"""
+        if self.auto_update_trending:
+            logger.info("🔄 Starting trending auto-updater (6h cycle)")
+            await self.trending_updater.start_auto_update()
+            
+            # Met à jour immédiatement les symboles trending
+            await self._sync_trending_symbols()
+    
+    async def _sync_trending_symbols(self):
+        """Synchronise les symboles trending avec l'auto-updater"""
+        try:
+            current_symbols = self.trending_updater.get_current_trending_symbols()
+            if current_symbols:
+                self.trending_symbols = current_symbols
+                logger.info(f"📈 Trending symbols updated: {current_symbols}")
+            else:
+                logger.info("📈 Using default trending symbols")
+        except Exception as e:
+            logger.error(f"Error syncing trending symbols: {e}")
     
     async def scan_opportunities(self) -> List[MarketOpportunity]:
-        """Ultra professional trend-focused market scanning"""
+        """Ultra professional trend-focused market scanning with auto-updated trends"""
         try:
-            logger.info(f"Starting TREND-FOCUSED market scan...")
+            # Sync trending symbols if auto-update is enabled
+            if self.auto_update_trending:
+                await self._sync_trending_symbols()
+            
+            logger.info(f"Starting TREND-FOCUSED scan with symbols: {self.trending_symbols}")
             
             if self.focus_trending:
                 # Get trending opportunities first
