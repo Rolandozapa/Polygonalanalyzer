@@ -82,7 +82,7 @@ class TechnicalPatternDetector:
     def __init__(self):
         self.coinapi_key = os.getenv('COINAPI_KEY')
         self.twelvedata_key = os.getenv('TWELVEDATA_KEY')
-        self.min_pattern_strength = 0.3  # Seuil réduit pour démo des nouvelles tendances soutenues
+        self.min_pattern_strength = 0.25  # Seuil encore plus bas pour détecter les figures chartistes subtiles
         self.lookback_days = 30  # Période d'analyse
         
         # Compteurs pour APIs gratuites (optimisation selon générosité)
