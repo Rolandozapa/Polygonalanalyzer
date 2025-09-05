@@ -180,12 +180,11 @@
 
 ## test_plan:
   current_focus:
-    - "Fix IA2 LLM Response Parsing"
-    - "Fix IA2 Confidence Calculation Logic"
     - "Adjust IA2 Trading Signal Thresholds"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Adjust IA2 Trading Signal Thresholds"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "stuck_first"
 
 ## agent_communication:
     - agent: "main"
