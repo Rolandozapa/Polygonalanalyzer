@@ -4196,20 +4196,6 @@ async def stop_trading():
         logger.error(f"Error stopping trading system: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to stop trading system: {str(e)}")
 
-@app.get("/api/trailing-stops/status")
-async def get_trailing_stops_status():
-    """Get trailing stops monitoring status"""
-    try:
-        return {
-            "monitor_active": orchestrator.trailing_stop_monitor_active,
-            "active_trailing_stops": len(trailing_stop_manager.active_trailing_stops),
-            "notification_email": trailing_stop_manager.notification_email,
-            "system_running": orchestrator.is_running
-        }
-    except Exception as e:
-        logger.error(f"Error getting trailing stops status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get status: {str(e)}")
-
 # WebSocket endpoint for real-time trailing stop updates
 @app.websocket("/api/ws/trailing-stops")
 async def websocket_trailing_stops(websocket: WebSocket):
