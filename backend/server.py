@@ -1158,6 +1158,40 @@ class UltraProfessionalIA2DecisionAgent:
             logger.error(f"Failed to get account balance: {e}")
             return 1000.0  # Fallback balance
     
+    async def _parse_llm_response(self, response: str) -> Dict[str, Any]:
+        """Parse IA2 LLM JSON response with fallback"""
+        if not response:
+            return {}
+            
+        try:
+            # Try to parse JSON response
+            import json
+            # Clean response - sometimes LLM adds extra text
+            response_clean = response.strip()
+            if response_clean.startswith('```json'):
+                response_clean = response_clean.replace('```json', '').replace('```', '').strip()
+            elif response_clean.startswith('```'):
+                response_clean = response_clean.replace('```', '').strip()
+            
+            # Find JSON in response if embedded in text
+            start_idx = response_clean.find('{')
+            end_idx = response_clean.rfind('}') + 1
+            if start_idx >= 0 and end_idx > start_idx:
+                response_clean = response_clean[start_idx:end_idx]
+            
+            parsed = json.loads(response_clean)
+            
+            # Validate expected fields
+            if not isinstance(parsed, dict):
+                logger.warning("IA2 LLM response is not a dict, using fallback")
+                return {}
+                
+            return parsed
+            
+        except (json.JSONDecodeError, ValueError, KeyError) as e:
+            logger.warning(f"Failed to parse IA2 LLM response: {e}, using raw response")
+            return {"reasoning": response[:1000] if response else "IA2 LLM response parsing failed"}
+    
     async def _evaluate_live_trading_decision(self, 
                                             opportunity: MarketOpportunity, 
                                             analysis: TechnicalAnalysis, 
