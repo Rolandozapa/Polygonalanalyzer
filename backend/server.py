@@ -2613,15 +2613,31 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"📊 IA1 PROCESSING RESULTS: {len(valid_analyses)} analyzed, {filtered_count} pattern-filtered, {rejected_no_data_count} data-rejected, {len(top_opportunities) - len(valid_analyses) - filtered_count - rejected_no_data_count} errors")
             logger.info(f"Completed {len(valid_analyses)} ultra professional analyses with REAL OHLCV data only")
             
-            # 3. Ultra professional IA2 decisions (parallel processing)
+            # 3. Ultra professional IA2 decisions avec économie d'API (filtrage données)
             decision_tasks = []
             # Get performance stats for IA2 decisions
             perf_stats = self.market_aggregator.get_performance_stats()
             
-            for opportunity, analysis in valid_analyses:
-                decision_tasks.append(self.ia2.make_decision(opportunity, analysis, perf_stats))
+            # Filtrer les analyses avant d'appeler IA2 pour économiser les appels API
+            ia2_ready_analyses = []
+            skipped_for_data_quality = 0
             
-            # Execute decisions in parallel
+            for opportunity, analysis in valid_analyses:
+                # Vérifier la qualité des données avant d'appeler IA2
+                if self._should_send_to_ia2(analysis, opportunity):
+                    ia2_ready_analyses.append((opportunity, analysis))
+                    decision_tasks.append(self.ia2.make_decision(opportunity, analysis, perf_stats))
+                else:
+                    skipped_for_data_quality += 1
+                    logger.info(f"💰 API ÉCONOMIE: IA2 skipped pour {opportunity.symbol} - données insuffisantes")
+            
+            logger.info(f"💰 IA2 API OPTIMISATION: {len(ia2_ready_analyses)} analyses envoyées à IA2, {skipped_for_data_quality} skipped pour économie API")
+            
+            if not decision_tasks:
+                logger.info("Aucune analyse qualifiée pour IA2 - économie API totale")
+                return
+            
+            # Execute decisions in parallel seulement pour les analyses de qualité
             decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
             
             valid_decisions = 0
