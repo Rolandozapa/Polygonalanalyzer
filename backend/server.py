@@ -1660,15 +1660,23 @@ async def get_live_trading_performance():
 
 @api_router.get("/market-status")
 async def get_market_status():
-    """Get ultra professional market status and API health"""
+    """Get ultra professional market status with BingX integration"""
     try:
         aggregator_stats = advanced_market_aggregator.get_performance_stats()
+        bingx_stats = bingx_trading_engine.get_performance_stats()
         
         return {
             "market_aggregator": {
                 "total_requests": aggregator_stats.get('total_requests', 0),
                 "success_rate": aggregator_stats.get('success_rate', 0),
                 "active_endpoints": len([ep for ep in aggregator_stats.get('api_endpoints', []) if ep.get('status') == 'active'])
+            },
+            "bingx_exchange": {
+                "connectivity": "active",
+                "live_trading_enabled": orchestrator.ia2.live_trading_enabled,
+                "demo_mode": bingx_stats.get('demo_mode', False),
+                "api_success_rate": bingx_stats.get('success_rate', 0),
+                "total_requests": bingx_stats.get('total_requests', 0)
             },
             "api_status": {
                 "coinmarketcap": "ultra_professional",
@@ -1677,15 +1685,18 @@ async def get_market_status():
                 "yahoo_finance": "active",
                 "binance": "ccxt_integration",
                 "bitfinex": "ccxt_integration",
+                "bingx": "live_trading_ready",
                 "dex_data": "coinmarketcap_v4"
             },
-            "system_status": "ultra_professional",
+            "system_status": "ultra_professional_live_trading",
             "version": "3.0.0",
             "features": [
                 "Multi-source aggregation",
-                "Parallel processing",
+                "Parallel processing", 
                 "Intelligent fallback",
-                "Advanced risk management"
+                "Advanced risk management",
+                "BingX live trading integration",
+                "Real-time position monitoring"
             ],
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
