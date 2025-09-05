@@ -1307,29 +1307,42 @@ class UltraProfessionalIA2DecisionAgent:
                 signal_strength += 0.15
                 reasoning += f"Bearish pattern confirmed: {pattern}. "
         
-        # Live trading decision logic (more conservative)
+        # Live trading decision logic (more balanced thresholds)
         net_signals = bullish_signals - bearish_signals
         
-        # Higher thresholds for live trading
-        if net_signals >= 4 and confidence > 0.85 and signal_strength > 0.6:
+        # Incorporate LLM decision if available
+        llm_signal_boost = 0
+        if llm_decision:
+            llm_signal = llm_decision.get("signal", "").lower()
+            if llm_signal in ["long", "buy"]:
+                llm_signal_boost = 2
+                reasoning += "LLM recommends LONG position. "
+            elif llm_signal in ["short", "sell"]:
+                llm_signal_boost = -2
+                reasoning += "LLM recommends SHORT position. "
+        
+        net_signals += llm_signal_boost
+        
+        # More reasonable thresholds for live trading
+        if net_signals >= 4 and confidence > 0.75 and signal_strength > 0.5:  # Lowered from 0.85/0.6
             signal = SignalType.LONG
             confidence = min(confidence + 0.1, 0.98)
-            reasoning += "LIVE LONG: Ultra strong bullish signals confirmed for live execution. "
-        elif net_signals >= 3 and confidence > 0.8 and signal_strength > 0.5:
+            reasoning += "LIVE LONG: Strong bullish signals confirmed for live execution. "
+        elif net_signals >= 2 and confidence > 0.65 and signal_strength > 0.4:  # Lowered from 3/0.8/0.5
             signal = SignalType.LONG
-            confidence = min(confidence + 0.05, 0.95)
-            reasoning += "LIVE LONG: Strong bullish signals for live execution. "
-        elif net_signals <= -4 and confidence > 0.85 and signal_strength > 0.6:
+            confidence = min(confidence + 0.05, 0.90)
+            reasoning += "LIVE LONG: Moderate bullish signals for live execution. "
+        elif net_signals <= -4 and confidence > 0.75 and signal_strength > 0.5:  # Lowered from 0.85/0.6
             signal = SignalType.SHORT
             confidence = min(confidence + 0.1, 0.98)
-            reasoning += "LIVE SHORT: Ultra strong bearish signals confirmed for live execution. "
-        elif net_signals <= -3 and confidence > 0.8 and signal_strength > 0.5:
+            reasoning += "LIVE SHORT: Strong bearish signals confirmed for live execution. "
+        elif net_signals <= -2 and confidence > 0.65 and signal_strength > 0.4:  # Lowered from -3/0.8/0.5
             signal = SignalType.SHORT
-            confidence = min(confidence + 0.05, 0.95)
-            reasoning += "LIVE SHORT: Strong bearish signals for live execution. "
+            confidence = min(confidence + 0.05, 0.90)
+            reasoning += "LIVE SHORT: Moderate bearish signals for live execution. "
         else:
             signal = SignalType.HOLD
-            reasoning += f"LIVE HOLD: Insufficient signal strength for live trading (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
+            reasoning += f"LIVE HOLD: Moderate signals for live trading (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
         
         # Calculate live trading levels with enhanced risk management
         current_price = opportunity.current_price
