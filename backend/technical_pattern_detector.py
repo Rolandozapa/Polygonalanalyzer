@@ -101,19 +101,35 @@ class TechnicalPatternDetector:
     
     async def _get_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
         """
-        Récupère les données OHLCV de multiples sources avec fallback
+        Récupère les données OHLCV des APIs les plus généreuses en priorité
+        Ordre optimisé selon générosité des limites : Binance > CoinGecko > CryptoCompare > CoinAPI > TwelveData
         """
-        # Essaie CoinAPI en premier (meilleure qualité)
+        # 1. BINANCE API (1,200 req/min - ULTRA GÉNÉREUX!)
+        data = await self._fetch_binance_ohlcv(symbol)
+        if data is not None:
+            return data
+        
+        # 2. CoinGecko (10,000 appels/mois, 10 req/sec - TRÈS GÉNÉREUX)
+        data = await self._fetch_coingecko_ohlcv(symbol)
+        if data is not None:
+            return data
+        
+        # 3. CryptoCompare (100,000 appels/mois mais limite req/minute)
+        data = await self._fetch_cryptocompare_ohlcv(symbol)
+        if data is not None:
+            return data
+        
+        # 4. CoinAPI (payant mais fiable - en backup)
         data = await self._fetch_coinapi_ohlcv(symbol)
         if data is not None:
             return data
         
-        # Fallback vers TwelveData
+        # 5. TwelveData (payant - en backup)
         data = await self._fetch_twelvedata_ohlcv(symbol)
         if data is not None:
             return data
         
-        # Dernier recours : Yahoo Finance
+        # 6. Yahoo Finance (gratuit - dernier recours)
         data = await self._fetch_yahoo_ohlcv(symbol)
         if data is not None:
             return data
