@@ -342,9 +342,11 @@
 
 ## test_plan:
   current_focus:
-    - "Major Improvements Testing Complete"
+    - "Advanced Trading Strategies IA2 Testing Complete"
   stuck_tasks: 
     - "Claude Integration Verification Needed"
+    - "Advanced TP Strategy Implementation Needed"
+    - "Position Inversion Logic Implementation Needed"
   test_all: false
   test_priority: "high_first"
 
