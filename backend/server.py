@@ -1201,66 +1201,75 @@ class UltraProfessionalIA2DecisionAgent:
         """Evaluate trading decision with live trading risk management"""
         
         signal = SignalType.HOLD
-        base_confidence = (analysis.analysis_confidence + opportunity.data_confidence) / 2
-        confidence = max(base_confidence, 0.5)  # Start with minimum 50% base confidence
         
-        # Start with LLM reasoning if available
+        # Robust confidence calculation with guaranteed 50% minimum
+        base_confidence_ia1 = max(analysis.analysis_confidence, 0.5)
+        base_confidence_data = max(opportunity.data_confidence, 0.5)
+        
+        # Start with robust base (never below 50%)
+        confidence = max((base_confidence_ia1 + base_confidence_data) / 2, 0.5)
+        
+        # LLM confidence integration (additive boost, never reduce below 50%)
         llm_reasoning = ""
-        llm_confidence_boost = 0.0
         if llm_decision:
             llm_reasoning = llm_decision.get("reasoning", "")
             llm_confidence = llm_decision.get("confidence", 0.0)
             if 0.5 <= llm_confidence <= 1.0:  # Valid LLM confidence
-                llm_confidence_boost = min((llm_confidence - 0.5) * 0.3, 0.25)  # Up to 0.25 boost
-                confidence += llm_confidence_boost
+                # Add LLM boost but maintain minimum
+                llm_boost = min((llm_confidence - 0.5) * 0.3, 0.25)  # Up to 0.25 boost
+                confidence = max(confidence + llm_boost, 0.5)
                 
         reasoning = f"IA2 Decision Analysis: {llm_reasoning[:500]} " if llm_reasoning else "Ultra professional live trading analysis: "
         
-        # LIVE TRADING GATES (More reasonable approach)
-        confidence_penalties = 0
+        # Quality assessment system (adjust confidence within 50-95% range)
+        quality_score = 0.0  # Start neutral
         
-        # Minimum balance gate
-        if account_balance < 50:  # Minimum $50 USDT
-            reasoning += "Insufficient account balance for live trading. "
-            confidence = max(confidence * 0.6, 0.5)  # Maintain 50% minimum even with penalty
-            return self._create_hold_decision(reasoning, confidence, opportunity.current_price)
+        # Data quality assessment
+        if opportunity.data_confidence >= 0.8:
+            quality_score += 0.05
+            reasoning += "High data quality confirmed. "
+        elif opportunity.data_confidence >= 0.7:
+            reasoning += "Good data quality. "
+        elif opportunity.data_confidence < 0.6:
+            quality_score -= 0.03
+            reasoning += "Lower data quality - conservative approach. "
         
-        # Data quality assessment (adjust rather than penalize heavily)
-        if opportunity.data_confidence < 0.6:  # Very low data confidence
-            reasoning += "Low data confidence - conservative approach. "
-            confidence_penalties += 0.1
-        elif opportunity.data_confidence < 0.75:  # Moderate data confidence
-            reasoning += "Moderate data confidence. "
-            confidence_penalties += 0.05
+        # Analysis quality assessment  
+        if analysis.analysis_confidence >= 0.8:
+            quality_score += 0.05
+            reasoning += "High analysis confidence. "
+        elif analysis.analysis_confidence >= 0.7:
+            reasoning += "Good analysis confidence. "
+        elif analysis.analysis_confidence < 0.6:
+            quality_score -= 0.03
+            reasoning += "Lower analysis confidence - conservative approach. "
         
-        if analysis.analysis_confidence < 0.6:  # Very low analysis confidence
-            reasoning += "Low analysis confidence - conservative approach. "
-            confidence_penalties += 0.1
-        elif analysis.analysis_confidence < 0.75:  # Moderate analysis confidence  
-            reasoning += "Moderate analysis confidence. "
-            confidence_penalties += 0.05
-        
-        # Apply confidence penalties (subtract rather than multiply)
-        confidence = max(confidence - confidence_penalties, 0.5)  # Maintain 50% minimum
-        
-        # Multi-source validation bonus (reward rather than penalize)
+        # Multi-source bonus system
         if len(opportunity.data_sources) >= 3:
-            confidence += 0.05
-            reasoning += "Multiple data sources confirmed. "
+            quality_score += 0.08
+            reasoning += "Multiple data sources validated. "
         elif len(opportunity.data_sources) >= 2:
-            confidence += 0.03
+            quality_score += 0.05
             reasoning += "Dual source validation. "
         
-        # Market conditions assessment
-        if opportunity.volatility > 0.25:  # Very high volatility
-            reasoning += "Extreme market volatility - high risk/reward. "
-            confidence -= 0.05
+        # Market condition assessment
+        if opportunity.volatility <= 0.10:  # Low volatility = more predictable
+            quality_score += 0.03
+            reasoning += "Stable market conditions. "
+        elif opportunity.volatility > 0.25:  # Very high volatility
+            quality_score -= 0.02
+            reasoning += "High volatility - increased uncertainty. "
         elif opportunity.volatility > 0.15:  # High volatility
-            reasoning += "High market volatility. "
-            confidence -= 0.02
+            reasoning += "Elevated market volatility. "
         
-        # CRITICAL: Enforce 50% minimum confidence after ALL penalties
-        confidence = max(confidence, 0.5)
+        # Apply quality adjustments within bounds
+        confidence = max(min(confidence + quality_score, 0.95), 0.5)  # Strict 50-95% range
+        
+        # Critical minimum balance check (separate logic)
+        if account_balance < 50:  # Minimum $50 USDT
+            reasoning += "Insufficient account balance for live trading. "
+            # Even with insufficient balance, maintain 50% minimum for calculation integrity
+            return self._create_hold_decision(reasoning, max(confidence * 0.8, 0.5), opportunity.current_price)
         
         # Enhanced signal scoring for live trading
         bullish_signals = 0
