@@ -835,6 +835,106 @@ class UltraProfessionalIA1TechnicalAnalyst:
             result["reason"] = f"Erreur validation: {str(e)}"
             return result
     
+    def _detect_lateral_movement(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
+        """Détecte les mouvements latéraux (consolidation) pour économiser appels API sur figures non-directionnelles"""
+        try:
+            result = {
+                "is_lateral": False,
+                "movement_type": "UNKNOWN",
+                "reason": "Analysis failed",
+                "trend_strength": 0.0,
+                "volatility_level": 0.0
+            }
+            
+            if len(historical_data) < 20:
+                result["reason"] = "Données insuffisantes pour analyse directionnelle"
+                return result
+            
+            # Analyse sur les 20 derniers jours pour détecter la tendance récente
+            recent_data = historical_data.tail(20)
+            prices = recent_data['Close']
+            
+            # 1. Calcul de la tendance générale (régression linéaire simple)
+            x = list(range(len(prices)))
+            n = len(x)
+            sum_x = sum(x)
+            sum_y = sum(prices)
+            sum_xy = sum(x[i] * prices.iloc[i] for i in range(n))
+            sum_x2 = sum(x[i] ** 2 for i in range(n))
+            
+            # Pente de la régression linéaire
+            slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
+            trend_percentage = (slope * (n-1) / prices.iloc[0]) * 100  # Pourcentage de tendance
+            
+            # 2. Calcul de la volatilité récente
+            price_changes = prices.pct_change().dropna()
+            volatility = price_changes.std() * 100  # Volatilité en pourcentage
+            
+            # 3. Range analysis (différence high-low relative)
+            price_range = (recent_data['High'].max() - recent_data['Low'].min()) / recent_data['Close'].iloc[-1] * 100
+            
+            # 4. Moving averages convergence
+            if len(prices) >= 10:
+                ma_short = prices.tail(5).mean()
+                ma_long = prices.tail(10).mean()
+                ma_convergence = abs(ma_short - ma_long) / ma_long * 100
+            else:
+                ma_convergence = 0
+            
+            # 5. Détection mouvement latéral (plusieurs critères)
+            lateral_signals = 0
+            lateral_reasons = []
+            
+            # Critère 1: Tendance faible (< 3% sur 20 jours)
+            if abs(trend_percentage) < 3.0:
+                lateral_signals += 1
+                lateral_reasons.append(f"Tendance faible: {trend_percentage:+.1f}%")
+            
+            # Critère 2: Volatilité faible (< 2% quotidien)
+            if volatility < 2.0:
+                lateral_signals += 1
+                lateral_reasons.append(f"Volatilité faible: {volatility:.1f}%")
+            
+            # Critère 3: Range limité (< 8% sur la période)
+            if price_range < 8.0:
+                lateral_signals += 1
+                lateral_reasons.append(f"Range limité: {price_range:.1f}%")
+            
+            # Critère 4: Moving averages convergentes (< 1.5% différence)
+            if ma_convergence < 1.5:
+                lateral_signals += 1
+                lateral_reasons.append(f"MA convergentes: {ma_convergence:.1f}%")
+            
+            # Décision finale basée sur confluence de signaux
+            result["trend_strength"] = abs(trend_percentage)
+            result["volatility_level"] = volatility
+            
+            if lateral_signals >= 3:  # 3+ critères = mouvement latéral confirmé
+                result["is_lateral"] = True
+                result["movement_type"] = "LATERAL"
+                result["reason"] = f"Consolidation détectée: {', '.join(lateral_reasons)}"
+            elif trend_percentage > 5.0:  # Tendance haussière forte
+                result["movement_type"] = "BULLISH_TREND"
+                result["reason"] = f"Tendance haussière: {trend_percentage:+.1f}%, vol: {volatility:.1f}%"
+            elif trend_percentage < -5.0:  # Tendance baissière forte
+                result["movement_type"] = "BEARISH_TREND"
+                result["reason"] = f"Tendance baissière: {trend_percentage:+.1f}%, vol: {volatility:.1f}%"
+            elif abs(trend_percentage) >= 3.0:  # Tendance modérée
+                direction = "haussière" if trend_percentage > 0 else "baissière"
+                result["movement_type"] = "MODERATE_TREND"
+                result["reason"] = f"Tendance {direction} modérée: {trend_percentage:+.1f}%"
+            else:  # Zone grise - pas assez de signaux latéraux mais pas de tendance claire
+                result["movement_type"] = "MIXED"
+                result["reason"] = f"Signaux mixtes: {lateral_signals}/4 critères latéraux"
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Erreur détection mouvement latéral pour {symbol}: {e}")
+            result["reason"] = f"Erreur analyse: {str(e)}"
+            result["movement_type"] = "ERROR"
+            return result
+    
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
         """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
         try:
