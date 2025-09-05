@@ -1202,7 +1202,7 @@ class UltraProfessionalIA2DecisionAgent:
         
         signal = SignalType.HOLD
         base_confidence = (analysis.analysis_confidence + opportunity.data_confidence) / 2
-        confidence = base_confidence
+        confidence = max(base_confidence, 0.5)  # Start with minimum 50% base confidence
         
         # Start with LLM reasoning if available
         llm_reasoning = ""
@@ -1211,38 +1211,53 @@ class UltraProfessionalIA2DecisionAgent:
             llm_reasoning = llm_decision.get("reasoning", "")
             llm_confidence = llm_decision.get("confidence", 0.0)
             if 0.5 <= llm_confidence <= 1.0:  # Valid LLM confidence
-                llm_confidence_boost = min((llm_confidence - 0.5) * 0.2, 0.2)  # Up to 0.2 boost
+                llm_confidence_boost = min((llm_confidence - 0.5) * 0.3, 0.25)  # Up to 0.25 boost
                 confidence += llm_confidence_boost
                 
         reasoning = f"IA2 Decision Analysis: {llm_reasoning[:500]} " if llm_reasoning else "Ultra professional live trading analysis: "
         
-        # LIVE TRADING GATES (Less aggressive penalties)
+        # LIVE TRADING GATES (More reasonable approach)
+        confidence_penalties = 0
         
         # Minimum balance gate
         if account_balance < 50:  # Minimum $50 USDT
             reasoning += "Insufficient account balance for live trading. "
-            confidence *= 0.5  # Less aggressive than 0.3
+            confidence *= 0.6  # Still restrictive but not too harsh
             return self._create_hold_decision(reasoning, confidence, opportunity.current_price)
         
-        # Data quality gates (less punitive)
-        if opportunity.data_confidence < 0.7:  # Lowered from 0.8
-            reasoning += "Data confidence moderate - reduced position sizing. "
-            confidence *= 0.85  # Less aggressive than 0.7
+        # Data quality assessment (adjust rather than penalize heavily)
+        if opportunity.data_confidence < 0.6:  # Very low data confidence
+            reasoning += "Low data confidence - conservative approach. "
+            confidence_penalties += 0.1
+        elif opportunity.data_confidence < 0.75:  # Moderate data confidence
+            reasoning += "Moderate data confidence. "
+            confidence_penalties += 0.05
         
-        if analysis.analysis_confidence < 0.6:  # Lowered from 0.7
-            reasoning += "Analysis confidence moderate - conservative approach. "
-            confidence *= 0.90  # Less aggressive than 0.8
+        if analysis.analysis_confidence < 0.6:  # Very low analysis confidence
+            reasoning += "Low analysis confidence - conservative approach. "
+            confidence_penalties += 0.1
+        elif analysis.analysis_confidence < 0.75:  # Moderate analysis confidence  
+            reasoning += "Moderate analysis confidence. "
+            confidence_penalties += 0.05
         
-        # Multi-source validation for larger trades (less strict)
-        position_value = self.max_risk_per_trade * account_balance * 10  # Approx position value
-        if position_value > 200 and len(opportunity.data_sources) < 2:  # Raised threshold from 100
-            reasoning += "Multi-source validation recommended for large trades. "
-            confidence *= 0.8  # Less aggressive than 0.6
+        # Apply confidence penalties (subtract rather than multiply)
+        confidence = max(confidence - confidence_penalties, 0.3)
         
-        # Market conditions gate (less strict)
-        if opportunity.volatility > 0.20:  # Raised from 0.15
-            reasoning += "High market volatility - reduced position size. "
-            confidence *= 0.85  # Less aggressive than 0.7
+        # Multi-source validation bonus (reward rather than penalize)
+        if len(opportunity.data_sources) >= 3:
+            confidence += 0.05
+            reasoning += "Multiple data sources confirmed. "
+        elif len(opportunity.data_sources) >= 2:
+            confidence += 0.03
+            reasoning += "Dual source validation. "
+        
+        # Market conditions assessment
+        if opportunity.volatility > 0.25:  # Very high volatility
+            reasoning += "Extreme market volatility - high risk/reward. "
+            confidence -= 0.05
+        elif opportunity.volatility > 0.15:  # High volatility
+            reasoning += "High market volatility. "
+            confidence -= 0.02
         
         # Enhanced signal scoring for live trading
         bullish_signals = 0
