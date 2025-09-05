@@ -715,13 +715,25 @@ class UltraProfessionalIA1TechnicalAnalyst:
     def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
         """Calculate MACD indicator"""
         try:
+            if len(prices) < slow + signal:
+                return 0.0, 0.0, 0.0  # Neutral MACD
+            
             exp1 = prices.ewm(span=fast).mean()
             exp2 = prices.ewm(span=slow).mean()
             macd_line = exp1 - exp2
             macd_signal = macd_line.ewm(span=signal).mean()
             macd_histogram = macd_line - macd_signal
             
-            return float(macd_line.iloc[-1]), float(macd_signal.iloc[-1]), float(macd_histogram.iloc[-1])
+            line_val = float(macd_line.iloc[-1])
+            signal_val = float(macd_signal.iloc[-1])
+            hist_val = float(macd_histogram.iloc[-1])
+            
+            # Ensure values are valid
+            line_val = line_val if not pd.isna(line_val) else 0.0
+            signal_val = signal_val if not pd.isna(signal_val) else 0.0
+            hist_val = hist_val if not pd.isna(hist_val) else 0.0
+            
+            return round(line_val, 6), round(signal_val, 6), round(hist_val, 6)
         except:
             return 0.0, 0.0, 0.0
     
