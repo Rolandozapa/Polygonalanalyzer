@@ -695,20 +695,24 @@ class DualAITradingBotTester:
         print(f"\n   🔍 Testing IA2 Decision Components:")
         
         # 1. Test confidence levels
-        confidence_test = self.test_ia2_decision_confidence_levels()
-        print(f"      Confidence Levels: {'✅' if confidence_test else '❌'}")
+        confidence_test = self.test_ia2_enhanced_confidence_calculation()
+        print(f"      Enhanced Confidence System: {'✅' if confidence_test else '❌'}")
         
         # 2. Test trading thresholds
-        threshold_test = self.test_ia2_trading_signal_thresholds()
-        print(f"      Trading Thresholds: {'✅' if threshold_test else '❌'}")
+        threshold_test = self.test_ia2_enhanced_trading_thresholds()
+        print(f"      Enhanced Trading Thresholds: {'✅' if threshold_test else '❌'}")
         
-        # 3. Test reasoning quality
+        # 3. Test signal generation rate
+        signal_test = self.test_ia2_signal_generation_rate()
+        print(f"      Signal Generation Rate: {'✅' if signal_test else '❌'}")
+        
+        # 4. Test reasoning quality
         reasoning_test = self.test_ia2_reasoning_quality()
         print(f"      Reasoning Quality: {'✅' if reasoning_test else '❌'}")
         
         # Overall assessment
-        components_passed = sum([confidence_test, threshold_test, reasoning_test])
-        flow_success = components_passed >= 2  # At least 2/3 components working
+        components_passed = sum([confidence_test, threshold_test, signal_test, reasoning_test])
+        flow_success = components_passed >= 3  # At least 3/4 components working
         
         print(f"\n   🎯 End-to-End Flow Assessment:")
         print(f"      Components Passed: {components_passed}/3")
