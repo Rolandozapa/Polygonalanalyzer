@@ -47,6 +47,9 @@ class TechnicalPattern:
     target_price: float
     stop_loss: float
     volume_confirmation: bool
+    trading_direction: str = "long"  # "long", "short", "neutral"
+    trend_duration_days: int = 0  # Durée de la tendance détectée
+    trend_strength_score: float = 0.0  # Score de force de tendance (0-1)
     timeframe: str = "1d"
     detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     additional_data: Dict[str, Any] = field(default_factory=dict)
