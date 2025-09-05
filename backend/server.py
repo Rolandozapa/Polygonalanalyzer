@@ -4069,6 +4069,171 @@ async def get_live_trading_performance():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/trailing-stops")
+async def get_trailing_stops():
+    """Get all active trailing stops"""
+    try:
+        trailing_stops = []
+        for position_id, ts in trailing_stop_manager.active_trailing_stops.items():
+            trailing_stops.append({
+                "id": ts.id,
+                "symbol": ts.symbol,
+                "position_id": ts.position_id,
+                "direction": ts.direction,
+                "leverage": ts.leverage,
+                "trailing_percentage": ts.trailing_percentage,
+                "initial_sl": ts.initial_sl,
+                "current_sl": ts.current_sl,
+                "last_tp_crossed": ts.last_tp_crossed,
+                "last_tp_price": ts.last_tp_price,
+                "tp1_minimum_lock": ts.tp1_minimum_lock,
+                "status": ts.status,
+                "created_at": ts.created_at.isoformat(),
+                "updated_at": ts.updated_at.isoformat(),
+                "notifications_sent": len(ts.notifications_sent)
+            })
+        
+        return {
+            "trailing_stops": trailing_stops,
+            "count": len(trailing_stops),
+            "monitor_active": trailing_stop_manager.active_trailing_stops is not None
+        }
+    except Exception as e:
+        logger.error(f"Error getting trailing stops: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get trailing stops: {str(e)}")
+
+@app.get("/api/trailing-stops/{symbol}")
+async def get_trailing_stop_by_symbol(symbol: str):
+    """Get trailing stop for specific symbol"""
+    try:
+        for position_id, ts in trailing_stop_manager.active_trailing_stops.items():
+            if ts.symbol.upper() == symbol.upper():
+                return {
+                    "id": ts.id,
+                    "symbol": ts.symbol,
+                    "position_id": ts.position_id,
+                    "direction": ts.direction,
+                    "leverage": ts.leverage,
+                    "trailing_percentage": ts.trailing_percentage,
+                    "initial_sl": ts.initial_sl,
+                    "current_sl": ts.current_sl,
+                    "last_tp_crossed": ts.last_tp_crossed,
+                    "last_tp_price": ts.last_tp_price,
+                    "tp1_minimum_lock": ts.tp1_minimum_lock,
+                    "status": ts.status,
+                    "created_at": ts.created_at.isoformat(),
+                    "updated_at": ts.updated_at.isoformat(),
+                    "notifications_sent": len(ts.notifications_sent)
+                }
+        
+        raise HTTPException(status_code=404, detail=f"No trailing stop found for {symbol}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting trailing stop for {symbol}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get trailing stop: {str(e)}")
+
+@app.delete("/api/trailing-stops/{position_id}")
+async def cancel_trailing_stop(position_id: str):
+    """Cancel trailing stop for specific position"""
+    try:
+        if position_id in trailing_stop_manager.active_trailing_stops:
+            ts = trailing_stop_manager.active_trailing_stops[position_id]
+            ts.status = "CANCELLED"
+            ts.updated_at = datetime.now(timezone.utc)
+            
+            # Remove from active tracking
+            del trailing_stop_manager.active_trailing_stops[position_id]
+            
+            logger.info(f"🛑 Cancelled trailing stop for {ts.symbol} (Position: {position_id})")
+            
+            return {
+                "status": "cancelled",
+                "message": f"Trailing stop cancelled for {ts.symbol}",
+                "position_id": position_id
+            }
+        else:
+            raise HTTPException(status_code=404, detail=f"No active trailing stop found for position {position_id}")
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling trailing stop: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to cancel trailing stop: {str(e)}")
+
+@app.post("/api/start-trading")
+async def start_trading():
+    """Start the ultra professional trading system with trailing stops"""
+    try:
+        result = await orchestrator.start_trading_system()
+        return result
+    except Exception as e:
+        logger.error(f"Error starting trading system: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to start trading system: {str(e)}")
+
+@app.post("/api/stop-trading")
+async def stop_trading():
+    """Stop the ultra professional trading system and trailing stops"""
+    try:
+        result = await orchestrator.stop_trading_system()
+        return result
+    except Exception as e:
+        logger.error(f"Error stopping trading system: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to stop trading system: {str(e)}")
+
+@app.get("/api/trailing-stops/status")
+async def get_trailing_stops_status():
+    """Get trailing stops monitoring status"""
+    try:
+        return {
+            "monitor_active": orchestrator.trailing_stop_monitor_active,
+            "active_trailing_stops": len(trailing_stop_manager.active_trailing_stops),
+            "notification_email": trailing_stop_manager.notification_email,
+            "system_running": orchestrator.is_running
+        }
+    except Exception as e:
+        logger.error(f"Error getting trailing stops status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get status: {str(e)}")
+
+# WebSocket endpoint for real-time trailing stop updates
+@app.websocket("/api/ws/trailing-stops")
+async def websocket_trailing_stops(websocket: WebSocket):
+    await websocket.accept()
+    logger.info("🔌 Trailing stops WebSocket connected")
+    
+    try:
+        while True:
+            # Send current trailing stops data
+            trailing_stops_data = []
+            for position_id, ts in trailing_stop_manager.active_trailing_stops.items():
+                trailing_stops_data.append({
+                    "id": ts.id,
+                    "symbol": ts.symbol, 
+                    "direction": ts.direction,
+                    "leverage": ts.leverage,
+                    "trailing_percentage": ts.trailing_percentage,
+                    "current_sl": ts.current_sl,
+                    "last_tp_crossed": ts.last_tp_crossed,
+                    "status": ts.status,
+                    "updated_at": ts.updated_at.isoformat()
+                })
+            
+            await websocket.send_json({
+                "type": "trailing_stops_update",
+                "data": trailing_stops_data,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "count": len(trailing_stops_data)
+            })
+            
+            await asyncio.sleep(10)  # Update every 10 seconds
+            
+    except WebSocketDisconnect:
+        logger.info("🔌 Trailing stops WebSocket disconnected")
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        await websocket.close()
+
+# Update existing market status endpoint to include trailing stops info
 @api_router.get("/market-status")
 async def get_market_status():
     """Get ultra professional market status with BingX integration"""
