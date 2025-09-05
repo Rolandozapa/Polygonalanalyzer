@@ -1469,7 +1469,11 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
         "tp2_percentage": 3.0,
         "tp3_percentage": 5.0,
         "tp4_percentage": 8.0,
-        "tp_distribution": [25, 30, 25, 20]
+        "tp5_percentage": 12.0,
+        "tp_distribution": [20, 25, 25, 20, 10],
+        "pattern_type": "double_bottom",
+        "market_condition": "HIGH_VOLATILITY",
+        "positioning_strategy": "PATTERN_ADAPTIVE"
     }},
     "position_management": {{
         "entry_strategy": "MARKET",
