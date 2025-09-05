@@ -1877,9 +1877,27 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 status=TradingStatus.PENDING
             )
             
-            # If we have a trading signal, create and execute advanced strategy
+            # If we have a trading signal, create and execute advanced strategy with trailing stop
             if decision.signal != SignalType.HOLD and claude_decision:
                 await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
+                
+                # CREATE TRAILING STOP LOSS with leverage-proportional settings
+                leverage_data = decision_logic.get("dynamic_leverage", {})
+                applied_leverage = leverage_data.get("applied_leverage", 2.0) if leverage_data else 2.0
+                
+                # Extract TP levels for trailing stop
+                tp_levels = {
+                    "tp1": decision.take_profit_1,
+                    "tp2": decision.take_profit_2, 
+                    "tp3": decision.take_profit_3,
+                    "tp4": decision_logic.get("tp4", decision.take_profit_3),
+                    "tp5": decision_logic.get("tp5", decision.take_profit_3)
+                }
+                
+                # Create trailing stop with leverage-proportional trailing percentage
+                trailing_stop = trailing_stop_manager.create_trailing_stop(decision, applied_leverage, tp_levels)
+                
+                logger.info(f"🎯 {decision.symbol} trading decision with {applied_leverage:.1f}x leverage and {trailing_stop.trailing_percentage:.1f}% trailing stop created")
             
             return decision
             
