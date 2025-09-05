@@ -16,9 +16,10 @@ from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
-import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+# Email functionality simplified to avoid import issues
+# import smtplib
+# from email.mime.text import MimeText
+# from email.mime.multipart import MimeMultipart
 
 # Import our advanced market aggregator, BingX trading engine, trending auto-updater, technical pattern detector, enhanced OHLCV fetcher, and advanced trading strategies
 from advanced_market_aggregator import advanced_market_aggregator, MarketDataResponse
