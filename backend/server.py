@@ -1678,6 +1678,71 @@ Provide your decision in the EXACT JSON format above with complete advanced stra
             "live_trading_ready": False
         }
     
+    async def _create_and_execute_advanced_strategy(self, decision: TradingDecision, claude_decision: Dict[str, Any], analysis: TechnicalAnalysis):
+        """Create and execute advanced trading strategy with multi-level TPs and position inversion"""
+        try:
+            logger.info(f"🎯 Creating advanced strategy for {decision.symbol}")
+            
+            # Extract advanced strategy details from Claude's response
+            tp_strategy = claude_decision.get('take_profit_strategy', {})
+            position_mgmt = claude_decision.get('position_management', {})
+            inversion_criteria = claude_decision.get('inversion_criteria', {})
+            
+            # Determine position direction
+            direction = PositionDirection.LONG if decision.signal == SignalType.LONG else PositionDirection.SHORT
+            
+            # Check for position inversion opportunity first
+            if inversion_criteria.get('enable_inversion', False):
+                inversion_triggered = await advanced_strategy_manager.check_position_inversion_signal(
+                    symbol=decision.symbol,
+                    new_direction=direction,
+                    new_confidence=decision.confidence,
+                    ia1_analysis_id=decision.ia1_analysis_id,
+                    reasoning=decision.ia2_reasoning
+                )
+                
+                if inversion_triggered:
+                    logger.info(f"🔄 Position inversion executed for {decision.symbol}")
+                    return
+            
+            # Create advanced strategy with multi-level TPs
+            advanced_strategy = await advanced_strategy_manager.create_advanced_strategy(
+                symbol=decision.symbol,
+                direction=direction,
+                entry_price=decision.entry_price,
+                quantity=decision.position_size,
+                confidence=decision.confidence,
+                ia1_analysis_id=decision.ia1_analysis_id,
+                reasoning=f"Advanced Strategy: {decision.ia2_reasoning}"
+            )
+            
+            # Execute the strategy if created successfully
+            if advanced_strategy:
+                strategy_executed = await advanced_strategy_manager.execute_strategy(advanced_strategy)
+                
+                if strategy_executed:
+                    logger.info(f"✅ Advanced strategy executed successfully for {decision.symbol}")
+                    
+                    # Update decision reasoning with strategy details
+                    strategy_details = (
+                        f"Advanced Multi-Level TP Strategy executed: "
+                        f"TP1({tp_strategy.get('tp1_percentage', 1.5)}%), "
+                        f"TP2({tp_strategy.get('tp2_percentage', 3.0)}%), "
+                        f"TP3({tp_strategy.get('tp3_percentage', 5.0)}%), "
+                        f"TP4({tp_strategy.get('tp4_percentage', 8.0)}%). "
+                        f"Position distribution: {tp_strategy.get('tp_distribution', [25, 30, 25, 20])}. "
+                        f"Inversion enabled: {inversion_criteria.get('enable_inversion', False)}."
+                    )
+                    
+                    decision.ia2_reasoning = f"{decision.ia2_reasoning[:800]} {strategy_details}"
+                else:
+                    logger.warning(f"⚠️ Advanced strategy execution failed for {decision.symbol}")
+            else:
+                logger.error(f"❌ Failed to create advanced strategy for {decision.symbol}")
+                
+        except Exception as e:
+            logger.error(f"❌ Error creating/executing advanced strategy for {decision.symbol}: {e}")
+    
     async def _check_position_inversion(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis):
         """Check for position inversion opportunities"""
         try:
