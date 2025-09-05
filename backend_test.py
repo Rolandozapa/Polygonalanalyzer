@@ -5122,16 +5122,30 @@ class DualAITradingBotTester:
         system_success, _ = self.test_system_status()
         market_success, _ = self.test_market_status()
         
-        # 2. API Economy Optimization System Test
-        print(f"\n2️⃣ API ECONOMY OPTIMIZATION SYSTEM TEST")
+        # 2. Balanced Filtering Test
+        print(f"\n2️⃣ BALANCED FILTERING TEST")
+        balanced_filtering_test = self.test_api_economy_optimization_balanced_filtering()
+        
+        # 3. Threshold Adjustments Test
+        print(f"\n3️⃣ THRESHOLD ADJUSTMENTS VALIDATION")
+        threshold_adjustments_test = self.test_api_economy_threshold_adjustments()
+        
+        # 4. Priority Bonus System Test
+        print(f"\n4️⃣ PRIORITY BONUS SYSTEM TEST")
+        priority_bonus_test = self.test_api_economy_priority_bonus_system()
+        
+        # 5. API Economy Rate Measurement
+        print(f"\n5️⃣ API ECONOMY RATE MEASUREMENT")
+        economy_rate_test = self.test_api_economy_rate_measurement()
+        
+        # 6. System Effectiveness Test
+        print(f"\n6️⃣ SYSTEM EFFECTIVENESS TEST")
+        system_effectiveness_test = self.test_api_economy_system_effectiveness()
+        
+        # Legacy tests for compatibility
+        print(f"\n7️⃣ LEGACY API ECONOMY TESTS")
         api_economy_test = self.test_api_economy_optimization_system()
-        
-        # 3. Quality vs Economy Balance Test
-        print(f"\n3️⃣ QUALITY VS ECONOMY BALANCE TEST")
         balance_test = self.test_api_economy_quality_vs_economy_balance()
-        
-        # 4. End-to-End Pipeline Test
-        print(f"\n4️⃣ END-TO-END API ECONOMY PIPELINE TEST")
         pipeline_test = self.test_api_economy_end_to_end_pipeline()
         
         # Results Summary
