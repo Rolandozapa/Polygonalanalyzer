@@ -45,13 +45,13 @@ class EnhancedOHLCVFetcher:
         }
         
     async def get_enhanced_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
-        """Enhanced OHLCV data fetching with better symbol resolution"""
+        """Enhanced OHLCV data fetching with multi-source validation (minimum 2 sources)"""
         # Normalize symbol
         normalized_symbol = self._normalize_symbol(symbol)
         
-        logger.info(f"🔍 Fetching enhanced OHLCV for {symbol} (normalized: {normalized_symbol})")
+        logger.info(f"🔍 Fetching multi-source OHLCV for {symbol} (normalized: {normalized_symbol})")
         
-        # Try multiple sources with enhanced logic
+        # Try multiple sources simultaneously for validation
         sources = [
             ('Binance Enhanced', self._fetch_binance_enhanced),
             ('CoinGecko Enhanced', self._fetch_coingecko_enhanced), 
@@ -60,19 +60,39 @@ class EnhancedOHLCVFetcher:
             ('Yahoo Finance Enhanced', self._fetch_yahoo_enhanced)
         ]
         
+        successful_data = []
+        
+        # Try to get data from multiple sources
         for source_name, fetch_func in sources:
             try:
                 data = await fetch_func(normalized_symbol)
-                if data is not None and len(data) >= 50:  # Minimum for good MACD
-                    logger.info(f"✅ {source_name} provided {len(data)} days of data for {symbol}")
-                    return self._validate_and_clean_data(data)
+                if data is not None and len(data) >= 100:  # Increased minimum for better MACD
+                    validated_data = self._validate_and_clean_data(data)
+                    if validated_data is not None and len(validated_data) >= 100:
+                        successful_data.append((source_name, validated_data))
+                        logger.info(f"✅ {source_name} provided {len(validated_data)} days of data for {symbol}")
+                        
+                        # Stop after getting 2 good sources (efficiency)
+                        if len(successful_data) >= 2:
+                            break
                 elif data is not None:
                     logger.debug(f"⚠️ {source_name} provided insufficient data for {symbol}: {len(data)} days")
             except Exception as e:
                 logger.debug(f"❌ {source_name} failed for {symbol}: {e}")
-                
-        logger.warning(f"❌ All enhanced sources failed for {symbol}")
-        return None
+        
+        # Process results based on how many sources we got
+        if len(successful_data) >= 2:
+            # We have multiple sources - validate and combine
+            logger.info(f"🎯 Multi-source validation for {symbol}: {len(successful_data)} sources")
+            return self._combine_multi_source_data(successful_data, symbol)
+        elif len(successful_data) == 1:
+            # Only one source - use it but log the limitation
+            source_name, data = successful_data[0]
+            logger.info(f"⚠️ Single-source data for {symbol} from {source_name}")
+            return data
+        else:
+            logger.warning(f"❌ All enhanced sources failed for {symbol}")
+            return None
     
     def _normalize_symbol(self, symbol: str) -> str:
         """Normalize symbol to standard format"""
