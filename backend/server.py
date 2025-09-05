@@ -579,7 +579,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             TECHNICAL INDICATORS (10-day):
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | BB Position: {bb_position:.2f}
-            Support: ${self._find_support_levels(historical_data, current_price)[0]:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0]:.2f}
+            Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
             Recent 5-day Close: {historical_data['Close'].tail().tolist()}
             
