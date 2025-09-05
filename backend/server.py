@@ -1241,7 +1241,7 @@ class UltraProfessionalIA2DecisionAgent:
             confidence_penalties += 0.05
         
         # Apply confidence penalties (subtract rather than multiply)
-        confidence = max(confidence - confidence_penalties, 0.3)
+        confidence = max(confidence - confidence_penalties, 0.5)  # Maintain 50% minimum
         
         # Multi-source validation bonus (reward rather than penalize)
         if len(opportunity.data_sources) >= 3:
