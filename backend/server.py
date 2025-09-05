@@ -763,6 +763,69 @@ class UltraProfessionalIA1TechnicalAnalyst:
             current_price = float(prices.iloc[-1]) if len(prices) > 0 else 100.0
             return current_price * 1.02, current_price, current_price * 0.98
     
+    def _ensure_json_safe(self, value, default=0.0):
+        """S'assure qu'une valeur est safe pour la sérialisation JSON"""
+        try:
+            if value is None:
+                return default
+            if isinstance(value, (list, tuple)):
+                return [self._ensure_json_safe(v, default) for v in value]
+            if isinstance(value, dict):
+                return {k: self._ensure_json_safe(v, default) for k, v in value.items()}
+            if isinstance(value, str):
+                return value
+            
+            # Vérifie les valeurs numériques
+            if pd.isna(value) or not pd.notna(value):
+                return default
+            if abs(value) == float('inf') or abs(value) > 1e10:
+                return default
+            if not isinstance(value, (int, float)):
+                return default
+                
+            return float(value)
+        except:
+            return default
+
+    def _validate_analysis_data(self, analysis_data: dict) -> dict:
+        """Valide et nettoie toutes les données d'analyse pour JSON"""
+        try:
+            cleaned_data = {}
+            
+            # Validation des champs numériques
+            cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), 50.0)
+            cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), 0.0)
+            cleaned_data["bollinger_position"] = self._ensure_json_safe(analysis_data.get("bollinger_position"), 0.0)
+            cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
+            cleaned_data["analysis_confidence"] = self._ensure_json_safe(analysis_data.get("analysis_confidence"), 0.5)
+            
+            # Validation des listes
+            cleaned_data["support_levels"] = self._ensure_json_safe(analysis_data.get("support_levels", []), [])
+            cleaned_data["resistance_levels"] = self._ensure_json_safe(analysis_data.get("resistance_levels", []), [])
+            cleaned_data["patterns_detected"] = analysis_data.get("patterns_detected", ["No patterns detected"])
+            
+            # Validation des strings
+            cleaned_data["ia1_reasoning"] = str(analysis_data.get("ia1_reasoning", "Analysis completed"))
+            cleaned_data["market_sentiment"] = str(analysis_data.get("market_sentiment", "neutral"))
+            cleaned_data["data_sources"] = analysis_data.get("data_sources", ["internal"])
+            
+            return cleaned_data
+        except Exception as e:
+            logger.error(f"Error validating analysis data: {e}")
+            return {
+                "rsi": 50.0,
+                "macd_signal": 0.0,
+                "bollinger_position": 0.0,
+                "fibonacci_level": 0.618,
+                "support_levels": [],
+                "resistance_levels": [],
+                "patterns_detected": ["Analysis validation error"],
+                "analysis_confidence": 0.5,
+                "ia1_reasoning": "Analysis completed with data validation",
+                "market_sentiment": "neutral",
+                "data_sources": ["internal"]
+            }
+
     def _calculate_fibonacci_retracement(self, historical_data: pd.DataFrame) -> float:
         """Calcule le niveau de retracement Fibonacci actuel"""
         try:
