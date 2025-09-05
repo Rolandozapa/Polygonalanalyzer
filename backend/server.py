@@ -1785,6 +1785,8 @@ class UltraProfessionalTradingOrchestrator:
             
             valid_analyses = []
             filtered_count = 0
+            rejected_no_data_count = 0
+            
             for i, analysis in enumerate(analyses):
                 if isinstance(analysis, TechnicalAnalysis):
                     valid_analyses.append((top_opportunities[i], analysis))
