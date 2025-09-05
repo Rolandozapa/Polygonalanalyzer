@@ -983,5 +983,123 @@ class AdvancedMarketAggregator:
         
         return parsed_data
 
+    async def _fetch_cmc_dex_info(self) -> List[MarketDataResponse]:
+        """Fetch comprehensive DEX info from CoinMarketCap v4"""
+        if not self.cmc_api_key:
+            return []
+        
+        try:
+            headers = {"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"}
+            params = {"limit": 100, "sort": "volume_24h", "sort_dir": "desc"}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                start_time = time.time()
+                async with session.get("https://pro-api.coinmarketcap.com/v4/dex/listings/info", 
+                                     headers=headers, params=params) as response:
+                    self._update_request_stats("cmc_dex_info", time.time() - start_time, response.status == 200)
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cmc_dex_info_data(data)
+                    else:
+                        logger.warning(f"CMC DEX info API returned {response.status}")
+                        return []
+                        
+        except Exception as e:
+            self._update_request_stats("cmc_dex_info", 30, False)
+            logger.error(f"Error fetching CMC DEX info: {e}")
+            return []
+
+    async def _fetch_cmc_dex_trades(self) -> List[MarketDataResponse]:
+        """Fetch latest DEX trades from CoinMarketCap v4"""
+        if not self.cmc_api_key:
+            return []
+        
+        try:
+            headers = {"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"}
+            params = {"limit": 50}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                start_time = time.time()
+                async with session.get("https://pro-api.coinmarketcap.com/v4/dex/pairs/trade/latest", 
+                                     headers=headers, params=params) as response:
+                    self._update_request_stats("cmc_dex_trades", time.time() - start_time, response.status == 200)
+                    
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cmc_dex_trades_data(data)
+                    else:
+                        logger.warning(f"CMC DEX trades API returned {response.status}")
+                        return []
+                        
+        except Exception as e:
+            self._update_request_stats("cmc_dex_trades", 30, False)
+            logger.error(f"Error fetching CMC DEX trades: {e}")
+            return []
+
+    def _parse_cmc_dex_info_data(self, data: Dict) -> List[MarketDataResponse]:
+        """Parse CoinMarketCap DEX info response"""
+        parsed_data = []
+        
+        for pair in data.get('data', []):
+            try:
+                base_symbol = pair.get('base_currency_symbol', '')
+                quote_data = pair.get('quote', {}).get('USD', {})
+                
+                if base_symbol and quote_data:
+                    parsed_data.append(MarketDataResponse(
+                        symbol=f"{base_symbol}USDT",
+                        price=quote_data.get('price', 0),
+                        volume_24h=quote_data.get('volume_24h', 0),
+                        price_change_24h=quote_data.get('percent_change_24h', 0),
+                        volatility=abs(quote_data.get('percent_change_24h', 0)) / 100.0,
+                        source="coinmarketcap_dex_info",
+                        confidence=0.85,  # High confidence DEX data
+                        additional_data={
+                            'dex_name': pair.get('dex_name'),
+                            'pair_address': pair.get('pair_address'),
+                            'network': pair.get('network_name'),
+                            'liquidity': pair.get('liquidity_usd')
+                        }
+                    ))
+            except Exception as e:
+                logger.debug(f"Error parsing CMC DEX info data: {e}")
+                continue
+        
+        return parsed_data
+
+    def _parse_cmc_dex_trades_data(self, data: Dict) -> List[MarketDataResponse]:
+        """Parse CoinMarketCap DEX trades response"""
+        parsed_data = []
+        
+        for trade in data.get('data', []):
+            try:
+                base_symbol = trade.get('base_currency_symbol', '')
+                
+                if base_symbol:
+                    # Estimate price change from trade data
+                    price_change = 0  # Would need historical comparison
+                    
+                    parsed_data.append(MarketDataResponse(
+                        symbol=f"{base_symbol}USDT",
+                        price=trade.get('price_usd', 0),
+                        volume_24h=trade.get('volume_24h_usd', 0),
+                        price_change_24h=price_change,
+                        volatility=0.03,  # Default for active trading pairs
+                        source="coinmarketcap_dex_trades",
+                        confidence=0.8,  # Trade data confidence
+                        additional_data={
+                            'dex_name': trade.get('dex_name'),
+                            'pair_address': trade.get('pair_address'),
+                            'trade_timestamp': trade.get('timestamp'),
+                            'trade_amount_usd': trade.get('amount_usd')
+                        }
+                    ))
+            except Exception as e:
+                logger.debug(f"Error parsing CMC DEX trades data: {e}")
+                continue
+        
+        return parsed_data
+
 # Global instance
 advanced_market_aggregator = AdvancedMarketAggregator()
