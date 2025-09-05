@@ -1874,6 +1874,16 @@ async def get_opportunities():
         opp.pop('_id', None)
     return {"opportunities": opportunities, "ultra_professional": True}
 
+@api_router.get("/status")
+async def get_status():
+    """Get system status for frontend connectivity"""
+    return {
+        "status": "connected",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "3.0.0",
+        "message": "Ultra Professional Trading System Active"
+    }
+
 @api_router.get("/analyses-debug")
 async def get_analyses_debug():
     """Debug endpoint pour identifier les problèmes JSON"""
