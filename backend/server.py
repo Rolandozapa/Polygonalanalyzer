@@ -1196,7 +1196,8 @@ class UltraProfessionalIA2DecisionAgent:
                                             opportunity: MarketOpportunity, 
                                             analysis: TechnicalAnalysis, 
                                             perf_stats: Dict,
-                                            account_balance: float) -> Dict[str, Any]:
+                                            account_balance: float,
+                                            llm_decision: Dict[str, Any] = None) -> Dict[str, Any]:
         """Evaluate trading decision with live trading risk management"""
         
         signal = SignalType.HOLD
