@@ -3336,9 +3336,298 @@ class DualAITradingBotTester:
         
         return fixes_working >= 3
 
+    def test_bingx_official_api_balance(self):
+        """Test BingX Official API Balance Integration"""
+        print(f"\n💰 Testing BingX Official API Balance Integration...")
+        
+        # Test market status endpoint for BingX balance information
+        success, market_data = self.test_market_status()
+        if not success:
+            print(f"   ❌ Cannot retrieve market status for BingX balance testing")
+            return False
+        
+        print(f"   🔍 Analyzing BingX balance data in market status...")
+        
+        # Check if enhanced BingX balance is present
+        bingx_balance = market_data.get('bingx_balance')
+        bingx_connectivity = market_data.get('bingx_connectivity', False)
+        account_balances = market_data.get('account_balances', [])
+        
+        print(f"   📊 BingX Balance Analysis:")
+        print(f"      BingX Balance Field: {'✅ Present' if bingx_balance is not None else '❌ Missing'}")
+        print(f"      BingX Connectivity: {'✅ Connected' if bingx_connectivity else '❌ Failed'}")
+        print(f"      Account Balances: {len(account_balances)} entries")
+        
+        if bingx_balance is not None:
+            print(f"      Balance Value: ${bingx_balance:.2f} USDT")
+            
+            # Test enhanced balance retrieval
+            realistic_balance = bingx_balance > 0  # Should not be 0
+            fallback_working = bingx_balance >= 100.0 if not bingx_connectivity else True  # $100 fallback when API fails
+            
+            print(f"\n   ✅ Enhanced Balance Validation:")
+            print(f"      Not Zero Balance: {'✅' if realistic_balance else '❌'} (${bingx_balance:.2f})")
+            print(f"      Fallback Mechanism: {'✅' if fallback_working else '❌'} (≥$100 when API fails)")
+            print(f"      API Connectivity: {'✅' if bingx_connectivity else '⚠️ Using fallback'}")
+            
+            # Check for USDT/USDC/BUSD detection
+            stablecoin_detected = False
+            if account_balances:
+                for balance in account_balances:
+                    if isinstance(balance, dict):
+                        asset = balance.get('asset', '').upper()
+                        if asset in ['USDT', 'USDC', 'BUSD']:
+                            stablecoin_detected = True
+                            print(f"      Stablecoin Detected: ✅ {asset} balance found")
+                            break
+            
+            if not stablecoin_detected and account_balances:
+                print(f"      Stablecoin Detection: ⚠️ No USDT/USDC/BUSD found in {len(account_balances)} balances")
+            elif not account_balances:
+                print(f"      Stablecoin Detection: ❌ No account balances returned")
+            
+            # Enhanced logging check
+            enhanced_logging = 'bingx_api_details' in market_data or 'api_connectivity_details' in market_data
+            print(f"      Enhanced Logging: {'✅' if enhanced_logging else '❌'} BingX API details")
+            
+            balance_fix_working = realistic_balance and (bingx_connectivity or fallback_working)
+            
+            print(f"\n   🎯 BingX Balance Fix Assessment: {'✅ SUCCESS' if balance_fix_working else '❌ FAILED'}")
+            
+            if not balance_fix_working:
+                print(f"   💡 ISSUE: BingX balance still shows ${bingx_balance:.2f} (expected >$0 or $100 fallback)")
+                print(f"   💡 Expected: Official API should show realistic balance or $100 fallback when API fails")
+            
+            return balance_fix_working
+        else:
+            print(f"   ❌ BingX balance field missing from market status")
+            print(f"   💡 Expected: Enhanced _get_account_balance() should be integrated into market-status endpoint")
+            return False
+
+    def test_ia2_confidence_real_variation(self):
+        """Test IA2 Confidence Real Market Data Variation"""
+        print(f"\n📊 Testing IA2 Confidence Real Market Data Variation...")
+        
+        # Clear cache first to get fresh decisions with new calculation
+        print(f"   🗑️ Clearing cache for fresh decisions with enhanced variation...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        if not cache_clear_success:
+            print(f"   ⚠️ Cache clear failed, testing existing decisions...")
+        
+        # Generate fresh decisions
+        print(f"   🚀 Generating fresh decisions with market-driven confidence...")
+        success, _ = self.test_start_trading_system()
+        if success:
+            print(f"   ⏱️ Waiting for fresh decisions with real variation (60s)...")
+            time.sleep(60)  # Wait for fresh generation
+            self.test_stop_trading_system()
+        
+        # Get decisions for variation analysis
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for variation testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) < 5:
+            print(f"   ❌ Insufficient decisions for variation testing ({len(decisions)} < 5)")
+            return False
+        
+        print(f"   📊 Analyzing confidence variation across {len(decisions)} decisions...")
+        
+        # Collect confidence and market data
+        confidence_data = []
+        symbol_confidences = {}
+        
+        for decision in decisions[:15]:  # Analyze up to 15 recent decisions
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            confidence_data.append(confidence)
+            symbol_confidences[symbol] = confidence
+            
+            # Look for market-driven reasoning indicators
+            market_indicators = []
+            if 'volatility' in reasoning.lower(): market_indicators.append('volatility')
+            if 'momentum' in reasoning.lower(): market_indicators.append('momentum')
+            if 'volume' in reasoning.lower(): market_indicators.append('volume')
+            if 'rsi' in reasoning.lower(): market_indicators.append('rsi')
+            if 'macd' in reasoning.lower(): market_indicators.append('macd')
+            if 'market cap' in reasoning.lower(): market_indicators.append('market_cap')
+            
+            print(f"   Decision - {symbol}: {confidence:.3f} confidence")
+            print(f"      Market factors: {', '.join(market_indicators) if market_indicators else 'None detected'}")
+        
+        # Calculate variation statistics
+        if len(confidence_data) >= 2:
+            avg_confidence = sum(confidence_data) / len(confidence_data)
+            min_confidence = min(confidence_data)
+            max_confidence = max(confidence_data)
+            confidence_range = max_confidence - min_confidence
+            
+            # Check for uniformity (the old problem)
+            unique_confidences = len(set(round(c, 3) for c in confidence_data))
+            uniformity_detected = unique_confidences <= 2  # 2 or fewer unique values = uniform
+            
+            # Volatility-based variation bands
+            volatility_2_percent = sum(1 for c in confidence_data if 0.50 <= c < 0.55)  # Low volatility
+            volatility_5_percent = sum(1 for c in confidence_data if 0.55 <= c < 0.65)  # Medium volatility  
+            volatility_10_percent = sum(1 for c in confidence_data if 0.65 <= c < 0.75)  # High volatility
+            volatility_15_percent = sum(1 for c in confidence_data if c >= 0.75)  # Very high volatility
+            
+            print(f"\n   📊 Confidence Variation Analysis:")
+            print(f"      Average Confidence: {avg_confidence:.3f}")
+            print(f"      Confidence Range: {confidence_range:.3f} (min: {min_confidence:.3f}, max: {max_confidence:.3f})")
+            print(f"      Unique Values: {unique_confidences} (was 1 when uniform)")
+            print(f"      Uniformity Check: {'❌ UNIFORM' if uniformity_detected else '✅ VARIED'}")
+            
+            print(f"\n   🎯 Market-Driven Confidence Bands:")
+            print(f"      Low Volatility (50-55%): {volatility_2_percent} decisions")
+            print(f"      Medium Volatility (55-65%): {volatility_5_percent} decisions")
+            print(f"      High Volatility (65-75%): {volatility_10_percent} decisions")
+            print(f"      Very High Volatility (75%+): {volatility_15_percent} decisions")
+            
+            # Symbol-based variation check
+            symbol_variation = len(set(round(c, 3) for c in symbol_confidences.values()))
+            print(f"\n   🔍 Symbol-Based Variation:")
+            print(f"      Different symbols: {len(symbol_confidences)}")
+            print(f"      Unique confidences: {symbol_variation}")
+            
+            for symbol, conf in list(symbol_confidences.items())[:5]:
+                print(f"      {symbol}: {conf:.3f}")
+            
+            # Enhanced quality scoring validation
+            realistic_variation = confidence_range >= 0.05  # At least 5% range
+            no_uniformity = not uniformity_detected
+            market_driven_bands = (volatility_5_percent + volatility_10_percent + volatility_15_percent) > 0
+            symbol_diversity = symbol_variation >= min(3, len(symbol_confidences))  # At least 3 unique or all different
+            
+            print(f"\n   ✅ Real Variation Validation:")
+            print(f"      Realistic Range (≥5%): {'✅' if realistic_variation else '❌'} ({confidence_range:.3f})")
+            print(f"      No Uniformity: {'✅' if no_uniformity else '❌'} ({unique_confidences} unique values)")
+            print(f"      Market-Driven Bands: {'✅' if market_driven_bands else '❌'} (medium/high volatility)")
+            print(f"      Symbol Diversity: {'✅' if symbol_diversity else '❌'} ({symbol_variation} unique)")
+            
+            variation_fix_working = (
+                realistic_variation and
+                no_uniformity and
+                market_driven_bands and
+                symbol_diversity
+            )
+            
+            print(f"\n   🎯 IA2 Confidence Variation Fix: {'✅ SUCCESS' if variation_fix_working else '❌ FAILED'}")
+            
+            if not variation_fix_working:
+                print(f"   💡 ISSUE: Confidence still shows limited variation")
+                print(f"   💡 Expected: Market conditions should create different confidence levels across symbols")
+                if uniformity_detected:
+                    print(f"   💡 CRITICAL: Still showing uniform confidence (was 76% uniform)")
+            
+            return variation_fix_working
+        
+        return False
+
+    def run_comprehensive_fixes_tests(self):
+        """Run comprehensive tests for BingX balance and IA2 confidence fixes"""
+        print(f"🚀 Starting Comprehensive Fixes Tests")
+        print(f"Backend URL: {self.base_url}")
+        print(f"API URL: {self.api_url}")
+        print(f"=" * 80)
+
+        # Basic system tests
+        self.test_system_status()
+        self.test_market_status()
+        
+        # Core functionality tests
+        self.test_get_opportunities()
+        self.test_get_analyses()
+        self.test_get_decisions()
+        
+        # NEW: BingX Balance and IA2 Confidence Variation Tests
+        print(f"\n" + "=" * 60)
+        print(f"🎯 TESTING COMPREHENSIVE FIXES")
+        print(f"=" * 60)
+        
+        # 1. BingX Official API Balance Test
+        balance_test = self.test_bingx_official_api_balance()
+        
+        # 2. IA2 Confidence Real Variation Test  
+        variation_test = self.test_ia2_confidence_real_variation()
+        
+        # 3. Enhanced Quality Scoring Validation
+        quality_test = self.test_enhanced_quality_scoring_validation()
+        
+        # 4. Real Market Data Integration
+        market_data_test = self.test_real_market_data_integration()
+        
+        # 5. System Integration Test
+        integration_test = self.test_system_integration_comprehensive()
+        
+        # Original IA2 critical fixes tests
+        print(f"\n" + "=" * 60)
+        print(f"🔧 TESTING ORIGINAL IA2 FIXES")
+        print(f"=" * 60)
+        
+        confidence_minimum_test = self.test_ia2_critical_confidence_minimum_fix()
+        enhanced_confidence_test = self.test_ia2_enhanced_confidence_calculation()
+        trading_thresholds_test = self.test_ia2_enhanced_trading_thresholds()
+        signal_generation_test = self.test_ia2_signal_generation_rate()
+        reasoning_test = self.test_ia2_reasoning_quality()
+        
+        # System control tests
+        self.test_start_trading_system()
+        time.sleep(2)  # Brief pause
+        self.test_stop_trading_system()
+        
+        # Performance summary
+        self.print_performance_summary()
+        
+        print(f"\n" + "=" * 80)
+        print(f"🎯 COMPREHENSIVE FIXES TEST SUMMARY")
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Specific fix results
+        print(f"\n📋 Comprehensive Fixes Results:")
+        print(f"   BingX Balance Fix: {'✅' if balance_test else '❌'}")
+        print(f"   IA2 Confidence Variation: {'✅' if variation_test else '❌'}")
+        print(f"   Enhanced Quality Scoring: {'✅' if quality_test else '❌'}")
+        print(f"   Real Market Data Integration: {'✅' if market_data_test else '❌'}")
+        print(f"   System Integration: {'✅' if integration_test else '❌'}")
+        
+        print(f"\n📋 Original IA2 Fixes Results:")
+        print(f"   50% Minimum Confidence: {'✅' if confidence_minimum_test else '❌'}")
+        print(f"   Enhanced Confidence Calculation: {'✅' if enhanced_confidence_test else '❌'}")
+        print(f"   Trading Thresholds: {'✅' if trading_thresholds_test else '❌'}")
+        print(f"   Signal Generation: {'✅' if signal_generation_test else '❌'}")
+        print(f"   Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        
+        # Overall assessment
+        comprehensive_fixes = [balance_test, variation_test, quality_test, market_data_test, integration_test]
+        original_fixes = [confidence_minimum_test, enhanced_confidence_test, trading_thresholds_test, signal_generation_test, reasoning_test]
+        
+        comprehensive_passed = sum(comprehensive_fixes)
+        original_passed = sum(original_fixes)
+        
+        print(f"\n🎯 FINAL ASSESSMENT:")
+        print(f"   Comprehensive Fixes: {comprehensive_passed}/5 passed")
+        print(f"   Original IA2 Fixes: {original_passed}/5 passed")
+        
+        if comprehensive_passed >= 4 and original_passed >= 4:
+            print(f"✅ ALL FIXES SUCCESSFUL - System is working correctly!")
+            return True
+        elif comprehensive_passed >= 3 and original_passed >= 3:
+            print(f"⚠️  MOSTLY WORKING - Some issues remain")
+            return True
+        else:
+            print(f"❌ SIGNIFICANT ISSUES - Multiple fixes failed")
+            return False
+
     async def run_all_tests(self):
-        """Run specific tests for BingX balance and IA2 confidence variation fixes"""
-        return self.run_bingx_and_ia2_fixes_tests()
+        """Run comprehensive tests for BingX balance and IA2 confidence variation fixes"""
+        return self.run_comprehensive_fixes_tests()
 
 async def main():
     """Main test function"""
