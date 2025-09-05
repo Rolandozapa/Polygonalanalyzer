@@ -507,8 +507,12 @@ class AdvancedTradingStrategiesIA2Tester:
             for category, keywords in strategy_keywords.items():
                 found = sum(1 for keyword in keywords if keyword.lower() in reasoning.lower())
                 strategy_patterns_found[category] = found
-                if found > 0:
+                if found > 0 and category in strategy_manager_indicators:
                     strategy_manager_indicators[category] += 1
+            
+            # Check for position direction specifically
+            if any(keyword in reasoning for keyword in ['LONG', 'SHORT']) or signal in ['LONG', 'SHORT']:
+                strategy_manager_indicators['position_direction_mentioned'] += 1
             
             # Check for LONG/SHORT strategy creation
             if signal in ['LONG', 'SHORT']:
