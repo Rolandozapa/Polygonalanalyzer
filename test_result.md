@@ -143,11 +143,11 @@
 
   - task: "Adjust IA2 Trading Signal Thresholds"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 2
+    stuck_count: 3
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
         - agent: "main"
@@ -170,6 +170,21 @@
         - working: true
         - agent: "testing"
         - comment: "CRITICAL FIX APPLIED: Found and fixed the root cause! The 50% minimum was being overridden by confidence penalties at lines 1257-1260 AFTER the minimum was set. Added final enforcement: 'confidence = max(confidence, 0.5)' after all penalties. The existing test failures were due to old cached decisions in database - new decisions will now properly enforce 50% minimum confidence. LLM Response Parsing: ✅ Working (100% proper reasoning). The fix is now complete and ready for validation with fresh decisions."
+        - working: false
+        - agent: "testing"
+        - comment: "CACHE CLEARING AND FRESH GENERATION TESTED: Successfully implemented and tested decision cache clearing endpoint (/api/decisions/clear) that properly clears trading_decisions, technical_analyses, and market_opportunities collections. However, CRITICAL ISSUE PERSISTS: Fresh decisions generated after cache clear still show confidence violations (26/30 decisions below 50% minimum, avg confidence 0.324, min 0.261). The 50% minimum confidence fix is NOT working even with fresh data. All decisions remain HOLD signals (0% trading rate). ROOT CAUSE: The confidence calculation logic still applies penalties that override the 50% minimum. REASONING: ✅ Working (100% proper reasoning, 1500 chars each). RECOMMENDATION: Main agent needs to review and fix the confidence calculation logic to truly enforce 50% minimum."
+
+  - task: "Test Decision Cache Clearing and Fresh IA2 Generation"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "COMPREHENSIVE CACHE CLEARING AND FRESH GENERATION TESTING: (1) ✅ Cache Clear Endpoint Working - Successfully implemented /api/decisions/clear endpoint that properly clears trading_decisions, technical_analyses, and market_opportunities collections. Fixed collection names from incorrect 'decisions' to correct 'trading_decisions'. (2) ✅ Fresh Decision Generation - System successfully generates fresh decisions after cache clear. (3) ❌ 50% Confidence Fix NOT Working - Fresh decisions still violate 50% minimum: 26/30 decisions below 50% (avg 0.324, min 0.261). (4) ❌ Trading Signals - 0% trading rate, all HOLD signals. (5) ✅ Reasoning Quality - 100% proper reasoning (1500 chars each). CONCLUSION: Cache clearing works but the core IA2 confidence calculation fix is not effective even with fresh data."
 
 ## frontend:
   - task: "Frontend changes for IA1 optimization"
