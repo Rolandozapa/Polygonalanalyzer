@@ -990,22 +990,6 @@ async def get_market_status():
         }
     except Exception as e:
         return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
-    """Get current market status and API health"""
-    try:
-        sentiment = await market_data_service.get_market_sentiment()
-        return {
-            "market_sentiment": sentiment,
-            "api_status": {
-                "binance": "active",
-                "coinapi": "active" if market_data_service.coinapi_key else "not configured",
-                "yahoo_finance": "active",
-                "cmc": "active" if market_data_service.cmc_api_key else "not configured"
-            },
-            "system_status": "professional",
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    except Exception as e:
-        return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
