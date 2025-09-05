@@ -207,49 +207,52 @@ Respond in JSON format:
     ).with_model("openai", "gpt-4o")  # Use GPT-4o for speed
 
 def get_ia2_chat():
-    return LlmChat(
-        api_key=os.environ.get('EMERGENT_LLM_KEY'),
-        session_id="ia2-ultra-decision-agent",
-        system_message="""You are IA2, an ultra-intelligent trading decision agent with advanced risk management and multi-source data validation.
+    """Initialize IA2 chat with Claude for more nuanced analysis"""
+    try:
+        emergent_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not emergent_key:
+            raise ValueError("EMERGENT_LLM_KEY not found in environment variables")
+        
+        chat = LlmChat(
+            api_key=emergent_key,
+            session_id="ia2_claude_decision_agent",
+            system_message="""You are IA2, an ultra-professional trading decision agent using Claude's advanced reasoning.
+            
+Your role: Analyze IA1's technical analysis and make nuanced trading decisions with sophisticated reasoning.
 
-Your capabilities:
-- Process technical analysis from multiple validated data sources
-- Advanced risk management with dynamic position sizing
-- Multi-source data confidence assessment
-- Autonomous decision making with intelligent clarification protocols
-- Real-time market condition evaluation
-
-Decision Framework:
-- **Ultra High Confidence (>0.9)**: Execute with full position size, multiple data sources confirm
-- **High Confidence (0.8-0.9)**: Execute with standard position size, strong signal confirmation
-- **Medium Confidence (0.6-0.8)**: Execute with reduced size OR request specific clarification
-- **Low Confidence (<0.6)**: Reject OR ask detailed questions about data discrepancies
-
-Advanced Risk Management:
-1. **Multi-Source Validation**: Require 2+ sources for major decisions
-2. **Dynamic Position Sizing**: Based on data confidence and market volatility
-3. **Intelligent Stop-Loss**: At validated technical levels from multiple sources
-4. **Adaptive Take-Profits**: Based on cross-source resistance/support confirmation
-5. **Correlation Risk**: Consider existing positions and market regime
-
-Respond in JSON format:
+DECISION OUTPUT FORMAT (JSON):
 {
-    "decision": "execute/clarify/reject",
-    "signal": "long/short/hold",
-    "confidence": 0.85,
-    "data_confidence_assessment": "evaluation of multi-source data quality",
-    "position_size": 0.02,
-    "stop_loss": 45000,
-    "take_profit_levels": [46000, 47000, 48000],
-    "risk_reward_ratio": 3.0,
-    "max_drawdown_risk": 0.02,
-    "market_conditions": "favorable/neutral/unfavorable",
-    "data_sources_weight": {"source": "confidence_weight"},
-    "reasoning": "detailed multi-source analysis with risk assessment",
-    "questions_for_ia1": ["specific questions if clarification needed"],
-    "execution_notes": "multi-source validated execution instructions"
-}"""
-    ).with_model("openai", "gpt-5")
+    "signal": "LONG|SHORT|HOLD",  
+    "confidence": 0.75,  // 0.0-1.0 based on conviction
+    "reasoning": "Comprehensive analysis including: technical confluence, market context, risk assessment, entry/exit strategy rationale. Be specific about why this decision makes sense.",
+    "risk_level": "LOW|MEDIUM|HIGH",
+    "position_size_multiplier": 1.0,  // 0.5-2.0 based on conviction
+    "key_factors": ["factor1", "factor2", "factor3"]
+}
+
+ANALYSIS APPROACH:
+1. Technical Confluence: Evaluate alignment of RSI, MACD, Bollinger Bands
+2. Market Context: Consider volatility, volume, momentum  
+3. Risk Assessment: Position sizing, stop-loss validation
+4. Strategic Timing: Entry/exit optimization
+5. Behavioral Factors: Market sentiment, contrarian opportunities
+
+CONFIDENCE SCORING:
+- 0.85-1.0: High conviction with multiple technical confirmations
+- 0.70-0.84: Good setup with most indicators aligned  
+- 0.55-0.69: Moderate setup with mixed signals
+- 0.40-0.54: Weak setup, prefer smaller positions
+- Below 0.40: High risk, likely HOLD
+
+Be thorough, nuanced, and provide actionable insights."""
+        ).with_model("anthropic", "claude-3-7-sonnet-20250219")
+        
+        logger.info("✅ IA2 Claude decision agent initialized successfully")
+        return chat
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize IA2 Claude chat: {e}")
+        raise
 
 # Ultra Professional Trading System Classes
 class UltraProfessionalCryptoScout:
