@@ -241,22 +241,34 @@ class TechnicalPatternDetector:
         return df.sort_index()
     
     def _detect_all_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte tous les patterns techniques"""
+        """Détecte tous les patterns techniques incluant les tendances soutenues"""
         patterns = []
         
-        # 1. Détection de tendances (Golden/Death Cross)
+        # 1. Détection de tendances soutenues (nouvelles méthodes)
+        patterns.extend(self._detect_sustained_trends(symbol, df))
+        
+        # 2. Détection d'alignements de moyennes mobiles multiples
+        patterns.extend(self._detect_multiple_ma_alignment(symbol, df))
+        
+        # 3. Détection de canaux directionnels
+        patterns.extend(self._detect_directional_channels(symbol, df))
+        
+        # 4. Détection de momentum continuation patterns
+        patterns.extend(self._detect_momentum_continuation(symbol, df))
+        
+        # 5. Détection de tendances (Golden/Death Cross) - existant
         patterns.extend(self._detect_moving_average_patterns(symbol, df))
         
-        # 2. Détection de breakouts
+        # 6. Détection de breakouts - existant
         patterns.extend(self._detect_breakout_patterns(symbol, df))
         
-        # 3. Détection de figures chartistes
+        # 7. Détection de figures chartistes - existant
         patterns.extend(self._detect_chart_patterns(symbol, df))
         
-        # 4. Détection de signaux volume
+        # 8. Détection de signaux volume - existant
         patterns.extend(self._detect_volume_patterns(symbol, df))
         
-        # 5. Détection RSI/MACD
+        # 9. Détection RSI/MACD - existant
         patterns.extend(self._detect_oscillator_patterns(symbol, df))
         
         return patterns
