@@ -2125,7 +2125,27 @@ async def get_market_aggregator_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/performance")
+@api_router.delete("/decisions/clear")
+async def clear_decisions():
+    """Clear all cached decisions to force fresh generation with IA2 improvements"""
+    try:
+        # Clear all decisions, analyses, and opportunities to force fresh generation
+        decisions_deleted = await db.decisions.delete_many({})
+        analyses_deleted = await db.analyses.delete_many({})
+        opportunities_deleted = await db.opportunities.delete_many({})
+        
+        logger.info(f"Cache cleared: {decisions_deleted.deleted_count} decisions, {analyses_deleted.deleted_count} analyses, {opportunities_deleted.deleted_count} opportunities")
+        
+        return {
+            "message": "Decision cache cleared successfully",
+            "decisions_cleared": decisions_deleted.deleted_count,
+            "analyses_cleared": analyses_deleted.deleted_count,
+            "opportunities_cleared": opportunities_deleted.deleted_count
+        }
+    except Exception as e:
+        logger.error(f"Error clearing decision cache: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
+
 async def get_performance():
     """Get ultra professional trading performance metrics"""
     try:
