@@ -2934,14 +2934,19 @@ class UltraProfessionalTradingOrchestrator:
             
             # Filter analyses for IA2 (minimal filtering as requested)
             for opportunity, analysis in valid_analyses:
-                should_process = self._should_send_to_ia2(analysis, opportunity)
-                
-                if should_process:
-                    decisions_to_make.append((opportunity, analysis))
-                    logger.debug(f"✅ IA2 QUEUE: {analysis.symbol} (confidence: {analysis.analysis_confidence:.2%})")
-                else:
+                try:
+                    should_process = self._should_send_to_ia2(analysis, opportunity)
+                    logger.info(f"🔍 IA2 FILTER: {analysis.symbol} → {'ACCEPT' if should_process else 'REJECT'}")
+                    
+                    if should_process:
+                        decisions_to_make.append((opportunity, analysis))
+                        logger.debug(f"✅ IA2 QUEUE: {analysis.symbol} (confidence: {analysis.analysis_confidence:.2%})")
+                    else:
+                        decisions_skipped += 1
+                        logger.debug(f"⏭️ IA2 SKIP: {analysis.symbol} (low quality)")
+                except Exception as e:
+                    logger.error(f"❌ IA2 FILTER ERROR for {analysis.symbol}: {e}")
                     decisions_skipped += 1
-                    logger.debug(f"⏭️ IA2 SKIP: {analysis.symbol} (low quality)")
             
             logger.info(f"🎯 IA2 PROCESSING: {len(decisions_to_make)} analyses queued, {decisions_skipped} skipped")
             
