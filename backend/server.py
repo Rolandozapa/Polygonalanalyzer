@@ -666,21 +666,32 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return self._create_fallback_analysis(opportunity)
     
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 50) -> Optional[pd.DataFrame]:
-        """Get enhanced historical data - VRAIES données seulement, pas de synthétique"""
+        """Get enhanced historical data using improved OHLCV fetcher - VRAIES données seulement"""
         try:
-            # Utilise le système OHLCV du technical_pattern_detector (Binance, CoinGecko, etc.)
-            real_data = await technical_pattern_detector._get_ohlcv_data(symbol)
+            logger.info(f"🔍 Fetching enhanced OHLCV data for {symbol} using improved fetcher")
             
-            if real_data is not None and len(real_data) >= 26:  # Minimum pour MACD
-                logger.info(f"✅ IA1 using REAL OHLCV data for {symbol}: {len(real_data)} days")
-                return real_data.tail(days)  # Garde les X derniers jours
-            else:
-                logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient real data: {len(real_data) if real_data is not None else 0} days")
-                return None  # Pas de données synthétiques
+            # Use the enhanced OHLCV fetcher
+            real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
+            
+            if real_data is not None and len(real_data) >= 50:  # Minimum for good MACD calculation
+                logger.info(f"✅ IA1 using ENHANCED REAL OHLCV data for {symbol}: {len(real_data)} days")
+                
+                # Ensure we have enough data for technical indicators
+                if len(real_data) >= days:
+                    return real_data.tail(days)  # Return requested number of days
+                else:
+                    logger.info(f"📊 Using all available data for {symbol}: {len(real_data)} days (requested: {days})")
+                    return real_data  # Return all available data
+                    
+            elif real_data is not None:
+                logger.warning(f"⚠️ Insufficient enhanced data for {symbol}: {len(real_data)} days (minimum: 50)")
+                
+            logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient enhanced OHLCV data")
+            return None  # No synthetic data fallback
                 
         except Exception as e:
-            logger.warning(f"❌ IA1 REJECTING {symbol} - OHLCV API error: {e}")
-            return None  # Pas de fallback synthétique
+            logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced OHLCV fetch error: {e}")
+            return None  # No fallback - real data only
     
     # Note: Synthetic data generation removed - using REAL OHLCV data only
     
