@@ -65,7 +65,16 @@ class TechnicalPatternDetector:
         self.min_pattern_strength = 0.3  # Seuil réduit pour démo des nouvelles tendances soutenues
         self.lookback_days = 30  # Période d'analyse
         
-        logger.info("TechnicalPatternDetector initialized - Pre-filtering for IA1")
+        # Compteurs pour APIs gratuites (optimisation selon générosité)
+        self.daily_counters = {
+            'binance': 0,      # 1,200 req/min - ULTRA GÉNÉREUX
+            'coingecko': 0,    # 10,000 req/mois - TRÈS GÉNÉREUX  
+            'cryptocompare': 0, # 100,000 req/mois - GÉNÉREUX
+            'yahoo': 0         # Pas de limite connue
+        }
+        
+        logger.info("TechnicalPatternDetector initialized - Optimized for most generous APIs")
+        logger.info("Priority: Binance (1200/min) > CoinGecko (10k/month) > CryptoCompare (100k/month)")
     
     async def should_analyze_with_ia1(self, symbol: str) -> Tuple[bool, Optional[TechnicalPattern]]:
         """
