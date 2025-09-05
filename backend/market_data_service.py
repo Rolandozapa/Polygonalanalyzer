@@ -396,7 +396,7 @@ class RealMarketDataService:
         
         return opportunities
     
-    async def get_historical_data(self, symbol: str, days: int = 30) -> pd.DataFrame:
+    async def get_historical_data(self, symbol: str, days: int = 10) -> pd.DataFrame:
         """Get historical OHLCV data for technical analysis"""
         try:
             # Try Binance first
