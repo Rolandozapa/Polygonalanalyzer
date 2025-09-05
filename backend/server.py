@@ -613,15 +613,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # ÉTAPE 4: Log de qualité multi-sources validée
             logger.info(f"✅ MULTI-SOURCE VALIDÉ: {opportunity.symbol} - {multi_source_quality['sources_info']}")
             
-            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé (seulement si données cohérentes)
+            # ÉTAPE 4: NOUVEAU FILTRE - Détection mouvements latéraux (économie API optimisée)
+            lateral_movement = self._detect_lateral_movement(historical_data, opportunity.symbol)
+            
+            if lateral_movement["is_lateral"]:
+                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - Mouvement latéral détecté: {lateral_movement['reason']}")
+                return None  # Économie API - pas d'intérêt trading sur mouvements latéraux
+            
+            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé (seulement si tendance/patterns)
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
             should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
             
             if not should_analyze:
                 logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs (mais données OK)")
-                # Note: On pourrait quand même envoyer à IA1 si les données sont très bonnes
-                if multi_source_quality["confidence_score"] >= 0.9:  # Très haute qualité
-                    logger.info(f"🎯 OVERRIDE: {opportunity.symbol} - Données excellentes, envoi à IA1 malgré patterns faibles")
+                # Note: On pourrait quand même envoyer à IA1 si les données sont très bonnes ET mouvement directionnel
+                if multi_source_quality["confidence_score"] >= 0.9 and not lateral_movement["is_lateral"]:  # Très haute qualité + tendance
+                    logger.info(f"🎯 OVERRIDE: {opportunity.symbol} - Données excellentes + tendance directionnelle, envoi à IA1")
                 else:
                     return None
             
@@ -629,7 +636,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 logger.info(f"✅ PATTERN DÉTECTÉ: {opportunity.symbol} - {detected_pattern.pattern_type.value} (force: {detected_pattern.strength:.2f})")
             
             # ÉTAPE 6: Toutes les validations passées - APPEL IA1 justifié
-            logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données multi-sources validées et cohérentes")
+            logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
             # Calculate advanced technical indicators avec données multi-sources validées
             rsi = self._calculate_rsi(historical_data['Close'])
@@ -637,7 +644,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(historical_data['Close'])
             
             # Debug logging pour vérifier les vraies valeurs calculées
-            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}, Cohérence: {multi_source_quality['coherence_rate']:.1%}")
+            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}, Mouvement: {lateral_movement['movement_type']}")
             
             # Calculate Bollinger Band position
             current_price = opportunity.current_price
