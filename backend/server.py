@@ -1136,72 +1136,65 @@ class UltraProfessionalIA2DecisionAgent:
         self.max_risk_per_trade = 0.02  # 2% risk per trade
     
     async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
-        """Ultra professional trading decision with BingX live trading integration"""
+        """Make ultra professional trading decision with advanced strategies and position inversion"""
         try:
-            logger.info(f"IA2 making ultra professional decision for {opportunity.symbol}")
+            logger.info(f"IA2 making ultra professional ADVANCED decision for {opportunity.symbol}")
             
-            # Get BingX account info for risk management
+            # Check for position inversion opportunity first
+            await self._check_position_inversion(opportunity, analysis)
+            
+            # Get account balance
             account_balance = await self._get_account_balance()
             
-            # Get aggregator performance stats
-            perf_stats = self.market_aggregator.get_performance_stats()
-            
-            # Format market cap safely
-            market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
-            
+            # Create comprehensive prompt for Claude with advanced strategy context
             prompt = f"""
-            ULTRA PROFESSIONAL TRADING DECISION - BingX Live Trading Integration
+ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
+
+Symbol: {opportunity.symbol}
+Current Price: ${opportunity.current_price:.6f}
+Account Balance: ${account_balance:.2f}
+
+MARKET DATA:
+- 24h Change: {opportunity.price_change_24h:.2f}%
+- Volume 24h: ${opportunity.volume_24h:,.0f}
+- Market Cap Rank: #{opportunity.market_cap_rank or 'N/A'}
+- Volatility: {opportunity.volatility:.2%}
+- Data Sources: {', '.join(opportunity.data_sources)}
+- Data Confidence: {opportunity.data_confidence:.2%}
+
+IA1 TECHNICAL ANALYSIS:
+- RSI: {analysis.rsi:.2f} (Oversold: <30, Overbought: >70)
+- MACD Signal: {analysis.macd_signal:.6f}
+- Bollinger Position: {analysis.bollinger_position}
+- Support Levels: {', '.join([f'${level:.6f}' for level in analysis.support_levels])}
+- Resistance Levels: {', '.join([f'${level:.6f}' for level in analysis.resistance_levels])}
+- Patterns Detected: {', '.join(analysis.patterns_detected)}
+- IA1 Confidence: {analysis.analysis_confidence:.2%}
+- IA1 Reasoning: {analysis.reasoning[:500]}...
+
+ADVANCED STRATEGY REQUIREMENTS:
+1. Create multi-level take profit strategy (4 levels with position distribution)
+2. Determine if position inversion should be enabled
+3. Calculate optimal risk-reward ratios based on technical confluence
+4. Assess market conditions for strategy type selection
+5. Provide comprehensive reasoning for advanced strategy choice
+
+Consider current market volatility, technical indicator alignment, and account balance for position sizing.
+Provide your decision in the specified JSON format with complete advanced strategy details.
+"""
             
-            LIVE TRADING ACCOUNT STATUS:
-            - Available Balance: ${account_balance:,.2f} USDT
-            - Live Trading: {'ENABLED' if self.live_trading_enabled else 'SIMULATION ONLY'}
-            - Max Risk Per Trade: {self.max_risk_per_trade * 100}% ({self.max_risk_per_trade * account_balance:,.2f} USDT)
-            
-            MARKET DATA VALIDATION:
-            Symbol: {opportunity.symbol}
-            Current Price: ${opportunity.current_price:,.2f}
-            Market Cap: {market_cap_str} (Rank #{opportunity.market_cap_rank or 'N/A'})
-            24h Volume: ${opportunity.volume_24h:,.0f}
-            24h Change: {opportunity.price_change_24h:.2f}%
-            Volatility: {opportunity.volatility:.4f}
-            
-            DATA SOURCE VALIDATION:
-            - Primary Sources: {', '.join(opportunity.data_sources)}
-            - Data Confidence: {opportunity.data_confidence:.2f}
-            - Analysis Sources: {', '.join(analysis.data_sources)}
-            - Market Aggregator Success Rate: {perf_stats.get('success_rate', 0):.2f}
-            - Active API Endpoints: {len(perf_stats.get('api_endpoints', []))}
-            
-            ULTRA PROFESSIONAL IA1 ANALYSIS:
-            - RSI: {analysis.rsi:.2f}
-            - MACD Signal: {analysis.macd_signal:.6f}
-            - Bollinger Position: {analysis.bollinger_position:.2f}
-            - Fibonacci Level: {analysis.fibonacci_level:.3f}
-            - Support Levels: {analysis.support_levels}
-            - Resistance Levels: {analysis.resistance_levels}
-            - Patterns: {', '.join(analysis.patterns_detected)}
-            - IA1 Confidence: {analysis.analysis_confidence:.2f}
-            - Market Sentiment: {analysis.market_sentiment}
-            - IA1 Reasoning: {analysis.ia1_reasoning}
-            
-            LIVE TRADING REQUIREMENTS:
-            - Minimum position size: $10 USDT
-            - Maximum position size: {self.max_risk_per_trade * account_balance:,.2f} USDT
-            - Required confidence for live execution: >0.75
-            - Multi-source validation required for trades >$100
-            
-            Make ultra professional trading decision for LIVE EXECUTION on BingX.
-            """
-            
+            # Send to Claude for advanced decision
             response = await self.chat.send_message(UserMessage(text=prompt))
             
-            # Parse LLM JSON response
-            llm_decision = await self._parse_llm_response(response)
+            # Parse Claude's advanced response
+            claude_decision = await self._parse_llm_response(response)
             
-            # Generate ultra professional decision with live trading considerations
-            decision_logic = await self._evaluate_live_trading_decision(opportunity, analysis, perf_stats, account_balance, llm_decision)
+            # Generate ultra professional decision with advanced strategy considerations
+            decision_logic = await self._evaluate_advanced_trading_decision(
+                opportunity, analysis, perf_stats, account_balance, claude_decision
+            )
             
-            # Create trading decision
+            # Create advanced trading decision
             decision = TradingDecision(
                 symbol=opportunity.symbol,
                 signal=decision_logic["signal"],
@@ -1214,20 +1207,19 @@ class UltraProfessionalIA2DecisionAgent:
                 position_size=decision_logic["position_size"],
                 risk_reward_ratio=decision_logic["risk_reward"],
                 ia1_analysis_id=analysis.id,
-                ia2_reasoning=decision_logic["reasoning"][:1500] if decision_logic["reasoning"] else "IA2 analysis completed",
+                ia2_reasoning=decision_logic["reasoning"][:1500] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
                 status=TradingStatus.PENDING
             )
             
-            # Execute live trading if enabled and signal is not HOLD
-            if self.live_trading_enabled and decision.signal != SignalType.HOLD:
-                await self._execute_live_trade(decision)
+            # If we have a trading signal, create and execute advanced strategy
+            if decision.signal != SignalType.HOLD and claude_decision:
+                await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
             
-            logger.info(f"IA2 ultra professional decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
             return decision
             
         except Exception as e:
             logger.error(f"IA2 ultra decision error for {opportunity.symbol}: {e}")
-            return self._create_fallback_decision(opportunity, analysis)
+            return self._create_hold_decision(f"IA2 error: {str(e)}", 0.3, opportunity.current_price)
     
     async def _get_account_balance(self) -> float:
         """Get current account balance with enhanced fallback system"""
