@@ -2024,24 +2024,29 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-# Ultra professional background trading loop
+# Ultra professional background trading loop with trending auto-update
 async def ultra_professional_trading_loop():
-    """Ultra professional continuous trading loop with enhanced error handling"""
+    """Ultra professional continuous trading loop with trending auto-update"""
+    # Initialize the orchestrator
+    await orchestrator.initialize()
+    
     while orchestrator.is_running:
         try:
             cycle_start = datetime.now()
             opportunities_processed = await orchestrator.run_trading_cycle()
             
             cycle_duration = (datetime.now() - cycle_start).total_seconds()
-            logger.info(f"Ultra professional cycle #{orchestrator.cycle_count} completed in {cycle_duration:.2f}s, processed {opportunities_processed} opportunities")
+            logger.info(f"Ultra professional trending cycle #{orchestrator.cycle_count} completed in {cycle_duration:.2f}s, processed {opportunities_processed} opportunities")
             
-            # Broadcast cycle completion
+            # Broadcast cycle completion with trending info
             await manager.broadcast({
                 "type": "cycle_complete",
                 "cycle": orchestrator.cycle_count,
                 "duration": cycle_duration,
                 "opportunities_processed": opportunities_processed,
                 "ultra_professional": True,
+                "trending_auto_updated": True,
+                "trending_symbols": orchestrator.scout.trending_symbols,
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
             
@@ -2049,7 +2054,7 @@ async def ultra_professional_trading_loop():
             await asyncio.sleep(180)
             
         except Exception as e:
-            logger.error(f"Ultra professional trading loop error: {e}")
+            logger.error(f"Ultra professional trending trading loop error: {e}")
             await asyncio.sleep(120)  # Wait 2 minutes on error
 
 # Include the router in the main app
