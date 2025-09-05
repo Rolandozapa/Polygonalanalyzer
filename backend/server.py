@@ -2395,6 +2395,62 @@ async def ultra_professional_trading_loop():
             logger.error(f"Ultra professional trending trading loop error: {e}")
             await asyncio.sleep(120)  # Wait 2 minutes on error
 
+# WebSocket endpoint for real-time updates
+@app.websocket("/api/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time trading updates"""
+    await websocket.accept()
+    logger.info("WebSocket connection established")
+    
+    try:
+        # Send initial status
+        await websocket.send_json({
+            "type": "status",
+            "status": "connected",
+            "message": "Ultra Professional Trading System Connected",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Keep connection alive and send updates
+        while True:
+            try:
+                # Send periodic updates every 30 seconds
+                await asyncio.sleep(30)
+                
+                # Get current system status
+                opportunities_count = await db.market_opportunities.count_documents({})
+                analyses_count = await db.technical_analyses.count_documents({})
+                decisions_count = await db.trading_decisions.count_documents({})
+                
+                update_data = {
+                    "type": "update",
+                    "data": {
+                        "opportunities_count": opportunities_count,
+                        "analyses_count": analyses_count,
+                        "decisions_count": decisions_count,
+                        "system_status": "active",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+                
+                await websocket.send_json(update_data)
+                
+            except WebSocketDisconnect:
+                logger.info("WebSocket client disconnected")
+                break
+            except Exception as e:
+                logger.error(f"WebSocket error: {e}")
+                await websocket.send_json({
+                    "type": "error",
+                    "message": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                })
+                
+    except WebSocketDisconnect:
+        logger.info("WebSocket connection closed")
+    except Exception as e:
+        logger.error(f"WebSocket endpoint error: {e}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
