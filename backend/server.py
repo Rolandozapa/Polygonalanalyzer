@@ -1896,6 +1896,62 @@ async def get_market_status():
     except Exception as e:
         return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
 
+@api_router.get("/trending-auto-status")
+async def get_trending_auto_status():
+    """Get trending auto-updater status and current trends"""
+    try:
+        trending_info = trending_auto_updater.get_trending_info()
+        return {
+            "trending_auto_updater": trending_info,
+            "scout_trending_symbols": orchestrator.scout.trending_symbols,
+            "auto_update_enabled": orchestrator.scout.auto_update_trending,
+            "readdy_url": trending_auto_updater.trending_url,
+            "update_interval_hours": trending_auto_updater.update_interval / 3600,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/trending-force-update")
+async def force_trending_update():
+    """Force manual update of trending cryptos from Readdy"""
+    try:
+        result = await trending_auto_updater.force_update()
+        
+        # Update scout symbols if successful
+        if result.get("updated"):
+            await orchestrator.scout._sync_trending_symbols()
+        
+        return {
+            "force_update_result": result,
+            "scout_symbols_updated": orchestrator.scout.trending_symbols,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/trending-auto-toggle")
+async def toggle_trending_auto_update(enabled: bool):
+    """Enable or disable trending auto-update"""
+    try:
+        if enabled:
+            if not trending_auto_updater.is_running:
+                await trending_auto_updater.start_auto_update()
+            orchestrator.scout.auto_update_trending = True
+        else:
+            if trending_auto_updater.is_running:
+                await trending_auto_updater.stop_auto_update()  
+            orchestrator.scout.auto_update_trending = False
+        
+        return {
+            "auto_update_enabled": enabled,
+            "trending_updater_running": trending_auto_updater.is_running,
+            "message": f"Trending auto-update {'enabled' if enabled else 'disabled'}",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/scout-trending-config")
 async def get_scout_trending_config():
     """Get current trending-focused scout configuration"""
