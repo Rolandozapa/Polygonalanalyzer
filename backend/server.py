@@ -2932,8 +2932,16 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"💰 IA2 API OPTIMISATION: {len(ia2_ready_analyses)} analyses envoyées à IA2, {skipped_for_data_quality} skipped pour économie API")
             
             if not decision_tasks:
-                logger.info("Aucune analyse qualifiée pour IA2 - économie API totale")
-                return
+                logger.info("Aucune analyse qualifiée pour IA2 - économie API totale, mais stockage des opportunités")
+                # Store opportunities même sans décisions IA2
+                for opportunity, analysis in valid_analyses:
+                    await db.market_opportunities.insert_one(opportunity.dict())
+                
+                # Statistiques d'économie d'API
+                total_analyses = len(valid_analyses)
+                logger.info(f"💰 ÉCONOMIE API CLAUDE: {skipped_for_data_quality}/{total_analyses} analyses skipped (100% économie)")
+                logger.info(f"📊 RÉSULTATS FINAUX: 0 décisions IA2, {len(valid_analyses)} opportunités stockées (économie totale)")
+                return len(opportunities)
             
             # Execute decisions in parallel seulement pour les analyses de qualité
             decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
