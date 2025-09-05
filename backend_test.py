@@ -403,12 +403,12 @@ class DualAITradingBotTester:
         print(f"\n5️⃣ SCOUT -> IA1 INTEGRATION TEST")
         integration_success = self.test_scout_ia1_integration_via_system()
         
-        # 5. Technical Analysis Quality Test
-        print(f"\n5️⃣ TECHNICAL ANALYSIS QUALITY TEST")
+        # 6. Technical Analysis Quality Test
+        print(f"\n6️⃣ TECHNICAL ANALYSIS QUALITY TEST")
         quality_success = self.test_technical_analysis_quality_from_system()
         
-        # 6. IA2 Decision Making Test
-        print(f"\n6️⃣ IA2 DECISION MAKING TEST")
+        # 7. IA2 Decision Making Test
+        print(f"\n7️⃣ IA2 DECISION MAKING TEST")
         decision_success, _ = self.test_get_decisions()
         
         # Performance Summary
