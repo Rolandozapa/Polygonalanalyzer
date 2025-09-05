@@ -15,7 +15,7 @@ class DualAITradingBotTester:
         self.tests_passed = 0
         self.websocket_messages = []
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=30):
+    def run_test(self, name, method, endpoint, expected_status, data=None, timeout=10):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}" if endpoint else f"{self.api_url}/"
         headers = {'Content-Type': 'application/json'}
@@ -35,7 +35,18 @@ class DualAITradingBotTester:
                 print(f"✅ Passed - Status: {response.status_code}")
                 try:
                     response_data = response.json()
-                    print(f"   Response: {json.dumps(response_data, indent=2)[:200]}...")
+                    # Show more relevant data for each endpoint
+                    if 'opportunities' in response_data:
+                        print(f"   Found {len(response_data['opportunities'])} opportunities")
+                    elif 'analyses' in response_data:
+                        print(f"   Found {len(response_data['analyses'])} analyses")
+                    elif 'decisions' in response_data:
+                        print(f"   Found {len(response_data['decisions'])} decisions")
+                    elif 'performance' in response_data:
+                        perf = response_data['performance']
+                        print(f"   Performance: {perf.get('total_opportunities', 0)} opps, {perf.get('executed_trades', 0)} trades")
+                    else:
+                        print(f"   Response: {json.dumps(response_data, indent=2)[:150]}...")
                     return True, response_data
                 except:
                     return True, {}
@@ -45,7 +56,7 @@ class DualAITradingBotTester:
                     error_data = response.json()
                     print(f"   Error: {error_data}")
                 except:
-                    print(f"   Error: {response.text}")
+                    print(f"   Error: {response.text[:200]}...")
                 return False, {}
 
         except Exception as e:
