@@ -1579,33 +1579,43 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
 {{
     "signal": "LONG",
-    "confidence": 0.75,
-    "reasoning": "Comprehensive analysis: Technical confluence shows RSI oversold at 28.5 with MACD bullish crossover. STRATEGIC 5-LEVEL TP: Double bottom pattern detected with high reliability (strength 1.00) - implementing pattern-adaptive scaling. Market volatility at 4.2%% suggests moderate TP distances. TP1 at 1.5%% (20%% position) for quick profit securing, TP2 at 3.0%% (25%% position) at pattern confirmation level, TP3 at 5.0%% (25%% position) targeting key resistance, TP4 at 8.0%% (20%% position) extended objective, TP5 at 12.0%% (10%% position) maximum pattern target. Position inversion enabled due to high volatility. Risk-reward optimized at 3.5:1 with pattern-specific positioning.",
+    "confidence": 0.85,
+    "reasoning": "MARKET SENTIMENT ANALYSIS: {market_sentiment['market_sentiment']} with BTC {market_sentiment['btc_change_24h']:+.1f}% suggests {'favorable' if market_sentiment['sentiment_score'] > 0.6 else 'neutral'} conditions for {'LONG' if market_sentiment['btc_change_24h'] > 0 else 'SHORT'} positions. TECHNICAL CONFLUENCE: RSI at {analysis.rsi:.1f} with MACD {analysis.macd_signal:.4f} confirms {'bullish' if analysis.macd_signal > 0 else 'bearish'} momentum. LEVERAGE CALCULATION: {{confidence:.0%}} confidence + {market_sentiment['market_sentiment']} = {{calculated_leverage}}x leverage justified. DYNAMIC RISK: Using {{stop_loss_percentage:.1f}}% SL (tighter due to {{calculated_leverage}}x leverage) with 5-level TP strategy. Risk-reward optimized at {{risk_reward_ratio:.1f}}:1 with market-adaptive positioning.",
     "risk_level": "MEDIUM",
-    "strategy_type": "ADVANCED_TP",
+    "strategy_type": "DYNAMIC_LEVERAGE_TP",
+    "leverage": {{
+        "calculated_leverage": 4.5,
+        "base_leverage": 2.5,
+        "confidence_bonus": 1.0,
+        "sentiment_bonus": 1.0,
+        "market_alignment": "FAVORABLE",
+        "max_leverage_cap": 10.0
+    }},
     "take_profit_strategy": {{
-        "tp1_percentage": 1.5,
-        "tp2_percentage": 3.0,
-        "tp3_percentage": 5.0,
-        "tp4_percentage": 8.0,
+        "tp1_percentage": 1.2,
+        "tp2_percentage": 2.8, 
+        "tp3_percentage": 4.8,
+        "tp4_percentage": 7.5,
         "tp5_percentage": 12.0,
         "tp_distribution": [20, 25, 25, 20, 10],
-        "pattern_type": "double_bottom",
-        "market_condition": "HIGH_VOLATILITY",
-        "positioning_strategy": "PATTERN_ADAPTIVE"
+        "leverage_adjusted": true,
+        "market_sentiment_factor": {market_sentiment['sentiment_score']}
     }},
     "position_management": {{
         "entry_strategy": "MARKET",
-        "stop_loss_percentage": 3.0,
+        "stop_loss_percentage": 1.8,
         "trailing_stop": true,
-        "position_size_multiplier": 1.0
+        "position_size_multiplier": 1.0,
+        "leverage_applied": true,
+        "risk_per_trade_usd": {{calculated_risk}}
     }},
-    "inversion_criteria": {{
-        "enable_inversion": true,
-        "confidence_threshold": 0.10,
-        "opposite_signal_strength": 0.6
+    "market_analysis": {{
+        "market_sentiment": "{market_sentiment['market_sentiment']}",
+        "btc_change_24h": {market_sentiment['btc_change_24h']},
+        "sentiment_score": {market_sentiment['sentiment_score']},
+        "leverage_justification": "Market sentiment alignment with trade direction"
     }},
-    "key_factors": ["RSI oversold", "MACD bullish crossover", "Support level bounce"]
+    "key_factors": ["Market sentiment analysis", "Dynamic leverage calculation", "Risk-adjusted position sizing"]
 }}
 
 Consider current market volatility, technical indicator alignment, and account balance for position sizing.
