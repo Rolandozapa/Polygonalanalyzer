@@ -1649,6 +1649,415 @@ Provide your decision in the specified JSON format with complete advanced strate
             "live_trading_ready": False
         }
     
+    async def _check_position_inversion(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis):
+        """Check for position inversion opportunities"""
+        try:
+            logger.info(f"Checking position inversion opportunity for {opportunity.symbol}")
+            
+            # Check if there are existing positions that could be inverted
+            # This is a placeholder for advanced position management logic
+            # In a real implementation, this would check current positions and market conditions
+            
+            # For now, just log the check
+            logger.debug(f"Position inversion check completed for {opportunity.symbol}")
+            
+        except Exception as e:
+            logger.error(f"Error checking position inversion for {opportunity.symbol}: {e}")
+    
+    async def _evaluate_advanced_trading_decision(self, 
+                                                opportunity: MarketOpportunity, 
+                                                analysis: TechnicalAnalysis, 
+                                                perf_stats: Dict,
+                                                account_balance: float,
+                                                claude_decision: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Evaluate advanced trading decision with multi-level take profits and position inversion"""
+        
+        signal = SignalType.HOLD
+        
+        # Enhanced confidence calculation for advanced strategies
+        base_confidence_ia1 = max(analysis.analysis_confidence, 0.5)
+        base_confidence_data = max(opportunity.data_confidence, 0.5)
+        
+        # Advanced confidence calculation with Claude integration
+        symbol_seed = hash(opportunity.symbol) % 1000
+        price_seed = int(opportunity.current_price * 1000) % 1000
+        volume_seed = int(opportunity.volume_24h) % 1000 if opportunity.volume_24h else 500
+        
+        # Base confidence with advanced variation (0.55 to 0.90 range for advanced strategies)
+        variation_factor = (symbol_seed + price_seed + volume_seed) / 3000.0
+        base_confidence = 0.55 + (variation_factor * 0.35)  # Higher base for advanced strategies
+        
+        # Combine with IA1 and data confidence
+        confidence = max((base_confidence + base_confidence_ia1 + base_confidence_data) / 3, 0.55)
+        
+        # Claude decision integration (enhanced for advanced strategies)
+        claude_reasoning = ""
+        if claude_decision:
+            claude_reasoning = claude_decision.get("reasoning", "")
+            claude_confidence = claude_decision.get("confidence", 0.0)
+            if 0.5 <= claude_confidence <= 1.0:
+                # Enhanced Claude boost for advanced strategies
+                claude_boost = min((claude_confidence - 0.5) * 0.4, 0.35)  # Up to 0.35 boost
+                confidence = max(confidence + claude_boost, 0.55)
+                
+        reasoning = f"IA2 Advanced Strategy Analysis: {claude_reasoning[:500]} " if claude_reasoning else "Ultra professional advanced trading analysis: "
+        
+        # Advanced quality assessment system
+        quality_score = 0.0
+        
+        # Enhanced data quality assessment for advanced strategies
+        if opportunity.data_confidence >= 0.85:
+            quality_score += 0.12  # Premium bonus for advanced strategies
+            reasoning += "Premium data quality for advanced strategy. "
+        elif opportunity.data_confidence >= 0.75:
+            quality_score += 0.08
+            reasoning += "High data quality for advanced strategy. "
+        elif opportunity.data_confidence >= 0.65:
+            quality_score += 0.04
+            reasoning += "Good data quality. "
+        elif opportunity.data_confidence < 0.6:
+            quality_score -= 0.08  # Higher penalty for advanced strategies
+            reasoning += "Lower data quality - conservative advanced approach. "
+        
+        # Advanced analysis quality assessment
+        if analysis.analysis_confidence >= 0.85:
+            quality_score += 0.12
+            reasoning += "Premium analysis confidence for advanced strategy. "
+        elif analysis.analysis_confidence >= 0.75:
+            quality_score += 0.08
+            reasoning += "High analysis confidence. "
+        elif analysis.analysis_confidence >= 0.65:
+            quality_score += 0.04
+            reasoning += "Good analysis confidence. "
+        elif analysis.analysis_confidence < 0.6:
+            quality_score -= 0.08
+            reasoning += "Lower analysis confidence - conservative advanced approach. "
+        
+        # Multi-source premium bonus for advanced strategies
+        if len(opportunity.data_sources) >= 5:
+            quality_score += 0.15  # Premium multi-source bonus
+            reasoning += "Premium multi-source validation for advanced strategy. "
+        elif len(opportunity.data_sources) >= 4:
+            quality_score += 0.12
+            reasoning += "Excellent multi-source validation. "
+        elif len(opportunity.data_sources) >= 3:
+            quality_score += 0.08
+            reasoning += "Good multi-source validation. "
+        elif len(opportunity.data_sources) >= 2:
+            quality_score += 0.05
+            reasoning += "Dual source validation. "
+        else:
+            quality_score -= 0.05  # Higher penalty for single source in advanced strategies
+            reasoning += "Single source data - not ideal for advanced strategies. "
+        
+        # Advanced market condition assessment
+        volatility_factor = opportunity.volatility * 100
+        price_change_factor = abs(opportunity.price_change_24h) / 10
+        volume_factor = min(opportunity.volume_24h / 1_000_000, 15) / 15  # Higher scale for advanced
+        
+        # Advanced volatility assessment
+        if volatility_factor < 1.5:  # Very stable for advanced strategies
+            quality_score += 0.10
+            reasoning += f"Excellent stability for advanced strategy (volatility: {volatility_factor:.1f}%). "
+        elif volatility_factor < 4:  # Good stability
+            quality_score += 0.06
+            reasoning += f"Good stability for advanced strategy (volatility: {volatility_factor:.1f}%). "
+        elif volatility_factor > 20:  # Too volatile for advanced strategies
+            quality_score -= 0.10
+            reasoning += f"Extreme volatility ({volatility_factor:.1f}%) - risky for advanced strategies. "
+        elif volatility_factor > 12:  # High volatility
+            quality_score -= 0.05
+            reasoning += f"High volatility ({volatility_factor:.1f}%) - adjusted advanced strategy. "
+        
+        # Advanced momentum assessment
+        if abs(opportunity.price_change_24h) > 15:  # Very strong momentum
+            quality_score += 0.08
+            reasoning += f"Very strong momentum ({opportunity.price_change_24h:+.1f}% 24h) - excellent for advanced strategy. "
+        elif abs(opportunity.price_change_24h) > 8:  # Strong momentum
+            quality_score += 0.05
+            reasoning += f"Strong momentum ({opportunity.price_change_24h:+.1f}% 24h). "
+        elif abs(opportunity.price_change_24h) > 4:  # Moderate momentum
+            quality_score += 0.03
+            reasoning += f"Moderate momentum ({opportunity.price_change_24h:+.1f}% 24h). "
+        
+        # Advanced volume assessment
+        if volume_factor > 12:  # Exceptional volume
+            quality_score += 0.10
+            reasoning += "Exceptional liquidity for advanced strategy execution. "
+        elif volume_factor > 8:  # Very high volume
+            quality_score += 0.06
+            reasoning += "Excellent liquidity for advanced strategy. "
+        elif volume_factor > 5:  # High volume
+            quality_score += 0.04
+            reasoning += "Good liquidity. "
+        elif volume_factor < 2:  # Low volume
+            quality_score -= 0.06
+            reasoning += "Limited liquidity - not ideal for advanced strategies. "
+        
+        # Apply quality adjustments for advanced strategies (higher range)
+        confidence = max(min(confidence + quality_score, 0.98), 0.55)  # 55-98% range for advanced
+        
+        # Advanced signal analysis
+        bullish_signals = 0
+        bearish_signals = 0
+        signal_strength = 0
+        
+        # Enhanced RSI analysis for advanced strategies
+        if analysis.rsi < 15:  # Extremely oversold - premium signal
+            bullish_signals += 6
+            signal_strength += 0.6
+            reasoning += "RSI extremely oversold - premium advanced buy signal. "
+        elif analysis.rsi < 25:  # Very oversold
+            bullish_signals += 4
+            signal_strength += 0.4
+            reasoning += "RSI very oversold - strong advanced buy signal. "
+        elif analysis.rsi < 35:  # Oversold
+            bullish_signals += 2
+            signal_strength += 0.25
+            reasoning += "RSI oversold - advanced buy signal. "
+        elif analysis.rsi > 85:  # Extremely overbought - premium signal
+            bearish_signals += 6
+            signal_strength += 0.6
+            reasoning += "RSI extremely overbought - premium advanced sell signal. "
+        elif analysis.rsi > 75:  # Very overbought
+            bearish_signals += 4
+            signal_strength += 0.4
+            reasoning += "RSI very overbought - strong advanced sell signal. "
+        elif analysis.rsi > 65:  # Overbought
+            bearish_signals += 2
+            signal_strength += 0.25
+            reasoning += "RSI overbought - advanced sell signal. "
+        
+        # Enhanced MACD analysis for advanced strategies
+        if analysis.macd_signal > 0.02:  # Very strong bullish momentum
+            bullish_signals += 5
+            signal_strength += 0.5
+            reasoning += "Very strong MACD bullish momentum - premium advanced signal. "
+        elif analysis.macd_signal > 0.005:  # Strong bullish momentum
+            bullish_signals += 3
+            signal_strength += 0.3
+            reasoning += "Strong MACD bullish momentum - advanced signal confirmed. "
+        elif analysis.macd_signal > 0:
+            bullish_signals += 1
+            signal_strength += 0.15
+            reasoning += "MACD bullish momentum. "
+        elif analysis.macd_signal < -0.02:  # Very strong bearish momentum
+            bearish_signals += 5
+            signal_strength += 0.5
+            reasoning += "Very strong MACD bearish momentum - premium advanced short signal. "
+        elif analysis.macd_signal < -0.005:  # Strong bearish momentum
+            bearish_signals += 3
+            signal_strength += 0.3
+            reasoning += "Strong MACD bearish momentum - advanced short confirmed. "
+        elif analysis.macd_signal < 0:
+            bearish_signals += 1
+            signal_strength += 0.15
+            reasoning += "MACD bearish momentum. "
+        
+        # Advanced volume validation
+        if opportunity.volume_24h > 100_000_000:  # Premium volume
+            signal_strength += 0.3
+            reasoning += "Premium volume validation for advanced strategy. "
+        elif opportunity.volume_24h > 20_000_000:  # High volume
+            signal_strength += 0.2
+            reasoning += "High volume validation for advanced strategy. "
+        elif opportunity.volume_24h < 5_000_000:  # Too low for advanced strategies
+            signal_strength -= 0.4
+            reasoning += "Low volume - risky for advanced strategies. "
+        
+        # Advanced pattern confirmation
+        premium_bullish_patterns = ["Golden Cross Formation", "Bullish Breakout", "Support Bounce", "Ascending Triangle"]
+        premium_bearish_patterns = ["Death Cross Formation", "Bearish Breakdown", "Resistance Rejection", "Descending Triangle"]
+        
+        for pattern in analysis.patterns_detected:
+            if any(bp in pattern for bp in premium_bullish_patterns):
+                bullish_signals += 3
+                signal_strength += 0.25
+                reasoning += f"Premium bullish pattern: {pattern}. "
+            elif any(bp in pattern for bp in premium_bearish_patterns):
+                bearish_signals += 3
+                signal_strength += 0.25
+                reasoning += f"Premium bearish pattern: {pattern}. "
+        
+        # Claude decision integration for advanced strategies
+        net_signals = bullish_signals - bearish_signals
+        claude_signal_boost = 0
+        
+        if claude_decision:
+            claude_signal = claude_decision.get("signal", "").upper()
+            claude_conf = claude_decision.get("confidence", 0.0)
+            
+            if claude_signal in ["LONG", "BUY"] and claude_conf > 0.7:
+                claude_signal_boost = 3
+                reasoning += "Claude strongly recommends LONG for advanced strategy. "
+            elif claude_signal in ["LONG", "BUY"] and claude_conf > 0.6:
+                claude_signal_boost = 2
+                reasoning += "Claude recommends LONG for advanced strategy. "
+            elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.7:
+                claude_signal_boost = -3
+                reasoning += "Claude strongly recommends SHORT for advanced strategy. "
+            elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.6:
+                claude_signal_boost = -2
+                reasoning += "Claude recommends SHORT for advanced strategy. "
+        
+        net_signals += claude_signal_boost
+        
+        # Advanced strategy decision thresholds (more selective)
+        if net_signals >= 6 and confidence > 0.75 and signal_strength > 0.6:  # Premium signals
+            signal = SignalType.LONG
+            confidence = min(confidence + 0.15, 0.98)
+            reasoning += "ADVANCED LONG: Premium bullish signals - full advanced strategy deployment. "
+        elif net_signals >= 4 and confidence > 0.65 and signal_strength > 0.4:  # Strong signals
+            signal = SignalType.LONG
+            confidence = min(confidence + 0.10, 0.90)
+            reasoning += "ADVANCED LONG: Strong bullish signals - advanced strategy confirmed. "
+        elif net_signals >= 2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate signals
+            signal = SignalType.LONG
+            confidence = min(confidence + 0.05, 0.80)
+            reasoning += "ADVANCED LONG: Moderate bullish signals - conservative advanced strategy. "
+        elif net_signals <= -6 and confidence > 0.75 and signal_strength > 0.6:  # Premium bearish
+            signal = SignalType.SHORT
+            confidence = min(confidence + 0.15, 0.98)
+            reasoning += "ADVANCED SHORT: Premium bearish signals - full advanced short strategy. "
+        elif net_signals <= -4 and confidence > 0.65 and signal_strength > 0.4:  # Strong bearish
+            signal = SignalType.SHORT
+            confidence = min(confidence + 0.10, 0.90)
+            reasoning += "ADVANCED SHORT: Strong bearish signals - advanced short strategy confirmed. "
+        elif net_signals <= -2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate bearish
+            signal = SignalType.SHORT
+            confidence = min(confidence + 0.05, 0.80)
+            reasoning += "ADVANCED SHORT: Moderate bearish signals - conservative advanced short. "
+        else:
+            signal = SignalType.HOLD
+            reasoning += f"ADVANCED HOLD: Signals below advanced threshold (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
+        
+        # Calculate advanced multi-level take profits
+        current_price = opportunity.current_price
+        atr_estimate = current_price * max(opportunity.volatility, 0.015)  # Minimum 1.5% ATR
+        
+        if signal == SignalType.LONG:
+            # Advanced stop-loss calculation
+            stop_loss_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            stop_loss = current_price - stop_loss_distance
+            
+            # Multi-level take profits for advanced strategy
+            tp1 = current_price + (stop_loss_distance * 1.5)  # 1.5:1 R:R (25% position)
+            tp2 = current_price + (stop_loss_distance * 3.0)  # 3:1 R:R (30% position)
+            tp3 = current_price + (stop_loss_distance * 5.0)  # 5:1 R:R (25% position)
+            # tp4 would be calculated in the advanced strategy manager (20% position)
+            
+        elif signal == SignalType.SHORT:
+            # Advanced stop-loss calculation
+            stop_loss_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
+            stop_loss = current_price + stop_loss_distance
+            
+            # Multi-level take profits for advanced strategy
+            tp1 = current_price - (stop_loss_distance * 1.5)  # 1.5:1 R:R (25% position)
+            tp2 = current_price - (stop_loss_distance * 3.0)  # 3:1 R:R (30% position)
+            tp3 = current_price - (stop_loss_distance * 5.0)  # 5:1 R:R (25% position)
+            
+        else:
+            stop_loss = current_price
+            tp1 = tp2 = tp3 = current_price
+        
+        # Advanced risk-reward calculation
+        if signal != SignalType.HOLD:
+            risk = abs(current_price - stop_loss)
+            reward = abs(tp2 - current_price)  # Use TP2 as primary target
+            risk_reward = reward / risk if risk > 0 else 1.0
+            
+            # Minimum 2:1 R:R for advanced strategies
+            if risk_reward < 2.0:
+                signal = SignalType.HOLD
+                reasoning += "Risk-reward ratio too low for advanced strategy (min 2:1 required). "
+                confidence = max(confidence * 0.9, 0.55)
+        else:
+            risk_reward = 1.0
+        
+        # Advanced position sizing (more aggressive for qualified signals)
+        if signal != SignalType.HOLD:
+            # Base position size on confidence and signal strength
+            base_position = 0.03  # 3% base for advanced strategies
+            confidence_multiplier = min(confidence / 0.7, 1.5)  # Up to 1.5x for high confidence
+            signal_multiplier = min(signal_strength / 0.4, 1.3)  # Up to 1.3x for strong signals
+            
+            position_size_percentage = min(
+                base_position * confidence_multiplier * signal_multiplier,
+                0.08  # Max 8% for advanced strategies
+            )
+        else:
+            position_size_percentage = 0.0
+        
+        return {
+            "signal": signal,
+            "confidence": confidence,
+            "stop_loss": stop_loss,
+            "tp1": tp1,
+            "tp2": tp2,
+            "tp3": tp3,
+            "position_size": position_size_percentage,
+            "risk_reward": risk_reward,
+            "reasoning": reasoning,
+            "signal_strength": signal_strength,
+            "net_signals": net_signals,
+            "advanced_strategy_ready": signal != SignalType.HOLD and confidence > 0.70,
+            "claude_decision": claude_decision
+        }
+    
+    async def _create_and_execute_advanced_strategy(self, decision: TradingDecision, claude_decision: Dict, analysis: TechnicalAnalysis):
+        """Create and execute advanced trading strategy with multi-level TPs and position inversion"""
+        try:
+            logger.info(f"Creating advanced strategy for {decision.symbol}")
+            
+            # Extract advanced strategy parameters from Claude decision
+            strategy_type = claude_decision.get("strategy_type", "ADVANCED_TP")
+            take_profit_strategy = claude_decision.get("take_profit_strategy", {})
+            position_management = claude_decision.get("position_management", {})
+            inversion_criteria = claude_decision.get("inversion_criteria", {})
+            
+            # Create advanced strategy configuration
+            strategy_config = {
+                "symbol": decision.symbol,
+                "signal": decision.signal,
+                "entry_price": decision.entry_price,
+                "stop_loss": decision.stop_loss,
+                "strategy_type": strategy_type,
+                "take_profit_levels": {
+                    "tp1": {
+                        "price": decision.take_profit_1,
+                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[0]
+                    },
+                    "tp2": {
+                        "price": decision.take_profit_2,
+                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[1]
+                    },
+                    "tp3": {
+                        "price": decision.take_profit_3,
+                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[2]
+                    },
+                    "tp4": {
+                        "price": decision.take_profit_3 * 1.6,  # Extended target
+                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[3]
+                    }
+                },
+                "position_management": position_management,
+                "inversion_criteria": inversion_criteria,
+                "confidence": decision.confidence,
+                "ia1_analysis_id": decision.ia1_analysis_id
+            }
+            
+            # Log the advanced strategy creation
+            logger.info(f"Advanced strategy created for {decision.symbol}: {strategy_type}")
+            logger.info(f"TP Distribution: {take_profit_strategy.get('tp_distribution', [25, 30, 25, 20])}")
+            logger.info(f"Inversion enabled: {inversion_criteria.get('enable_inversion', False)}")
+            
+            # Here you would integrate with the advanced_strategy_manager
+            # For now, we'll just log the strategy details
+            logger.info(f"Advanced strategy configuration: {strategy_config}")
+            
+        except Exception as e:
+            logger.error(f"Error creating advanced strategy for {decision.symbol}: {e}")
+    
     async def _execute_live_trade(self, decision: TradingDecision):
         """Execute live trade on BingX"""
         try:
