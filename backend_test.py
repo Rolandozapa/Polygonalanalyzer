@@ -4641,6 +4641,471 @@ class DualAITradingBotTester:
         
         return pipeline_success
 
+    def test_api_economy_optimization_balanced_filtering(self):
+        """Test the ADJUSTED API Economy Optimization with balanced thresholds"""
+        print(f"\n💰 Testing API Economy Optimization - Balanced Filtering...")
+        
+        # First, clear cache to ensure fresh data
+        print(f"   🗑️ Clearing cache for fresh API economy testing...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        if not cache_clear_success:
+            print(f"   ⚠️ Cache clear failed, using existing data")
+        
+        # Start trading system to generate fresh cycle
+        print(f"   🚀 Starting trading system for fresh API economy cycle...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for system to complete a full cycle
+        print(f"   ⏱️ Waiting for complete trading cycle (120 seconds)...")
+        time.sleep(120)  # Extended wait for full cycle
+        
+        # Stop trading system
+        print(f"   🛑 Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Get all data to analyze API economy
+        success_opp, opportunities_data = self.test_get_opportunities()
+        success_ana, analyses_data = self.test_get_analyses()
+        success_dec, decisions_data = self.test_get_decisions()
+        
+        if not (success_opp and success_ana and success_dec):
+            print(f"   ❌ Cannot retrieve data for API economy analysis")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        
+        print(f"\n   📊 API Economy Pipeline Analysis:")
+        print(f"      Scout Opportunities: {len(opportunities)}")
+        print(f"      IA1 Analyses: {len(analyses)}")
+        print(f"      IA2 Decisions: {len(decisions)}")
+        
+        # Calculate API economy rate
+        if len(analyses) > 0:
+            api_economy_rate = (len(analyses) - len(decisions)) / len(analyses)
+            api_calls_saved = len(analyses) - len(decisions)
+            
+            print(f"\n   💰 API Economy Metrics:")
+            print(f"      IA1 Analyses Generated: {len(analyses)}")
+            print(f"      IA2 Decisions Made: {len(decisions)}")
+            print(f"      API Calls Saved: {api_calls_saved}")
+            print(f"      API Economy Rate: {api_economy_rate:.1%}")
+            
+            # Test balanced filtering (target: 20-50% savings, not 100%)
+            balanced_economy = 0.20 <= api_economy_rate <= 0.50
+            not_over_filtering = api_economy_rate < 0.95  # Not filtering everything
+            quality_preserved = len(decisions) > 0  # Some decisions made
+            
+            print(f"\n   🎯 Balanced Filtering Validation:")
+            print(f"      Economy Rate 20-50%: {'✅' if balanced_economy else '❌'} ({api_economy_rate:.1%})")
+            print(f"      Not Over-Filtering: {'✅' if not_over_filtering else '❌'} (≤95%)")
+            print(f"      Quality Preserved: {'✅' if quality_preserved else '❌'} ({len(decisions)} decisions)")
+            
+            return balanced_economy and not_over_filtering and quality_preserved
+        else:
+            print(f"   ❌ No analyses available for API economy testing")
+            return False
+
+    def test_api_economy_threshold_adjustments(self):
+        """Test each adjusted criterion in the API economy system"""
+        print(f"\n🔧 Testing API Economy Threshold Adjustments...")
+        
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for threshold testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for threshold testing")
+            return False
+        
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for threshold testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        
+        print(f"   📊 Testing adjusted thresholds on {len(analyses)} analyses...")
+        
+        # Create opportunity lookup for analysis
+        opp_by_symbol = {opp.get('symbol'): opp for opp in opportunities}
+        
+        threshold_stats = {
+            'ia1_confidence_40': 0,
+            'data_confidence_40': 0,
+            'rsi_range_5_95': 0,
+            'macd_non_zero': 0,
+            'volatility_0_5': 0,
+            'volume_50k': 0,
+            'reasoning_50_chars': 0,
+            'technical_patterns': 0,
+            'high_confidence_75': 0,
+            'high_volatility_5': 0
+        }
+        
+        for analysis in analyses[:20]:  # Test first 20 analyses
+            symbol = analysis.get('symbol', '')
+            opportunity = opp_by_symbol.get(symbol, {})
+            
+            # Test adjusted thresholds
+            ia1_conf = analysis.get('analysis_confidence', 0)
+            data_conf = opportunity.get('data_confidence', 0)
+            rsi = analysis.get('rsi', 50)
+            macd = analysis.get('macd_signal', 0)
+            volatility = opportunity.get('volatility', 0)
+            volume = opportunity.get('volume_24h', 0)
+            reasoning = analysis.get('ia1_reasoning', '')
+            patterns = analysis.get('patterns_detected', [])
+            
+            # Count threshold compliance
+            if ia1_conf >= 0.40:  # Was 50%, now 40%
+                threshold_stats['ia1_confidence_40'] += 1
+            
+            if data_conf >= 0.40:  # Was 60%, now 40%
+                threshold_stats['data_confidence_40'] += 1
+            
+            if 5 <= rsi <= 95:  # Was 10-90, now 5-95
+                threshold_stats['rsi_range_5_95'] += 1
+            
+            if abs(macd) > 0.000001:  # Near-zero tolerance improved
+                threshold_stats['macd_non_zero'] += 1
+            
+            if volatility >= 0.005:  # Was 1.0%, now 0.5%
+                threshold_stats['volatility_0_5'] += 1
+            
+            if volume >= 50_000:  # Was $100K, now $50K
+                threshold_stats['volume_50k'] += 1
+            
+            if len(reasoning) >= 50:  # Was 100 chars, now 50
+                threshold_stats['reasoning_50_chars'] += 1
+            
+            if patterns and len(patterns) > 0:  # Technical patterns bonus
+                threshold_stats['technical_patterns'] += 1
+            
+            if ia1_conf >= 0.75:  # High confidence bonus
+                threshold_stats['high_confidence_75'] += 1
+            
+            if volatility > 0.05:  # High volatility bonus (>5%)
+                threshold_stats['high_volatility_5'] += 1
+        
+        total_tested = min(len(analyses), 20)
+        
+        print(f"\n   📊 Adjusted Threshold Compliance:")
+        for criterion, count in threshold_stats.items():
+            rate = count / total_tested if total_tested > 0 else 0
+            print(f"      {criterion}: {count}/{total_tested} ({rate:.1%})")
+        
+        # Validation: Adjusted thresholds should allow more analyses through
+        ia1_threshold_relaxed = threshold_stats['ia1_confidence_40'] / total_tested >= 0.6
+        data_threshold_relaxed = threshold_stats['data_confidence_40'] / total_tested >= 0.6
+        rsi_range_expanded = threshold_stats['rsi_range_5_95'] / total_tested >= 0.8
+        volume_threshold_lowered = threshold_stats['volume_50k'] / total_tested >= 0.7
+        reasoning_threshold_lowered = threshold_stats['reasoning_50_chars'] / total_tested >= 0.8
+        
+        print(f"\n   ✅ Threshold Adjustment Validation:")
+        print(f"      IA1 Confidence ≥40%: {'✅' if ia1_threshold_relaxed else '❌'} (≥60% compliance)")
+        print(f"      Data Confidence ≥40%: {'✅' if data_threshold_relaxed else '❌'} (≥60% compliance)")
+        print(f"      RSI Range 5-95: {'✅' if rsi_range_expanded else '❌'} (≥80% compliance)")
+        print(f"      Volume ≥$50K: {'✅' if volume_threshold_lowered else '❌'} (≥70% compliance)")
+        print(f"      Reasoning ≥50 chars: {'✅' if reasoning_threshold_lowered else '❌'} (≥80% compliance)")
+        
+        adjustments_working = (
+            ia1_threshold_relaxed and
+            data_threshold_relaxed and
+            rsi_range_expanded and
+            volume_threshold_lowered and
+            reasoning_threshold_lowered
+        )
+        
+        print(f"\n   🎯 Threshold Adjustments: {'✅ WORKING' if adjustments_working else '❌ NEED TUNING'}")
+        
+        return adjustments_working
+
+    def test_api_economy_priority_bonus_system(self):
+        """Test the priority bonus system that bypasses normal criteria"""
+        print(f"\n🎯 Testing API Economy Priority Bonus System...")
+        
+        success, analyses_data = self.test_get_analyses()
+        success2, decisions_data = self.test_get_decisions()
+        success3, opportunities_data = self.test_get_opportunities()
+        
+        if not (success and success2 and success3):
+            print(f"   ❌ Cannot retrieve data for priority bonus testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        opportunities = opportunities_data.get('opportunities', [])
+        
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for priority bonus testing")
+            return False
+        
+        # Create lookups
+        opp_by_symbol = {opp.get('symbol'): opp for opp in opportunities}
+        decision_symbols = set(dec.get('symbol') for dec in decisions)
+        
+        print(f"   📊 Testing priority bonus criteria on {len(analyses)} analyses...")
+        
+        priority_stats = {
+            'technical_patterns_detected': 0,
+            'high_confidence_75_plus': 0,
+            'high_volatility_5_plus': 0,
+            'patterns_reached_ia2': 0,
+            'high_conf_reached_ia2': 0,
+            'high_vol_reached_ia2': 0
+        }
+        
+        for analysis in analyses:
+            symbol = analysis.get('symbol', '')
+            opportunity = opp_by_symbol.get(symbol, {})
+            reached_ia2 = symbol in decision_symbols
+            
+            # Check priority bonus criteria
+            patterns = analysis.get('patterns_detected', [])
+            ia1_conf = analysis.get('analysis_confidence', 0)
+            volatility = opportunity.get('volatility', 0)
+            
+            # Technical patterns detected
+            if patterns and len(patterns) > 0:
+                priority_stats['technical_patterns_detected'] += 1
+                if reached_ia2:
+                    priority_stats['patterns_reached_ia2'] += 1
+            
+            # High confidence (≥75%)
+            if ia1_conf >= 0.75:
+                priority_stats['high_confidence_75_plus'] += 1
+                if reached_ia2:
+                    priority_stats['high_conf_reached_ia2'] += 1
+            
+            # High volatility (>5%)
+            if volatility > 0.05:
+                priority_stats['high_volatility_5_plus'] += 1
+                if reached_ia2:
+                    priority_stats['high_vol_reached_ia2'] += 1
+        
+        print(f"\n   📊 Priority Bonus Analysis:")
+        print(f"      Technical Patterns: {priority_stats['technical_patterns_detected']} detected")
+        print(f"      High Confidence (≥75%): {priority_stats['high_confidence_75_plus']} analyses")
+        print(f"      High Volatility (>5%): {priority_stats['high_volatility_5_plus']} opportunities")
+        
+        print(f"\n   🎯 Priority Bypass Effectiveness:")
+        
+        # Calculate bypass rates
+        pattern_bypass_rate = (priority_stats['patterns_reached_ia2'] / 
+                              priority_stats['technical_patterns_detected']) if priority_stats['technical_patterns_detected'] > 0 else 0
+        
+        high_conf_bypass_rate = (priority_stats['high_conf_reached_ia2'] / 
+                                priority_stats['high_confidence_75_plus']) if priority_stats['high_confidence_75_plus'] > 0 else 0
+        
+        high_vol_bypass_rate = (priority_stats['high_vol_reached_ia2'] / 
+                               priority_stats['high_volatility_5_plus']) if priority_stats['high_volatility_5_plus'] > 0 else 0
+        
+        print(f"      Pattern Bypass Rate: {pattern_bypass_rate:.1%} ({priority_stats['patterns_reached_ia2']}/{priority_stats['technical_patterns_detected']})")
+        print(f"      High Conf Bypass Rate: {high_conf_bypass_rate:.1%} ({priority_stats['high_conf_reached_ia2']}/{priority_stats['high_confidence_75_plus']})")
+        print(f"      High Vol Bypass Rate: {high_vol_bypass_rate:.1%} ({priority_stats['high_vol_reached_ia2']}/{priority_stats['high_volatility_5_plus']})")
+        
+        # Validation: Priority analyses should have high bypass rates
+        pattern_bypass_working = pattern_bypass_rate >= 0.8 if priority_stats['technical_patterns_detected'] > 0 else True
+        high_conf_bypass_working = high_conf_bypass_rate >= 0.8 if priority_stats['high_confidence_75_plus'] > 0 else True
+        high_vol_bypass_working = high_vol_bypass_rate >= 0.7 if priority_stats['high_volatility_5_plus'] > 0 else True
+        
+        print(f"\n   ✅ Priority Bonus Validation:")
+        print(f"      Pattern Bypass ≥80%: {'✅' if pattern_bypass_working else '❌'}")
+        print(f"      High Conf Bypass ≥80%: {'✅' if high_conf_bypass_working else '❌'}")
+        print(f"      High Vol Bypass ≥70%: {'✅' if high_vol_bypass_working else '❌'}")
+        
+        priority_system_working = (
+            pattern_bypass_working and
+            high_conf_bypass_working and
+            high_vol_bypass_working
+        )
+        
+        print(f"\n   🎯 Priority Bonus System: {'✅ WORKING' if priority_system_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return priority_system_working
+
+    def test_api_economy_rate_measurement(self):
+        """Test optimal economy vs quality balance (target: 20-50% savings)"""
+        print(f"\n📊 Testing API Economy Rate Measurement...")
+        
+        success_ana, analyses_data = self.test_get_analyses()
+        success_dec, decisions_data = self.test_get_decisions()
+        
+        if not (success_ana and success_dec):
+            print(f"   ❌ Cannot retrieve data for economy rate measurement")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for economy rate measurement")
+            return False
+        
+        # Calculate detailed API economy metrics
+        total_ia1_analyses = len(analyses)
+        total_ia2_decisions = len(decisions)
+        api_calls_saved = total_ia1_analyses - total_ia2_decisions
+        api_economy_rate = api_calls_saved / total_ia1_analyses if total_ia1_analyses > 0 else 0
+        
+        print(f"\n   📊 API Economy Measurement:")
+        print(f"      Total IA1 Analyses: {total_ia1_analyses}")
+        print(f"      IA2 Decisions Made: {total_ia2_decisions}")
+        print(f"      API Calls Saved: {api_calls_saved}")
+        print(f"      API Economy Rate: {api_economy_rate:.1%}")
+        
+        # Analyze quality of decisions that made it through
+        if total_ia2_decisions > 0:
+            high_quality_decisions = 0
+            trading_decisions = 0
+            
+            for decision in decisions:
+                confidence = decision.get('confidence', 0)
+                signal = decision.get('signal', 'hold')
+                reasoning = decision.get('ia2_reasoning', '')
+                
+                # Count high quality decisions
+                if confidence >= 0.65 and len(reasoning) > 100:
+                    high_quality_decisions += 1
+                
+                # Count trading decisions
+                if signal.lower() in ['long', 'short']:
+                    trading_decisions += 1
+            
+            quality_rate = high_quality_decisions / total_ia2_decisions
+            trading_rate = trading_decisions / total_ia2_decisions
+            
+            print(f"\n   🎯 Quality Preservation Analysis:")
+            print(f"      High Quality Decisions: {high_quality_decisions}/{total_ia2_decisions} ({quality_rate:.1%})")
+            print(f"      Trading Decisions: {trading_decisions}/{total_ia2_decisions} ({trading_rate:.1%})")
+        else:
+            quality_rate = 0
+            trading_rate = 0
+            print(f"\n   ❌ No decisions made - cannot assess quality preservation")
+        
+        # Validation criteria for optimal balance
+        optimal_economy_rate = 0.20 <= api_economy_rate <= 0.50  # Target: 20-50% savings
+        not_over_filtering = api_economy_rate < 0.90  # Not filtering too much
+        quality_maintained = quality_rate >= 0.30 if total_ia2_decisions > 0 else False  # 30% high quality
+        trading_preserved = trading_rate >= 0.10 if total_ia2_decisions > 0 else False  # 10% trading signals
+        
+        print(f"\n   ✅ API Economy Balance Validation:")
+        print(f"      Optimal Rate (20-50%): {'✅' if optimal_economy_rate else '❌'} ({api_economy_rate:.1%})")
+        print(f"      Not Over-Filtering (<90%): {'✅' if not_over_filtering else '❌'}")
+        print(f"      Quality Maintained (≥30%): {'✅' if quality_maintained else '❌'} ({quality_rate:.1%})")
+        print(f"      Trading Preserved (≥10%): {'✅' if trading_preserved else '❌'} ({trading_rate:.1%})")
+        
+        economy_balance_optimal = (
+            optimal_economy_rate and
+            not_over_filtering and
+            quality_maintained and
+            trading_preserved
+        )
+        
+        print(f"\n   🎯 API Economy Balance: {'✅ OPTIMAL' if economy_balance_optimal else '❌ NEEDS ADJUSTMENT'}")
+        
+        return economy_balance_optimal
+
+    def test_api_economy_system_effectiveness(self):
+        """Test overall optimized system performance"""
+        print(f"\n🚀 Testing API Economy System Effectiveness...")
+        
+        # Run comprehensive system test
+        print(f"   🔄 Running full system cycle for effectiveness testing...")
+        
+        # Start fresh cycle
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for complete cycle
+        print(f"   ⏱️ Waiting for complete trading cycle (90 seconds)...")
+        time.sleep(90)
+        
+        # Stop system
+        self.test_stop_trading_system()
+        
+        # Get all system data
+        success_opp, opportunities_data = self.test_get_opportunities()
+        success_ana, analyses_data = self.test_get_analyses()
+        success_dec, decisions_data = self.test_get_decisions()
+        
+        if not (success_opp and success_ana and success_dec):
+            print(f"   ❌ Cannot retrieve system data for effectiveness testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        analyses = analyses_data.get('analyses', [])
+        decisions = decisions_data.get('decisions', [])
+        
+        print(f"\n   📊 System Effectiveness Analysis:")
+        print(f"      Scout → IA1 Pipeline: {len(opportunities)} → {len(analyses)}")
+        print(f"      IA1 → IA2 Pipeline: {len(analyses)} → {len(decisions)}")
+        
+        # Calculate pipeline efficiency
+        scout_to_ia1_rate = len(analyses) / len(opportunities) if len(opportunities) > 0 else 0
+        ia1_to_ia2_rate = len(decisions) / len(analyses) if len(analyses) > 0 else 0
+        end_to_end_rate = len(decisions) / len(opportunities) if len(opportunities) > 0 else 0
+        
+        print(f"\n   🔄 Pipeline Efficiency:")
+        print(f"      Scout → IA1 Rate: {scout_to_ia1_rate:.1%}")
+        print(f"      IA1 → IA2 Rate: {ia1_to_ia2_rate:.1%} (API Economy)")
+        print(f"      End-to-End Rate: {end_to_end_rate:.1%}")
+        
+        # Analyze decision quality and trading effectiveness
+        if len(decisions) > 0:
+            high_confidence_decisions = sum(1 for d in decisions if d.get('confidence', 0) >= 0.65)
+            trading_decisions = sum(1 for d in decisions if d.get('signal', 'hold').lower() in ['long', 'short'])
+            quality_reasoning = sum(1 for d in decisions if len(d.get('ia2_reasoning', '')) > 100)
+            
+            decision_quality_rate = high_confidence_decisions / len(decisions)
+            trading_effectiveness = trading_decisions / len(decisions)
+            reasoning_quality_rate = quality_reasoning / len(decisions)
+            
+            print(f"\n   🎯 Trading Effectiveness:")
+            print(f"      High Confidence (≥65%): {high_confidence_decisions}/{len(decisions)} ({decision_quality_rate:.1%})")
+            print(f"      Trading Signals: {trading_decisions}/{len(decisions)} ({trading_effectiveness:.1%})")
+            print(f"      Quality Reasoning: {quality_reasoning}/{len(decisions)} ({reasoning_quality_rate:.1%})")
+        else:
+            decision_quality_rate = 0
+            trading_effectiveness = 0
+            reasoning_quality_rate = 0
+            print(f"\n   ❌ No decisions generated - system effectiveness compromised")
+        
+        # System effectiveness validation
+        pipeline_working = scout_to_ia1_rate >= 0.20 and ia1_to_ia2_rate >= 0.30  # Reasonable conversion rates
+        api_economy_balanced = 0.30 <= ia1_to_ia2_rate <= 0.80  # Balanced filtering (not too strict)
+        quality_maintained = decision_quality_rate >= 0.40 if len(decisions) > 0 else False
+        trading_preserved = trading_effectiveness >= 0.15 if len(decisions) > 0 else False
+        reasoning_quality = reasoning_quality_rate >= 0.80 if len(decisions) > 0 else False
+        
+        print(f"\n   ✅ System Effectiveness Validation:")
+        print(f"      Pipeline Working: {'✅' if pipeline_working else '❌'} (Scout→IA1≥20%, IA1→IA2≥30%)")
+        print(f"      API Economy Balanced: {'✅' if api_economy_balanced else '❌'} (30-80% pass rate)")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'} (≥40% high confidence)")
+        print(f"      Trading Preserved: {'✅' if trading_preserved else '❌'} (≥15% trading signals)")
+        print(f"      Reasoning Quality: {'✅' if reasoning_quality else '❌'} (≥80% quality reasoning)")
+        
+        system_effective = (
+            pipeline_working and
+            api_economy_balanced and
+            quality_maintained and
+            trading_preserved and
+            reasoning_quality
+        )
+        
+        print(f"\n   🎯 System Effectiveness: {'✅ EXCELLENT' if system_effective else '❌ NEEDS OPTIMIZATION'}")
+        
+        return system_effective
+
     async def run_api_economy_optimization_tests(self):
         """Run comprehensive API Economy Optimization tests"""
         print("💰 Starting API Economy Optimization Tests")
