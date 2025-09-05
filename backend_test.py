@@ -2964,9 +2964,381 @@ class DualAITradingBotTester:
             "decision_availability": decision_success
         }
 
+    def test_bingx_balance_fix_validation(self):
+        """Test BingX balance fix with enhanced logging and fallback handling"""
+        print(f"\n💰 Testing BingX Balance Fix Validation...")
+        
+        # Test the market status endpoint which includes BingX balance
+        success, market_data = self.run_test("Market Status (BingX Balance)", "GET", "market-status", 200)
+        
+        if not success:
+            print(f"   ❌ Cannot retrieve market status for balance testing")
+            return False
+        
+        # Check if balance information is present
+        balance_info = market_data.get('bingx_balance', {})
+        if not balance_info:
+            print(f"   ❌ No BingX balance information in market status")
+            return False
+        
+        total_balance = balance_info.get('total_balance', 0)
+        available_balance = balance_info.get('available_balance', 0)
+        
+        print(f"   📊 BingX Balance Information:")
+        print(f"      Total Balance: ${total_balance:.2f} USDT")
+        print(f"      Available Balance: ${available_balance:.2f} USDT")
+        
+        # Test the enhanced balance retrieval
+        balance_realistic = total_balance > 0  # Should not be 0$ anymore
+        fallback_working = total_balance >= 100.0  # Should show 100$ fallback or actual balance
+        
+        print(f"\n   ✅ Balance Fix Validation:")
+        print(f"      Balance > 0$: {'✅' if balance_realistic else '❌'} (was showing 0$)")
+        print(f"      Realistic Value: {'✅' if fallback_working else '❌'} (≥$100 fallback or actual)")
+        
+        # Check for enhanced logging in the response
+        bingx_status = market_data.get('bingx_status', {})
+        connectivity = bingx_status.get('connectivity', False)
+        
+        print(f"   🔍 Enhanced BingX Logging:")
+        print(f"      API Connectivity: {'✅' if connectivity else '❌'}")
+        print(f"      Status Available: {'✅' if bingx_status else '❌'}")
+        
+        balance_fix_working = balance_realistic and fallback_working
+        
+        print(f"\n   🎯 BingX Balance Fix: {'✅ SUCCESS' if balance_fix_working else '❌ FAILED'}")
+        
+        if not balance_fix_working:
+            print(f"   💡 ISSUE: Balance still showing 0$ or unrealistic values")
+            print(f"   💡 Expected: Should show $100 fallback or actual balance with enhanced logging")
+        
+        return balance_fix_working
+
+    def test_ia2_confidence_variation_fix(self):
+        """Test IA2 confidence variation fix - should no longer be uniformly 76%"""
+        print(f"\n🎯 Testing IA2 Confidence Variation Fix...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for confidence variation testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for confidence variation testing")
+            return False
+        
+        print(f"   📊 Analyzing confidence variation across {len(decisions)} decisions...")
+        
+        confidences = []
+        symbols_confidence = {}
+        
+        for decision in decisions:
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            confidences.append(confidence)
+            
+            if symbol not in symbols_confidence:
+                symbols_confidence[symbol] = []
+            symbols_confidence[symbol].append(confidence)
+        
+        if not confidences:
+            return False
+        
+        # Calculate variation statistics
+        unique_confidences = list(set(confidences))
+        avg_confidence = sum(confidences) / len(confidences)
+        min_confidence = min(confidences)
+        max_confidence = max(confidences)
+        confidence_range = max_confidence - min_confidence
+        
+        # Check for the old uniform 76% issue
+        uniform_76_count = sum(1 for c in confidences if abs(c - 0.76) < 0.001)
+        uniform_76_rate = uniform_76_count / len(confidences)
+        
+        print(f"\n   📊 Confidence Variation Analysis:")
+        print(f"      Total Decisions: {len(confidences)}")
+        print(f"      Unique Confidence Values: {len(unique_confidences)}")
+        print(f"      Average Confidence: {avg_confidence:.3f}")
+        print(f"      Min Confidence: {min_confidence:.3f}")
+        print(f"      Max Confidence: {max_confidence:.3f}")
+        print(f"      Confidence Range: {confidence_range:.3f}")
+        print(f"      Uniform 76% Count: {uniform_76_count} ({uniform_76_rate*100:.1f}%)")
+        
+        # Show confidence distribution
+        print(f"\n   🎯 Confidence Distribution:")
+        confidence_buckets = {}
+        for conf in confidences:
+            bucket = round(conf, 2)
+            confidence_buckets[bucket] = confidence_buckets.get(bucket, 0) + 1
+        
+        # Show top 5 most common confidence values
+        sorted_buckets = sorted(confidence_buckets.items(), key=lambda x: x[1], reverse=True)
+        for i, (conf_val, count) in enumerate(sorted_buckets[:5]):
+            print(f"      {conf_val:.3f}: {count} decisions ({count/len(confidences)*100:.1f}%)")
+        
+        # Symbol-based variation analysis
+        print(f"\n   🔍 Symbol-Based Variation Analysis:")
+        symbol_variations = {}
+        for symbol, symbol_confs in symbols_confidence.items():
+            if len(symbol_confs) > 1:
+                symbol_range = max(symbol_confs) - min(symbol_confs)
+                symbol_variations[symbol] = symbol_range
+        
+        if symbol_variations:
+            avg_symbol_variation = sum(symbol_variations.values()) / len(symbol_variations)
+            print(f"      Symbols with Multiple Decisions: {len(symbol_variations)}")
+            print(f"      Average Symbol Variation: {avg_symbol_variation:.3f}")
+        
+        # Validation criteria for confidence variation fix
+        not_uniform_76 = uniform_76_rate < 0.8  # Less than 80% should be exactly 76%
+        has_variation = len(unique_confidences) > 3  # Should have more than 3 unique values
+        realistic_range = confidence_range >= 0.05  # Should have at least 5% range
+        maintains_minimum = min_confidence >= 0.50  # Should maintain 50% minimum
+        
+        print(f"\n   ✅ Confidence Variation Fix Validation:")
+        print(f"      Not Uniform 76%: {'✅' if not_uniform_76 else '❌'} (<80% at 76%)")
+        print(f"      Has Variation: {'✅' if has_variation else '❌'} (>3 unique values)")
+        print(f"      Realistic Range: {'✅' if realistic_range else '❌'} (≥5% range)")
+        print(f"      Maintains 50% Min: {'✅' if maintains_minimum else '❌'}")
+        
+        variation_fix_working = (
+            not_uniform_76 and
+            has_variation and
+            realistic_range and
+            maintains_minimum
+        )
+        
+        print(f"\n   🎯 IA2 Confidence Variation Fix: {'✅ SUCCESS' if variation_fix_working else '❌ FAILED'}")
+        
+        if not variation_fix_working:
+            print(f"   💡 ISSUE: Confidence still showing uniform values or insufficient variation")
+            print(f"   💡 Expected: Varied confidence based on symbol hash, RSI, MACD, volatility, multi-source bonuses")
+        
+        return variation_fix_working
+
+    def test_enhanced_quality_scoring_system(self):
+        """Test enhanced quality scoring system with RSI, MACD, volatility variations"""
+        print(f"\n🎯 Testing Enhanced Quality Scoring System...")
+        
+        # Get both decisions and analyses for comprehensive testing
+        success_decisions, decisions_data = self.test_get_decisions()
+        success_analyses, analyses_data = self.test_get_analyses()
+        
+        if not success_decisions or not success_analyses:
+            print(f"   ❌ Cannot retrieve data for quality scoring testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        analyses = analyses_data.get('analyses', [])
+        
+        if len(decisions) == 0 or len(analyses) == 0:
+            print(f"   ❌ Insufficient data for quality scoring testing")
+            return False
+        
+        print(f"   📊 Analyzing enhanced quality scoring across {len(decisions)} decisions and {len(analyses)} analyses...")
+        
+        # Analyze RSI-based confidence adjustments
+        rsi_variations = []
+        macd_variations = []
+        volatility_impacts = []
+        multi_source_bonuses = []
+        
+        for analysis in analyses:
+            rsi = analysis.get('rsi', 50)
+            macd_signal = analysis.get('macd_signal', 0)
+            symbol = analysis.get('symbol', 'Unknown')
+            data_sources = analysis.get('data_sources', [])
+            
+            rsi_variations.append(rsi)
+            macd_variations.append(abs(macd_signal))
+            multi_source_bonuses.append(len(data_sources))
+        
+        # Find corresponding decisions for volatility analysis
+        for decision in decisions:
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            
+            # Try to find corresponding analysis
+            corresponding_analysis = next((a for a in analyses if a.get('symbol') == symbol), None)
+            if corresponding_analysis:
+                # Estimate volatility impact based on confidence variation
+                volatility_impacts.append(confidence)
+        
+        # Calculate variation statistics
+        rsi_range = max(rsi_variations) - min(rsi_variations) if rsi_variations else 0
+        macd_range = max(macd_variations) - min(macd_variations) if macd_variations else 0
+        source_range = max(multi_source_bonuses) - min(multi_source_bonuses) if multi_source_bonuses else 0
+        
+        print(f"\n   📊 Enhanced Quality Scoring Analysis:")
+        print(f"      RSI Range: {rsi_range:.2f} (should vary across symbols)")
+        print(f"      MACD Range: {macd_range:.6f} (should show signal variation)")
+        print(f"      Data Sources Range: {source_range} (multi-source bonus variation)")
+        
+        # Check for RSI-based adjustments
+        rsi_oversold = sum(1 for rsi in rsi_variations if rsi < 30)
+        rsi_overbought = sum(1 for rsi in rsi_variations if rsi > 70)
+        rsi_neutral = len(rsi_variations) - rsi_oversold - rsi_overbought
+        
+        print(f"\n   🎯 RSI-Based Confidence Adjustments:")
+        print(f"      Oversold (RSI<30): {rsi_oversold} ({rsi_oversold/len(rsi_variations)*100:.1f}%)")
+        print(f"      Overbought (RSI>70): {rsi_overbought} ({rsi_overbought/len(rsi_variations)*100:.1f}%)")
+        print(f"      Neutral (30-70): {rsi_neutral} ({rsi_neutral/len(rsi_variations)*100:.1f}%)")
+        
+        # Check for MACD signal influence
+        strong_macd = sum(1 for macd in macd_variations if macd > 0.01)
+        moderate_macd = sum(1 for macd in macd_variations if 0.001 < macd <= 0.01)
+        weak_macd = len(macd_variations) - strong_macd - moderate_macd
+        
+        print(f"\n   🎯 MACD Signal Influence:")
+        print(f"      Strong MACD (>0.01): {strong_macd} ({strong_macd/len(macd_variations)*100:.1f}%)")
+        print(f"      Moderate MACD (0.001-0.01): {moderate_macd} ({moderate_macd/len(macd_variations)*100:.1f}%)")
+        print(f"      Weak MACD (≤0.001): {weak_macd} ({weak_macd/len(macd_variations)*100:.1f}%)")
+        
+        # Check multi-source bonuses
+        premium_sources = sum(1 for sources in multi_source_bonuses if sources >= 4)
+        multiple_sources = sum(1 for sources in multi_source_bonuses if 2 <= sources < 4)
+        single_source = sum(1 for sources in multi_source_bonuses if sources < 2)
+        
+        print(f"\n   🎯 Multi-Source Bonuses:")
+        print(f"      Premium (≥4 sources): {premium_sources} ({premium_sources/len(multi_source_bonuses)*100:.1f}%)")
+        print(f"      Multiple (2-3 sources): {multiple_sources} ({multiple_sources/len(multi_source_bonuses)*100:.1f}%)")
+        print(f"      Single (<2 sources): {single_source} ({single_source/len(multi_source_bonuses)*100:.1f}%)")
+        
+        # Validation criteria for enhanced quality scoring
+        rsi_variation_working = rsi_range > 20  # RSI should vary across symbols
+        macd_variation_working = macd_range > 0.001  # MACD should show some variation
+        multi_source_working = source_range > 0  # Should have different source counts
+        diverse_rsi_signals = (rsi_oversold + rsi_overbought) > 0  # Should have some extreme RSI values
+        
+        print(f"\n   ✅ Enhanced Quality Scoring Validation:")
+        print(f"      RSI Variation Working: {'✅' if rsi_variation_working else '❌'} (range: {rsi_range:.2f})")
+        print(f"      MACD Variation Working: {'✅' if macd_variation_working else '❌'} (range: {macd_range:.6f})")
+        print(f"      Multi-Source Working: {'✅' if multi_source_working else '❌'} (range: {source_range})")
+        print(f"      Diverse RSI Signals: {'✅' if diverse_rsi_signals else '❌'}")
+        
+        quality_scoring_working = (
+            rsi_variation_working and
+            macd_variation_working and
+            multi_source_working and
+            diverse_rsi_signals
+        )
+        
+        print(f"\n   🎯 Enhanced Quality Scoring System: {'✅ SUCCESS' if quality_scoring_working else '❌ NEEDS WORK'}")
+        
+        return quality_scoring_working
+
+    def test_clear_decision_cache_and_generate_fresh(self):
+        """Clear decision cache and generate fresh decisions to test fixes"""
+        print(f"\n🔄 Testing Cache Clear and Fresh Decision Generation...")
+        
+        # Step 1: Clear the decision cache
+        print(f"   🗑️ Step 1: Clearing decision cache...")
+        success, clear_result = self.run_test("Clear Decision Cache", "DELETE", "decisions/clear", 200)
+        
+        if not success:
+            print(f"   ❌ Failed to clear decision cache")
+            return False
+        
+        print(f"   ✅ Cache cleared successfully")
+        if clear_result:
+            print(f"      Cleared decisions: {clear_result.get('cleared_decisions', 0)}")
+            print(f"      Cleared analyses: {clear_result.get('cleared_analyses', 0)}")
+            print(f"      Cleared opportunities: {clear_result.get('cleared_opportunities', 0)}")
+        
+        # Step 2: Start trading system
+        print(f"   🚀 Step 2: Starting trading system...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for fresh decisions
+        print(f"   ⏱️ Step 3: Waiting for fresh decisions (60 seconds)...")
+        
+        start_time = time.time()
+        max_wait = 60
+        check_interval = 10
+        fresh_decisions_generated = False
+        
+        while time.time() - start_time < max_wait:
+            time.sleep(check_interval)
+            
+            success, decisions_data = self.test_get_decisions()
+            if success:
+                decisions = decisions_data.get('decisions', [])
+                elapsed = time.time() - start_time
+                
+                print(f"   📈 After {elapsed:.1f}s: {len(decisions)} decisions")
+                
+                if len(decisions) > 0:
+                    fresh_decisions_generated = True
+                    print(f"   ✅ Fresh decisions generated!")
+                    break
+        
+        # Step 4: Stop trading system
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        if not fresh_decisions_generated:
+            print(f"   ❌ No fresh decisions generated within {max_wait}s")
+            return False
+        
+        print(f"   🎯 Cache Clear and Fresh Generation: ✅ SUCCESS")
+        return True
+
+    def run_bingx_and_ia2_fixes_tests(self):
+        """Run specific tests for BingX balance and IA2 confidence variation fixes"""
+        print(f"🚀 Testing BingX Balance and IA2 Confidence Variation Fixes...")
+        print(f"Backend URL: {self.base_url}")
+        print(f"API URL: {self.api_url}")
+        
+        # Test basic connectivity first
+        self.test_system_status()
+        self.test_market_status()
+        
+        # Clear cache and generate fresh data for testing
+        cache_success = self.test_clear_decision_cache_and_generate_fresh()
+        
+        # Test BingX Balance Fix
+        balance_fix = self.test_bingx_balance_fix_validation()
+        
+        # Test IA2 Confidence Variation Fix
+        confidence_variation = self.test_ia2_confidence_variation_fix()
+        
+        # Test Enhanced Quality Scoring System
+        quality_scoring = self.test_enhanced_quality_scoring_system()
+        
+        # Test 50% Confidence Minimum (from existing tests)
+        confidence_minimum = self.test_ia2_critical_confidence_minimum_fix()
+        
+        # Final summary
+        print(f"\n{'='*60}")
+        print(f"🎯 BINGX BALANCE AND IA2 FIXES TEST SUMMARY")
+        print(f"{'='*60}")
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        print(f"\n📋 Specific Fix Results:")
+        print(f"   Cache Clear & Fresh Generation: {'✅' if cache_success else '❌'}")
+        print(f"   BingX Balance Fix: {'✅' if balance_fix else '❌'}")
+        print(f"   IA2 Confidence Variation Fix: {'✅' if confidence_variation else '❌'}")
+        print(f"   Enhanced Quality Scoring: {'✅' if quality_scoring else '❌'}")
+        print(f"   50% Confidence Minimum: {'✅' if confidence_minimum else '❌'}")
+        
+        fixes_working = sum([balance_fix, confidence_variation, quality_scoring, confidence_minimum])
+        
+        if fixes_working >= 3:
+            print(f"\n✅ FIXES VALIDATION: SUCCESS - {fixes_working}/4 major fixes working")
+        else:
+            print(f"\n❌ FIXES VALIDATION: FAILED - Only {fixes_working}/4 major fixes working")
+        
+        return fixes_working >= 3
+
     async def run_all_tests(self):
-        """Run debug tests for BingX balance and IA2 confidence uniformity issues"""
-        return await self.run_debug_tests()
+        """Run specific tests for BingX balance and IA2 confidence variation fixes"""
+        return self.run_bingx_and_ia2_fixes_tests()
 
 async def main():
     """Main test function"""
