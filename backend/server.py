@@ -748,6 +748,86 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced multi-source OHLCV fetch error: {e}")
             return None  # No fallback - real data only
     
+    def _validate_multi_source_quality(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
+        """Valide la cohérence entre sources multiples OHLCV pour garantir la qualité"""
+        try:
+            # Résultat par défaut
+            result = {
+                "is_valid": False,
+                "reason": "Validation failed",
+                "sources_count": 0,
+                "coherence_rate": 0.0,
+                "confidence_score": 0.0,
+                "sources_info": "Unknown"
+            }
+            
+            # Vérifier les métadonnées multi-sources du enhanced fetcher
+            if hasattr(historical_data, 'attrs') and historical_data.attrs:
+                primary_source = historical_data.attrs.get('primary_source', 'Unknown')
+                secondary_source = historical_data.attrs.get('secondary_source', 'None')
+                validation_rate = historical_data.attrs.get('validation_rate', 0.0)
+                sources_count = historical_data.attrs.get('sources_count', 1)
+                
+                result["sources_count"] = sources_count
+                result["coherence_rate"] = validation_rate
+                result["sources_info"] = f"{primary_source} + {secondary_source}"
+                
+                # Critère principal: Au moins 2 sources avec validation croisée
+                if sources_count >= 2 and validation_rate >= 0.8:  # 80% de cohérence minimum
+                    result["is_valid"] = True
+                    result["confidence_score"] = min(validation_rate + 0.1, 1.0)  # Bonus pour multi-source
+                    result["reason"] = f"Excellent: {sources_count} sources, {validation_rate:.1%} cohérence"
+                    return result
+                elif sources_count >= 2 and validation_rate >= 0.7:  # 70% acceptable
+                    result["is_valid"] = True
+                    result["confidence_score"] = validation_rate
+                    result["reason"] = f"Bon: {sources_count} sources, {validation_rate:.1%} cohérence"
+                    return result
+                elif sources_count >= 2:
+                    result["reason"] = f"Sources multiples mais cohérence faible: {validation_rate:.1%}"
+                    return result
+                else:
+                    result["reason"] = f"Une seule source: {primary_source}"
+            
+            # Fallback: validation de base sur une source unique (si pas de multi-source)
+            if len(historical_data) >= 50:
+                # Vérifications de base pour source unique
+                price_columns = ['Open', 'High', 'Low', 'Close']
+                
+                # Vérifier cohérence des prix
+                price_consistency = True
+                for col in price_columns:
+                    if col in historical_data.columns:
+                        if (historical_data[col] <= 0).any():
+                            price_consistency = False
+                            break
+                
+                # Vérifier High >= Low
+                if 'High' in historical_data.columns and 'Low' in historical_data.columns:
+                    if (historical_data['High'] < historical_data['Low']).any():
+                        price_consistency = False
+                
+                if price_consistency:
+                    # Source unique mais données cohérentes - acceptable avec scoring réduit
+                    result["is_valid"] = True
+                    result["sources_count"] = 1
+                    result["coherence_rate"] = 0.6  # Score réduit pour source unique
+                    result["confidence_score"] = 0.6
+                    result["reason"] = f"Source unique mais cohérente ({len(historical_data)} jours)"
+                    result["sources_info"] = "Single source validated"
+                    return result
+                else:
+                    result["reason"] = "Source unique avec données incohérentes"
+                    return result
+            else:
+                result["reason"] = f"Données insuffisantes: {len(historical_data)} jours"
+                return result
+            
+        except Exception as e:
+            logger.error(f"Erreur validation multi-source pour {symbol}: {e}")
+            result["reason"] = f"Erreur validation: {str(e)}"
+            return result
+    
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
         """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
         try:
