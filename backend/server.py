@@ -619,7 +619,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 reasoning += f"\nTrend Duration: {detected_pattern.trend_duration_days} days"
                 reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
             
-            # Create ultra professional analysis
+            # Create ultra professional analysis avec validation JSON
             analysis_data = {
                 "rsi": rsi,
                 "macd_signal": macd_signal,
@@ -636,14 +636,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "data_sources": opportunity.data_sources
             }
             
+            # Valide et nettoie les données pour éviter les erreurs JSON
+            validated_data = self._validate_analysis_data(analysis_data)
+            
             # Ajuster la confiance basée sur le pattern technique
             if detected_pattern and detected_pattern.strength > 0.7:
-                analysis_data["analysis_confidence"] = min(analysis_data["analysis_confidence"] + 0.1, 0.98)
-                analysis_data["patterns_detected"].insert(0, detected_pattern.pattern_type.value)
+                validated_data["analysis_confidence"] = min(validated_data["analysis_confidence"] + 0.1, 0.98)
+                if detected_pattern.pattern_type.value not in validated_data["patterns_detected"]:
+                    validated_data["patterns_detected"].insert(0, detected_pattern.pattern_type.value)
             
             return TechnicalAnalysis(
                 symbol=opportunity.symbol,
-                **analysis_data
+                **validated_data
             )
             
         except Exception as e:
