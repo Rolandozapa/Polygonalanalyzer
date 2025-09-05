@@ -181,3 +181,5 @@
 ## agent_communication:
     - agent: "main"
     - message: "CRITICAL IA2 ISSUES IDENTIFIED: (1) IA2 not parsing LLM JSON responses correctly, (2) Confidence penalties too aggressive causing 37.3% average, (3) Trading thresholds too strict after penalties. Starting fixes for proper decision-making."
+    - agent: "main"
+    - message: "IMPLEMENTED IA2 FIXES: (1) Added proper JSON parsing for LLM responses with reasoning extraction, (2) Reduced confidence penalty factors and added LLM confidence boost, (3) Lowered trading thresholds for more realistic signal generation. Ready for testing."
