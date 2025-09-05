@@ -601,6 +601,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
+            # Enrichir le raisonnement avec le pattern technique détecté
+            reasoning = response[:1200] if response else "Ultra professional analysis with multi-source validation"
+            if detected_pattern:
+                reasoning += f"\n\n🎯 TECHNICAL PATTERN DETECTED: {detected_pattern.pattern_type.value} (strength: {detected_pattern.strength:.2f}, confidence: {detected_pattern.confidence:.2f})"
+                reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f}, Target: ${detected_pattern.target_price:.2f}, Stop: ${detected_pattern.stop_loss:.2f}"
+            
             # Create ultra professional analysis
             analysis_data = {
                 "rsi": rsi,
@@ -613,10 +619,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "analysis_confidence": self._calculate_analysis_confidence(
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 ),
-                "ia1_reasoning": response[:1500] if response else "Ultra professional analysis with multi-source validation",
+                "ia1_reasoning": reasoning,
                 "market_sentiment": self._determine_market_sentiment(opportunity),
                 "data_sources": opportunity.data_sources
             }
+            
+            # Ajuster la confiance basée sur le pattern technique
+            if detected_pattern and detected_pattern.strength > 0.7:
+                analysis_data["analysis_confidence"] = min(analysis_data["analysis_confidence"] + 0.1, 0.98)
+                analysis_data["patterns_detected"].insert(0, detected_pattern.pattern_type.value)
             
             return TechnicalAnalysis(
                 symbol=opportunity.symbol,
