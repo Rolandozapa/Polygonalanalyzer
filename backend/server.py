@@ -1557,27 +1557,23 @@ PERFORMANCE CONTEXT:
 - Recent Trades: {perf_stats.get('total_trades', 0)}
 
 DYNAMIC LEVERAGE & RISK CALCULATION REQUIREMENTS:
-1. **Calculate optimal leverage** based on trade confidence and market sentiment
-2. **Analyze crypto market conditions** (total market cap change, BTC dominance, volume trends)
-3. **Adapt Stop Loss levels** based on leverage used (higher leverage = tighter SL for same $ risk)
-4. **Create 5-level TP distribution** with market-adaptive spacing and leverage-optimized distances
-5. **Provide detailed reasoning** for leverage selection and market sentiment analysis
+1. **Base Leverage:** Start with 2x-3x conservative base
+2. **Analyze Market Sentiment Alignment:**
+   - LONG + BULL_MARKET ({market_sentiment['market_sentiment']}) = Favorable sentiment bonus
+   - SHORT + BEAR_MARKET = Favorable sentiment bonus
+   - Misaligned sentiment = Base leverage only (risk mitigation)
+3. **Apply Confidence Multiplier:** High confidence (>90%) adds leverage
+4. **Calculate Dynamic Stop Loss:** Higher leverage = Tighter SL (1.0-2.5%)
+5. **Optimize Position Size:** Account balance ÷ (leverage × stop_loss_%) = max position
+6. **Maximum 10x leverage cap** for risk control
 
-MARKET SENTIMENT INTEGRATION:
-- **Total Crypto Market Cap 24h Change:** Primary sentiment indicator for leverage calculation
-- **Market Sentiment Classification:** 
-  - **BULL MARKET:** >+3% market cap growth = favorable for LONG positions
-  - **BEAR MARKET:** <-3% market cap decline = favorable for SHORT positions  
-  - **NEUTRAL MARKET:** -3% to +3% = base leverage only
-- **Confidence-Leverage Matrix:** Combine Claude confidence with market sentiment for optimal leverage
+LEVERAGE CALCULATION EXAMPLES:
+- High confidence (>90%) + Aligned sentiment = Up to 6x-8x leverage
+- Medium confidence (70-90%) + Aligned sentiment = 4x-5x leverage  
+- Low confidence (<70%) or Misaligned sentiment = 2x-3x base leverage
+- Perfect conditions (95%+ confidence + strong sentiment) = Up to 10x leverage
 
-DYNAMIC RISK PARAMETERS:
-- **Leverage Range:** 2x (conservative) to 10x (maximum aggressive with perfect conditions)
-- **Stop Loss Adaptation:** 
-  - 2x-3x leverage: 2.0-2.5% SL
-  - 4x-6x leverage: 1.5-2.0% SL  
-  - 7x-10x leverage: 1.0-1.5% SL
-- **Take Profit Scaling:** More aggressive TPs with favorable sentiment alignment
+TASK: Create an ultra professional trading decision with MARKET-ADAPTIVE LEVERAGE STRATEGY.
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
