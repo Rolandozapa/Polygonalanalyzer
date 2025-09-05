@@ -106,7 +106,7 @@
 
 ## backend:
   - task: "Optimize IA1 historical data retrieval"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -116,9 +116,12 @@
         - working: "NA"
         - agent: "main"
         - comment: "Starting implementation - identified 30-day data window as bottleneck, will reduce to 10 days"
+        - working: "NA"
+        - agent: "main"
+        - comment: "COMPLETED: Updated _get_enhanced_historical_data() from 30-day to 10-day default"
 
   - task: "Optimize IA1 prompt structure"
-    implemented: false
+    implemented: true
     working: "NA"
     file: "/app/backend/server.py"
     stuck_count: 0
@@ -128,6 +131,21 @@
         - working: "NA"
         - agent: "main"
         - comment: "Will streamline prompt to reference 10-day analysis instead of 30-day"
+        - working: "NA"
+        - agent: "main"
+        - comment: "COMPLETED: Streamlined prompt from verbose multi-source format to concise fast analysis format"
+
+  - task: "Optimize market data service historical data"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/market_data_service.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "COMPLETED: Updated get_historical_data() from 30-day to 10-day default"
 
 ## frontend:
   - task: "Frontend changes for IA1 optimization"
