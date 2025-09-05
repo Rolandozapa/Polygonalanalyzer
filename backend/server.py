@@ -283,6 +283,9 @@ class ProfessionalIA1TechnicalAnalyst:
             sentiment_data = await self.market_service.get_market_sentiment()
             
             # Create comprehensive analysis prompt with real data
+            # Format market cap safely
+            market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
+            
             prompt = f"""
             Analyze this REAL cryptocurrency trading opportunity with actual market data:
             
@@ -291,7 +294,7 @@ class ProfessionalIA1TechnicalAnalyst:
             24h Volume: ${opportunity.volume_24h:,.0f}
             24h Change: {opportunity.price_change_24h:.2f}%
             Volatility: {opportunity.volatility:.2f}
-            Market Cap: ${opportunity.market_cap:,.0f if opportunity.market_cap else 'N/A'}
+            Market Cap: {market_cap_str}
             
             REAL Technical Indicators (calculated from 30-day history):
             - RSI (14): {rsi:.2f}
