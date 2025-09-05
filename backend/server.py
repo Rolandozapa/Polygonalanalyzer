@@ -1573,6 +1573,7 @@ class UltraProfessionalTradingOrchestrator:
             analyses = await asyncio.gather(*analysis_tasks, return_exceptions=True)
             
             valid_analyses = []
+            filtered_count = 0
             for i, analysis in enumerate(analyses):
                 if isinstance(analysis, TechnicalAnalysis):
                     valid_analyses.append((top_opportunities[i], analysis))
