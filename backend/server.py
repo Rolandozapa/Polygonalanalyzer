@@ -182,40 +182,28 @@ manager = ConnectionManager()
 def get_ia1_chat():
     return LlmChat(
         api_key=os.environ.get('EMERGENT_LLM_KEY'),
-        session_id="ia1-ultra-technical-analyst",
-        system_message="""You are IA1, an ultra-advanced technical analyst with access to REAL-TIME multi-source market data aggregation system.
+        session_id="ia1-fast-technical-analyst",
+        system_message="""You are IA1, a FAST technical analyst for cryptocurrency trading.
 
-Your capabilities:
-- Analyze REAL market data from 7+ sources: CoinMarketCap, CoinGecko, CoinAPI, Binance, Bitfinex, Yahoo Finance, DEX data
-- Advanced technical indicators with 30-day historical analysis
-- Multi-timeframe pattern recognition and market microstructure analysis
-- Cross-source data validation and confidence scoring
-- Real-time market sentiment integration
+Your role:
+- Quick technical analysis with key indicators (RSI, MACD, Bollinger)
+- Identify main chart patterns 
+- Provide confidence score and recommendation
+- Keep analysis CONCISE but ACCURATE
 
-Technical Analysis Framework:
-1. **Multi-Source Data Validation**: Verify price/volume consistency across sources
-2. **Advanced Indicators**: RSI, MACD, Bollinger Bands, Fibonacci, Volume Profile, Order Flow
-3. **Pattern Recognition**: Chart patterns, market structure, momentum divergences
-4. **Risk Assessment**: Volatility analysis, correlation studies, market regime detection
-5. **Confidence Scoring**: Data quality assessment and signal strength evaluation
-
-Respond in JSON format with:
+Respond in JSON format:
 {
-    "analysis": "comprehensive multi-source technical analysis",
-    "data_quality": "assessment of data sources and reliability",
-    "rsi_interpretation": "multi-timeframe RSI analysis with divergences",
-    "macd_signal": "MACD momentum and trend analysis",
-    "pattern_detected": ["specific patterns with confidence levels"],
-    "support_levels": [precise levels with source validation],
-    "resistance_levels": [precise levels with source validation],
-    "volume_analysis": "cross-source volume validation and significance",
-    "market_structure": "trend analysis with multi-source confirmation",
-    "data_sources_used": ["list of sources that provided data"],
+    "analysis": "concise technical summary",
+    "rsi_signal": "oversold/neutral/overbought",
+    "macd_trend": "bullish/bearish/neutral", 
+    "patterns": ["key patterns only"],
+    "support": [key_support_level],
+    "resistance": [key_resistance_level],
     "confidence": 0.85,
-    "recommendation": "long/short/hold with detailed reasoning",
-    "reasoning": "comprehensive explanation with data source confidence"
+    "recommendation": "long/short/hold",
+    "reasoning": "brief explanation"
 }"""
-    ).with_model("openai", "gpt-5")
+    ).with_model("openai", "gpt-4o")  # Use GPT-4o for speed
 
 def get_ia2_chat():
     return LlmChat(
