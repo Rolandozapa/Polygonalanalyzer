@@ -2638,17 +2638,33 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         else:
             risk_reward = 1.0
         
-        # Advanced position sizing (more aggressive for qualified signals)
+        # Advanced position sizing with DYNAMIC LEVERAGE integration
         if signal != SignalType.HOLD:
-            # Base position size on confidence and signal strength
+            # Base position size calculation with leverage consideration
             base_position = 0.03  # 3% base for advanced strategies
             confidence_multiplier = min(confidence / 0.7, 1.5)  # Up to 1.5x for high confidence
             signal_multiplier = min(signal_strength / 0.4, 1.3)  # Up to 1.3x for strong signals
             
+            # DYNAMIC LEVERAGE POSITION SIZING
+            leverage_adjusted_position = base_position
+            if calculated_leverage_data:
+                applied_leverage = calculated_leverage_data.get("applied_leverage", 2.0)
+                # With leverage, we can achieve same dollar exposure with smaller % of account
+                # Higher leverage = smaller position % needed for same exposure
+                leverage_efficiency = min(applied_leverage / 2.0, 4.0)  # 2x leverage = 1.0x, 10x leverage = 5.0x efficiency
+                leverage_adjusted_position = base_position / leverage_efficiency  # Smaller % needed
+                
+                reasoning += f"LEVERAGE POSITION SIZING: {applied_leverage:.1f}x leverage allows {leverage_efficiency:.1f}x capital efficiency. "
+            
             position_size_percentage = min(
-                base_position * confidence_multiplier * signal_multiplier,
-                0.08  # Max 8% for advanced strategies
+                leverage_adjusted_position * confidence_multiplier * signal_multiplier,
+                0.08  # Max 8% for advanced strategies even with leverage
             )
+            
+            # Store leverage data for strategy execution
+            if calculated_leverage_data:
+                applied_leverage = calculated_leverage_data.get("applied_leverage", 2.0)
+                reasoning += f"FINAL POSITION: {position_size_percentage:.1%} of account with {applied_leverage:.1f}x leverage = {position_size_percentage * applied_leverage:.1%} market exposure. "
         else:
             position_size_percentage = 0.0
         
