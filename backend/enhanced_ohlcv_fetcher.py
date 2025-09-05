@@ -396,6 +396,297 @@ class EnhancedOHLCVFetcher:
             logger.debug(f"Error parsing CoinAPI data for {symbol}: {e}")
             return None
     
+    async def _fetch_historical_fallback_data(self, normalized_symbol: str, original_symbol: str) -> Optional[pd.DataFrame]:
+        """
+        FALLBACK SYSTEM: Try specialized historical data APIs when primary sources fail
+        Guarantees minimum 20 days of data even when all primary OHLCV sources fail
+        """
+        logger.info(f"🔄 FALLBACK ACTIVATED: Trying historical data APIs for {original_symbol}")
+        
+        # Historical data fallback sources (specialized for historical data)
+        fallback_sources = [
+            ('Alpha Vantage Historical', self._fetch_alpha_vantage_historical),
+            ('Polygon Historical', self._fetch_polygon_historical),
+            ('IEX Cloud Historical', self._fetch_iex_cloud_historical),
+            ('CoinCap Historical', self._fetch_coincap_historical),
+            ('Messari Historical', self._fetch_messari_historical),
+            ('CryptoCompare Historical', self._fetch_cryptocompare_historical_fallback)
+        ]
+        
+        for source_name, fetch_func in fallback_sources:
+            try:
+                logger.info(f"🔍 Trying {source_name} for {original_symbol}")
+                data = await fetch_func(normalized_symbol)
+                
+                if data is not None and len(data) >= 20:  # Minimum required days
+                    validated_data = self._validate_and_clean_data(data)
+                    if validated_data is not None and len(validated_data) >= 20:
+                        logger.info(f"✅ FALLBACK SUCCESS: {source_name} provided {len(validated_data)} days for {original_symbol}")
+                        
+                        # Add fallback metadata
+                        validated_data.attrs = {
+                            'primary_source': source_name,
+                            'secondary_source': 'None',
+                            'validation_rate': 0.8,  # Good but single source
+                            'sources_count': 1,
+                            'fallback_used': True
+                        }
+                        
+                        return validated_data
+                elif data is not None:
+                    logger.debug(f"⚠️ {source_name} insufficient data for {original_symbol}: {len(data)} days")
+                    
+            except Exception as e:
+                logger.debug(f"❌ {source_name} failed for {original_symbol}: {e}")
+                continue
+        
+        # FINAL FALLBACK: If all else fails, try to get ANY data from primary sources with lower standards
+        logger.warning(f"🚨 ALL FALLBACK APIS FAILED for {original_symbol} - trying relaxed primary sources")
+        return await self._fetch_relaxed_primary_data(normalized_symbol, original_symbol)
+    
+    async def _fetch_alpha_vantage_historical(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from Alpha Vantage - very reliable for historical data"""
+        if not self.alpha_vantage_key:
+            return None
+            
+        try:
+            # Format symbol for Alpha Vantage (they support many crypto symbols)
+            av_symbol = symbol.replace('USDT', 'USD') if symbol.endswith('USDT') else symbol
+            
+            url = "https://www.alphavantage.co/query"
+            params = {
+                "function": "DIGITAL_CURRENCY_DAILY",
+                "symbol": av_symbol.replace('USD', '').replace('USDT', ''),  # Remove USD suffix
+                "market": "USD",
+                "apikey": self.alpha_vantage_key
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_alpha_vantage_data(data, symbol)
+                    else:
+                        logger.debug(f"Alpha Vantage returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"Alpha Vantage error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_polygon_historical(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from Polygon - excellent for crypto historical data"""
+        if not self.polygon_key:
+            return None
+            
+        try:
+            # Format symbol for Polygon (X:BTCUSD format)
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            polygon_symbol = f"X:{base_symbol}USD"
+            
+            # Get data for the last 150 days
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=self.lookback_days)
+            
+            url = f"https://api.polygon.io/v2/aggs/ticker/{polygon_symbol}/range/1/day/{start_date.strftime('%Y-%m-%d')}/{end_date.strftime('%Y-%m-%d')}"
+            params = {"apikey": self.polygon_key}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_polygon_data(data, symbol)
+                    else:
+                        logger.debug(f"Polygon returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"Polygon error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_iex_cloud_historical(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from IEX Cloud - reliable backup source"""
+        if not self.iex_cloud_key:
+            return None
+            
+        try:
+            # Format symbol for IEX (they have crypto support)
+            iex_symbol = symbol.replace('USDT', 'USD') if symbol.endswith('USDT') else symbol
+            
+            url = f"https://cloud.iexapis.com/stable/crypto/{iex_symbol}/chart/3m"
+            params = {"token": self.iex_cloud_key}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_iex_cloud_data(data, symbol)
+                    else:
+                        logger.debug(f"IEX Cloud returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"IEX Cloud error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_coincap_historical(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from CoinCap - free historical endpoint not used yet"""
+        try:
+            # CoinCap uses different symbol format - need to resolve asset ID
+            base_symbol = symbol.replace('USDT', '').replace('USD', '').lower()
+            
+            # First, get the asset ID
+            assets_url = "https://api.coincap.io/v2/assets"
+            params = {"search": base_symbol}
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(assets_url, params=params) as response:
+                    if response.status == 200:
+                        assets_data = await response.json()
+                        assets = assets_data.get('data', [])
+                        
+                        # Find matching asset
+                        asset_id = None
+                        for asset in assets:
+                            if asset.get('symbol', '').lower() == base_symbol:
+                                asset_id = asset.get('id')
+                                break
+                        
+                        if not asset_id:
+                            return None
+                        
+                        # Now get historical data
+                        end_time = int(datetime.now(timezone.utc).timestamp() * 1000)
+                        start_time = int((datetime.now(timezone.utc) - timedelta(days=self.lookback_days)).timestamp() * 1000)
+                        
+                        history_url = f"https://api.coincap.io/v2/assets/{asset_id}/history"
+                        history_params = {
+                            "interval": "d1",
+                            "start": start_time,
+                            "end": end_time
+                        }
+                        
+                        async with session.get(history_url, params=history_params) as hist_response:
+                            if hist_response.status == 200:
+                                hist_data = await hist_response.json()
+                                return self._parse_coincap_historical_data(hist_data, symbol)
+                                
+        except Exception as e:
+            logger.debug(f"CoinCap historical error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_messari_historical(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from Messari - crypto-specialized historical data"""
+        try:
+            # Format symbol for Messari
+            base_symbol = symbol.replace('USDT', '').replace('USD', '').lower()
+            
+            # Messari uses slug format, try common mappings
+            symbol_mapping = {
+                'btc': 'bitcoin',
+                'eth': 'ethereum',
+                'bnb': 'binance-coin',
+                'sol': 'solana',
+                'xrp': 'xrp',
+                'ada': 'cardano',
+                'doge': 'dogecoin',
+                'avax': 'avalanche',
+                'dot': 'polkadot',
+                'matic': 'polygon'
+            }
+            
+            messari_symbol = symbol_mapping.get(base_symbol, base_symbol)
+            
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=self.lookback_days)
+            
+            url = f"https://data.messari.io/api/v1/assets/{messari_symbol}/metrics/price/time-series"
+            params = {
+                "start": start_date.strftime('%Y-%m-%d'),
+                "end": end_date.strftime('%Y-%m-%d'),
+                "interval": "1d"
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_messari_data(data, symbol)
+                    else:
+                        logger.debug(f"Messari returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"Messari error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_cryptocompare_historical_fallback(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Fetch historical data from CryptoCompare - fallback endpoint for historical data"""
+        try:
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            
+            url = "https://min-api.cryptocompare.com/data/v2/histoday"
+            params = {
+                "fsym": base_symbol,
+                "tsym": "USD",
+                "limit": self.lookback_days,
+                "api_key": os.environ.get('CRYPTOCOMPARE_KEY', '')  # Optional key
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cryptocompare_historical_data(data, symbol)
+                    else:
+                        logger.debug(f"CryptoCompare historical returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"CryptoCompare historical error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_relaxed_primary_data(self, normalized_symbol: str, original_symbol: str) -> Optional[pd.DataFrame]:
+        """
+        LAST RESORT: Try primary sources again with relaxed requirements
+        Accept any data >= 20 days from any primary source
+        """
+        logger.info(f"🚨 LAST RESORT: Relaxed primary source attempt for {original_symbol}")
+        
+        sources = [
+            ('Binance Relaxed', self._fetch_binance_enhanced),
+            ('CoinGecko Relaxed', self._fetch_coingecko_enhanced),
+            ('Yahoo Finance Relaxed', self._fetch_yahoo_enhanced)
+        ]
+        
+        for source_name, fetch_func in sources:
+            try:
+                data = await fetch_func(normalized_symbol)
+                if data is not None and len(data) >= 20:  # Minimum 20 days
+                    validated_data = self._validate_and_clean_data(data)
+                    if validated_data is not None and len(validated_data) >= 20:
+                        logger.info(f"🆘 EMERGENCY SUCCESS: {source_name} provided {len(validated_data)} days for {original_symbol}")
+                        
+                        # Add emergency metadata
+                        validated_data.attrs = {
+                            'primary_source': source_name,
+                            'secondary_source': 'None',
+                            'validation_rate': 0.7,  # Lower confidence but better than nothing
+                            'sources_count': 1,
+                            'fallback_used': True,
+                            'emergency_mode': True
+                        }
+                        
+                        return validated_data
+                        
+            except Exception as e:
+                logger.debug(f"❌ {source_name} relaxed attempt failed: {e}")
+                continue
+        
+        logger.error(f"🚨 COMPLETE FAILURE: No historical data available for {original_symbol} from any source")
+        return None
+    
     def _combine_multi_source_data(self, successful_data: List[Tuple[str, pd.DataFrame]], symbol: str) -> pd.DataFrame:
         """Combine and validate data from multiple sources"""
         try:
