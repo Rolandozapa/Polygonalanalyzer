@@ -1449,12 +1449,19 @@ IA1 TECHNICAL ANALYSIS:
 - IA1 Confidence: {analysis.analysis_confidence:.2%}
 - IA1 Reasoning: {analysis.ia1_reasoning[:500]}...
 
-ADVANCED STRATEGY REQUIREMENTS:
-1. Create multi-level take profit strategy (4 levels with position distribution)
-2. Determine if position inversion should be enabled
-3. Calculate optimal risk-reward ratios based on technical confluence
-4. Assess market conditions for strategy type selection
-5. Provide comprehensive reasoning for advanced strategy choice
+STRATEGIC 5-LEVEL TAKE PROFIT REQUIREMENTS:
+1. **Analyze pattern type** from IA1 detected patterns and adapt TP strategy accordingly
+2. **Calculate strategic TP positioning** based on pattern reliability and market volatility  
+3. **Create 5-level TP distribution** with pattern-adaptive spacing and position allocation
+4. **Optimize R:R ratios** for each TP level based on technical confluence strength
+5. **Provide detailed reasoning** for pattern-specific TP positioning strategy
+
+PATTERN-ADAPTIVE TP RULES:
+- **Strong Reversal Patterns** (Head&Shoulders, Double Top/Bottom): Wider TP spacing, extended final targets
+- **Continuation Patterns** (Flags, Pennants, Channels): Conservative early TPs, momentum-based final targets  
+- **Consolidation Breakouts** (Triangles, Wedges): Balanced distribution with volatility-adjusted distances
+- **High Volatility Markets** (>5%%): Closer TP levels for quick profit capture
+- **Low Volatility Markets** (<2%%): Extended TP distances for maximum profit potential
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
