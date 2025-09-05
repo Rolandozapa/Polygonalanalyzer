@@ -283,11 +283,17 @@ class UltraProfessionalCryptoScout:
             current_symbols = self.trending_updater.get_current_trending_symbols()
             if current_symbols:
                 self.trending_symbols = current_symbols
-                logger.info(f"📈 Trending symbols updated: {current_symbols}")
+                logger.info(f"📈 Trending symbols updated from crawler: {current_symbols}")
             else:
-                logger.info("📈 Using default trending symbols")
+                # Fallback vers des cryptos populaires avec activité récente
+                popular_trending = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']
+                self.trending_symbols = popular_trending
+                logger.info(f"📈 Using popular trending symbols (crawler failed): {popular_trending}")
         except Exception as e:
             logger.error(f"Error syncing trending symbols: {e}")
+            # Fallback final
+            self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP']
+            logger.info(f"📈 Using fallback trending symbols: {self.trending_symbols}")
     
     async def scan_opportunities(self) -> List[MarketOpportunity]:
         """Ultra professional trend-focused market scanning with auto-updated trends"""
