@@ -5,15 +5,32 @@ import time
 import asyncio
 import websockets
 from datetime import datetime
+import os
+from pathlib import Path
 
 class DualAITradingBotTester:
-    def __init__(self, base_url="http://localhost:8001"):
+    def __init__(self, base_url=None):
+        # Get the correct backend URL from frontend/.env
+        if base_url is None:
+            try:
+                env_path = Path(__file__).parent / "frontend" / ".env"
+                with open(env_path, 'r') as f:
+                    for line in f:
+                        if line.startswith('REACT_APP_BACKEND_URL='):
+                            base_url = line.split('=', 1)[1].strip()
+                            break
+                if not base_url:
+                    base_url = "https://market-oracle-ai-3.preview.emergentagent.com"
+            except:
+                base_url = "https://market-oracle-ai-3.preview.emergentagent.com"
+        
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.ws_url = f"{base_url.replace('http', 'ws')}/api/ws"
         self.tests_run = 0
         self.tests_passed = 0
         self.websocket_messages = []
+        self.ia1_performance_times = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, timeout=10):
         """Run a single API test"""
