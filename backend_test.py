@@ -2496,9 +2496,468 @@ class DualAITradingBotTester:
             "legacy_minimum_test": legacy_minimum_test
         }
 
+    def test_bingx_balance_investigation(self):
+        """Test BingX balance retrieval - Debug why balance shows 0$ instead of 11$+"""
+        print(f"\n💰 Testing BingX Balance Investigation...")
+        
+        # Test the BingX account balance endpoint
+        success, balance_data = self.run_test("BingX Account Balance", "GET", "bingx/balance", 200)
+        
+        if not success:
+            print(f"   ❌ BingX balance endpoint failed")
+            return False
+        
+        if balance_data:
+            total_balance = balance_data.get('total_balance', 0)
+            available_balance = balance_data.get('available_balance', 0)
+            used_margin = balance_data.get('used_margin', 0)
+            unrealized_pnl = balance_data.get('unrealized_pnl', 0)
+            
+            print(f"   📊 BingX Balance Details:")
+            print(f"      Total Balance: ${total_balance:.2f} USDT")
+            print(f"      Available Balance: ${available_balance:.2f} USDT")
+            print(f"      Used Margin: ${used_margin:.2f} USDT")
+            print(f"      Unrealized PnL: ${unrealized_pnl:.2f} USDT")
+            
+            # Check if balance is showing 0 when it should be 11$+
+            balance_issue = total_balance == 0.0 and available_balance == 0.0
+            
+            print(f"\n   🔍 Balance Investigation:")
+            print(f"      Balance Shows Zero: {'❌ ISSUE CONFIRMED' if balance_issue else '✅ Balance Present'}")
+            print(f"      Expected: >$11 USDT")
+            print(f"      Actual: ${total_balance:.2f} USDT")
+            
+            if balance_issue:
+                print(f"   💡 POTENTIAL CAUSES:")
+                print(f"      1. API keys may be for spot trading, not futures")
+                print(f"      2. BingX API connection issue")
+                print(f"      3. Account configuration problem")
+                print(f"      4. API permissions insufficient")
+                
+                # Test BingX API connection directly
+                print(f"\n   🔧 Testing BingX API Connection...")
+                connection_success, connection_data = self.run_test("BingX API Connection Test", "GET", "bingx/test-connection", 200)
+                
+                if connection_success and connection_data:
+                    api_status = connection_data.get('status', 'unknown')
+                    api_message = connection_data.get('message', 'No message')
+                    print(f"      API Status: {api_status}")
+                    print(f"      API Message: {api_message}")
+                
+                return False
+            else:
+                print(f"   ✅ BingX balance retrieval working correctly")
+                return True
+        
+        return False
+
+    def test_ia2_confidence_uniformity_debug(self):
+        """Test IA2 confidence uniformity - Debug why ALL decisions show exactly 76% confidence"""
+        print(f"\n🎯 Testing IA2 Confidence Uniformity Debug...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for confidence uniformity testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for confidence uniformity testing")
+            return False
+        
+        print(f"   📊 Analyzing confidence uniformity across {len(decisions)} decisions...")
+        
+        # Collect confidence values and analyze uniformity
+        confidences = []
+        analysis_confidences = []
+        data_confidences = []
+        symbols = []
+        
+        for decision in decisions[:20]:  # Analyze up to 20 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            
+            symbols.append(symbol)
+            confidences.append(confidence)
+            
+            # Try to get the underlying analysis confidence if available
+            # This would require getting the analysis data separately
+            
+        if confidences:
+            unique_confidences = list(set(confidences))
+            avg_confidence = sum(confidences) / len(confidences)
+            min_confidence = min(confidences)
+            max_confidence = max(confidences)
+            confidence_range = max_confidence - min_confidence
+            
+            print(f"\n   📊 Confidence Uniformity Analysis:")
+            print(f"      Total Decisions: {len(confidences)}")
+            print(f"      Unique Confidence Values: {len(unique_confidences)}")
+            print(f"      Average Confidence: {avg_confidence:.3f}")
+            print(f"      Min Confidence: {min_confidence:.3f}")
+            print(f"      Max Confidence: {max_confidence:.3f}")
+            print(f"      Confidence Range: {confidence_range:.3f}")
+            
+            # Show confidence distribution
+            print(f"\n   🔍 Confidence Value Distribution:")
+            confidence_counts = {}
+            for conf in confidences:
+                conf_rounded = round(conf, 3)
+                confidence_counts[conf_rounded] = confidence_counts.get(conf_rounded, 0) + 1
+            
+            for conf_val, count in sorted(confidence_counts.items()):
+                percentage = (count / len(confidences)) * 100
+                print(f"      {conf_val:.3f}: {count} decisions ({percentage:.1f}%)")
+            
+            # Check for uniformity issue (all values exactly the same)
+            uniformity_issue = len(unique_confidences) == 1
+            near_uniformity_issue = len(unique_confidences) <= 2 and confidence_range < 0.01
+            
+            print(f"\n   🎯 Uniformity Issue Detection:")
+            print(f"      Exact Uniformity (all same): {'❌ ISSUE CONFIRMED' if uniformity_issue else '✅ Variation Present'}")
+            print(f"      Near Uniformity (<1% range): {'❌ ISSUE CONFIRMED' if near_uniformity_issue else '✅ Adequate Variation'}")
+            
+            if uniformity_issue or near_uniformity_issue:
+                print(f"\n   💡 POTENTIAL ROOT CAUSES:")
+                print(f"      1. IA1 analysis_confidence always the same")
+                print(f"      2. Opportunity data_confidence always the same")
+                print(f"      3. Quality score calculation not varying")
+                print(f"      4. Robust confidence calculation using fixed inputs")
+                print(f"      5. Market data not varying across symbols")
+                
+                # Test if we can get analysis data to check input variation
+                print(f"\n   🔧 Testing Input Data Variation...")
+                success, analyses_data = self.test_get_analyses()
+                
+                if success and analyses_data:
+                    analyses = analyses_data.get('analyses', [])
+                    if analyses:
+                        analysis_confs = [a.get('analysis_confidence', 0) for a in analyses[:10]]
+                        unique_analysis_confs = list(set(analysis_confs))
+                        
+                        print(f"      IA1 Analysis Confidence Variation:")
+                        print(f"        Unique Values: {len(unique_analysis_confs)}")
+                        print(f"        Range: {max(analysis_confs) - min(analysis_confs):.3f}")
+                        
+                        if len(unique_analysis_confs) <= 2:
+                            print(f"        ❌ IA1 confidence not varying - ROOT CAUSE FOUND")
+                        else:
+                            print(f"        ✅ IA1 confidence varies properly")
+                
+                # Test opportunity data variation
+                success, opportunities_data = self.test_get_opportunities()
+                
+                if success and opportunities_data:
+                    opportunities = opportunities_data.get('opportunities', [])
+                    if opportunities:
+                        data_confs = [o.get('data_confidence', 0) for o in opportunities[:10]]
+                        unique_data_confs = list(set(data_confs))
+                        
+                        print(f"      Opportunity Data Confidence Variation:")
+                        print(f"        Unique Values: {len(unique_data_confs)}")
+                        print(f"        Range: {max(data_confs) - min(data_confs):.3f}")
+                        
+                        if len(unique_data_confs) <= 2:
+                            print(f"        ❌ Data confidence not varying - ROOT CAUSE FOUND")
+                        else:
+                            print(f"        ✅ Data confidence varies properly")
+                
+                return False
+            else:
+                print(f"   ✅ IA2 confidence shows proper variation")
+                return True
+        
+        return False
+
+    def test_bingx_futures_configuration(self):
+        """Test BingX configuration for futures trading vs spot trading"""
+        print(f"\n⚙️ Testing BingX Futures Configuration...")
+        
+        # Test BingX configuration endpoint
+        success, config_data = self.run_test("BingX Configuration Check", "GET", "bingx/config", 200)
+        
+        if not success:
+            print(f"   ❌ BingX configuration endpoint failed")
+            return False
+        
+        if config_data:
+            base_url = config_data.get('base_url', 'Unknown')
+            trading_type = config_data.get('trading_type', 'Unknown')
+            api_permissions = config_data.get('api_permissions', [])
+            
+            print(f"   📊 BingX Configuration Details:")
+            print(f"      Base URL: {base_url}")
+            print(f"      Trading Type: {trading_type}")
+            print(f"      API Permissions: {api_permissions}")
+            
+            # Check if configured for futures
+            futures_configured = 'futures' in base_url.lower() or trading_type.lower() == 'futures'
+            futures_permissions = any('futures' in perm.lower() for perm in api_permissions)
+            
+            print(f"\n   🔍 Futures Configuration Check:")
+            print(f"      Futures URL: {'✅' if futures_configured else '❌ May be spot only'}")
+            print(f"      Futures Permissions: {'✅' if futures_permissions else '❌ May lack futures access'}")
+            
+            if not futures_configured or not futures_permissions:
+                print(f"   💡 CONFIGURATION ISSUES:")
+                print(f"      1. API may be configured for spot trading only")
+                print(f"      2. Need futures trading permissions")
+                print(f"      3. Base URL should include futures endpoint")
+                return False
+            else:
+                print(f"   ✅ BingX properly configured for futures trading")
+                return True
+        
+        return False
+
+    def test_market_data_variation_analysis(self):
+        """Test if market data has proper variation across symbols and time"""
+        print(f"\n📊 Testing Market Data Variation Analysis...")
+        
+        # Get opportunities to check data variation
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for variation testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities available for variation testing")
+            return False
+        
+        print(f"   📊 Analyzing data variation across {len(opportunities)} opportunities...")
+        
+        # Collect various data points
+        symbols = []
+        prices = []
+        volumes = []
+        price_changes = []
+        volatilities = []
+        data_confidences = []
+        
+        for opp in opportunities[:15]:  # Analyze up to 15 opportunities
+            symbols.append(opp.get('symbol', 'Unknown'))
+            prices.append(opp.get('current_price', 0))
+            volumes.append(opp.get('volume_24h', 0))
+            price_changes.append(opp.get('price_change_24h', 0))
+            volatilities.append(opp.get('volatility', 0))
+            data_confidences.append(opp.get('data_confidence', 0))
+        
+        # Calculate variation statistics
+        def calculate_variation_stats(data, name):
+            if not data or len(data) <= 1:
+                return False, f"Insufficient {name} data"
+            
+            unique_values = len(set(data))
+            data_range = max(data) - min(data)
+            avg_value = sum(data) / len(data)
+            
+            print(f"      {name}:")
+            print(f"        Unique Values: {unique_values}/{len(data)}")
+            print(f"        Range: {data_range:.6f}")
+            print(f"        Average: {avg_value:.6f}")
+            
+            # Check for adequate variation (at least 50% unique values and non-zero range)
+            adequate_variation = unique_values >= len(data) * 0.5 and data_range > 0
+            return adequate_variation, f"{name} variation: {'✅' if adequate_variation else '❌'}"
+        
+        print(f"\n   🔍 Market Data Variation Analysis:")
+        
+        price_var, price_msg = calculate_variation_stats(prices, "Prices")
+        volume_var, volume_msg = calculate_variation_stats(volumes, "Volumes")
+        change_var, change_msg = calculate_variation_stats(price_changes, "Price Changes")
+        vol_var, vol_msg = calculate_variation_stats(volatilities, "Volatilities")
+        conf_var, conf_msg = calculate_variation_stats(data_confidences, "Data Confidences")
+        
+        print(f"\n   ✅ Variation Assessment:")
+        print(f"      {price_msg}")
+        print(f"      {volume_msg}")
+        print(f"      {change_msg}")
+        print(f"      {vol_msg}")
+        print(f"      {conf_msg}")
+        
+        # Check technical indicators variation from analyses
+        success, analyses_data = self.test_get_analyses()
+        if success and analyses_data:
+            analyses = analyses_data.get('analyses', [])
+            if analyses:
+                rsi_values = [a.get('rsi', 0) for a in analyses[:10]]
+                macd_values = [a.get('macd_signal', 0) for a in analyses[:10]]
+                
+                rsi_var, rsi_msg = calculate_variation_stats(rsi_values, "RSI Values")
+                macd_var, macd_msg = calculate_variation_stats(macd_values, "MACD Values")
+                
+                print(f"      {rsi_msg}")
+                print(f"      {macd_msg}")
+        
+        # Overall variation assessment
+        variations_adequate = sum([price_var, volume_var, change_var, vol_var, conf_var]) >= 3
+        
+        print(f"\n   🎯 Overall Data Variation: {'✅ ADEQUATE' if variations_adequate else '❌ INSUFFICIENT'}")
+        
+        if not variations_adequate:
+            print(f"   💡 VARIATION ISSUES DETECTED:")
+            print(f"      1. Market data may not be updating properly")
+            print(f"      2. Data sources may be returning similar values")
+            print(f"      3. Technical indicators may be calculated incorrectly")
+            print(f"      4. This could cause uniform IA2 confidence values")
+        
+        return variations_adequate
+
+    def test_live_balance_retrieval_direct(self):
+        """Test direct BingX API balance retrieval"""
+        print(f"\n🔗 Testing Live Balance Retrieval Direct...")
+        
+        # Test direct BingX API call
+        success, api_data = self.run_test("Direct BingX API Balance", "GET", "bingx/direct-balance", 200)
+        
+        if not success:
+            print(f"   ❌ Direct BingX API call failed")
+            return False
+        
+        if api_data:
+            api_status = api_data.get('api_status', 'unknown')
+            raw_balance = api_data.get('raw_balance', {})
+            usdt_balance = api_data.get('usdt_balance', 0)
+            futures_balance = api_data.get('futures_balance', 0)
+            error_message = api_data.get('error', None)
+            
+            print(f"   📊 Direct API Balance Results:")
+            print(f"      API Status: {api_status}")
+            print(f"      USDT Balance: ${usdt_balance:.2f}")
+            print(f"      Futures Balance: ${futures_balance:.2f}")
+            
+            if error_message:
+                print(f"      Error: {error_message}")
+            
+            if raw_balance:
+                print(f"      Raw Balance Data: {raw_balance}")
+            
+            # Check if this reveals the actual balance vs the 0$ issue
+            balance_retrieved = usdt_balance > 0 or futures_balance > 0
+            
+            print(f"\n   🔍 Balance Retrieval Analysis:")
+            print(f"      Balance Retrieved: {'✅' if balance_retrieved else '❌ Still showing 0$'}")
+            
+            if balance_retrieved:
+                print(f"      Expected ~$11: {'✅ Match' if usdt_balance >= 10 else '❌ Different amount'}")
+            else:
+                print(f"   💡 BALANCE ISSUE CONFIRMED:")
+                print(f"      1. API authentication may be failing")
+                print(f"      2. Account may not have futures balance")
+                print(f"      3. API keys may be for different account")
+                print(f"      4. BingX API endpoint may be incorrect")
+            
+            return balance_retrieved
+        
+        return False
+
+    async def run_debug_tests(self):
+        """Run specific debug tests for BingX balance and IA2 confidence uniformity"""
+        print("🔍 Starting BingX Balance and IA2 Confidence Debug Tests")
+        print("=" * 80)
+        print(f"🎯 Debug Focus 1: BingX Balance Investigation (0$ vs 11$+ issue)")
+        print(f"🎯 Debug Focus 2: IA2 Confidence Uniformity (ALL 76% issue)")
+        print(f"🎯 Debug Focus 3: BingX Futures Configuration Check")
+        print(f"🎯 Debug Focus 4: Market Data Variation Analysis")
+        print(f"🎯 Debug Focus 5: Live Balance Retrieval Testing")
+        print("=" * 80)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. BingX Balance Investigation
+        print(f"\n2️⃣ BINGX BALANCE INVESTIGATION")
+        balance_test = self.test_bingx_balance_investigation()
+        
+        # 3. BingX Futures Configuration Check
+        print(f"\n3️⃣ BINGX FUTURES CONFIGURATION CHECK")
+        config_test = self.test_bingx_futures_configuration()
+        
+        # 4. Live Balance Retrieval Direct
+        print(f"\n4️⃣ LIVE BALANCE RETRIEVAL DIRECT")
+        direct_balance_test = self.test_live_balance_retrieval_direct()
+        
+        # 5. IA2 Confidence Uniformity Debug
+        print(f"\n5️⃣ IA2 CONFIDENCE UNIFORMITY DEBUG")
+        uniformity_test = self.test_ia2_confidence_uniformity_debug()
+        
+        # 6. Market Data Variation Analysis
+        print(f"\n6️⃣ MARKET DATA VARIATION ANALYSIS")
+        variation_test = self.test_market_data_variation_analysis()
+        
+        # 7. Get current decisions for detailed analysis
+        print(f"\n7️⃣ CURRENT DECISIONS ANALYSIS")
+        decision_success, _ = self.test_get_decisions()
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 DEBUG TEST RESULTS")
+        print("=" * 80)
+        
+        print(f"\n🔍 Debug Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • BingX Balance Investigation: {'✅' if balance_test else '❌ ISSUE FOUND'}")
+        print(f"   • BingX Futures Configuration: {'✅' if config_test else '❌ ISSUE FOUND'}")
+        print(f"   • Live Balance Retrieval: {'✅' if direct_balance_test else '❌ ISSUE FOUND'}")
+        print(f"   • IA2 Confidence Uniformity: {'✅' if uniformity_test else '❌ ISSUE FOUND'}")
+        print(f"   • Market Data Variation: {'✅' if variation_test else '❌ ISSUE FOUND'}")
+        print(f"   • Decision Availability: {'✅' if decision_success else '❌'}")
+        
+        # Critical issue assessment
+        balance_issues = [balance_test, config_test, direct_balance_test]
+        confidence_issues = [uniformity_test, variation_test]
+        
+        balance_working = sum(balance_issues) >= 2  # At least 2/3 balance tests pass
+        confidence_working = sum(confidence_issues) >= 1  # At least 1/2 confidence tests pass
+        
+        print(f"\n🎯 Critical Issue Assessment:")
+        print(f"   • BingX Balance Issues: {'✅ RESOLVED' if balance_working else '❌ CRITICAL ISSUE'}")
+        print(f"   • IA2 Confidence Issues: {'✅ RESOLVED' if confidence_working else '❌ CRITICAL ISSUE'}")
+        
+        # Specific recommendations
+        print(f"\n💡 DEBUG FINDINGS & RECOMMENDATIONS:")
+        
+        if not balance_working:
+            print(f"   🔴 BingX Balance Issue Detected:")
+            print(f"      - Balance showing 0$ instead of expected 11$+")
+            print(f"      - Check API keys have futures trading permissions")
+            print(f"      - Verify BingX account is configured for futures")
+            print(f"      - Test API connection and authentication")
+        
+        if not confidence_working:
+            print(f"   🔴 IA2 Confidence Uniformity Issue Detected:")
+            print(f"      - ALL decisions showing exactly 76% confidence")
+            print(f"      - Check if IA1 analysis_confidence varies")
+            print(f"      - Check if opportunity data_confidence varies")
+            print(f"      - Verify quality score calculation logic")
+            print(f"      - Test robust confidence calculation with varied inputs")
+        
+        overall_debug_success = balance_working and confidence_working
+        
+        print(f"\n🎯 Overall Debug Status: {'✅ ISSUES RESOLVED' if overall_debug_success else '❌ CRITICAL ISSUES FOUND'}")
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return "SUCCESS" if overall_debug_success else "FAILED", {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "balance_working": balance_working,
+            "confidence_working": confidence_working,
+            "bingx_balance_test": balance_test,
+            "bingx_config_test": config_test,
+            "direct_balance_test": direct_balance_test,
+            "uniformity_test": uniformity_test,
+            "variation_test": variation_test,
+            "decision_availability": decision_success
+        }
+
     async def run_all_tests(self):
-        """Run all tests focusing on ROBUST IA2 confidence system"""
-        return await self.run_robust_ia2_confidence_tests()
+        """Run debug tests for BingX balance and IA2 confidence uniformity issues"""
+        return await self.run_debug_tests()
 
 async def main():
     """Main test function"""
