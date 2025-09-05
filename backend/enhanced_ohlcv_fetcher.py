@@ -71,9 +71,9 @@ class EnhancedOHLCVFetcher:
         for source_name, fetch_func in sources:
             try:
                 data = await fetch_func(normalized_symbol)
-                if data is not None and len(data) >= 100:  # Increased minimum for better MACD
+                if data is not None and len(data) >= 20:  # Reduced minimum for more flexibility
                     validated_data = self._validate_and_clean_data(data)
-                    if validated_data is not None and len(validated_data) >= 100:
+                    if validated_data is not None and len(validated_data) >= 20:
                         successful_data.append((source_name, validated_data))
                         logger.info(f"✅ {source_name} provided {len(validated_data)} days of data for {symbol}")
                         
@@ -96,8 +96,9 @@ class EnhancedOHLCVFetcher:
             logger.info(f"⚠️ Single-source data for {symbol} from {source_name}")
             return data
         else:
-            logger.warning(f"❌ All enhanced sources failed for {symbol}")
-            return None
+            # ALL PRIMARY SOURCES FAILED - Try historical data fallback APIs
+            logger.warning(f"❌ All primary sources failed for {symbol} - trying historical fallback APIs")
+            return await self._fetch_historical_fallback_data(normalized_symbol, symbol)
     
     def _normalize_symbol(self, symbol: str) -> str:
         """Normalize symbol to standard format"""
