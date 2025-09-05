@@ -1259,6 +1259,9 @@ class UltraProfessionalIA2DecisionAgent:
             reasoning += "High market volatility. "
             confidence -= 0.02
         
+        # CRITICAL: Enforce 50% minimum confidence after ALL penalties
+        confidence = max(confidence, 0.5)
+        
         # Enhanced signal scoring for live trading
         bullish_signals = 0
         bearish_signals = 0
