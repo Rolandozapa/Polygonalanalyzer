@@ -2804,54 +2804,32 @@ class UltraProfessionalTradingOrchestrator:
             logger.info("✅ Trading orchestrator initialized with auto-trending system")
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """Filtrage IA2 simplifié - IA1 ne fournit que des analyses de qualité"""
+        """
+        Filtrage IA1→IA2 MINIMAL : Si IA1 a produit une analyse, elle est valable pour IA2
+        Les vrais filtres (mouvements latéraux, données insuffisantes) sont AVANT IA1
+        """
         try:
-            # Puisque IA1 n'est appelé que si données OHLCV validées, filtrage minimal nécessaire
+            # PRINCIPE: Si IA1 a fait une analyse, c'est qu'elle a des données valables
+            # Les filtres de qualité de données sont appliqués AVANT IA1, pas ici
             
-            # PRIORITÉ ABSOLUE: Toujours envoyer les analyses avec patterns techniques
-            if analysis.patterns_detected and len(analysis.patterns_detected) > 0:
-                logger.debug(f"🎯 PATTERN PRIORITY - IA2 pour {analysis.symbol}: {analysis.patterns_detected}")
-                return True
-            
-            # PRIORITÉ HAUTE: Confiance IA1 élevée (déjà validé par pré-check)
-            if analysis.analysis_confidence >= 0.70:
-                logger.debug(f"🎯 HIGH CONFIDENCE - IA2 pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
-                return True
-            
-            # ÉCONOMIE ÉQUILIBRÉE: Filtrage léger pour balance 30-50%
-            # Seuls critères restants après validation IA1 stricte
-            filters_failed = 0
-            
-            # Vérification confiance minimale (déjà pre-validé, mais double-check)
-            if analysis.analysis_confidence < 0.50:
-                filters_failed += 1
-            
-            # Vérification raisonnement minimal
-            if len(analysis.ia1_reasoning) < 100:
-                filters_failed += 1
-            
-            # Vérification indicateurs techniques cohérents
-            if analysis.rsi == 50.0 and abs(analysis.macd_signal) < 0.00001:
-                filters_failed += 1
-            
-            # Économie équilibrée: filtrer 30% des analyses moyennes pour économie
-            if filters_failed >= 2:
-                logger.debug(f"💰 BASIC ECONOMY FILTER - Skip IA2 pour {analysis.symbol}")
+            # SEUL CAS DE REJET: Analyse IA1 complètement vide/corrompue (ne devrait jamais arriver)
+            if not analysis.ia1_reasoning or len(analysis.ia1_reasoning.strip()) < 50:
+                logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Analyse IA1 vide/corrompue")
                 return False
-            elif filters_failed == 1:
-                # 40% chance de filtrer pour économie équilibrée
-                import random
-                if random.random() < 0.4:
-                    logger.debug(f"💰 BALANCED ECONOMY FILTER - Skip IA2 pour {analysis.symbol}")
-                    return False
             
-            # Par défaut: envoyer à IA2 (analyses pré-validées par IA1)
-            logger.debug(f"✅ IA2 VALIDATED - {analysis.symbol} qualifié")
+            # SEUL CAS DE REJET: Confiance IA1 extrêmement faible (analyse défaillante)
+            if analysis.analysis_confidence < 0.3:
+                logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
+                return False
+            
+            # SINON: TOUTES les analyses IA1 passent à IA2
+            # (Mouvements latéraux et tokens sans données déjà filtrés avant IA1)
+            logger.debug(f"✅ IA2 ACCEPTED - {analysis.symbol}: Confiance {analysis.analysis_confidence:.2%}, Patterns: {len(analysis.patterns_detected)}")
             return True
             
         except Exception as e:
             logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
-            return True  # En cas d'erreur, envoyer à IA2 (analyses déjà pré-validées)
+            return True  # En cas d'erreur, envoyer à IA2 (principe de précaution)
     
     async def run_trading_cycle(self):
         """Execute ultra professional trading cycle with auto-updated trends"""
