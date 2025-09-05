@@ -1877,6 +1877,42 @@ async def get_opportunities():
         opp.pop('_id', None)
     return {"opportunities": opportunities, "ultra_professional": True}
 
+@api_router.get("/analyses-debug")
+async def get_analyses_debug():
+    """Debug endpoint pour identifier les problèmes JSON"""
+    try:
+        analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(5).to_list(5)
+        
+        debug_info = {
+            "count": len(analyses),
+            "analyses": [],
+            "errors": []
+        }
+        
+        for i, analysis in enumerate(analyses):
+            analysis.pop('_id', None)
+            symbol = analysis.get('symbol', f'unknown_{i}')
+            
+            # Test individual fields
+            field_status = {}
+            for key, value in analysis.items():
+                try:
+                    json.dumps(value)
+                    field_status[key] = "OK"
+                except Exception as e:
+                    field_status[key] = f"ERROR: {str(e)} (value: {repr(value)[:100]})"
+                    debug_info["errors"].append(f"{symbol}.{key}: {repr(value)[:100]}")
+            
+            debug_info["analyses"].append({
+                "symbol": symbol,
+                "field_status": field_status
+            })
+        
+        return debug_info
+        
+    except Exception as e:
+        return {"error": str(e), "type": str(type(e))}
+
 @api_router.get("/analyses")
 async def get_analyses():
     """Get recent technical analyses avec validation JSON"""
