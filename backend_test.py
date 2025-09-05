@@ -922,7 +922,263 @@ class DualAITradingBotTester:
         
         return flow_success
 
-    async def run_ia2_enhanced_decision_agent_tests(self):
+    async def test_ia2_confidence_minimum_comprehensive(self):
+        """Comprehensive test for IA2 50% confidence minimum fix with multiple scenarios"""
+        print(f"\n🎯 COMPREHENSIVE IA2 50% Confidence Minimum Fix Test...")
+        
+        # Start the trading system to generate fresh decisions
+        print(f"   🚀 Starting trading system for fresh IA2 decisions...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for the system to generate decisions
+        print(f"   ⏱️  Waiting for IA2 to generate decisions (60 seconds)...")
+        
+        decision_start_time = time.time()
+        max_wait_time = 60
+        check_interval = 10
+        
+        # Get initial decision count
+        initial_success, initial_data = self.test_get_decisions()
+        initial_count = len(initial_data.get('decisions', [])) if initial_success else 0
+        
+        while time.time() - decision_start_time < max_wait_time:
+            time.sleep(check_interval)
+            
+            success, current_data = self.test_get_decisions()
+            if success:
+                current_count = len(current_data.get('decisions', []))
+                elapsed_time = time.time() - decision_start_time
+                
+                print(f"   📈 After {elapsed_time:.1f}s: {current_count} decisions (was {initial_count})")
+                
+                if current_count > initial_count:
+                    print(f"   ✅ New IA2 decisions generated!")
+                    break
+        
+        # Stop the trading system
+        print(f"   🛑 Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Now run comprehensive confidence tests
+        print(f"\n   🔍 Running comprehensive confidence validation tests...")
+        
+        # Test 1: Critical 50% minimum enforcement
+        critical_test = self.test_ia2_critical_confidence_minimum_fix()
+        print(f"      Critical 50% Minimum: {'✅' if critical_test else '❌'}")
+        
+        # Test 2: Trading signal generation (not 100% HOLD)
+        signal_test = self.test_ia2_signal_generation_rate()
+        print(f"      Signal Generation Rate: {'✅' if signal_test else '❌'}")
+        
+        # Test 3: Enhanced trading thresholds
+        threshold_test = self.test_ia2_enhanced_trading_thresholds()
+        print(f"      Enhanced Trading Thresholds: {'✅' if threshold_test else '❌'}")
+        
+        # Test 4: Reasoning quality
+        reasoning_test = self.test_ia2_reasoning_quality()
+        print(f"      Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        
+        # Test 5: Confidence distribution analysis
+        distribution_test = self.test_ia2_confidence_distribution_analysis()
+        print(f"      Confidence Distribution: {'✅' if distribution_test else '❌'}")
+        
+        # Overall assessment
+        components_passed = sum([critical_test, signal_test, threshold_test, reasoning_test, distribution_test])
+        comprehensive_success = components_passed >= 4  # At least 4/5 components working
+        
+        print(f"\n   🎯 Comprehensive Assessment:")
+        print(f"      Components Passed: {components_passed}/5")
+        print(f"      Critical Fix Status: {'✅ SUCCESS' if comprehensive_success else '❌ FAILED'}")
+        
+        if not comprehensive_success:
+            print(f"   💡 CRITICAL ISSUE: The 50% minimum confidence fix needs further work")
+            print(f"   💡 Expected: ALL IA2 decisions should maintain ≥50% confidence after penalties")
+        
+        return comprehensive_success
+
+    def test_ia2_confidence_distribution_analysis(self):
+        """Test IA2 confidence distribution to ensure realistic spread"""
+        print(f"\n📊 Testing IA2 Confidence Distribution Analysis...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for distribution testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for distribution testing")
+            return False
+        
+        print(f"   📊 Analyzing confidence distribution of {len(decisions)} decisions...")
+        
+        confidences = [decision.get('confidence', 0) for decision in decisions]
+        
+        if not confidences:
+            return False
+        
+        # Calculate distribution statistics
+        avg_confidence = sum(confidences) / len(confidences)
+        min_confidence = min(confidences)
+        max_confidence = max(confidences)
+        
+        # Confidence buckets
+        bucket_50_55 = sum(1 for c in confidences if 0.50 <= c < 0.55)
+        bucket_55_60 = sum(1 for c in confidences if 0.55 <= c < 0.60)
+        bucket_60_65 = sum(1 for c in confidences if 0.60 <= c < 0.65)
+        bucket_65_70 = sum(1 for c in confidences if 0.65 <= c < 0.70)
+        bucket_70_plus = sum(1 for c in confidences if c >= 0.70)
+        
+        total = len(confidences)
+        
+        print(f"\n   📊 Confidence Distribution Buckets:")
+        print(f"      50-55%: {bucket_50_55} ({bucket_50_55/total*100:.1f}%)")
+        print(f"      55-60%: {bucket_55_60} ({bucket_55_60/total*100:.1f}%)")
+        print(f"      60-65%: {bucket_60_65} ({bucket_60_65/total*100:.1f}%)")
+        print(f"      65-70%: {bucket_65_70} ({bucket_65_70/total*100:.1f}%)")
+        print(f"      70%+:   {bucket_70_plus} ({bucket_70_plus/total*100:.1f}%)")
+        
+        print(f"\n   📊 Distribution Statistics:")
+        print(f"      Average: {avg_confidence:.3f}")
+        print(f"      Minimum: {min_confidence:.3f}")
+        print(f"      Maximum: {max_confidence:.3f}")
+        print(f"      Range: {max_confidence - min_confidence:.3f}")
+        
+        # Validation criteria for realistic distribution
+        minimum_enforced = min_confidence >= 0.50
+        average_reasonable = avg_confidence >= 0.55  # Should be above minimum
+        has_moderate_signals = (bucket_55_60 + bucket_60_65) > 0  # Some moderate confidence
+        has_strong_signals = (bucket_65_70 + bucket_70_plus) > 0  # Some strong confidence
+        realistic_spread = (max_confidence - min_confidence) >= 0.10  # At least 10% range
+        
+        print(f"\n   ✅ Distribution Validation:")
+        print(f"      Minimum ≥50%: {'✅' if minimum_enforced else '❌'}")
+        print(f"      Average ≥55%: {'✅' if average_reasonable else '❌'}")
+        print(f"      Has Moderate (55-65%): {'✅' if has_moderate_signals else '❌'}")
+        print(f"      Has Strong (≥65%): {'✅' if has_strong_signals else '❌'}")
+        print(f"      Realistic Spread: {'✅' if realistic_spread else '❌'}")
+        
+        distribution_healthy = (
+            minimum_enforced and
+            average_reasonable and
+            has_moderate_signals and
+            realistic_spread
+        )
+        
+        print(f"\n   🎯 Distribution Assessment: {'✅ HEALTHY' if distribution_healthy else '❌ NEEDS WORK'}")
+        
+        return distribution_healthy
+
+    async def run_ia2_confidence_minimum_fix_tests(self):
+        """Run comprehensive IA2 confidence minimum fix tests"""
+        print("🎯 Starting IA2 Confidence Minimum Fix Tests")
+        print("=" * 70)
+        print(f"🔧 Testing CRITICAL FIX: 50% minimum confidence enforcement")
+        print(f"🎯 Expected: ALL IA2 decisions have confidence ≥50% after penalties")
+        print(f"🎯 Expected: Trading signals generated (not 100% HOLD)")
+        print(f"🎯 Expected: Realistic confidence distribution (55%, 65% thresholds)")
+        print("=" * 70)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. IA2 Decision availability test
+        print(f"\n2️⃣ IA2 DECISION AVAILABILITY TEST")
+        decision_success, _ = self.test_get_decisions()
+        
+        # 3. CRITICAL: 50% minimum confidence enforcement test
+        print(f"\n3️⃣ CRITICAL: 50% MINIMUM CONFIDENCE ENFORCEMENT TEST")
+        critical_minimum_test = self.test_ia2_critical_confidence_minimum_fix()
+        
+        # 4. Comprehensive confidence minimum test with fresh data
+        print(f"\n4️⃣ COMPREHENSIVE CONFIDENCE MINIMUM TEST")
+        comprehensive_test = await self.test_ia2_confidence_minimum_comprehensive()
+        
+        # 5. Trading signal generation test (should not be 100% HOLD)
+        print(f"\n5️⃣ TRADING SIGNAL GENERATION TEST")
+        signal_generation_test = self.test_ia2_signal_generation_rate()
+        
+        # 6. Enhanced trading thresholds test
+        print(f"\n6️⃣ ENHANCED TRADING THRESHOLDS TEST")
+        enhanced_threshold_test = self.test_ia2_enhanced_trading_thresholds()
+        
+        # 7. Confidence distribution analysis
+        print(f"\n7️⃣ CONFIDENCE DISTRIBUTION ANALYSIS TEST")
+        distribution_test = self.test_ia2_confidence_distribution_analysis()
+        
+        # 8. Reasoning quality test
+        print(f"\n8️⃣ REASONING QUALITY TEST")
+        reasoning_test = self.test_ia2_reasoning_quality()
+        
+        # Results Summary
+        print("\n" + "=" * 70)
+        print("📊 IA2 CONFIDENCE MINIMUM FIX TEST RESULTS")
+        print("=" * 70)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • IA2 Decision Availability: {'✅' if decision_success else '❌'}")
+        print(f"   • CRITICAL 50% Minimum: {'✅' if critical_minimum_test else '❌'}")
+        print(f"   • Comprehensive Test: {'✅' if comprehensive_test else '❌'}")
+        print(f"   • Signal Generation: {'✅' if signal_generation_test else '❌'}")
+        print(f"   • Enhanced Thresholds: {'✅' if enhanced_threshold_test else '❌'}")
+        print(f"   • Confidence Distribution: {'✅' if distribution_test else '❌'}")
+        print(f"   • Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        
+        # Critical assessment - focus on the main fix
+        critical_tests = [
+            critical_minimum_test,  # Most important
+            comprehensive_test,     # Second most important
+            signal_generation_test, # Should enable trading
+            reasoning_test         # Should be working
+        ]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 CRITICAL FIX Assessment:")
+        if critical_passed == 4:
+            print(f"   ✅ IA2 50% CONFIDENCE MINIMUM FIX SUCCESSFUL")
+            print(f"   ✅ All critical components working properly")
+            fix_status = "SUCCESS"
+        elif critical_passed >= 3:
+            print(f"   ⚠️  IA2 50% CONFIDENCE MINIMUM FIX PARTIAL")
+            print(f"   ⚠️  Most components working, minor issues detected")
+            fix_status = "PARTIAL"
+        elif critical_passed >= 2:
+            print(f"   ⚠️  IA2 50% CONFIDENCE MINIMUM FIX LIMITED")
+            print(f"   ⚠️  Some components working, significant issues remain")
+            fix_status = "LIMITED"
+        else:
+            print(f"   ❌ IA2 50% CONFIDENCE MINIMUM FIX FAILED")
+            print(f"   ❌ Critical issues detected - fix not working")
+            fix_status = "FAILED"
+        
+        # Specific feedback on the critical fix
+        print(f"\n📋 Critical Fix Status:")
+        print(f"   • 50% Minimum Enforced: {'✅' if critical_minimum_test else '❌ CRITICAL ISSUE'}")
+        print(f"   • Trading Signals Generated: {'✅' if signal_generation_test else '❌ Still 100% HOLD'}")
+        print(f"   • Confidence Distribution: {'✅' if distribution_test else '❌ Unrealistic'}")
+        print(f"   • LLM Response Parsing: {'✅' if reasoning_test else '❌ Still null'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return fix_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "ia2_available": decision_success,
+            "critical_minimum_enforced": critical_minimum_test,
+            "comprehensive_test_passed": comprehensive_test,
+            "signal_generation_working": signal_generation_test,
+            "enhanced_thresholds_working": enhanced_threshold_test,
+            "confidence_distribution_healthy": distribution_test,
+            "reasoning_quality": reasoning_test
+        }
         """Run comprehensive IA2 Enhanced Decision Agent tests for new improvements"""
         print("🤖 Starting IA2 Enhanced Decision Agent Tests")
         print("=" * 70)
