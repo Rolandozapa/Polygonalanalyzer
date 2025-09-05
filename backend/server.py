@@ -1462,19 +1462,28 @@ IA1 TECHNICAL ANALYSIS:
 - IA1 Confidence: {analysis.analysis_confidence:.2%}
 - IA1 Reasoning: {analysis.ia1_reasoning[:500]}...
 
-STRATEGIC 5-LEVEL TAKE PROFIT REQUIREMENTS:
-1. **Analyze pattern type** from IA1 detected patterns and adapt TP strategy accordingly
-2. **Calculate strategic TP positioning** based on pattern reliability and market volatility  
-3. **Create 5-level TP distribution** with pattern-adaptive spacing and position allocation
-4. **Optimize R:R ratios** for each TP level based on technical confluence strength
-5. **Provide detailed reasoning** for pattern-specific TP positioning strategy
+STRATEGIC 5-LEVEL TP REQUIREMENTS WITH DYNAMIC LEVERAGE:
+1. **Calculate optimal leverage** based on trade confidence and market sentiment
+2. **Analyze crypto market conditions** (total market cap change, BTC dominance, volume trends)
+3. **Adapt Stop Loss levels** based on leverage used (higher leverage = tighter SL for same $ risk)
+4. **Create 5-level TP distribution** with market-adaptive spacing and leverage-optimized distances
+5. **Provide detailed reasoning** for leverage selection and market sentiment analysis
 
-PATTERN-ADAPTIVE TP RULES:
-- **Strong Reversal Patterns** (Head&Shoulders, Double Top/Bottom): Wider TP spacing, extended final targets
-- **Continuation Patterns** (Flags, Pennants, Channels): Conservative early TPs, momentum-based final targets  
-- **Consolidation Breakouts** (Triangles, Wedges): Balanced distribution with volatility-adjusted distances
-- **High Volatility Markets** (>5%%): Closer TP levels for quick profit capture
-- **Low Volatility Markets** (<2%%): Extended TP distances for maximum profit potential
+MARKET SENTIMENT INTEGRATION:
+- **Total Crypto Market Cap 24h Change:** Primary sentiment indicator for leverage calculation
+- **Market Sentiment Classification:** 
+  - **BULL MARKET:** >+3% market cap growth = favorable for LONG positions
+  - **BEAR MARKET:** <-3% market cap decline = favorable for SHORT positions  
+  - **NEUTRAL MARKET:** -3% to +3% = base leverage only
+- **Confidence-Leverage Matrix:** Combine Claude confidence with market sentiment for optimal leverage
+
+DYNAMIC RISK PARAMETERS:
+- **Leverage Range:** 2x (conservative) to 10x (maximum aggressive with perfect conditions)
+- **Stop Loss Adaptation:** 
+  - 2x-3x leverage: 2.0-2.5% SL
+  - 4x-6x leverage: 1.5-2.0% SL  
+  - 7x-10x leverage: 1.0-1.5% SL
+- **Take Profit Scaling:** More aggressive TPs with favorable sentiment alignment
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
