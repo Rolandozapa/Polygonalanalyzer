@@ -265,102 +265,251 @@ Respond in JSON format:
 class UltraProfessionalCryptoScout:
     def __init__(self):
         self.market_aggregator = advanced_market_aggregator
-        self.max_cryptos_to_analyze = 100  # Increased for ultra professional analysis
-        self.min_market_cap = 5_000_000    # $5M minimum
-        self.min_volume_24h = 500_000      # $500K minimum
+        self.max_cryptos_to_analyze = 15  # Réduit mais focus sur trending
+        self.min_market_cap = 1_000_000    # $1M minimum (plus bas pour trending coins)
+        self.min_volume_24h = 100_000      # $100K minimum (plus accessible)
         self.require_multiple_sources = True
         self.min_data_confidence = 0.7
+        
+        # Focus trending configuration
+        self.trending_symbols = ['WLFI', 'EUL', 'PTB', 'PIN', 'PUMP', 'SOMI']  # From your trend list
+        self.focus_trending = True
+        self.min_price_change_threshold = 3.0  # Focus sur les mouvements >3%
+        self.volume_spike_multiplier = 2.0     # Volume >2x moyenne
     
     async def scan_opportunities(self) -> List[MarketOpportunity]:
-        """Ultra professional market scanning with multi-source aggregation"""
+        """Ultra professional trend-focused market scanning"""
         try:
-            logger.info(f"Starting ultra professional market scan with multi-source aggregation...")
+            logger.info(f"Starting TREND-FOCUSED market scan...")
             
-            # Get comprehensive market data from all sources
-            market_responses = await self.market_aggregator.get_comprehensive_market_data(
-                limit=500,
-                include_dex=True
-            )
+            if self.focus_trending:
+                # Get trending opportunities first
+                trending_opportunities = await self._scan_trending_opportunities()
+                logger.info(f"Found {len(trending_opportunities)} trending opportunities")
+                
+                # Get high-momentum opportunities
+                momentum_opportunities = await self._scan_momentum_opportunities()
+                logger.info(f"Found {len(momentum_opportunities)} momentum opportunities")
+                
+                # Combine and deduplicate
+                all_opportunities = trending_opportunities + momentum_opportunities
+                unique_opportunities = self._deduplicate_opportunities(all_opportunities)
+                
+            else:
+                # Fallback to comprehensive scan
+                market_responses = await self.market_aggregator.get_comprehensive_market_data(
+                    limit=100,  # Reduced from 500
+                    include_dex=True
+                )
+                unique_opportunities = self._convert_responses_to_opportunities(market_responses)
             
-            if not market_responses:
-                logger.warning("No market data available from any source")
-                return []
+            # Sort by trending score
+            sorted_opportunities = self._sort_by_trending_score(unique_opportunities)
             
-            # Filter and convert to opportunities
-            opportunities = []
-            sources_summary = {}
+            # Limit results for focused analysis
+            final_opportunities = sorted_opportunities[:self.max_cryptos_to_analyze]
             
-            for response in market_responses:
-                try:
-                    # Apply professional filters
-                    if not self._passes_professional_filters(response):
-                        continue
-                    
-                    # Track data sources
-                    if response.source not in sources_summary:
-                        sources_summary[response.source] = 0
-                    sources_summary[response.source] += 1
-                    
-                    # Convert to MarketOpportunity
-                    opportunity = MarketOpportunity(
-                        symbol=response.symbol,
-                        current_price=response.price,
-                        volume_24h=response.volume_24h,
-                        price_change_24h=response.price_change_24h,
-                        volatility=self._calculate_volatility(response.price_change_24h),
-                        market_cap=response.market_cap,
-                        market_cap_rank=response.market_cap_rank,
-                        data_sources=[response.source],
-                        data_confidence=response.confidence,
-                        timestamp=response.timestamp
-                    )
-                    opportunities.append(opportunity)
-                    
-                except Exception as e:
-                    logger.debug(f"Error processing market response: {e}")
-                    continue
-            
-            # Sort by data confidence and market cap
-            opportunities.sort(key=lambda x: (x.data_confidence, -(x.market_cap_rank or 9999)), reverse=True)
-            
-            # Limit results
-            final_opportunities = opportunities[:self.max_cryptos_to_analyze]
-            
-            logger.info(f"Ultra professional scan complete: {len(final_opportunities)} opportunities from {len(sources_summary)} sources")
-            logger.info(f"Data sources: {sources_summary}")
+            logger.info(f"TREND-FOCUSED scan complete: {len(final_opportunities)} high-potential opportunities selected")
             
             return final_opportunities
             
         except Exception as e:
-            logger.error(f"Error in ultra professional market scan: {e}")
+            logger.error(f"Error in trend-focused market scan: {e}")
             return []
     
+    async def _scan_trending_opportunities(self) -> List[MarketOpportunity]:
+        """Scan specifically for trending cryptocurrencies"""
+        opportunities = []
+        
+        try:
+            # Get CoinGecko trending
+            market_responses = await self.market_aggregator.get_comprehensive_market_data(limit=100)
+            
+            for response in market_responses:
+                symbol_base = response.symbol.replace('USDT', '').replace('USD', '')
+                
+                # Check if it's in our trending list
+                is_trending = symbol_base.upper() in [s.upper() for s in self.trending_symbols]
+                
+                # Check for trending characteristics
+                has_high_volatility = response.volatility > 0.05  # >5% volatility
+                has_significant_move = abs(response.price_change_24h) > self.min_price_change_threshold
+                has_volume_spike = response.volume_24h > 1_000_000  # Good volume
+                
+                if is_trending or (has_high_volatility and has_significant_move and has_volume_spike):
+                    if self._passes_trending_filters(response):
+                        opportunity = self._convert_response_to_opportunity(response)
+                        # Boost trending score
+                        opportunity.data_confidence = min(opportunity.data_confidence + 0.1, 1.0)
+                        opportunities.append(opportunity)
+                        
+                        logger.info(f"TRENDING: {symbol_base} - {response.price_change_24h:.2f}% change, vol: ${response.volume_24h:,.0f}")
+            
+        except Exception as e:
+            logger.error(f"Error scanning trending opportunities: {e}")
+        
+        return opportunities
+    
+    async def _scan_momentum_opportunities(self) -> List[MarketOpportunity]:
+        """Scan for high-momentum opportunities (big movers)"""
+        opportunities = []
+        
+        try:
+            # Get market data focused on momentum
+            market_responses = await self.market_aggregator.get_comprehensive_market_data(limit=200)
+            
+            # Sort by price change (both positive and negative momentum)
+            sorted_responses = sorted(market_responses, 
+                                    key=lambda x: abs(x.price_change_24h), 
+                                    reverse=True)
+            
+            # Take top movers
+            top_movers = sorted_responses[:20]
+            
+            for response in top_movers:
+                if self._passes_momentum_filters(response):
+                    opportunity = self._convert_response_to_opportunity(response)
+                    opportunities.append(opportunity)
+                    
+                    logger.info(f"MOMENTUM: {response.symbol} - {response.price_change_24h:.2f}% change")
+        
+        except Exception as e:
+            logger.error(f"Error scanning momentum opportunities: {e}")
+        
+        return opportunities
+    
+    def _passes_trending_filters(self, response: MarketDataResponse) -> bool:
+        """Apply trending-specific filters"""
+        # More lenient filters for trending coins
+        if response.price <= 0:
+            return False
+        
+        # Lower market cap threshold for trending
+        if response.market_cap and response.market_cap < self.min_market_cap:
+            return False
+        
+        # Minimum volume (lower for trending)
+        if response.volume_24h < self.min_volume_24h:
+            return False
+        
+        # Data confidence
+        if response.confidence < 0.6:  # Lower threshold for trending
+            return False
+        
+        # Skip obvious stablecoins
+        symbol = response.symbol.upper()
+        stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD']
+        if any(stable in symbol for stable in stablecoins):
+            return False
+        
+        return True
+    
+    def _passes_momentum_filters(self, response: MarketDataResponse) -> bool:
+        """Apply momentum-specific filters"""
+        # Must have significant price movement
+        if abs(response.price_change_24h) < self.min_price_change_threshold:
+            return False
+        
+        # Must have decent volume
+        if response.volume_24h < 500_000:  # $500K minimum for momentum
+            return False
+        
+        # Basic quality filters
+        if response.price <= 0:
+            return False
+        
+        # Confidence threshold
+        if response.confidence < 0.7:
+            return False
+        
+        return True
+    
+    def _convert_response_to_opportunity(self, response: MarketDataResponse) -> MarketOpportunity:
+        """Convert MarketDataResponse to MarketOpportunity"""
+        return MarketOpportunity(
+            symbol=response.symbol,
+            current_price=response.price,
+            volume_24h=response.volume_24h,
+            price_change_24h=response.price_change_24h,
+            volatility=self._calculate_volatility(response.price_change_24h),
+            market_cap=response.market_cap,
+            market_cap_rank=response.market_cap_rank,
+            data_sources=[response.source],
+            data_confidence=response.confidence,
+            timestamp=response.timestamp
+        )
+    
+    def _convert_responses_to_opportunities(self, responses: List[MarketDataResponse]) -> List[MarketOpportunity]:
+        """Convert multiple responses to opportunities"""
+        opportunities = []
+        for response in responses:
+            if self._passes_professional_filters(response):
+                opportunity = self._convert_response_to_opportunity(response)
+                opportunities.append(opportunity)
+        return opportunities
+    
+    def _deduplicate_opportunities(self, opportunities: List[MarketOpportunity]) -> List[MarketOpportunity]:
+        """Remove duplicate opportunities by symbol"""
+        seen_symbols = set()
+        unique_opportunities = []
+        
+        for opp in opportunities:
+            if opp.symbol not in seen_symbols:
+                seen_symbols.add(opp.symbol)
+                unique_opportunities.append(opp)
+        
+        return unique_opportunities
+    
+    def _sort_by_trending_score(self, opportunities: List[MarketOpportunity]) -> List[MarketOpportunity]:
+        """Sort opportunities by trending score"""
+        def trending_score(opp):
+            score = 0
+            
+            # Price movement score (both directions valuable)
+            score += abs(opp.price_change_24h) * 0.3
+            
+            # Volume score
+            volume_score = min(opp.volume_24h / 10_000_000, 10) * 0.2  # Cap at 10
+            score += volume_score
+            
+            # Volatility score (but not too much)
+            volatility_score = min(opp.volatility * 100, 15) * 0.2  # Cap at 15%
+            score += volatility_score
+            
+            # Data confidence score
+            score += opp.data_confidence * 0.3
+            
+            # Trending symbol bonus
+            symbol_base = opp.symbol.replace('USDT', '').replace('USD', '')
+            if symbol_base.upper() in [s.upper() for s in self.trending_symbols]:
+                score += 2.0  # Big bonus for trending symbols
+            
+            return score
+        
+        return sorted(opportunities, key=trending_score, reverse=True)
+    
     def _passes_professional_filters(self, response: MarketDataResponse) -> bool:
-        """Apply professional-grade filters to market data"""
+        """Apply professional-grade filters to market data (same as before)"""
         # Price validation
         if response.price <= 0:
             return False
         
-        # Market cap filter
-        if response.market_cap and response.market_cap < self.min_market_cap:
+        # Market cap filter (more lenient for trending)
+        if response.market_cap and response.market_cap < 500_000:  # $500K minimum
             return False
         
         # Volume filter
-        if response.volume_24h < self.min_volume_24h:
+        if response.volume_24h < 50_000:  # $50K minimum for trending
             return False
         
         # Data confidence filter
-        if response.confidence < self.min_data_confidence:
+        if response.confidence < 0.6:  # Lower for trending
             return False
         
         # Skip obvious stablecoins
         symbol = response.symbol.upper()
         stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD', 'FRAX', 'LUSD']
         if any(stable in symbol for stable in stablecoins):
-            return False
-        
-        # Skip wrapped tokens (optional)
-        if symbol.startswith('W') and len(symbol) <= 6:  # WBTC, WETH, etc.
             return False
         
         return True
