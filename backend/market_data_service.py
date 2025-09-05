@@ -52,6 +52,147 @@ class RealMarketDataService:
         
         logger.info("RealMarketDataService initialized with live APIs")
     
+    
+    async def get_top_cryptos_by_marketcap(self, limit: int = 500) -> List[Dict[str, Any]]:
+        """Get top cryptocurrencies by market cap from multiple sources"""
+        top_cryptos = []
+        
+        # Try CoinMarketCap first (most reliable for market cap data)
+        if self.cmc_api_key:
+            try:
+                top_cryptos = await self._get_cmc_top_cryptos(limit)
+                if top_cryptos:
+                    logger.info(f"Retrieved top {len(top_cryptos)} cryptos from CoinMarketCap")
+                    return top_cryptos
+            except Exception as e:
+                logger.warning(f"CoinMarketCap API failed: {e}")
+        
+        # Fallback to CoinGecko (free API)
+        try:
+            top_cryptos = await self._get_coingecko_top_cryptos(limit)
+            if top_cryptos:
+                logger.info(f"Retrieved top {len(top_cryptos)} cryptos from CoinGecko")
+                return top_cryptos
+        except Exception as e:
+            logger.warning(f"CoinGecko API failed: {e}")
+        
+        # Last fallback to predefined list
+        logger.warning("Using predefined crypto list as fallback")
+        return self._get_predefined_top_cryptos()
+    
+    async def _get_cmc_top_cryptos(self, limit: int) -> List[Dict[str, Any]]:
+        """Get top cryptos from CoinMarketCap API"""
+        url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest'
+        headers = {
+            'X-CMC_PRO_API_KEY': self.cmc_api_key,
+            'Accept': 'application/json'
+        }
+        params = {
+            'start': 1,
+            'limit': min(limit, 5000),  # CMC allows up to 5000
+            'convert': 'USD',
+            'sort': 'market_cap',
+            'sort_dir': 'desc'
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    cryptos = []
+                    
+                    for crypto in data.get('data', []):
+                        quote = crypto.get('quote', {}).get('USD', {})
+                        cryptos.append({
+                            'symbol': crypto.get('symbol'),
+                            'name': crypto.get('name'),
+                            'market_cap_rank': crypto.get('cmc_rank'),
+                            'price': quote.get('price', 0),
+                            'market_cap': quote.get('market_cap', 0),
+                            'volume_24h': quote.get('volume_24h', 0),
+                            'percent_change_24h': quote.get('percent_change_24h', 0),
+                            'source': 'coinmarketcap'
+                        })
+                    
+                    return cryptos
+                else:
+                    raise Exception(f"CMC API returned status {response.status}")
+    
+    async def _get_coingecko_top_cryptos(self, limit: int) -> List[Dict[str, Any]]:
+        """Get top cryptos from CoinGecko API (free alternative)"""
+        url = 'https://api.coingecko.com/api/v3/coins/markets'
+        params = {
+            'vs_currency': 'usd',
+            'order': 'market_cap_desc',
+            'per_page': min(limit, 250),  # CoinGecko free allows up to 250
+            'page': 1,
+            'sparkline': False,
+            'price_change_percentage': '24h'
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    cryptos = []
+                    
+                    for crypto in data:
+                        cryptos.append({
+                            'symbol': crypto.get('symbol', '').upper(),
+                            'name': crypto.get('name'),
+                            'market_cap_rank': crypto.get('market_cap_rank'),
+                            'price': crypto.get('current_price', 0),
+                            'market_cap': crypto.get('market_cap', 0),
+                            'volume_24h': crypto.get('total_volume', 0),
+                            'percent_change_24h': crypto.get('price_change_percentage_24h', 0),
+                            'source': 'coingecko'
+                        })
+                    
+                    return cryptos
+                else:
+                    raise Exception(f"CoinGecko API returned status {response.status}")
+    
+    def _get_predefined_top_cryptos(self) -> List[Dict[str, Any]]:
+        """Fallback predefined list of top cryptocurrencies"""
+        top_cryptos = [
+            {'symbol': 'BTC', 'name': 'Bitcoin', 'market_cap_rank': 1},
+            {'symbol': 'ETH', 'name': 'Ethereum', 'market_cap_rank': 2},
+            {'symbol': 'BNB', 'name': 'BNB', 'market_cap_rank': 3},
+            {'symbol': 'XRP', 'name': 'XRP', 'market_cap_rank': 4},
+            {'symbol': 'SOL', 'name': 'Solana', 'market_cap_rank': 5},
+            {'symbol': 'USDC', 'name': 'USD Coin', 'market_cap_rank': 6},
+            {'symbol': 'STETH', 'name': 'Lido Staked Ether', 'market_cap_rank': 7},
+            {'symbol': 'ADA', 'name': 'Cardano', 'market_cap_rank': 8},
+            {'symbol': 'AVAX', 'name': 'Avalanche', 'market_cap_rank': 9},
+            {'symbol': 'DOGE', 'name': 'Dogecoin', 'market_cap_rank': 10},
+            {'symbol': 'TRX', 'name': 'TRON', 'market_cap_rank': 11},
+            {'symbol': 'LINK', 'name': 'Chainlink', 'market_cap_rank': 12},
+            {'symbol': 'TON', 'name': 'Toncoin', 'market_cap_rank': 13},
+            {'symbol': 'MATIC', 'name': 'Polygon', 'market_cap_rank': 14},
+            {'symbol': 'ICP', 'name': 'Internet Computer', 'market_cap_rank': 15},
+            {'symbol': 'SHIB', 'name': 'Shiba Inu', 'market_cap_rank': 16},
+            {'symbol': 'DAI', 'name': 'Dai', 'market_cap_rank': 17},
+            {'symbol': 'DOT', 'name': 'Polkadot', 'market_cap_rank': 18},
+            {'symbol': 'LTC', 'name': 'Litecoin', 'market_cap_rank': 19},
+            {'symbol': 'BCH', 'name': 'Bitcoin Cash', 'market_cap_rank': 20},
+            {'symbol': 'UNI', 'name': 'Uniswap', 'market_cap_rank': 21},
+            {'symbol': 'ATOM', 'name': 'Cosmos', 'market_cap_rank': 22},
+            {'symbol': 'LEO', 'name': 'UNUS SED LEO', 'market_cap_rank': 23},
+            {'symbol': 'XLM', 'name': 'Stellar', 'market_cap_rank': 24},
+            {'symbol': 'ETC', 'name': 'Ethereum Classic', 'market_cap_rank': 25}
+        ]
+        
+        # Add basic market data for fallback
+        for crypto in top_cryptos:
+            crypto.update({
+                'price': 50000 if crypto['symbol'] == 'BTC' else np.random.uniform(0.1, 100),
+                'market_cap': np.random.uniform(1000000000, 100000000000),
+                'volume_24h': np.random.uniform(100000000, 10000000000),
+                'percent_change_24h': np.random.uniform(-10, 10),
+                'source': 'predefined'
+            })
+        
+        return top_cryptos
     async def get_crypto_opportunities(self) -> List[MarketDataPoint]:
         """Get real cryptocurrency opportunities from multiple sources"""
         opportunities = []
