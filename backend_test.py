@@ -5156,15 +5156,22 @@ class DualAITradingBotTester:
         print(f"\n🔍 Test Results Summary:")
         print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
         print(f"   • Market Status: {'✅' if market_success else '❌'}")
-        print(f"   • API Economy System: {'✅' if api_economy_test else '❌'}")
-        print(f"   • Quality vs Economy Balance: {'✅' if balance_test else '❌'}")
-        print(f"   • End-to-End Pipeline: {'✅' if pipeline_test else '❌'}")
+        print(f"   • Balanced Filtering: {'✅' if balanced_filtering_test else '❌'}")
+        print(f"   • Threshold Adjustments: {'✅' if threshold_adjustments_test else '❌'}")
+        print(f"   • Priority Bonus System: {'✅' if priority_bonus_test else '❌'}")
+        print(f"   • Economy Rate Measurement: {'✅' if economy_rate_test else '❌'}")
+        print(f"   • System Effectiveness: {'✅' if system_effectiveness_test else '❌'}")
+        print(f"   • Legacy API Economy: {'✅' if api_economy_test else '❌'}")
+        print(f"   • Legacy Balance Test: {'✅' if balance_test else '❌'}")
+        print(f"   • Legacy Pipeline Test: {'✅' if pipeline_test else '❌'}")
         
-        # Critical assessment for API Economy
+        # Critical assessment for API Economy (NEW comprehensive tests)
         critical_tests = [
-            api_economy_test,    # Core API economy functionality
-            balance_test,        # Quality preservation
-            pipeline_test        # End-to-end integration
+            balanced_filtering_test,    # Balanced filtering (20-50% savings)
+            threshold_adjustments_test, # Adjusted thresholds working
+            priority_bonus_test,        # Priority bypass system
+            economy_rate_test,          # Optimal economy rate
+            system_effectiveness_test   # Overall system effectiveness
         ]
         critical_passed = sum(critical_tests)
         
