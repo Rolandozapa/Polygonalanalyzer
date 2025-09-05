@@ -477,6 +477,7 @@ class AdvancedMarketAggregator:
                             price=current_price,
                             volume_24h=hist['Volume'].iloc[-1] * current_price,
                             price_change_24h=price_change,
+                            volatility=abs(price_change) / 100.0,  # Estimate volatility from 24h change
                             market_cap=info.get('marketCap'),
                             source="yahoo_finance",
                             confidence=0.9  # Yahoo Finance is very reliable
