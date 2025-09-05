@@ -18,7 +18,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Import our advanced market aggregator, BingX trading engine, trending auto-updater, and technical pattern detector
 from advanced_market_aggregator import advanced_market_aggregator, MarketDataResponse
-from bingx_trading_engine import bingx_trading_engine, BingXOrderSide, BingXOrderType, BingXPositionSide
+from bingx_official_engine import bingx_official_engine, BingXOrderSide, BingXOrderType, BingXPositionSide
 from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 
@@ -1050,7 +1050,7 @@ class UltraProfessionalIA2DecisionAgent:
     def __init__(self):
         self.chat = get_ia2_chat()
         self.market_aggregator = advanced_market_aggregator
-        self.bingx_engine = bingx_trading_engine
+        self.bingx_engine = bingx_official_engine
         self.live_trading_enabled = True  # Set to False for simulation only
         self.max_risk_per_trade = 0.02  # 2% risk per trade
     
@@ -2259,16 +2259,16 @@ async def get_bingx_status():
     """Get BingX exchange status and account info"""
     try:
         # Test connectivity
-        connectivity = await bingx_trading_engine.test_connectivity()
+        connectivity = await bingx_official_engine.test_connectivity()
         
         # Get account balance
-        balances = await bingx_trading_engine.get_account_balance()
+        balances = await bingx_official_engine.get_account_balance()
         
         # Get open positions
-        positions = await bingx_trading_engine.get_positions()
+        positions = await bingx_official_engine.get_positions()
         
         # Get performance stats
-        perf_stats = bingx_trading_engine.get_performance_stats()
+        perf_stats = bingx_official_engine.get_performance_stats()
         
         return {
             "connectivity": connectivity,
@@ -2296,7 +2296,7 @@ async def get_live_positions():
 async def get_bingx_orders(symbol: Optional[str] = None):
     """Get current open orders on BingX"""
     try:
-        orders = await bingx_trading_engine.get_open_orders(symbol)
+        orders = await bingx_official_engine.get_open_orders(symbol)
         return {
             "orders": [order.__dict__ for order in orders],
             "total_orders": len(orders),
@@ -2309,7 +2309,7 @@ async def get_bingx_orders(symbol: Optional[str] = None):
 async def close_position(symbol: str):
     """Manually close a position on BingX"""
     try:
-        result = await bingx_trading_engine.close_position(symbol)
+        result = await bingx_official_engine.close_position(symbol)
         return {
             "success": result,
             "message": f"Position closure {'successful' if result else 'failed'} for {symbol}",
@@ -2346,7 +2346,7 @@ async def get_live_trading_performance():
         successful_orders = len([d for d in decisions if d.get('bingx_order_id')])
         
         # Get BingX performance
-        bingx_stats = bingx_trading_engine.get_performance_stats()
+        bingx_stats = bingx_official_engine.get_performance_stats()
         
         performance = {
             "total_live_trades": total_live_trades,
@@ -2369,7 +2369,7 @@ async def get_market_status():
     """Get ultra professional market status with BingX integration"""
     try:
         aggregator_stats = advanced_market_aggregator.get_performance_stats()
-        bingx_stats = bingx_trading_engine.get_performance_stats()
+        bingx_stats = bingx_official_engine.get_performance_stats()
         
         return {
             "market_aggregator": {
