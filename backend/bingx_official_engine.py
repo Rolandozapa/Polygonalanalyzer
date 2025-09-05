@@ -72,57 +72,68 @@ class BingXOfficialTradingEngine:
         logger.info("BingX Official Trading Engine initialized")
 
     async def get_account_balance(self) -> List[BingXBalance]:
-        """Get account balance from BingX FUTURES account (where user funds are located)"""
+        """Get account balance from BingX FUTURES account - FIXED PARSING"""
         try:
-            logger.info("Fetching account balance from BingX FUTURES account")
+            logger.info("Fetching account balance from BingX FUTURES account with CORRECT parsing")
             
             # Use async context manager for proper session handling
             async with self.client as client:
-                # Get FUTURES account data (where user's funds are)
+                # Get FUTURES account data - the API call works, we just need to parse it correctly
                 balance_response = await client.swap.query_account_data()
                 
                 balances = []
                 if balance_response and hasattr(balance_response, 'data'):
                     data = balance_response.data
+                    logger.info(f"Raw account data received: {data}")
                     
-                    # Create a USDT balance entry for futures account
-                    futures_balance = float(getattr(data, 'balance', 0))
-                    available_margin = float(getattr(data, 'availableMargin', 0))
-                    used_margin = float(getattr(data, 'usedMargin', 0))
+                    # The data is a LIST of AccountData objects, not a single object!
+                    if isinstance(data, list):
+                        for account_item in data:
+                            logger.info(f"Processing account item: {account_item}")
+                            
+                            # Extract fields from AccountData object
+                            asset = getattr(account_item, 'asset', 'UNKNOWN')
+                            balance = float(getattr(account_item, 'balance', 0))
+                            equity = float(getattr(account_item, 'equity', 0))
+                            available_margin = float(getattr(account_item, 'available_margin', 0))
+                            used_margin = float(getattr(account_item, 'used_margin', 0))
+                            unrealized_profit = float(getattr(account_item, 'unrealized_profit', 0))
+                            
+                            # Only include assets with non-zero balance
+                            if balance > 0:
+                                balances.append(BingXBalance(
+                                    asset=asset,
+                                    balance=balance,
+                                    available=available_margin,
+                                    locked=used_margin
+                                ))
+                                logger.info(f"💰 FOUND {asset}: Balance=${balance}, Available=${available_margin}, Used=${used_margin}")
                     
-                    if futures_balance > 0:
-                        balances.append(BingXBalance(
-                            asset="USDT",  # Futures account is typically in USDT
-                            balance=futures_balance,
-                            available=available_margin,
-                            locked=used_margin
-                        ))
-                        logger.info(f"💰 FUTURES Balance found: USDT = {futures_balance} (available: {available_margin})")
-                    else:
-                        logger.warning("No futures balance found")
+                    elif hasattr(data, 'balance'):
+                        # Single AccountData object
+                        asset = getattr(data, 'asset', 'USDT')
+                        balance = float(getattr(data, 'balance', 0))
+                        available_margin = float(getattr(data, 'available_margin', 0))
+                        used_margin = float(getattr(data, 'used_margin', 0))
                         
-                    # Also try to get individual asset balances if available
-                    if hasattr(data, 'assets') and data.assets:
-                        for asset_item in data.assets:
-                            if hasattr(asset_item, 'asset') and hasattr(asset_item, 'balance'):
-                                asset_balance = float(getattr(asset_item, 'balance', 0))
-                                if asset_balance > 0:
-                                    balances.append(BingXBalance(
-                                        asset=asset_item.asset,
-                                        balance=asset_balance,
-                                        available=float(getattr(asset_item, 'availableMargin', asset_balance)),
-                                        locked=float(getattr(asset_item, 'frozenMargin', 0))
-                                    ))
-                                    logger.info(f"Asset balance: {asset_item.asset} = {asset_balance}")
-                else:
-                    logger.warning("No futures account data received from BingX API")
+                        if balance > 0:
+                            balances.append(BingXBalance(
+                                asset=asset,
+                                balance=balance,
+                                available=available_margin,
+                                locked=used_margin
+                            ))
+                            logger.info(f"💰 SINGLE ACCOUNT FOUND {asset}: Balance=${balance}")
+                
+                total_balance = sum(b.balance for b in balances)
+                logger.info(f"✅ TOTAL FUTURES BALANCE FOUND: ${total_balance} across {len(balances)} assets")
                 
                 return balances
             
         except Exception as e:
-            logger.error(f"Failed to get FUTURES account balance from BingX: {e}")
+            logger.error(f"Failed to get FUTURES account balance: {e}")
             
-            # Fallback: Try spot account if futures fails
+            # Still try spot as fallback
             try:
                 logger.info("Trying spot account balance as fallback")
                 async with self.client as client:
@@ -147,9 +158,9 @@ class BingXOfficialTradingEngine:
             except Exception as spot_error:
                 logger.error(f"Spot balance fallback also failed: {spot_error}")
                 
-                # Final fallback - return mock balance for demo purposes
-                logger.warning("Using fallback demo balance - check API keys and IP whitelist")
-                return [BingXBalance(asset="USDT", balance=250.0, available=250.0, locked=0.0)]
+                # Final fallback - return empty instead of mock
+                logger.warning("All balance methods failed - check API configuration")
+                return []
 
     async def place_order(self, symbol: str, side: BingXOrderSide, order_type: BingXOrderType, 
                          quantity: float, price: Optional[float] = None, 
