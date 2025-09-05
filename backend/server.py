@@ -1299,45 +1299,79 @@ class UltraProfessionalIA2DecisionAgent:
             quality_score -= 0.02  # Single source penalty
             reasoning += "Single source data - increased uncertainty. "
         
-        # Enhanced market condition assessment with MACD consideration
-        macd_variation = abs(analysis.macd_signal) * 10  # Scale MACD for variation
-        if macd_variation > 0.05:  # Strong MACD signal
-            quality_score += 0.06
-            reasoning += "Strong momentum signal detected. "
-        elif macd_variation > 0.02:  # Moderate MACD signal
-            quality_score += 0.03
-            reasoning += "Moderate momentum signal. "
+        # Enhanced market condition assessment with real variation based on actual market data
+        volatility_factor = opportunity.volatility * 100  # Scale to percentage
+        price_change_factor = abs(opportunity.price_change_24h) / 10  # Scale price change
+        volume_factor = min(opportunity.volume_24h / 1_000_000, 10) / 10  # Scale volume (millions)
         
-        # Volatility assessment with enhanced variation
-        if opportunity.volatility <= 0.05:  # Very low volatility
-            quality_score += 0.06
-            reasoning += "Very stable market conditions. "
-        elif opportunity.volatility <= 0.10:  # Low volatility
-            quality_score += 0.03
-            reasoning += "Stable market conditions. "
-        elif opportunity.volatility > 0.30:  # Extreme volatility
+        # Market data-driven quality adjustments
+        if volatility_factor < 2:  # Very low volatility (< 2%)
+            quality_score += 0.08
+            reasoning += f"Very stable market (volatility: {volatility_factor:.1f}%). "
+        elif volatility_factor < 5:  # Low volatility (2-5%)
+            quality_score += 0.04
+            reasoning += f"Stable market conditions (volatility: {volatility_factor:.1f}%). "
+        elif volatility_factor > 15:  # Very high volatility (> 15%)
             quality_score -= 0.06
-            reasoning += "Extreme volatility - high uncertainty. "
-        elif opportunity.volatility > 0.25:  # Very high volatility
+            reasoning += f"Extreme volatility ({volatility_factor:.1f}%) - high uncertainty. "
+        elif volatility_factor > 10:  # High volatility (10-15%)
             quality_score -= 0.03
-            reasoning += "High volatility - increased uncertainty. "
-        elif opportunity.volatility > 0.15:  # High volatility
-            quality_score -= 0.01
-            reasoning += "Elevated market volatility. "
+            reasoning += f"High volatility ({volatility_factor:.1f}%) - increased uncertainty. "
         
-        # RSI consideration for additional variation
-        if analysis.rsi < 25:  # Extremely oversold
-            quality_score += 0.04
-            reasoning += "Extremely oversold conditions detected. "
+        # Price momentum assessment
+        if abs(opportunity.price_change_24h) > 10:  # Strong momentum
+            quality_score += 0.05
+            reasoning += f"Strong momentum ({opportunity.price_change_24h:+.1f}% 24h). "
+        elif abs(opportunity.price_change_24h) > 5:  # Moderate momentum
+            quality_score += 0.02
+            reasoning += f"Moderate momentum ({opportunity.price_change_24h:+.1f}% 24h). "
+        
+        # Volume assessment for liquidity
+        if volume_factor > 8:  # Very high volume
+            quality_score += 0.06
+            reasoning += "Excellent liquidity conditions. "
+        elif volume_factor > 5:  # High volume
+            quality_score += 0.03
+            reasoning += "Good liquidity. "
+        elif volume_factor < 1:  # Low volume
+            quality_score -= 0.04
+            reasoning += "Limited liquidity - increased execution risk. "
+        
+        # RSI-based momentum scoring with real variation
+        rsi_deviation = abs(analysis.rsi - 50) / 50  # How far from neutral (0-1)
+        if analysis.rsi < 20:  # Extremely oversold
+            quality_score += 0.06 + (rsi_deviation * 0.04)
+            reasoning += f"Extremely oversold conditions (RSI: {analysis.rsi:.1f}). "
         elif analysis.rsi < 30:  # Oversold
-            quality_score += 0.02
-            reasoning += "Oversold conditions. "
-        elif analysis.rsi > 75:  # Extremely overbought
-            quality_score += 0.04
-            reasoning += "Extremely overbought conditions detected. "
+            quality_score += 0.03 + (rsi_deviation * 0.02)
+            reasoning += f"Oversold conditions (RSI: {analysis.rsi:.1f}). "
+        elif analysis.rsi > 80:  # Extremely overbought
+            quality_score += 0.06 + (rsi_deviation * 0.04)
+            reasoning += f"Extremely overbought conditions (RSI: {analysis.rsi:.1f}). "
         elif analysis.rsi > 70:  # Overbought
-            quality_score += 0.02
-            reasoning += "Overbought conditions. "
+            quality_score += 0.03 + (rsi_deviation * 0.02)
+            reasoning += f"Overbought conditions (RSI: {analysis.rsi:.1f}). "
+        
+        # MACD with real signal strength variation
+        macd_strength = min(abs(analysis.macd_signal) * 1000, 1.0)  # Scale and cap at 1.0
+        if macd_strength > 0.5:  # Strong MACD signal
+            quality_score += 0.04 + (macd_strength * 0.04)
+            reasoning += f"Strong MACD momentum (signal: {analysis.macd_signal:.6f}). "
+        elif macd_strength > 0.2:  # Moderate MACD signal
+            quality_score += 0.02 + (macd_strength * 0.02)
+            reasoning += f"Moderate MACD momentum (signal: {analysis.macd_signal:.6f}). "
+        
+        # Market cap rank influence (if available)
+        if opportunity.market_cap_rank:
+            if opportunity.market_cap_rank <= 10:  # Top 10 crypto
+                quality_score += 0.05
+                reasoning += f"Top-tier crypto (rank #{opportunity.market_cap_rank}). "
+            elif opportunity.market_cap_rank <= 50:  # Top 50
+                quality_score += 0.03
+                reasoning += f"Major crypto (rank #{opportunity.market_cap_rank}). "
+            elif opportunity.market_cap_rank > 200:  # Lower cap
+                quality_score -= 0.02
+                reasoning += f"Lower market cap crypto (rank #{opportunity.market_cap_rank}). "
         
         # Apply quality adjustments within bounds with enhanced variation
         confidence = max(min(confidence + quality_score, 0.95), 0.5)  # Strict 50-95% range
