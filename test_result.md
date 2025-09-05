@@ -107,11 +107,11 @@
 ## backend:
   - task: "Fix IA2 LLM Response Parsing"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
@@ -119,14 +119,17 @@
         - working: "NA"
         - agent: "main"
         - comment: "IMPLEMENTED: Added _parse_llm_response() method to properly parse JSON from IA2 LLM and extract reasoning field. Updated make_decision() to use parsed response."
+        - working: true
+        - agent: "testing"
+        - comment: "TESTED: IA2 LLM response parsing is working correctly. All 30 tested decisions have proper reasoning field populated (1500 chars each). No null reasoning detected. JSON parsing fix successful."
 
   - task: "Fix IA2 Confidence Calculation Logic"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
@@ -134,14 +137,17 @@
         - working: "NA"
         - agent: "main"
         - comment: "IMPLEMENTED: Reduced penalty factors (0.3->0.5, 0.7->0.85, 0.8->0.9). Added LLM confidence boost up to +0.2. More balanced confidence calculation."
+        - working: true
+        - agent: "testing"
+        - comment: "TESTED: IA2 confidence calculation improved. Average confidence now 40.9% (up from 37.3%). Range: 27%-60%. Fix successful but some decisions still show lower confidence, indicating room for further tuning."
 
   - task: "Adjust IA2 Trading Signal Thresholds"
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
@@ -149,6 +155,9 @@
         - working: "NA"
         - agent: "main"
         - comment: "IMPLEMENTED: Lowered thresholds - LONG/SHORT at confidence >0.75 (was 0.85), signal_strength >0.5 (was 0.6). Added moderate signals at confidence >0.65. Lowered risk-reward from 2:1 to 1.5:1."
+        - working: false
+        - agent: "testing"
+        - comment: "TESTED: IA2 trading thresholds still too conservative. All 30 decisions are HOLD signals (0% trading rate). Despite confidence improvements and lowered thresholds, no LONG/SHORT signals generated. May need further threshold reduction or market conditions analysis."
 
 ## frontend:
   - task: "Frontend changes for IA1 optimization"
