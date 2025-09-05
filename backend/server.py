@@ -1936,59 +1936,84 @@ async def get_analyses_simple():
 
 @api_router.get("/analyses")
 async def get_analyses():
-    """Get recent technical analyses - version temporaire JSON-safe"""
+    """Get recent technical analyses - VRAIES valeurs IA1 avec validation JSON"""
     try:
-        # Version temporaire : retour des analyses avec données statiques JSON-safe
-        sample_analyses = [
-            {
-                "id": f"analysis-{i+1}",
-                "symbol": symbol,
-                "rsi": 45.0 + i * 5,
-                "macd_signal": 0.001 * i,
-                "bollinger_position": 0.0,
-                "fibonacci_level": 0.618,
-                "support_levels": [100.0, 95.0],
-                "resistance_levels": [110.0, 115.0],
-                "patterns_detected": ["bullish_channel", "volume_spike"],
-                "analysis_confidence": 0.75,
-                "ia1_reasoning": f"Technical analysis for {symbol} shows strong patterns with RSI at {45.0 + i * 5}",
-                "market_sentiment": "bullish",
-                "data_sources": ["binance", "coingecko"],
-                "timestamp": "2025-09-05T06:45:00.000Z"
-            }
-            for i, symbol in enumerate(["SUPERUSDT", "ENAUSDT", "BUSDT", "POLUSDT", "BTCUSDT"][:5])
-        ]
+        real_analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(10).to_list(10)
         
-        # Essayer de récupérer les vraies analyses si possible
-        try:
-            real_analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(5).to_list(5)
-            if real_analyses:
-                validated_analyses = []
-                for analysis in real_analyses:
-                    analysis.pop('_id', None)
-                    # Conversion datetime sécurisée
-                    if 'timestamp' in analysis and isinstance(analysis['timestamp'], datetime):
-                        analysis['timestamp'] = analysis['timestamp'].isoformat()
-                    
-                    # Validation des valeurs numériques
-                    for key in ['rsi', 'macd_signal', 'analysis_confidence', 'fibonacci_level']:
-                        if key in analysis:
-                            val = analysis[key]
-                            if val is None or pd.isna(val) or not pd.notna(val):
-                                analysis[key] = 50.0 if key == 'rsi' else 0.5 if key == 'analysis_confidence' else 0.618 if key == 'fibonacci_level' else 0.0
-                            else:
-                                analysis[key] = float(val)
-                    
-                    validated_analyses.append(analysis)
+        if not real_analyses:
+            return {"analyses": [], "ultra_professional": True, "note": "No analyses found"}
+        
+        validated_analyses = []
+        for analysis in real_analyses:
+            try:
+                # Remove MongoDB _id
+                analysis.pop('_id', None)
                 
-                return {"analyses": validated_analyses, "ultra_professional": True}
-        except Exception as e:
-            logger.warning(f"Could not fetch real analyses, using samples: {e}")
+                # Fix timestamp issue (seul problème JSON identifié)
+                if 'timestamp' in analysis and isinstance(analysis['timestamp'], datetime):
+                    analysis['timestamp'] = analysis['timestamp'].isoformat()
+                elif 'timestamp' in analysis:
+                    analysis['timestamp'] = str(analysis['timestamp'])
+                
+                # Validation sécurisée des valeurs numériques (garder les vraies valeurs IA1)
+                numeric_fields = ['rsi', 'macd_signal', 'bollinger_position', 'fibonacci_level', 'analysis_confidence']
+                for field in numeric_fields:
+                    if field in analysis:
+                        val = analysis[field]
+                        if val is None or pd.isna(val) or not pd.notna(val) or abs(val) > 1e6:
+                            # Remplace seulement les valeurs invalides, garde les vraies valeurs IA1
+                            if field == 'rsi':
+                                analysis[field] = 50.0
+                            elif field == 'analysis_confidence':
+                                analysis[field] = 0.5
+                            elif field == 'fibonacci_level':
+                                analysis[field] = 0.618
+                            else:
+                                analysis[field] = 0.0
+                        else:
+                            # Garde les vraies valeurs IA1 calculées
+                            analysis[field] = float(val)
+                
+                # Valide les listes (support/resistance)
+                for list_field in ['support_levels', 'resistance_levels']:
+                    if list_field in analysis:
+                        if not isinstance(analysis[list_field], list):
+                            analysis[list_field] = []
+                        else:
+                            # Nettoie les valeurs invalides dans les listes
+                            clean_list = []
+                            for val in analysis[list_field]:
+                                try:
+                                    if pd.notna(val) and abs(float(val)) < 1e6:
+                                        clean_list.append(float(val))
+                                except:
+                                    pass
+                            analysis[list_field] = clean_list[:5]  # Max 5 niveaux
+                
+                # Valide les strings
+                string_fields = ['ia1_reasoning', 'market_sentiment']
+                for field in string_fields:
+                    if field in analysis:
+                        analysis[field] = str(analysis[field]) if analysis[field] is not None else ""
+                
+                # Valide patterns_detected
+                if 'patterns_detected' not in analysis or not isinstance(analysis['patterns_detected'], list):
+                    analysis['patterns_detected'] = ["No patterns detected"]
+                
+                validated_analyses.append(analysis)
+                
+            except Exception as e:
+                logger.error(f"Error validating analysis for {analysis.get('symbol', 'unknown')}: {e}")
+                continue
         
-        return {"analyses": sample_analyses, "ultra_professional": True}
+        return {
+            "analyses": validated_analyses, 
+            "ultra_professional": True,
+            "note": f"Real IA1 analyses with validated RSI, MACD, BB, Fibonacci values"
+        }
         
     except Exception as e:
-        logger.error(f"Error in analyses endpoint: {e}")
+        logger.error(f"Error fetching real analyses: {e}")
         return {"analyses": [], "ultra_professional": True, "error": str(e)}
 
 @api_router.get("/decisions")
