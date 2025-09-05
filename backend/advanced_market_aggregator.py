@@ -438,6 +438,7 @@ class AdvancedMarketAggregator:
                             price=ticker.get('close', 0) or 0,
                             volume_24h=ticker.get('quoteVolume', 0) or 0,
                             price_change_24h=ticker.get('percentage', 0) or 0,
+                            volatility=abs(ticker.get('percentage', 0) or 0) / 100.0,  # Estimate volatility from 24h change
                             source=f"{exchange_name}_ccxt",
                             confidence=0.8  # CCXT data is generally reliable
                         ))
