@@ -2928,7 +2928,7 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"✅ OPPORTUNITIES STORED: {opportunities_stored}/{len(valid_analyses)}")
             
             # Prepare IA2 decision making
-            perf_stats = self.market_aggregator.get_performance_stats()
+            perf_stats = advanced_market_aggregator.get_performance_stats()  # Use global aggregator
             decisions_to_make = []
             decisions_skipped = 0
             
