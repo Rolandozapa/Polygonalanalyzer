@@ -91,6 +91,44 @@ class RealMarketDataService:
         # Sort by volume and return top opportunities
         opportunities.sort(key=lambda x: x.volume_24h, reverse=True)
         return opportunities[:10]  # Return top 10
+        """Get real cryptocurrency opportunities from multiple sources"""
+        opportunities = []
+        
+        # Primary symbols to track
+        symbols = ['BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'ADA/USDT', 'DOT/USDT', 
+                  'AVAX/USDT', 'MATIC/USDT', 'LINK/USDT', 'UNI/USDT', 'ATOM/USDT']
+        
+        # Try different data sources with fallbacks
+        try:
+            # First try Binance (most reliable for crypto)
+            binance_data = await self._get_binance_data(symbols)
+            if binance_data:
+                opportunities.extend(binance_data)
+                logger.info(f"Retrieved {len(binance_data)} opportunities from Binance")
+        except Exception as e:
+            logger.warning(f"Binance API failed: {e}")
+        
+        # Fallback to CoinAPI if Binance fails or for additional data
+        if len(opportunities) < 5:
+            try:
+                coinapi_data = await self._get_coinapi_data()
+                opportunities.extend(coinapi_data)
+                logger.info(f"Retrieved {len(coinapi_data)} additional opportunities from CoinAPI")
+            except Exception as e:
+                logger.warning(f"CoinAPI failed: {e}")
+        
+        # If still no data, use Yahoo Finance as last resort
+        if len(opportunities) == 0:
+            try:
+                yahoo_data = await self._get_yahoo_finance_data()
+                opportunities.extend(yahoo_data)
+                logger.info(f"Retrieved {len(yahoo_data)} opportunities from Yahoo Finance")
+            except Exception as e:
+                logger.warning(f"Yahoo Finance failed: {e}")
+        
+        # Sort by volume and return top opportunities
+        opportunities.sort(key=lambda x: x.volume_24h, reverse=True)
+        return opportunities[:10]  # Return top 10
     
     async def _get_binance_data(self, symbols: List[str]) -> List[MarketDataPoint]:
         """Get data from Binance API"""
