@@ -112,7 +112,7 @@ class AdvancedMarketAggregator:
                     rate_limit=500,
                     priority=1
                 ),
-                # DEX endpoints spéciaux
+                # DEX endpoints spéciaux - Comprehensive DEX Coverage
                 APIEndpoint(
                     name="cmc_dex_listings",
                     url="https://pro-api.coinmarketcap.com/v4/dex/listings/quotes",
@@ -121,8 +121,29 @@ class AdvancedMarketAggregator:
                     priority=2
                 ),
                 APIEndpoint(
+                    name="cmc_dex_info",
+                    url="https://pro-api.coinmarketcap.com/v4/dex/listings/info",
+                    headers={"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"},
+                    rate_limit=150,
+                    priority=2
+                ),
+                APIEndpoint(
+                    name="cmc_dex_networks",
+                    url="https://pro-api.coinmarketcap.com/v4/dex/networks/list",
+                    headers={"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"},
+                    rate_limit=100,
+                    priority=3
+                ),
+                APIEndpoint(
                     name="cmc_dex_ohlcv",
                     url="https://pro-api.coinmarketcap.com/v4/dex/pairs/ohlcv/historical",
+                    headers={"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"},
+                    rate_limit=100,
+                    priority=3
+                ),
+                APIEndpoint(
+                    name="cmc_dex_trades",
+                    url="https://pro-api.coinmarketcap.com/v4/dex/pairs/trade/latest",
                     headers={"X-CMC_PRO_API_KEY": self.cmc_api_key, "Accept": "application/json"},
                     rate_limit=100,
                     priority=3
