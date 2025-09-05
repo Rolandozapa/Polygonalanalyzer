@@ -454,18 +454,27 @@ async def stop_trading():
 async def get_opportunities():
     """Get recent market opportunities"""
     opportunities = await db.market_opportunities.find().sort("timestamp", -1).limit(20).to_list(20)
+    # Remove MongoDB ObjectId for JSON serialization
+    for opp in opportunities:
+        opp.pop('_id', None)
     return {"opportunities": opportunities}
 
 @api_router.get("/analyses")
 async def get_analyses():
     """Get recent technical analyses"""
     analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(20).to_list(20)
+    # Remove MongoDB ObjectId for JSON serialization
+    for analysis in analyses:
+        analysis.pop('_id', None)
     return {"analyses": analyses}
 
 @api_router.get("/decisions")
 async def get_decisions():
     """Get recent trading decisions"""
     decisions = await db.trading_decisions.find().sort("timestamp", -1).limit(20).to_list(20)
+    # Remove MongoDB ObjectId for JSON serialization
+    for decision in decisions:
+        decision.pop('_id', None)
     return {"decisions": decisions}
 
 @api_router.get("/conversations")
