@@ -6317,10 +6317,10 @@ class DualAITradingBotTester:
         
         # Test the formula: Base 3% * (6 / leverage) with range 1.5% - 6.0%
         test_cases = [
-            {"leverage": 2.0, "expected": 9.0},   # 3% * (6/2) = 9%
+            {"leverage": 2.0, "expected": 6.0},   # 3% * (6/2) = 9% -> capped at 6.0%
             {"leverage": 5.0, "expected": 3.6},   # 3% * (6/5) = 3.6%
             {"leverage": 10.0, "expected": 1.8},  # 3% * (6/10) = 1.8%
-            {"leverage": 1.0, "expected": 6.0},   # 3% * (6/1) = 18% -> capped at 6.0%
+            {"leverage": 1.0, "expected": 6.0},   # 3% * (6/max(1,2)) = 3% * (6/2) = 9% -> capped at 6.0%
             {"leverage": 20.0, "expected": 1.5},  # 3% * (6/20) = 0.9% -> floored at 1.5%
         ]
         
