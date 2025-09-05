@@ -3586,106 +3586,121 @@ async def get_scout_config():
 
 @api_router.post("/test-bingx-trade")
 async def test_bingx_trade():
-    """Test BingX trading capabilities with correct API methods"""
+    """Test BingX trading capabilities with correct async context"""
     try:
         from bingx_official_engine import BingXOfficialTradingEngine
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
         
-        engine = BingXOfficialTradingEngine()
+        # Create client with proper context manager
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
         
-        # Test 1: Get account assets (correct method)
-        try:
-            logger.info("Testing spot account assets...")
-            spot_assets = await engine.client.spot.query_assets()
-            logger.info(f"Spot assets response: {spot_assets}")
-            
-            assets_info = []
-            if spot_assets and hasattr(spot_assets, 'data') and spot_assets.data:
-                for asset in spot_assets.data:
-                    if hasattr(asset, 'coin') and hasattr(asset, 'free'):
-                        free_balance = float(getattr(asset, 'free', 0))
-                        if free_balance > 0:  # Only show non-zero balances
-                            assets_info.append({
-                                "coin": asset.coin,
-                                "free": free_balance,
-                                "locked": float(getattr(asset, 'locked', 0))
-                            })
-            
-            logger.info(f"Non-zero assets found: {assets_info}")
-            
-        except Exception as spot_error:
-            logger.error(f"Spot assets failed: {spot_error}")
-            assets_info = []
+        if not api_key or not secret_key:
+            return {
+                "status": "no_api_keys",
+                "message": "BingX API keys not configured"
+            }
         
-        # Test 2: Get futures account balance (correct method)
-        try:
-            logger.info("Testing futures account data...")
-            futures_account = await engine.client.swap.query_account_data()
-            logger.info(f"Futures account response: {futures_account}")
-        except Exception as futures_error:
-            logger.error(f"Futures account failed: {futures_error}")
-        
-        # Test 3: Get BTC ticker (correct method)
-        try:
-            logger.info("Testing BTC ticker...")
-            btc_ticker = await engine.client.spot.get_symbol_price_ticker(symbol="BTC-USDT")
-            logger.info(f"BTC ticker response: {btc_ticker}")
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
             
-            current_price = None
-            if btc_ticker and hasattr(btc_ticker, 'data') and btc_ticker.data:
-                current_price = float(btc_ticker.data.price)
-                logger.info(f"Current BTC price: ${current_price}")
+            # Test 1: Get spot account assets
+            try:
+                logger.info("🔍 Testing spot account access...")
+                spot_assets = await client.spot.query_assets()
+                logger.info(f"Spot assets response: {spot_assets}")
                 
-        except Exception as ticker_error:
-            logger.error(f"BTC ticker failed: {ticker_error}")
-            current_price = 50000  # Fallback price
-        
-        # Test 4: Prepare test trade parameters
-        if assets_info and current_price:
-            # Find USDT balance
+                assets_info = []
+                if spot_assets and hasattr(spot_assets, 'data'):
+                    data = spot_assets.data
+                    logger.info(f"Assets data type: {type(data)}, length: {len(data) if hasattr(data, '__len__') else 'unknown'}")
+                    
+                    # Handle different data structures
+                    if hasattr(data, '__iter__'):
+                        for asset in data:
+                            logger.info(f"Asset item: {asset}")
+                            if hasattr(asset, 'coin'):
+                                free_balance = float(getattr(asset, 'free', 0))
+                                locked_balance = float(getattr(asset, 'locked', 0))
+                                total_balance = free_balance + locked_balance
+                                
+                                assets_info.append({
+                                    "coin": asset.coin,
+                                    "free": free_balance,
+                                    "locked": locked_balance,
+                                    "total": total_balance
+                                })
+                                
+                                if total_balance > 0:
+                                    logger.info(f"💰 Found {asset.coin}: {total_balance} (free: {free_balance})")
+                
+                logger.info(f"Total assets found: {len(assets_info)}")
+                
+            except Exception as spot_error:
+                logger.error(f"❌ Spot assets failed: {spot_error}")
+                assets_info = []
+            
+            # Test 2: Get BTC price
+            current_price = None
+            try:
+                logger.info("💱 Testing BTC price ticker...")
+                btc_ticker = await client.spot.get_symbol_price_ticker(symbol="BTC-USDT")
+                logger.info(f"BTC ticker response: {btc_ticker}")
+                
+                if btc_ticker and hasattr(btc_ticker, 'data'):
+                    current_price = float(btc_ticker.data.price)
+                    logger.info(f"📈 Current BTC price: ${current_price}")
+                    
+            except Exception as ticker_error:
+                logger.error(f"❌ BTC ticker failed: {ticker_error}")
+                current_price = 50000  # Fallback
+            
+            # Test 3: Check trading permissions
+            try:
+                logger.info("🔐 Testing API key permissions...")
+                permissions = await client.query_api_key_permissions()
+                logger.info(f"API permissions: {permissions}")
+            except Exception as perm_error:
+                logger.error(f"❌ Permissions check failed: {perm_error}")
+            
+            # Analyze results
+            non_zero_assets = [asset for asset in assets_info if asset['total'] > 0]
             usdt_balance = 0
-            for asset in assets_info:
+            for asset in non_zero_assets:
                 if asset['coin'] == 'USDT':
                     usdt_balance = asset['free']
                     break
             
-            if usdt_balance >= 1.0:  # Need at least 1 USDT
-                test_quantity = round(1.0 / current_price, 8)  # 1 USDT worth of BTC
-                
+            if non_zero_assets:
                 return {
-                    "status": "ready_to_trade",
-                    "account_access": "success",
-                    "spot_assets": assets_info,
-                    "usdt_balance": usdt_balance,
+                    "status": "success_with_funds",
+                    "message": f"✅ Account accessible with {len(non_zero_assets)} assets!",
+                    "total_assets": len(assets_info),
+                    "non_zero_assets": non_zero_assets,
+                    "usdt_available": usdt_balance,
                     "btc_price": current_price,
-                    "test_trade_prepared": {
-                        "symbol": "BTC-USDT",
-                        "side": "BUY",
-                        "quantity": test_quantity,
-                        "value_usdt": 1.0
-                    },
-                    "message": f"✅ Account accessible! {usdt_balance} USDT available - Ready for test trade"
+                    "trading_ready": usdt_balance >= 1.0,
+                    "ready_for_test_trade": usdt_balance >= 1.0
                 }
             else:
                 return {
-                    "status": "insufficient_funds",
-                    "account_access": "success", 
-                    "spot_assets": assets_info,
-                    "usdt_balance": usdt_balance,
-                    "message": f"Account accessible but need at least 1 USDT for test trade (found {usdt_balance} USDT)"
+                    "status": "account_empty",
+                    "message": "Account accessible but no funds found",
+                    "total_assets_checked": len(assets_info),
+                    "btc_price": current_price,
+                    "suggestion": "Add funds to your BingX account to enable trading"
                 }
-        else:
-            return {
-                "status": "account_access_limited",
-                "spot_assets": assets_info,
-                "message": "Can access account but limited data - check API permissions"
-            }
-            
+                
     except Exception as e:
-        logger.error(f"BingX test failed: {e}")
+        logger.error(f"❌ BingX test completely failed: {e}")
         return {
             "status": "failed",
             "error": str(e),
-            "message": "BingX test completely failed"
+            "message": "Complete BingX test failure"
         }
 
 @api_router.post("/execute-test-trade")
