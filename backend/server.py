@@ -750,33 +750,45 @@ class UltraProfessionalIA1TechnicalAnalyst:
         except:
             return 0.618
     
-    def _find_support_levels(self, historical_data: pd.DataFrame, current_price: float) -> List[float]:
-        """Find key support levels"""
+    def _find_support_levels(self, df: pd.DataFrame, current_price: float) -> List[float]:
+        """Trouve les niveaux de support clés"""
         try:
-            lows = historical_data['Low'].rolling(window=5).min()
-            support_levels = []
+            if len(df) < 10:
+                return [current_price * 0.95, current_price * 0.90]
             
-            for low in lows.dropna().unique()[-15:]:
-                if low < current_price * 0.97:
-                    support_levels.append(float(low))
+            lows = df['Low'].rolling(5).min().dropna().unique()
+            supports = [float(low) for low in lows if low < current_price and low > 0]
+            supports = sorted(supports, reverse=True)
             
-            return sorted(support_levels, reverse=True)[:3]
+            # Limite à 3 niveaux et s'assure qu'ils sont valides
+            valid_supports = []
+            for support in supports[:3]:
+                if support > 0 and support < current_price * 1.5:  # Valeurs raisonnables
+                    valid_supports.append(round(support, 2))
+            
+            return valid_supports if valid_supports else [current_price * 0.95]
         except:
-            return [current_price * 0.95, current_price * 0.90, current_price * 0.85]
+            return [current_price * 0.95]
     
-    def _find_resistance_levels(self, historical_data: pd.DataFrame, current_price: float) -> List[float]:
-        """Find key resistance levels"""
+    def _find_resistance_levels(self, df: pd.DataFrame, current_price: float) -> List[float]:
+        """Trouve les niveaux de résistance clés"""
         try:
-            highs = historical_data['High'].rolling(window=5).max()
-            resistance_levels = []
+            if len(df) < 10:
+                return [current_price * 1.05, current_price * 1.10]
             
-            for high in highs.dropna().unique()[-15:]:
-                if high > current_price * 1.03:
-                    resistance_levels.append(float(high))
+            highs = df['High'].rolling(5).max().dropna().unique()
+            resistances = [float(high) for high in highs if high > current_price and high > 0]
+            resistances = sorted(resistances)
             
-            return sorted(resistance_levels)[:3]
+            # Limite à 3 niveaux et s'assure qu'ils sont valides
+            valid_resistances = []
+            for resistance in resistances[:3]:
+                if resistance > current_price and resistance < current_price * 2:  # Valeurs raisonnables
+                    valid_resistances.append(round(resistance, 2))
+            
+            return valid_resistances if valid_resistances else [current_price * 1.05]
         except:
-            return [current_price * 1.05, current_price * 1.10, current_price * 1.15]
+            return [current_price * 1.05]
     
     def _detect_advanced_patterns(self, historical_data: pd.DataFrame) -> List[str]:
         """Detect advanced chart patterns"""
