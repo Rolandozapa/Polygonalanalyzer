@@ -496,12 +496,15 @@ class ProfessionalIA2DecisionAgent:
         try:
             logger.info(f"IA2 making decision for {opportunity.symbol} based on real analysis...")
             
+            # Format market cap safely
+            market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
+            
             prompt = f"""
             Review this technical analysis based on REAL market data and make a trading decision:
             
             Symbol: {opportunity.symbol}
             Current Price: ${opportunity.current_price:,.2f}
-            Market Cap: ${opportunity.market_cap:,.0f if opportunity.market_cap else 'N/A'}
+            Market Cap: {market_cap_str}
             24h Volume: ${opportunity.volume_24h:,.0f}
             24h Change: {opportunity.price_change_24h:.2f}%
             Volatility: {opportunity.volatility:.2f}
