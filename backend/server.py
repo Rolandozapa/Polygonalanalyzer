@@ -3584,7 +3584,180 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
-@api_router.get("/check-our-ip")
+@api_router.post("/deep-scan-bingx-futures")
+async def deep_scan_bingx_futures():
+    """Deep scan using ALL possible BingX futures API methods to find the funds"""
+    try:
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
+        
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        results = {
+            "status": "scanning",
+            "methods_tested": [],
+            "funds_found": [],
+            "errors": []
+        }
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
+            
+            # Method 1: query_account_data (already tested)
+            try:
+                logger.info("🔍 Method 1: swap.query_account_data()")
+                response = await client.swap.query_account_data()
+                method_result = {
+                    "method": "swap.query_account_data",
+                    "status": "success",
+                    "raw_response": str(response.data) if response else "None",
+                    "balance_found": 0
+                }
+                
+                if response and hasattr(response, 'data'):
+                    balance = float(getattr(response.data, 'balance', 0))
+                    method_result["balance_found"] = balance
+                    if balance > 0:
+                        results["funds_found"].append(f"Method1: ${balance}")
+                
+                results["methods_tested"].append(method_result)
+                
+            except Exception as e:
+                results["errors"].append(f"Method1 error: {str(e)}")
+            
+            # Method 2: Try different swap methods
+            swap_methods = [
+                "query_account_data",
+                "query_account_info", 
+                "query_wallet_balance",
+                "query_balance",
+                "account_info"
+            ]
+            
+            for method_name in swap_methods[1:]:  # Skip first one already tested
+                try:
+                    logger.info(f"🔍 Method: swap.{method_name}()")
+                    
+                    if hasattr(client.swap, method_name):
+                        method = getattr(client.swap, method_name)
+                        response = await method()
+                        
+                        method_result = {
+                            "method": f"swap.{method_name}",
+                            "status": "success",
+                            "raw_response": str(response)[:500] if response else "None"
+                        }
+                        
+                        # Try to extract balance from response
+                        balance = 0
+                        if response and hasattr(response, 'data'):
+                            if hasattr(response.data, 'balance'):
+                                balance = float(response.data.balance)
+                            elif hasattr(response.data, 'totalWalletBalance'):
+                                balance = float(response.data.totalWalletBalance)
+                            elif hasattr(response.data, 'totalMarginBalance'): 
+                                balance = float(response.data.totalMarginBalance)
+                        
+                        method_result["balance_found"] = balance
+                        if balance > 0:
+                            results["funds_found"].append(f"{method_name}: ${balance}")
+                        
+                        results["methods_tested"].append(method_result)
+                    else:
+                        results["methods_tested"].append({
+                            "method": f"swap.{method_name}",
+                            "status": "method_not_exists"
+                        })
+                        
+                except Exception as e:
+                    results["errors"].append(f"{method_name} error: {str(e)}")
+            
+            # Method 3: Try to get all available methods from swap
+            try:
+                logger.info("🔍 Discovering all available swap methods...")
+                swap_methods_available = [method for method in dir(client.swap) if not method.startswith('_')]
+                
+                results["all_swap_methods"] = swap_methods_available
+                logger.info(f"Available swap methods: {swap_methods_available}")
+                
+                # Try balance-related methods
+                balance_keywords = ['balance', 'account', 'wallet', 'margin', 'equity']
+                potential_methods = []
+                
+                for method in swap_methods_available:
+                    if any(keyword in method.lower() for keyword in balance_keywords):
+                        potential_methods.append(method)
+                
+                results["potential_balance_methods"] = potential_methods
+                
+                # Test these potential methods
+                for method_name in potential_methods:
+                    if method_name not in [m["method"].split(".")[-1] for m in results["methods_tested"]]:
+                        try:
+                            method = getattr(client.swap, method_name)
+                            
+                            # Some methods might need parameters, try without first
+                            try:
+                                response = await method()
+                            except TypeError:
+                                # Method needs parameters, skip for now
+                                continue
+                            
+                            method_result = {
+                                "method": f"swap.{method_name}",
+                                "status": "success",
+                                "raw_response": str(response)[:300] if response else "None"
+                            }
+                            
+                            results["methods_tested"].append(method_result)
+                            
+                        except Exception as e:
+                            results["errors"].append(f"Potential method {method_name}: {str(e)}")
+                
+            except Exception as e:
+                results["errors"].append(f"Method discovery error: {str(e)}")
+            
+            # Method 4: Try standard/rest API methods (non-swap)
+            try:
+                logger.info("🔍 Testing standard futures API methods...")
+                
+                if hasattr(client, 'standard'):
+                    standard_response = await client.standard.query_account_data()
+                    results["methods_tested"].append({
+                        "method": "standard.query_account_data",
+                        "status": "success",
+                        "raw_response": str(standard_response)[:300] if standard_response else "None"
+                    })
+                
+            except Exception as e:
+                results["errors"].append(f"Standard API error: {str(e)}")
+        
+        # Final analysis
+        if results["funds_found"]:
+            results["status"] = "funds_located"
+            results["message"] = f"✅ FUNDS FOUND! Located in: {', '.join(results['funds_found'])}"
+        else:
+            results["status"] = "funds_not_found_in_api"
+            results["message"] = "❌ Funds confirmed in BingX interface but not accessible via these API methods"
+            results["next_steps"] = [
+                "Check if API key has full futures permissions",
+                "Verify which specific futures account type has the funds",
+                "Check for USDT-M vs COIN-M futures accounts",
+                "Consider contacting BingX support for API access"
+            ]
+        
+        return results
+        
+    except Exception as e:
+        return {
+            "status": "deep_scan_failed",
+            "error": str(e),
+            "message": "Deep futures scan completely failed"
+        }
 async def check_our_ip():
     """Check what IP address BingX sees from our server"""
     try:
