@@ -491,5 +491,330 @@ class TechnicalPatternDetector:
         
         return recent_volume > previous_volume * 1.2
 
+    def _detect_sustained_trends(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les tendances soutenues pour positions long/short"""
+        patterns = []
+        
+        if len(df) < 20:
+            return patterns
+        
+        # Calcule les moyennes mobiles pour analyse de tendance
+        df['MA5'] = df['Close'].rolling(5).mean()
+        df['MA10'] = df['Close'].rolling(10).mean()
+        df['MA20'] = df['Close'].rolling(20).mean()
+        
+        # Analyse la pente des moyennes mobiles
+        ma5_slope = self._calculate_slope(df['MA5'].iloc[-10:])
+        ma10_slope = self._calculate_slope(df['MA10'].iloc[-10:])
+        ma20_slope = self._calculate_slope(df['MA20'].iloc[-15:])
+        
+        current_price = df['Close'].iloc[-1]
+        
+        # Tendance haussière soutenue (LONG)
+        bullish_conditions = [
+            ma5_slope > 0,  # MA5 en hausse
+            ma10_slope > 0,  # MA10 en hausse
+            ma20_slope > 0,  # MA20 en hausse
+            current_price > df['MA5'].iloc[-1],  # Prix au-dessus MA5
+            df['MA5'].iloc[-1] > df['MA10'].iloc[-1],  # MA5 > MA10
+            df['MA10'].iloc[-1] > df['MA20'].iloc[-1],  # MA10 > MA20
+        ]
+        
+        if sum(bullish_conditions) >= 5:  # Au moins 5 conditions sur 6
+            # Calcule la force de la tendance
+            trend_strength = min((ma5_slope + ma10_slope + ma20_slope) * 1000, 1.0)
+            trend_duration = self._calculate_trend_duration(df, "bullish")
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.SUSTAINED_BULLISH_TREND,
+                confidence=0.85,
+                strength=max(trend_strength, 0.7),
+                entry_price=current_price,
+                target_price=current_price * 1.08,  # 8% target
+                stop_loss=df['MA10'].iloc[-1] * 0.97,  # Stop sous MA10
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="long",
+                trend_duration_days=trend_duration,
+                trend_strength_score=trend_strength,
+                additional_data={
+                    'ma5_slope': ma5_slope,
+                    'ma10_slope': ma10_slope,
+                    'ma20_slope': ma20_slope,
+                    'ma_alignment': 'bullish'
+                }
+            ))
+        
+        # Tendance baissière soutenue (SHORT)
+        bearish_conditions = [
+            ma5_slope < 0,  # MA5 en baisse
+            ma10_slope < 0,  # MA10 en baisse
+            ma20_slope < 0,  # MA20 en baisse
+            current_price < df['MA5'].iloc[-1],  # Prix en-dessous MA5
+            df['MA5'].iloc[-1] < df['MA10'].iloc[-1],  # MA5 < MA10
+            df['MA10'].iloc[-1] < df['MA20'].iloc[-1],  # MA10 < MA20
+        ]
+        
+        if sum(bearish_conditions) >= 5:  # Au moins 5 conditions sur 6
+            # Calcule la force de la tendance baissière
+            trend_strength = min(abs(ma5_slope + ma10_slope + ma20_slope) * 1000, 1.0)
+            trend_duration = self._calculate_trend_duration(df, "bearish")
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.SUSTAINED_BEARISH_TREND,
+                confidence=0.85,
+                strength=max(trend_strength, 0.7),
+                entry_price=current_price,
+                target_price=current_price * 0.92,  # -8% target
+                stop_loss=df['MA10'].iloc[-1] * 1.03,  # Stop au-dessus MA10
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="short",
+                trend_duration_days=trend_duration,
+                trend_strength_score=trend_strength,
+                additional_data={
+                    'ma5_slope': ma5_slope,
+                    'ma10_slope': ma10_slope,
+                    'ma20_slope': ma20_slope,
+                    'ma_alignment': 'bearish'
+                }
+            ))
+        
+        return patterns
+
+    def _detect_multiple_ma_alignment(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte l'alignement de multiples moyennes mobiles"""
+        patterns = []
+        
+        if len(df) < 50:
+            return patterns
+        
+        # Calcule plusieurs moyennes mobiles
+        df['MA8'] = df['Close'].rolling(8).mean()
+        df['MA13'] = df['Close'].rolling(13).mean()
+        df['MA21'] = df['Close'].rolling(21).mean()
+        df['MA34'] = df['Close'].rolling(34).mean()
+        
+        current_price = df['Close'].iloc[-1]
+        
+        # Alignement bullish (toutes les MA en ordre croissant)
+        bullish_alignment = (
+            current_price > df['MA8'].iloc[-1] > df['MA13'].iloc[-1] > 
+            df['MA21'].iloc[-1] > df['MA34'].iloc[-1]
+        )
+        
+        if bullish_alignment:
+            # Calcule l'écartement des MA (plus grand = plus fort)
+            ma_spread = (df['MA8'].iloc[-1] - df['MA34'].iloc[-1]) / df['MA34'].iloc[-1]
+            strength = min(ma_spread * 20, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.MULTIPLE_MA_BULLISH_ALIGNMENT,
+                confidence=0.9,
+                strength=max(strength, 0.75),
+                entry_price=current_price,
+                target_price=current_price * 1.06,
+                stop_loss=df['MA13'].iloc[-1] * 0.98,
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="long",
+                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                trend_strength_score=strength,
+                additional_data={'ma_spread': ma_spread, 'alignment': 'perfect_bullish'}
+            ))
+        
+        # Alignement bearish (toutes les MA en ordre décroissant)
+        bearish_alignment = (
+            current_price < df['MA8'].iloc[-1] < df['MA13'].iloc[-1] < 
+            df['MA21'].iloc[-1] < df['MA34'].iloc[-1]
+        )
+        
+        if bearish_alignment:
+            # Calcule l'écartement des MA
+            ma_spread = (df['MA34'].iloc[-1] - df['MA8'].iloc[-1]) / df['MA8'].iloc[-1]
+            strength = min(ma_spread * 20, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.MULTIPLE_MA_BEARISH_ALIGNMENT,
+                confidence=0.9,
+                strength=max(strength, 0.75),
+                entry_price=current_price,
+                target_price=current_price * 0.94,
+                stop_loss=df['MA13'].iloc[-1] * 1.02,
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="short",
+                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                trend_strength_score=strength,
+                additional_data={'ma_spread': ma_spread, 'alignment': 'perfect_bearish'}
+            ))
+        
+        return patterns
+
+    def _detect_directional_channels(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les canaux directionnels (bullish/bearish channels)"""
+        patterns = []
+        
+        if len(df) < 20:
+            return patterns
+        
+        # Analyse les 20 derniers jours
+        recent_highs = df['High'].iloc[-20:]
+        recent_lows = df['Low'].iloc[-20:]
+        current_price = df['Close'].iloc[-1]
+        
+        # Calcule les lignes de tendance
+        high_slope = self._calculate_slope(recent_highs)
+        low_slope = self._calculate_slope(recent_lows)
+        
+        # Canal haussier : support et résistance en hausse
+        if high_slope > 0 and low_slope > 0 and abs(high_slope - low_slope) < high_slope * 0.5:
+            channel_strength = min((high_slope + low_slope) * 1000, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.BULLISH_CHANNEL,
+                confidence=0.8,
+                strength=max(channel_strength, 0.6),
+                entry_price=current_price,
+                target_price=recent_highs.max() + (recent_highs.max() - recent_lows.min()) * 0.3,
+                stop_loss=recent_lows.iloc[-5:].min() * 0.98,
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="long",
+                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                trend_strength_score=channel_strength,
+                additional_data={
+                    'high_slope': high_slope,
+                    'low_slope': low_slope,
+                    'channel_width': recent_highs.max() - recent_lows.min()
+                }
+            ))
+        
+        # Canal baissier : support et résistance en baisse
+        elif high_slope < 0 and low_slope < 0 and abs(high_slope - low_slope) < abs(high_slope) * 0.5:
+            channel_strength = min(abs(high_slope + low_slope) * 1000, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.BEARISH_CHANNEL,
+                confidence=0.8,
+                strength=max(channel_strength, 0.6),
+                entry_price=current_price,
+                target_price=recent_lows.min() - (recent_highs.max() - recent_lows.min()) * 0.3,
+                stop_loss=recent_highs.iloc[-5:].max() * 1.02,
+                volume_confirmation=self._check_volume_increase(df),
+                trading_direction="short",
+                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                trend_strength_score=channel_strength,
+                additional_data={
+                    'high_slope': high_slope,
+                    'low_slope': low_slope,
+                    'channel_width': recent_highs.max() - recent_lows.min()
+                }
+            ))
+        
+        return patterns
+
+    def _detect_momentum_continuation(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les patterns de continuation de momentum"""
+        patterns = []
+        
+        if len(df) < 15:
+            return patterns
+        
+        # Calcule le momentum sur différentes périodes
+        momentum_5d = (df['Close'].iloc[-1] - df['Close'].iloc[-6]) / df['Close'].iloc[-6]
+        momentum_10d = (df['Close'].iloc[-1] - df['Close'].iloc[-11]) / df['Close'].iloc[-11]
+        
+        current_price = df['Close'].iloc[-1]
+        volume_ratio = df['Volume'].iloc[-3:].mean() / df['Volume'].iloc[-10:-3].mean()
+        
+        # Momentum bullish continuation
+        if momentum_5d > 0.02 and momentum_10d > 0.03 and volume_ratio > 1.2:
+            momentum_strength = min((momentum_5d + momentum_10d) * 10, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.BULLISH_MOMENTUM_CONTINUATION,
+                confidence=0.75,
+                strength=max(momentum_strength, 0.65),
+                entry_price=current_price,
+                target_price=current_price * (1 + momentum_10d * 0.8),
+                stop_loss=current_price * (1 - momentum_10d * 0.3),
+                volume_confirmation=True,
+                trading_direction="long",
+                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                trend_strength_score=momentum_strength,
+                additional_data={
+                    'momentum_5d': momentum_5d,
+                    'momentum_10d': momentum_10d,
+                    'volume_ratio': volume_ratio
+                }
+            ))
+        
+        # Momentum bearish continuation
+        elif momentum_5d < -0.02 and momentum_10d < -0.03 and volume_ratio > 1.2:
+            momentum_strength = min(abs(momentum_5d + momentum_10d) * 10, 1.0)
+            
+            patterns.append(TechnicalPattern(
+                symbol=symbol,
+                pattern_type=PatternType.BEARISH_MOMENTUM_CONTINUATION,
+                confidence=0.75,
+                strength=max(momentum_strength, 0.65),
+                entry_price=current_price,
+                target_price=current_price * (1 + momentum_10d * 0.8),  # momentum_10d est négatif
+                stop_loss=current_price * (1 - momentum_10d * 0.3),
+                volume_confirmation=True,
+                trading_direction="short",
+                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                trend_strength_score=momentum_strength,
+                additional_data={
+                    'momentum_5d': momentum_5d,
+                    'momentum_10d': momentum_10d,
+                    'volume_ratio': volume_ratio
+                }
+            ))
+        
+        return patterns
+
+    def _calculate_slope(self, series: pd.Series) -> float:
+        """Calcule la pente d'une série temporelle"""
+        if len(series) < 2:
+            return 0.0
+        
+        x = np.arange(len(series))
+        y = series.values
+        slope = np.polyfit(x, y, 1)[0]
+        
+        # Normalise par rapport à la valeur moyenne
+        return slope / series.mean() if series.mean() != 0 else 0.0
+
+    def _calculate_trend_duration(self, df: pd.DataFrame, trend_type: str) -> int:
+        """Calcule la durée de la tendance en jours"""
+        if len(df) < 10:
+            return 0
+        
+        df['MA10'] = df['Close'].rolling(10).mean()
+        
+        duration = 0
+        if trend_type == "bullish":
+            # Compte les jours consécutifs où prix > MA10 et MA10 en hausse
+            for i in range(len(df) - 1, 0, -1):
+                if (df['Close'].iloc[i] > df['MA10'].iloc[i] and 
+                    df['MA10'].iloc[i] > df['MA10'].iloc[i-1]):
+                    duration += 1
+                else:
+                    break
+        elif trend_type == "bearish":
+            # Compte les jours consécutifs où prix < MA10 et MA10 en baisse
+            for i in range(len(df) - 1, 0, -1):
+                if (df['Close'].iloc[i] < df['MA10'].iloc[i] and 
+                    df['MA10'].iloc[i] < df['MA10'].iloc[i-1]):
+                    duration += 1
+                else:
+                    break
+        
+        return duration
+
 # Global instance
 technical_pattern_detector = TechnicalPatternDetector()
