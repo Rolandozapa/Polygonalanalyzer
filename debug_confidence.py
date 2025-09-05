@@ -8,7 +8,7 @@ def debug_ia2_confidence():
     
     try:
         # Get decisions
-        response = requests.get("https://dualtrade-ai.preview.emergentagent.com/api/decisions", timeout=10)
+        response = requests.get("https://cryptobot-plus.preview.emergentagent.com/api/decisions", timeout=10)
         if response.status_code != 200:
             print(f"❌ Failed to get decisions: {response.status_code}")
             return
@@ -60,7 +60,7 @@ def debug_ia2_confidence():
         
         # Get analyses to check base confidence
         print(f"\n🔍 Checking IA1 analysis confidence...")
-        response = requests.get("https://dualtrade-ai.preview.emergentagent.com/api/analyses", timeout=10)
+        response = requests.get("https://cryptobot-plus.preview.emergentagent.com/api/analyses", timeout=10)
         if response.status_code == 200:
             analyses_data = response.json()
             analyses = analyses_data.get('analyses', [])
@@ -73,7 +73,7 @@ def debug_ia2_confidence():
         
         # Get opportunities to check data confidence
         print(f"\n🔍 Checking market data confidence...")
-        response = requests.get("https://dualtrade-ai.preview.emergentagent.com/api/opportunities", timeout=10)
+        response = requests.get("https://cryptobot-plus.preview.emergentagent.com/api/opportunities", timeout=10)
         if response.status_code == 200:
             opps_data = response.json()
             opportunities = opps_data.get('opportunities', [])

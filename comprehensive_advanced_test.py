@@ -5,7 +5,7 @@ from pathlib import Path
 
 class ComprehensiveAdvancedTradingTest:
     def __init__(self):
-        self.base_url = "https://dualtrade-ai.preview.emergentagent.com"
+        self.base_url = "https://cryptobot-plus.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         
     def get_data(self, endpoint):
