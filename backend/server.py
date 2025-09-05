@@ -1508,10 +1508,13 @@ class UltraProfessionalIA2DecisionAgent:
             # Check for position inversion opportunity first
             await self._check_position_inversion(opportunity, analysis)
             
-            # Get account balance
+            # Get account balance for position sizing
             account_balance = await self._get_account_balance()
             
-            # Create comprehensive prompt for Claude with advanced strategy context
+            # NEW: Get crypto market sentiment for leverage calculation
+            market_sentiment = await self._get_crypto_market_sentiment()
+            
+            # Create comprehensive prompt for Claude with market sentiment and leverage logic
             prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
 
