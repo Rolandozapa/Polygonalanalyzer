@@ -671,8 +671,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.warning(f"⚠️ IA1 OHLCV error for {symbol}, using synthetic: {e}")
             return self._generate_enhanced_synthetic_ohlcv(days)
     
-    def _generate_enhanced_synthetic_ohlcv(self, days: int) -> pd.DataFrame:
-        """Generate enhanced synthetic OHLCV data"""
+    def _generate_enhanced_synthetic_ohlcv(self, days: int = 50) -> pd.DataFrame:
+        """Generate enhanced synthetic OHLCV data - 50 jours pour calculs techniques complets"""
         dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
         
         # More realistic price movement with trends
