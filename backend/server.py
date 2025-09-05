@@ -566,39 +566,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
             prompt = f"""
-            ULTRA PROFESSIONAL TECHNICAL ANALYSIS - Multi-Source Data Validation
+            FAST TECHNICAL ANALYSIS - {opportunity.symbol}
             
-            Symbol: {opportunity.symbol}
-            Current Price: ${opportunity.current_price:,.2f}
-            24h Volume: ${opportunity.volume_24h:,.0f}
-            24h Change: {opportunity.price_change_24h:.2f}%
-            Market Cap: {market_cap_str}
-            Market Cap Rank: #{opportunity.market_cap_rank or 'N/A'}
+            Price: ${opportunity.current_price:,.2f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
+            Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
             
-            DATA SOURCE VALIDATION:
-            - Data Sources: {', '.join(opportunity.data_sources)}
-            - Data Confidence: {opportunity.data_confidence:.2f}
-            - Market Aggregator Status: {performance_stats.get('success_rate', 0):.2f} success rate
-            - Total API Sources: {len(performance_stats.get('api_endpoints', []))} endpoints active
+            TECHNICAL INDICATORS (10-day):
+            RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | BB Position: {bb_position:.2f}
+            Support: ${self._find_support_levels(historical_data, current_price)[0]:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0]:.2f}
             
-            ADVANCED TECHNICAL INDICATORS (10-day historical analysis):
-            - RSI (14): {rsi:.2f}
-            - MACD Line: {macd_line:.6f}
-            - MACD Signal: {macd_signal:.6f} 
-            - MACD Histogram: {macd_histogram:.6f}
-            - Bollinger Band Position: {bb_position:.2f} (-1=lower, 0=middle, 1=upper)
-            - BB Upper: ${bb_upper:.2f}
-            - BB Lower: ${bb_lower:.2f}
-            - Volatility: {opportunity.volatility:.4f}
+            Recent 5-day Close: {historical_data['Close'].tail().tolist()}
             
-            MARKET MICROSTRUCTURE:
-            - Volume Quality: {'High' if opportunity.volume_24h > 10_000_000 else 'Medium' if opportunity.volume_24h > 1_000_000 else 'Low'}
-            - Price Action: {'Bullish' if opportunity.price_change_24h > 2 else 'Bearish' if opportunity.price_change_24h < -2 else 'Neutral'}
-            
-            Recent Price History (last 5 days):
-            {historical_data['Close'].tail().to_string()}
-            
-            Perform comprehensive multi-source validated technical analysis.
+            Provide concise technical analysis with confidence score.
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
