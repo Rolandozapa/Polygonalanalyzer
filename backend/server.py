@@ -830,6 +830,65 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "data_sources": ["internal"]
             }
 
+    def _calculate_analysis_confidence(self, rsi: float, macd_histogram: float, bb_position: float, volatility: float, data_confidence: float) -> float:
+        """Calcule la confiance de l'analyse technique"""
+        try:
+            # Initialise la confiance de base
+            confidence = 0.5
+            
+            # RSI dans des zones significatives
+            rsi_safe = self._ensure_json_safe(rsi, 50.0)
+            if rsi_safe < 30 or rsi_safe > 70:
+                confidence += 0.15
+            elif 35 < rsi_safe < 65:
+                confidence += 0.1
+            
+            # MACD histogram strength
+            macd_safe = self._ensure_json_safe(macd_histogram, 0.0)
+            if abs(macd_safe) > 0.01:
+                confidence += 0.1
+            
+            # Bollinger bands position
+            bb_safe = self._ensure_json_safe(bb_position, 0.0)
+            if abs(bb_safe) > 0.7:  # Near bands
+                confidence += 0.1
+            
+            # Volatilité appropriée
+            vol_safe = self._ensure_json_safe(volatility, 0.02)
+            if 0.01 < vol_safe < 0.05:  # Sweet spot volatility
+                confidence += 0.1
+            
+            # Data confidence from aggregator
+            data_conf_safe = self._ensure_json_safe(data_confidence, 0.5)
+            confidence += data_conf_safe * 0.2
+            
+            # Ensure confidence is within bounds
+            return self._ensure_json_safe(confidence, 0.5)
+            
+        except Exception as e:
+            logger.debug(f"Error calculating analysis confidence: {e}")
+            return 0.5
+
+    def _determine_market_sentiment(self, opportunity) -> str:
+        """Détermine le sentiment du marché"""
+        try:
+            change = self._ensure_json_safe(opportunity.price_change_24h, 0.0)
+            
+            if change > 5:
+                return "very_bullish"
+            elif change > 2:
+                return "bullish"
+            elif change > -2:
+                return "neutral"
+            elif change > -5:
+                return "bearish"
+            else:
+                return "very_bearish"
+        except:
+            return "neutral"
+
+# Global instances
+
     def _calculate_fibonacci_retracement(self, historical_data: pd.DataFrame) -> float:
         """Calcule le niveau de retracement Fibonacci actuel"""
         try:
