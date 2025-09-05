@@ -322,7 +322,7 @@ class AdvancedMarketAggregator:
                 "order": "market_cap_desc",
                 "per_page": min(limit, 250),
                 "page": 1,
-                "sparkline": False,
+                "sparkline": "false",
                 "price_change_percentage": "24h"
             }
             
