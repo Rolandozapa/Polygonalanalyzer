@@ -2543,59 +2543,70 @@ class UltraProfessionalTradingOrchestrator:
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """Vérifie si l'analyse IA1 a suffisamment de données de qualité pour justifier un appel IA2 (économie API)"""
         try:
-            # Critères de qualité pour économiser les appels API Claude
+            # Critères de qualité AJUSTÉS pour économiser les appels API tout en maintenant l'efficacité
             
-            # 1. Vérifier la confiance d'analyse IA1
-            if analysis.analysis_confidence < 0.5:  # Moins de 50% de confiance
+            # 1. Vérifier la confiance d'analyse IA1 (seuil réduit)
+            if analysis.analysis_confidence < 0.40:  # Réduit de 50% à 40%
                 logger.debug(f"⚠️ IA1 confiance trop faible pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
                 return False
             
-            # 2. Vérifier la qualité des données de marché
-            if opportunity.data_confidence < 0.6:  # Moins de 60% de confiance données
+            # 2. Vérifier la qualité des données de marché (seuil réduit)
+            if opportunity.data_confidence < 0.40:  # Réduit de 60% à 40%
                 logger.debug(f"⚠️ Données marché insuffisantes pour {analysis.symbol}: {opportunity.data_confidence:.2%}")
                 return False
             
-            # 3. Vérifier que les indicateurs techniques sont calculés (pas par défaut)
-            if analysis.rsi == 50.0 and analysis.macd_signal == 0.0:  # Valeurs par défaut = pas de vraies données
+            # 3. Vérifier que les indicateurs techniques sont calculés (plus permissif)
+            if analysis.rsi == 50.0 and abs(analysis.macd_signal) < 0.000001:  # MACD très proche de zéro
                 logger.debug(f"⚠️ Indicateurs techniques par défaut pour {analysis.symbol} - pas de vraies données OHLCV")
                 return False
             
-            # 4. Vérifier que RSI est dans une plage réaliste
-            if not (10 <= analysis.rsi <= 90):  # RSI irréaliste
+            # 4. Vérifier que RSI est dans une plage réaliste (plus large)
+            if not (5 <= analysis.rsi <= 95):  # Élargi de 10-90 à 5-95
                 logger.debug(f"⚠️ RSI irréaliste pour {analysis.symbol}: {analysis.rsi}")
                 return False
             
-            # 5. Vérifier les niveaux support/résistance
-            if not analysis.support_levels or not analysis.resistance_levels:
-                logger.debug(f"⚠️ Niveaux support/résistance manquants pour {analysis.symbol}")
+            # 5. Vérifier les niveaux support/résistance (plus permissif)
+            if (not analysis.support_levels or len(analysis.support_levels) == 0) and \
+               (not analysis.resistance_levels or len(analysis.resistance_levels) == 0):
+                logger.debug(f"⚠️ Aucun niveau support/résistance pour {analysis.symbol}")
                 return False
             
-            # 6. Vérifier la volatilité du marché (trop faible = pas d'opportunité)
-            if opportunity.volatility < 0.01:  # Moins de 1% de volatilité
+            # 6. Vérifier la volatilité du marché (seuil réduit)
+            if opportunity.volatility < 0.005:  # Réduit de 1% à 0.5%
                 logger.debug(f"⚠️ Volatilité trop faible pour {analysis.symbol}: {opportunity.volatility:.3%}")
                 return False
             
-            # 7. Vérifier le volume de trading
-            if opportunity.volume_24h < 100_000:  # Moins de 100K$ de volume
+            # 7. Vérifier le volume de trading (seuil réduit)
+            if opportunity.volume_24h < 50_000:  # Réduit de 100K à 50K
                 logger.debug(f"⚠️ Volume insuffisant pour {analysis.symbol}: ${opportunity.volume_24h:,.0f}")
                 return False
             
-            # 8. Vérifier que le raisonnement IA1 n'est pas trop court (signe de problème)
-            if len(analysis.ia1_reasoning) < 100:
+            # 8. Vérifier que le raisonnement IA1 n'est pas trop court (seuil réduit)
+            if len(analysis.ia1_reasoning) < 50:  # Réduit de 100 à 50 caractères
                 logger.debug(f"⚠️ Raisonnement IA1 trop court pour {analysis.symbol}: {len(analysis.ia1_reasoning)} chars")
                 return False
             
-            # 9. Bonus: analyse avec pattern technique détecté
+            # 9. BONUS: analyses avec patterns techniques détectés (bypass certains critères)
             if analysis.patterns_detected and len(analysis.patterns_detected) > 0:
-                logger.debug(f"✅ Pattern technique détecté pour {analysis.symbol}: {analysis.patterns_detected}")
-                return True  # Priorité aux patterns
+                logger.debug(f"✅ Pattern technique détecté - PRIORITÉ IA2 pour {analysis.symbol}: {analysis.patterns_detected}")
+                return True  # Priorité absolue aux patterns techniques
             
-            # 10. Vérifier que nous avons des sources de données multiples
+            # 10. BONUS: analyses avec confiance élevée (bypass certains critères)
+            if analysis.analysis_confidence >= 0.75:  # Confiance élevée
+                logger.debug(f"✅ Confiance élevée - PRIORITÉ IA2 pour {analysis.symbol}: {analysis.analysis_confidence:.2%}")
+                return True  # Priorité aux analyses haute confiance
+            
+            # 11. BONUS: marchés très volatils (opportunités importantes)
+            if opportunity.volatility > 0.05:  # Plus de 5% de volatilité
+                logger.debug(f"✅ Haute volatilité - OPPORTUNITÉ IA2 pour {analysis.symbol}: {opportunity.volatility:.2%}")
+                return True  # Opportunités sur marchés volatils
+            
+            # 12. Vérifier que nous avons des sources de données
             if len(opportunity.data_sources) < 1:
                 logger.debug(f"⚠️ Aucune source de données pour {analysis.symbol}")
                 return False
             
-            # Si tous les critères sont remplis, c'est bon pour IA2
+            # Si les critères de base sont remplis, c'est bon pour IA2
             logger.debug(f"✅ Analyse qualifiée pour IA2: {analysis.symbol} (IA1: {analysis.analysis_confidence:.2%}, Data: {opportunity.data_confidence:.2%})")
             return True
             
