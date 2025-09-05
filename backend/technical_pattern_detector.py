@@ -885,6 +885,435 @@ class TechnicalPatternDetector:
         
         return duration
 
+    def _detect_classic_chart_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les figures chartistes classiques"""
+        patterns = []
+        
+        if len(df) < 30:
+            return patterns
+        
+        # Cup and Handle pattern
+        patterns.extend(self._detect_cup_and_handle(symbol, df))
+        
+        # Rectangle consolidation
+        patterns.extend(self._detect_rectangle_consolidation(symbol, df))
+        
+        # Rounding patterns
+        patterns.extend(self._detect_rounding_patterns(symbol, df))
+        
+        return patterns
+
+    def _detect_reversal_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les patterns de retournement (Head & Shoulders, Double Top/Bottom)"""
+        patterns = []
+        
+        if len(df) < 25:
+            return patterns
+        
+        # Head and Shoulders pattern
+        patterns.extend(self._detect_head_and_shoulders(symbol, df))
+        
+        # Double Top/Bottom patterns
+        patterns.extend(self._detect_double_patterns(symbol, df))
+        
+        # Triple Top/Bottom patterns
+        patterns.extend(self._detect_triple_patterns(symbol, df))
+        
+        return patterns
+
+    def _detect_triangle_wedge_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les triangles et wedges"""
+        patterns = []
+        
+        if len(df) < 20:
+            return patterns
+        
+        # Triangles symétriques
+        patterns.extend(self._detect_symmetrical_triangle(symbol, df))
+        
+        # Triangles ascendants/descendants (améliorer l'existant)
+        patterns.extend(self._detect_enhanced_triangles(symbol, df))
+        
+        # Rising/Falling Wedges
+        patterns.extend(self._detect_wedge_patterns(symbol, df))
+        
+        return patterns
+
+    def _detect_flag_pennant_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les flags et pennants (patterns de continuation)"""
+        patterns = []
+        
+        if len(df) < 15:
+            return patterns
+        
+        # Flag patterns
+        patterns.extend(self._detect_flag_patterns(symbol, df))
+        
+        # Pennant patterns
+        patterns.extend(self._detect_pennant_patterns(symbol, df))
+        
+        return patterns
+
+    def _detect_head_and_shoulders(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Head and Shoulders et Inverse Head and Shoulders"""
+        patterns = []
+        
+        try:
+            highs = df['High'].rolling(3, center=True).max() == df['High']
+            lows = df['Low'].rolling(3, center=True).min() == df['Low']
+            
+            current_price = df['Close'].iloc[-1]
+            
+            # Head and Shoulders (bearish reversal)
+            high_peaks = df[highs]['High'].iloc[-15:]  # Derniers 15 pics
+            if len(high_peaks) >= 3:
+                # Cherche pattern: épaule gauche < tête > épaule droite
+                for i in range(len(high_peaks) - 2):
+                    left_shoulder = high_peaks.iloc[i]
+                    head = high_peaks.iloc[i + 1]
+                    right_shoulder = high_peaks.iloc[i + 2]
+                    
+                    if (left_shoulder < head > right_shoulder and 
+                        abs(left_shoulder - right_shoulder) / head < 0.03):  # Épaules similaires
+                        
+                        neckline = min(left_shoulder, right_shoulder) * 0.98
+                        strength = min((head - neckline) / neckline * 5, 1.0)
+                        
+                        if strength > 0.4:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.HEAD_AND_SHOULDERS,
+                                confidence=0.85,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=neckline * 0.95,
+                                stop_loss=head * 1.02,
+                                volume_confirmation=self._check_volume_increase(df),
+                                trading_direction="short",
+                                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                                trend_strength_score=strength,
+                                additional_data={
+                                    'head_price': head,
+                                    'left_shoulder': left_shoulder,
+                                    'right_shoulder': right_shoulder,
+                                    'neckline': neckline
+                                }
+                            ))
+
+            # Inverse Head and Shoulders (bullish reversal)
+            low_troughs = df[lows]['Low'].iloc[-15:]  # Derniers 15 creux
+            if len(low_troughs) >= 3:
+                for i in range(len(low_troughs) - 2):
+                    left_shoulder = low_troughs.iloc[i]
+                    head = low_troughs.iloc[i + 1]
+                    right_shoulder = low_troughs.iloc[i + 2]
+                    
+                    if (left_shoulder > head < right_shoulder and 
+                        abs(left_shoulder - right_shoulder) / head < 0.03):
+                        
+                        neckline = max(left_shoulder, right_shoulder) * 1.02
+                        strength = min((neckline - head) / head * 5, 1.0)
+                        
+                        if strength > 0.4:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.INVERSE_HEAD_AND_SHOULDERS,
+                                confidence=0.85,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=neckline * 1.05,
+                                stop_loss=head * 0.98,
+                                volume_confirmation=self._check_volume_increase(df),
+                                trading_direction="long",
+                                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                                trend_strength_score=strength,
+                                additional_data={
+                                    'head_price': head,
+                                    'left_shoulder': left_shoulder,
+                                    'right_shoulder': right_shoulder,
+                                    'neckline': neckline
+                                }
+                            ))
+
+        except Exception as e:
+            logger.debug(f"Head and Shoulders detection error for {symbol}: {e}")
+
+        return patterns
+
+    def _detect_double_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Double Top et Double Bottom"""
+        patterns = []
+        
+        try:
+            current_price = df['Close'].iloc[-1]
+            
+            # Double Top (bearish reversal)
+            highs = df['High'].rolling(5, center=True).max() == df['High']
+            high_peaks = df[highs]['High'].iloc[-10:]
+            
+            if len(high_peaks) >= 2:
+                for i in range(len(high_peaks) - 1):
+                    peak1 = high_peaks.iloc[i]
+                    peak2 = high_peaks.iloc[i + 1]
+                    
+                    # Double top : deux pics similaires
+                    if abs(peak1 - peak2) / max(peak1, peak2) < 0.02:  # Différence < 2%
+                        valley = df['Low'][df.index > high_peaks.index[i]].min()
+                        strength = min((max(peak1, peak2) - valley) / valley * 3, 1.0)
+                        
+                        if strength > 0.5:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.DOUBLE_TOP,
+                                confidence=0.8,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=valley * 0.97,
+                                stop_loss=max(peak1, peak2) * 1.02,
+                                volume_confirmation=self._check_volume_increase(df),
+                                trading_direction="short",
+                                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                                trend_strength_score=strength,
+                                additional_data={'peak1': peak1, 'peak2': peak2, 'valley': valley}
+                            ))
+
+            # Double Bottom (bullish reversal)
+            lows = df['Low'].rolling(5, center=True).min() == df['Low']
+            low_troughs = df[lows]['Low'].iloc[-10:]
+            
+            if len(low_troughs) >= 2:
+                for i in range(len(low_troughs) - 1):
+                    trough1 = low_troughs.iloc[i]
+                    trough2 = low_troughs.iloc[i + 1]
+                    
+                    if abs(trough1 - trough2) / min(trough1, trough2) < 0.02:
+                        peak = df['High'][df.index > low_troughs.index[i]].max()
+                        strength = min((peak - min(trough1, trough2)) / min(trough1, trough2) * 3, 1.0)
+                        
+                        if strength > 0.5:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.DOUBLE_BOTTOM,
+                                confidence=0.8,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=peak * 1.03,
+                                stop_loss=min(trough1, trough2) * 0.98,
+                                volume_confirmation=self._check_volume_increase(df),
+                                trading_direction="long",
+                                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                                trend_strength_score=strength,
+                                additional_data={'trough1': trough1, 'trough2': trough2, 'peak': peak}
+                            ))
+
+        except Exception as e:
+            logger.debug(f"Double pattern detection error for {symbol}: {e}")
+
+        return patterns
+
+    def _detect_flag_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les patterns Flag (continuation)"""
+        patterns = []
+        
+        try:
+            if len(df) < 15:
+                return patterns
+            
+            current_price = df['Close'].iloc[-1]
+            
+            # Flag pattern : forte hausse/baisse suivie d'une consolidation rectangulaire
+            price_change_pre = (df['Close'].iloc[-10] - df['Close'].iloc[-15]) / df['Close'].iloc[-15]
+            
+            # Consolidation récente (5 derniers jours)
+            recent_highs = df['High'].iloc[-5:].max()
+            recent_lows = df['Low'].iloc[-5:].min()
+            consolidation_range = (recent_highs - recent_lows) / recent_lows
+            
+            # Bullish Flag : forte hausse puis consolidation plate
+            if price_change_pre > 0.05 and consolidation_range < 0.03:  # Hausse 5%+ puis consolidation 3%-
+                strength = min(price_change_pre * 10, 1.0)
+                patterns.append(TechnicalPattern(
+                    symbol=symbol,
+                    pattern_type=PatternType.FLAG_BULLISH,
+                    confidence=0.75,
+                    strength=strength,
+                    entry_price=current_price,
+                    target_price=current_price * (1 + price_change_pre * 0.8),
+                    stop_loss=recent_lows * 0.98,
+                    volume_confirmation=self._check_volume_increase(df),
+                    trading_direction="long",
+                    trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                    trend_strength_score=strength,
+                    additional_data={
+                        'pre_move': price_change_pre,
+                        'consolidation_range': consolidation_range,
+                        'flag_high': recent_highs,
+                        'flag_low': recent_lows
+                    }
+                ))
+            
+            # Bearish Flag : forte baisse puis consolidation plate
+            elif price_change_pre < -0.05 and consolidation_range < 0.03:
+                strength = min(abs(price_change_pre) * 10, 1.0)
+                patterns.append(TechnicalPattern(
+                    symbol=symbol,
+                    pattern_type=PatternType.FLAG_BEARISH,
+                    confidence=0.75,
+                    strength=strength,
+                    entry_price=current_price,
+                    target_price=current_price * (1 + price_change_pre * 0.8),  # price_change_pre négatif
+                    stop_loss=recent_highs * 1.02,
+                    volume_confirmation=self._check_volume_increase(df),
+                    trading_direction="short",
+                    trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                    trend_strength_score=strength,
+                    additional_data={
+                        'pre_move': price_change_pre,
+                        'consolidation_range': consolidation_range,
+                        'flag_high': recent_highs,
+                        'flag_low': recent_lows
+                    }
+                ))
+
+        except Exception as e:
+            logger.debug(f"Flag pattern detection error for {symbol}: {e}")
+
+        return patterns
+
+    def _detect_cup_and_handle(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte le pattern Cup and Handle (bullish)"""
+        patterns = []
+        
+        try:
+            if len(df) < 30:
+                return patterns
+            
+            current_price = df['Close'].iloc[-1]
+            prices = df['Close'].iloc[-30:]
+            
+            # Cup : U-shape sur 20-25 jours, Handle : petite consolidation sur 5-10 jours
+            cup_start = prices.iloc[0]
+            cup_low = prices.iloc[5:25].min()
+            cup_end = prices.iloc[25]
+            handle_low = prices.iloc[25:].min()
+            
+            # Conditions Cup and Handle
+            cup_depth = (cup_start - cup_low) / cup_start
+            handle_depth = (cup_end - handle_low) / cup_end
+            
+            if (0.1 < cup_depth < 0.3 and  # Cup depth 10-30%
+                handle_depth < cup_depth * 0.3 and  # Handle shallow vs cup
+                current_price > cup_start * 0.95):  # Prix proche du cup rim
+                
+                strength = min(cup_depth * 3, 1.0)
+                patterns.append(TechnicalPattern(
+                    symbol=symbol,
+                    pattern_type=PatternType.CUP_AND_HANDLE,
+                    confidence=0.8,
+                    strength=strength,
+                    entry_price=current_price,
+                    target_price=cup_start * (1 + cup_depth),  # Measured move
+                    stop_loss=handle_low * 0.98,
+                    volume_confirmation=self._check_volume_increase(df),
+                    trading_direction="long",
+                    trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                    trend_strength_score=strength,
+                    additional_data={
+                        'cup_start': cup_start,
+                        'cup_low': cup_low,
+                        'cup_depth': cup_depth,
+                        'handle_low': handle_low,
+                        'handle_depth': handle_depth
+                    }
+                ))
+
+        except Exception as e:
+            logger.debug(f"Cup and Handle detection error for {symbol}: {e}")
+
+        return patterns
+
+    def _detect_wedge_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Rising et Falling Wedges"""
+        patterns = []
+        
+        try:
+            if len(df) < 20:
+                return patterns
+            
+            current_price = df['Close'].iloc[-1]
+            recent_highs = df['High'].iloc[-15:]
+            recent_lows = df['Low'].iloc[-15:]
+            
+            # Calcule les tendances des highs et lows
+            high_slope = self._calculate_slope(recent_highs)
+            low_slope = self._calculate_slope(recent_lows)
+            
+            # Rising Wedge : highs et lows montent, mais highs slope < lows slope (bearish)
+            if high_slope > 0 and low_slope > 0 and low_slope > high_slope * 1.2:
+                strength = min(abs(high_slope - low_slope) * 1000, 1.0)
+                patterns.append(TechnicalPattern(
+                    symbol=symbol,
+                    pattern_type=PatternType.RISING_WEDGE,
+                    confidence=0.75,
+                    strength=strength,
+                    entry_price=current_price,
+                    target_price=recent_lows.iloc[0] * 0.95,  # Retour vers support initial
+                    stop_loss=recent_highs.max() * 1.02,
+                    volume_confirmation=self._check_volume_increase(df),
+                    trading_direction="short",
+                    trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                    trend_strength_score=strength,
+                    additional_data={'high_slope': high_slope, 'low_slope': low_slope}
+                ))
+            
+            # Falling Wedge : highs et lows descendent, mais lows slope < highs slope (bullish)
+            elif high_slope < 0 and low_slope < 0 and abs(low_slope) > abs(high_slope) * 1.2:
+                strength = min(abs(high_slope - low_slope) * 1000, 1.0)
+                patterns.append(TechnicalPattern(
+                    symbol=symbol,
+                    pattern_type=PatternType.FALLING_WEDGE,
+                    confidence=0.75,
+                    strength=strength,
+                    entry_price=current_price,
+                    target_price=recent_highs.iloc[0] * 1.05,  # Retour vers résistance initiale
+                    stop_loss=recent_lows.min() * 0.98,
+                    volume_confirmation=self._check_volume_increase(df),
+                    trading_direction="long",
+                    trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                    trend_strength_score=strength,
+                    additional_data={'high_slope': high_slope, 'low_slope': low_slope}
+                ))
+
+        except Exception as e:
+            logger.debug(f"Wedge pattern detection error for {symbol}: {e}")
+
+        return patterns
+
+    # Méthodes stub pour les autres patterns (à implémenter si nécessaire)
+    def _detect_triple_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Triple Top et Triple Bottom - version simplifiée"""
+        return []  # TODO: Implémenter si nécessaire
+
+    def _detect_symmetrical_triangle(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Triangle Symétrique - version simplifiée"""
+        return []  # TODO: Implémenter si nécessaire
+
+    def _detect_enhanced_triangles(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Améliore la détection existante des triangles"""
+        return []  # TODO: Améliorer l'existant
+
+    def _detect_pennant_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les Pennants - version simplifiée"""
+        return []  # TODO: Implémenter si nécessaire
+
+    def _detect_rectangle_consolidation(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les consolidations rectangulaires"""
+        return []  # TODO: Implémenter si nécessaire
+
+    def _detect_rounding_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte Rounding Top et Bottom"""
+        return []  # TODO: Implémenter si nécessaire
+
     async def _fetch_binance_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
         """Récupère OHLCV depuis Binance API (1,200 req/min - ULTRA GÉNÉREUX!)"""
         try:
