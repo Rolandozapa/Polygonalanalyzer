@@ -665,18 +665,25 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
             return self._create_fallback_analysis(opportunity)
     
-    async def _get_enhanced_historical_data(self, symbol: str, days: int = 50) -> Optional[pd.DataFrame]:
-        """Get enhanced historical data using improved OHLCV fetcher - VRAIES données seulement"""
+    async def _get_enhanced_historical_data(self, symbol: str, days: int = 100) -> Optional[pd.DataFrame]:
+        """Get enhanced historical data using improved OHLCV fetcher - VRAIES données seulement avec plus d'historique"""
         try:
-            logger.info(f"🔍 Fetching enhanced OHLCV data for {symbol} using improved fetcher")
+            logger.info(f"🔍 Fetching enhanced OHLCV data for {symbol} using improved multi-source fetcher")
             
-            # Use the enhanced OHLCV fetcher
+            # Use the enhanced OHLCV fetcher with more historical data for better MACD
             real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
             
-            if real_data is not None and len(real_data) >= 50:  # Minimum for good MACD calculation
-                logger.info(f"✅ IA1 using ENHANCED REAL OHLCV data for {symbol}: {len(real_data)} days")
+            if real_data is not None and len(real_data) >= 100:  # Minimum for stable MACD calculation
+                logger.info(f"✅ IA1 using ENHANCED MULTI-SOURCE OHLCV data for {symbol}: {len(real_data)} days")
                 
-                # Ensure we have enough data for technical indicators
+                # Log multi-source info if available
+                if hasattr(real_data, 'attrs') and real_data.attrs:
+                    primary = real_data.attrs.get('primary_source', 'Unknown')
+                    secondary = real_data.attrs.get('secondary_source', 'None')
+                    validation = real_data.attrs.get('validation_rate', 0)
+                    logger.info(f"📊 Multi-source: {primary} + {secondary}, validation: {validation*100:.1f}%")
+                
+                # Return requested number of days or all available data
                 if len(real_data) >= days:
                     return real_data.tail(days)  # Return requested number of days
                 else:
@@ -684,13 +691,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     return real_data  # Return all available data
                     
             elif real_data is not None:
-                logger.warning(f"⚠️ Insufficient enhanced data for {symbol}: {len(real_data)} days (minimum: 50)")
+                logger.warning(f"⚠️ Insufficient enhanced data for {symbol}: {len(real_data)} days (minimum: 100 for stable MACD)")
                 
-            logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient enhanced OHLCV data")
+            logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient enhanced multi-source OHLCV data")
             return None  # No synthetic data fallback
                 
         except Exception as e:
-            logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced OHLCV fetch error: {e}")
+            logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced multi-source OHLCV fetch error: {e}")
             return None  # No fallback - real data only
     
     # Note: Synthetic data generation removed - using REAL OHLCV data only
