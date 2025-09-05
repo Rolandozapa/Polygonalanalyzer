@@ -2913,13 +2913,20 @@ class UltraProfessionalTradingOrchestrator:
             ia2_ready_analyses = []
             skipped_for_data_quality = 0
             
+            logger.info(f"🔍 DEBUG: About to filter {len(valid_analyses)} analyses for IA2")
+            
             for opportunity, analysis in valid_analyses:
+                # Debug logging
+                logger.info(f"🔍 DEBUG: Checking {analysis.symbol} - Confidence: {analysis.analysis_confidence:.2%}, Reasoning: {len(analysis.ia1_reasoning)} chars")
+                
                 # Vérifier la qualité des données avant d'appeler IA2
                 if self._should_send_to_ia2(analysis, opportunity):
                     ia2_ready_analyses.append((opportunity, analysis))
                     decision_tasks.append(self.ia2.make_decision(opportunity, analysis, perf_stats))
+                    logger.info(f"✅ DEBUG: {analysis.symbol} ACCEPTED for IA2")
                 else:
                     skipped_for_data_quality += 1
+                    logger.info(f"❌ DEBUG: {analysis.symbol} REJECTED for IA2")
                     logger.info(f"💰 API ÉCONOMIE: IA2 skipped pour {opportunity.symbol} - données insuffisantes")
             
             logger.info(f"💰 IA2 API OPTIMISATION: {len(ia2_ready_analyses)} analyses envoyées à IA2, {skipped_for_data_quality} skipped pour économie API")
