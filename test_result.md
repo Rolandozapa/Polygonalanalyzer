@@ -155,6 +155,9 @@
         - working: "NA"
         - agent: "main"
         - comment: "IMPLEMENTED: Lowered thresholds - LONG/SHORT at confidence >0.75 (was 0.85), signal_strength >0.5 (was 0.6). Added moderate signals at confidence >0.65. Lowered risk-reward from 2:1 to 1.5:1."
+        - working: "NA"
+        - agent: "main"
+        - comment: "FURTHER IMPROVED: Based on industry research, lowered moderate thresholds to confidence >0.55 and signal_strength >0.35. Changed confidence calculation from multiplicative penalties to additive adjustments. Added multi-source bonuses. Lowered R:R to 1.2:1."
         - working: false
         - agent: "testing"
         - comment: "TESTED: IA2 trading thresholds still too conservative. All 30 decisions are HOLD signals (0% trading rate). Despite confidence improvements and lowered thresholds, no LONG/SHORT signals generated. May need further threshold reduction or market conditions analysis."
