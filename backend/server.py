@@ -1338,26 +1338,26 @@ class UltraProfessionalIA2DecisionAgent:
         
         net_signals += llm_signal_boost
         
-        # More reasonable thresholds for live trading
-        if net_signals >= 4 and confidence > 0.75 and signal_strength > 0.5:  # Lowered from 0.85/0.6
+        # More reasonable trading thresholds based on industry standards
+        if net_signals >= 4 and confidence > 0.65 and signal_strength > 0.5:  # Strong signals
             signal = SignalType.LONG
-            confidence = min(confidence + 0.1, 0.98)
+            confidence = min(confidence + 0.1, 0.95)
             reasoning += "LIVE LONG: Strong bullish signals confirmed for live execution. "
-        elif net_signals >= 2 and confidence > 0.65 and signal_strength > 0.4:  # Lowered from 3/0.8/0.5
+        elif net_signals >= 2 and confidence > 0.55 and signal_strength > 0.35:  # Moderate signals
             signal = SignalType.LONG
-            confidence = min(confidence + 0.05, 0.90)
+            confidence = min(confidence + 0.05, 0.80)
             reasoning += "LIVE LONG: Moderate bullish signals for live execution. "
-        elif net_signals <= -4 and confidence > 0.75 and signal_strength > 0.5:  # Lowered from 0.85/0.6
+        elif net_signals <= -4 and confidence > 0.65 and signal_strength > 0.5:  # Strong bearish
             signal = SignalType.SHORT
-            confidence = min(confidence + 0.1, 0.98)
+            confidence = min(confidence + 0.1, 0.95)
             reasoning += "LIVE SHORT: Strong bearish signals confirmed for live execution. "
-        elif net_signals <= -2 and confidence > 0.65 and signal_strength > 0.4:  # Lowered from -3/0.8/0.5
+        elif net_signals <= -2 and confidence > 0.55 and signal_strength > 0.35:  # Moderate bearish
             signal = SignalType.SHORT
-            confidence = min(confidence + 0.05, 0.90)
+            confidence = min(confidence + 0.05, 0.80)
             reasoning += "LIVE SHORT: Moderate bearish signals for live execution. "
         else:
             signal = SignalType.HOLD
-            reasoning += f"LIVE HOLD: Moderate signals for live trading (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
+            reasoning += f"LIVE HOLD: Signals below threshold for live trading (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
         
         # Calculate live trading levels with enhanced risk management
         current_price = opportunity.current_price
