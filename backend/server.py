@@ -629,7 +629,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
             return self._create_fallback_analysis(opportunity)
     
-    async def _get_enhanced_historical_data(self, symbol: str, days: int = 30) -> pd.DataFrame:
+    async def _get_enhanced_historical_data(self, symbol: str, days: int = 10) -> pd.DataFrame:
         """Get enhanced historical data with fallback"""
         try:
             # Try to get real historical data (implementation depends on available APIs)
