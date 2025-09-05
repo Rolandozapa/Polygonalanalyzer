@@ -2146,6 +2146,7 @@ async def clear_decisions():
         logger.error(f"Error clearing decision cache: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
 
+@api_router.get("/performance")
 async def get_performance():
     """Get ultra professional trading performance metrics"""
     try:
