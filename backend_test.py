@@ -6335,7 +6335,7 @@ class DualAITradingBotTester:
             
             # Calculate using the same formula as in the code
             base_percentage = 3.0
-            leverage_factor = 6.0 / max(leverage, 2.0)  # Minimum 2x leverage
+            leverage_factor = 6.0 / leverage  # Use actual leverage, not max(leverage, 2.0)
             calculated = min(max(base_percentage * leverage_factor, 1.5), 6.0)  # Range: 1.5% - 6.0%
             
             # Allow small floating point differences
