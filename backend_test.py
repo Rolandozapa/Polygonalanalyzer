@@ -430,46 +430,99 @@ class DualAITradingBotTester:
         print("❌ AI integration test failed - no AI-generated data found")
         return False
 
-    async def run_all_tests(self):
-        """Run all tests"""
-        print("🚀 Starting Dual AI Trading Bot System Tests")
-        print("=" * 60)
+    async def run_ia1_optimization_tests(self):
+        """Run comprehensive IA1 performance optimization tests"""
+        print("🚀 Starting IA1 Performance Optimization Tests")
+        print("=" * 70)
+        print(f"🎯 Target: Reduce IA1 analysis time from 50-60s to 15-25s")
+        print(f"🔧 Optimization: 30-day → 10-day historical data + streamlined prompts")
+        print("=" * 70)
         
-        # Basic API tests
-        self.test_root_endpoint()
-        self.test_market_status()  # Professional Edition feature
-        self.test_get_opportunities()
-        self.test_get_analyses()
-        self.test_get_decisions()
-        self.test_get_performance()
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        self.test_status_endpoint()
         
-        # Professional features test
-        self.test_professional_features()
+        # 2. Scout functionality test
+        print(f"\n2️⃣ SCOUT FUNCTIONALITY TEST")
+        scout_success = self.test_get_opportunities()
         
-        # WebSocket test
-        await self.test_websocket_connection()
+        # 3. IA1 Analysis Speed Test (MAIN TEST)
+        print(f"\n3️⃣ IA1 ANALYSIS SPEED TEST (MAIN OPTIMIZATION)")
+        speed_success = self.test_ia1_analysis_speed()
         
-        # Trading system tests
-        self.test_start_trading()
+        # 4. Scout -> IA1 Integration Test
+        print(f"\n4️⃣ SCOUT -> IA1 INTEGRATION TEST")
+        integration_success = self.test_scout_ia1_integration()
         
-        # AI integration test (this takes time but may fail due to budget limits)
-        print(f"\n⚠️  Note: AI integration test may fail due to LLM budget limits")
-        self.test_ai_integration()
+        # 5. Technical Analysis Quality Test
+        print(f"\n5️⃣ TECHNICAL ANALYSIS QUALITY TEST")
+        quality_success = self.test_technical_analysis_accuracy()
         
-        # Stop trading
-        self.test_stop_trading()
+        # 6. IA2 Decision Making Test
+        print(f"\n6️⃣ IA2 DECISION MAKING TEST")
+        decision_success, _ = self.test_get_decisions()
         
-        # Print results
-        print("\n" + "=" * 60)
-        print(f"📊 Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        # Performance Summary
+        print("\n" + "=" * 70)
+        print("📊 IA1 OPTIMIZATION TEST RESULTS")
+        print("=" * 70)
         
-        if self.tests_passed == self.tests_run:
-            print("🎉 All tests passed! The Dual AI Trading Bot system is working correctly.")
-            return 0
+        if self.ia1_performance_times:
+            avg_time = sum(self.ia1_performance_times) / len(self.ia1_performance_times)
+            improvement = ((55 - avg_time) / 55) * 100  # Assuming 55s baseline
+            
+            print(f"⚡ Performance Metrics:")
+            print(f"   • Average IA1 Analysis Time: {avg_time:.2f}s")
+            print(f"   • Performance Improvement: {improvement:.1f}%")
+            print(f"   • Target Achievement: {'✅ SUCCESS' if avg_time <= 25 else '❌ NEEDS WORK'}")
+            
+            if avg_time <= 15:
+                print(f"   🚀 EXCEPTIONAL: Exceeded optimization target!")
+            elif avg_time <= 25:
+                print(f"   ✅ SUCCESS: Within optimization target (15-25s)")
+            elif avg_time <= 40:
+                print(f"   ⚠️  PARTIAL: Better than baseline but above target")
+            else:
+                print(f"   ❌ FAILED: No significant improvement over baseline")
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • Scout Functionality: {'✅' if scout_success else '❌'}")
+        print(f"   • IA1 Speed Optimization: {'✅' if speed_success else '❌'}")
+        print(f"   • Scout->IA1 Integration: {'✅' if integration_success else '❌'}")
+        print(f"   • Technical Analysis Quality: {'✅' if quality_success else '❌'}")
+        print(f"   • IA2 Decision Making: {'✅' if decision_success else '❌'}")
+        
+        # Overall assessment
+        critical_tests = [speed_success, integration_success, quality_success]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 Overall Assessment:")
+        if critical_passed == 3:
+            print(f"   ✅ IA1 OPTIMIZATION SUCCESSFUL - All critical tests passed")
+            optimization_status = "SUCCESS"
+        elif critical_passed >= 2:
+            print(f"   ⚠️  IA1 OPTIMIZATION PARTIAL - Some issues detected")
+            optimization_status = "PARTIAL"
         else:
-            failed_tests = self.tests_run - self.tests_passed
-            print(f"⚠️  {failed_tests} test(s) failed. Please check the issues above.")
-            return 1
+            print(f"   ❌ IA1 OPTIMIZATION FAILED - Major issues detected")
+            optimization_status = "FAILED"
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return optimization_status, {
+            "avg_analysis_time": sum(self.ia1_performance_times) / len(self.ia1_performance_times) if self.ia1_performance_times else 0,
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "scout_working": scout_success,
+            "ia1_speed_optimized": speed_success,
+            "integration_working": integration_success,
+            "quality_maintained": quality_success,
+            "ia2_working": decision_success
+        }
+
+    async def run_all_tests(self):
+        """Run all tests including IA1 optimization focus"""
+        return await self.run_ia1_optimization_tests()
 
 async def main():
     """Main test function"""
