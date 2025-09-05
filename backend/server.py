@@ -1930,12 +1930,25 @@ async def get_analyses():
                 cleaned_analysis = {}
                 for key, value in analysis.items():
                     try:
-                        # Test JSON serialization for each field
-                        json.dumps({key: value})
-                        cleaned_analysis[key] = value
+                        # Handle datetime objects
+                        if isinstance(value, datetime):
+                            cleaned_analysis[key] = value.isoformat()
+                        # Test JSON serialization for other fields
+                        elif key == 'timestamp':
+                            # Ensure timestamp is always a string
+                            if isinstance(value, str):
+                                cleaned_analysis[key] = value
+                            else:
+                                cleaned_analysis[key] = str(value)
+                        else:
+                            # Test JSON serialization for each field
+                            json.dumps({key: value})
+                            cleaned_analysis[key] = value
                     except (ValueError, TypeError):
                         # Replace problematic values with safe defaults
-                        if key == 'rsi':
+                        if key == 'timestamp':
+                            cleaned_analysis[key] = datetime.now(timezone.utc).isoformat()
+                        elif key == 'rsi':
                             cleaned_analysis[key] = 50.0
                         elif key == 'macd_signal':
                             cleaned_analysis[key] = 0.0
