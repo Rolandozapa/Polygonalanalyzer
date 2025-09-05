@@ -562,6 +562,7 @@ class AdvancedMarketAggregator:
                         price=quote.get('rate', 0),
                         volume_24h=0,  # Not available in quotes endpoint
                         price_change_24h=0,  # Would need historical data
+                        volatility=0.02,  # Default volatility since no historical data
                         source="coinapi",
                         confidence=0.85
                     ))
