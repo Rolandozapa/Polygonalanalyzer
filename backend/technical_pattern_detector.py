@@ -13,6 +13,7 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 class PatternType(Enum):
+    # Patterns existants
     BULLISH_BREAKOUT = "bullish_breakout"
     BEARISH_BREAKDOWN = "bearish_breakdown"
     ASCENDING_TRIANGLE = "ascending_triangle"
@@ -25,7 +26,7 @@ class PatternType(Enum):
     SUPPORT_BOUNCE = "support_bounce"
     RESISTANCE_BREAK = "resistance_break"
     
-    # Nouvelles tendances soutenues pour positions long/short
+    # Tendances soutenues
     SUSTAINED_BULLISH_TREND = "sustained_bullish_trend"
     SUSTAINED_BEARISH_TREND = "sustained_bearish_trend"
     BULLISH_CHANNEL = "bullish_channel"
@@ -36,6 +37,25 @@ class PatternType(Enum):
     BEARISH_MOMENTUM_CONTINUATION = "bearish_momentum_continuation"
     MULTIPLE_MA_BULLISH_ALIGNMENT = "multiple_ma_bullish_alignment"
     MULTIPLE_MA_BEARISH_ALIGNMENT = "multiple_ma_bearish_alignment"
+    
+    # NOUVELLES FIGURES CHARTISTES CLASSIQUES
+    HEAD_AND_SHOULDERS = "head_and_shoulders"
+    INVERSE_HEAD_AND_SHOULDERS = "inverse_head_and_shoulders"
+    DOUBLE_TOP = "double_top"
+    DOUBLE_BOTTOM = "double_bottom"
+    TRIPLE_TOP = "triple_top"
+    TRIPLE_BOTTOM = "triple_bottom"
+    SYMMETRICAL_TRIANGLE = "symmetrical_triangle"
+    FLAG_BULLISH = "flag_bullish"
+    FLAG_BEARISH = "flag_bearish"
+    PENNANT_BULLISH = "pennant_bullish"
+    PENNANT_BEARISH = "pennant_bearish"
+    CUP_AND_HANDLE = "cup_and_handle"
+    RISING_WEDGE = "rising_wedge"
+    FALLING_WEDGE = "falling_wedge"
+    RECTANGLE_CONSOLIDATION = "rectangle_consolidation"
+    ROUNDING_BOTTOM = "rounding_bottom"
+    ROUNDING_TOP = "rounding_top"
 
 @dataclass
 class TechnicalPattern:
