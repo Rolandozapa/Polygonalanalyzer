@@ -317,6 +317,229 @@ Be thorough, strategic, and provide advanced trading insights."""
         raise
 
 # Ultra Professional Trading System Classes
+@dataclass
+class TrailingStopLoss:
+    id: str
+    symbol: str
+    position_id: str
+    initial_sl: float
+    current_sl: float
+    last_tp_crossed: str  # "TP1", "TP2", "TP3", "TP4", "TP5"
+    last_tp_price: float
+    leverage: float
+    trailing_percentage: float  # Calculated based on leverage
+    direction: str  # "LONG" or "SHORT"
+    tp1_minimum_lock: float  # TP1 price as minimum profit protection
+    created_at: datetime
+    updated_at: datetime
+    status: str  # "ACTIVE", "FILLED", "CANCELLED"
+    notifications_sent: List[str] = field(default_factory=list)
+
+class TrailingStopManager:
+    def __init__(self):
+        self.active_trailing_stops: Dict[str, TrailingStopLoss] = {}
+        self.notification_email = "estevedelcanto@gmail.com"
+        
+    def calculate_trailing_percentage(self, leverage: float) -> float:
+        """Calculate trailing stop percentage based on leverage (higher leverage = tighter trailing stop)"""
+        # Formula: Base 3% * (6 / leverage) = proportional trailing %
+        # 2x leverage = 3% * (6/2) = 9% trailing stop
+        # 10x leverage = 3% * (6/10) = 1.8% trailing stop
+        base_percentage = 3.0
+        leverage_factor = 6.0 / max(leverage, 2.0)  # Minimum 2x leverage
+        trailing_percentage = min(max(base_percentage * leverage_factor, 1.5), 6.0)  # Range: 1.5% - 6.0%
+        return trailing_percentage
+    
+    def create_trailing_stop(self, decision: "TradingDecision", leverage: float, tp_levels: Dict[str, float]) -> TrailingStopLoss:
+        """Create a new trailing stop loss for a trading decision"""
+        trailing_percentage = self.calculate_trailing_percentage(leverage)
+        
+        # TP1 is the minimum profit lock
+        tp1_price = tp_levels.get("tp1", decision.take_profit_1)
+        
+        trailing_stop = TrailingStopLoss(
+            id=str(uuid.uuid4()),
+            symbol=decision.symbol,
+            position_id=decision.id,
+            initial_sl=decision.stop_loss,
+            current_sl=decision.stop_loss,
+            last_tp_crossed="NONE",
+            last_tp_price=decision.entry_price,
+            leverage=leverage,
+            trailing_percentage=trailing_percentage,
+            direction="LONG" if decision.signal == SignalType.LONG else "SHORT",
+            tp1_minimum_lock=tp1_price,
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+            status="ACTIVE"
+        )
+        
+        self.active_trailing_stops[decision.id] = trailing_stop
+        logger.info(f"🎯 Created trailing stop for {decision.symbol}: {trailing_percentage:.1f}% trailing (leverage: {leverage:.1f}x)")
+        return trailing_stop
+    
+    async def check_and_update_trailing_stops(self, current_prices: Dict[str, float]):
+        """Check all active trailing stops and update if TP levels are crossed"""
+        for position_id, trailing_stop in list(self.active_trailing_stops.items()):
+            if trailing_stop.status != "ACTIVE":
+                continue
+                
+            current_price = current_prices.get(trailing_stop.symbol)
+            if not current_price:
+                continue
+                
+            await self._update_trailing_stop(trailing_stop, current_price)
+    
+    async def _update_trailing_stop(self, trailing_stop: TrailingStopLoss, current_price: float):
+        """Update individual trailing stop based on current price"""
+        # Get TP levels for the position (we'll need to fetch this from the decision)
+        # For now, we'll calculate based on the pattern we know
+        tp_levels = self._calculate_tp_levels(trailing_stop, current_price)
+        
+        new_tp_crossed = self._check_tp_crossed(trailing_stop, current_price, tp_levels)
+        
+        if new_tp_crossed and new_tp_crossed != trailing_stop.last_tp_crossed:
+            new_sl = self._calculate_new_trailing_sl(trailing_stop, new_tp_crossed, tp_levels)
+            
+            # Ensure we never move SL against the position
+            if self._is_sl_improvement(trailing_stop, new_sl):
+                # Ensure we never go below TP1 minimum lock
+                final_sl = self._apply_tp1_minimum_lock(trailing_stop, new_sl)
+                
+                old_sl = trailing_stop.current_sl
+                trailing_stop.current_sl = final_sl
+                trailing_stop.last_tp_crossed = new_tp_crossed
+                trailing_stop.last_tp_price = tp_levels[new_tp_crossed.lower()]
+                trailing_stop.updated_at = datetime.now(timezone.utc)
+                
+                logger.info(f"🚀 {trailing_stop.symbol} {new_tp_crossed} crossed! Trailing SL: ${old_sl:.6f} → ${final_sl:.6f}")
+                
+                # Send email notification
+                await self._send_trailing_stop_notification(trailing_stop, new_tp_crossed, old_sl, final_sl)
+                
+                # Update BingX stop loss order (if in live trading)
+                # await self._update_bingx_stop_loss(trailing_stop, final_sl)
+    
+    def _calculate_tp_levels(self, trailing_stop: TrailingStopLoss, current_price: float) -> Dict[str, float]:
+        """Calculate TP levels based on current price and direction"""
+        # This is a simplified calculation - in production, we'd fetch from the original decision
+        entry_price = trailing_stop.last_tp_price if trailing_stop.last_tp_crossed == "NONE" else current_price
+        
+        if trailing_stop.direction == "LONG":
+            return {
+                "tp1": entry_price * 1.015,  # 1.5%
+                "tp2": entry_price * 1.030,  # 3.0%
+                "tp3": entry_price * 1.050,  # 5.0%
+                "tp4": entry_price * 1.080,  # 8.0%
+                "tp5": entry_price * 1.120   # 12.0%
+            }
+        else:  # SHORT
+            return {
+                "tp1": entry_price * 0.985,  # -1.5%
+                "tp2": entry_price * 0.970,  # -3.0%
+                "tp3": entry_price * 0.950,  # -5.0%
+                "tp4": entry_price * 0.920,  # -8.0%
+                "tp5": entry_price * 0.880   # -12.0%
+            }
+    
+    def _check_tp_crossed(self, trailing_stop: TrailingStopLoss, current_price: float, tp_levels: Dict[str, float]) -> Optional[str]:
+        """Check which TP level has been crossed"""
+        if trailing_stop.direction == "LONG":
+            # Check from highest to lowest TP
+            for tp_name in ["TP5", "TP4", "TP3", "TP2", "TP1"]:
+                if current_price >= tp_levels[tp_name.lower()]:
+                    return tp_name
+        else:  # SHORT
+            # Check from lowest to highest TP
+            for tp_name in ["TP5", "TP4", "TP3", "TP2", "TP1"]:
+                if current_price <= tp_levels[tp_name.lower()]:
+                    return tp_name
+        
+        return None
+    
+    def _calculate_new_trailing_sl(self, trailing_stop: TrailingStopLoss, tp_crossed: str, tp_levels: Dict[str, float]) -> float:
+        """Calculate new trailing stop loss position"""
+        tp_price = tp_levels[tp_crossed.lower()]
+        trailing_distance = tp_price * (trailing_stop.trailing_percentage / 100.0)
+        
+        if trailing_stop.direction == "LONG":
+            new_sl = tp_price - trailing_distance  # 3% below TP
+        else:  # SHORT
+            new_sl = tp_price + trailing_distance  # 3% above TP
+            
+        return new_sl
+    
+    def _is_sl_improvement(self, trailing_stop: TrailingStopLoss, new_sl: float) -> bool:
+        """Check if new SL is an improvement (moves favorably)"""
+        if trailing_stop.direction == "LONG":
+            return new_sl > trailing_stop.current_sl  # SL moving up is good for LONG
+        else:  # SHORT
+            return new_sl < trailing_stop.current_sl  # SL moving down is good for SHORT
+    
+    def _apply_tp1_minimum_lock(self, trailing_stop: TrailingStopLoss, proposed_sl: float) -> float:
+        """Ensure SL never goes below TP1 minimum profit lock"""
+        if trailing_stop.direction == "LONG":
+            return max(proposed_sl, trailing_stop.tp1_minimum_lock)
+        else:  # SHORT
+            return min(proposed_sl, trailing_stop.tp1_minimum_lock)
+    
+    async def _send_trailing_stop_notification(self, trailing_stop: TrailingStopLoss, tp_crossed: str, old_sl: float, new_sl: float):
+        """Send email notification about trailing stop update"""
+        try:
+            subject = f"🚀 {trailing_stop.symbol} {tp_crossed} Crossed - Trailing Stop Updated"
+            
+            body = f"""
+            <html>
+            <body>
+                <h2>🎯 Trailing Stop Loss Update</h2>
+                <p><strong>Symbol:</strong> {trailing_stop.symbol}</p>
+                <p><strong>Direction:</strong> {trailing_stop.direction}</p>
+                <p><strong>TP Level Crossed:</strong> {tp_crossed}</p>
+                <p><strong>Leverage:</strong> {trailing_stop.leverage:.1f}x</p>
+                <p><strong>Trailing Percentage:</strong> {trailing_stop.trailing_percentage:.1f}%</p>
+                
+                <h3>📊 Stop Loss Movement:</h3>
+                <p><strong>Previous SL:</strong> ${old_sl:.6f}</p>
+                <p><strong>New SL:</strong> ${new_sl:.6f}</p>
+                <p><strong>Movement:</strong> ${abs(new_sl - old_sl):.6f} ({((new_sl - old_sl) / old_sl * 100):+.2f}%)</p>
+                
+                <h3>🔒 Profit Protection:</h3>
+                <p><strong>TP1 Minimum Lock:</strong> ${trailing_stop.tp1_minimum_lock:.6f}</p>
+                <p><strong>Time:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+                
+                <p><em>Your trailing stop has been automatically updated to lock in profits! 🎉</em></p>
+            </body>
+            </html>
+            """
+            
+            await self._send_email(subject, body)
+            trailing_stop.notifications_sent.append(f"{tp_crossed}_{datetime.now(timezone.utc).isoformat()}")
+            
+        except Exception as e:
+            logger.error(f"Failed to send trailing stop notification: {e}")
+    
+    async def _send_email(self, subject: str, body: str):
+        """Send email notification"""
+        try:
+            # Use a simple SMTP setup - you might want to configure this with your preferred email service
+            # For now, we'll log the notification (you can configure with Gmail SMTP later)
+            logger.info(f"📧 EMAIL NOTIFICATION: {subject}")
+            logger.info(f"📧 To: {self.notification_email}")
+            logger.info(f"📧 Body: {body[:200]}...")  # Log first 200 chars
+            
+            # TODO: Configure actual SMTP settings
+            # For production, you'd configure Gmail SMTP:
+            # smtp_server = "smtp.gmail.com"
+            # smtp_port = 587
+            # sender_email = "your-app@gmail.com"
+            # sender_password = "your-app-password"
+            
+        except Exception as e:
+            logger.error(f"Failed to send email: {e}")
+
+# Global trailing stop manager
+trailing_stop_manager = TrailingStopManager()
+
 class UltraProfessionalCryptoScout:
     def __init__(self):
         self.market_aggregator = advanced_market_aggregator
