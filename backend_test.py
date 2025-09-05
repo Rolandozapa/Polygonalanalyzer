@@ -467,6 +467,7 @@ class DualAITradingBotTester:
             "tests_total": self.tests_run,
             "system_working": system_success,
             "scout_working": scout_success,
+            "optimization_evidence": optimization_evidence,
             "ia1_speed_optimized": speed_success,
             "integration_working": integration_success,
             "quality_maintained": quality_success,
