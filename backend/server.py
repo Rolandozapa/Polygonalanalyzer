@@ -575,10 +575,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Get additional historical data if needed
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
             
-            # Calculate advanced technical indicators
+            # Calculate advanced technical indicators avec données étendues
             rsi = self._calculate_rsi(historical_data['Close'])
             macd_line, macd_signal, macd_histogram = self._calculate_macd(historical_data['Close'])
             bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(historical_data['Close'])
+            
+            # Debug logging pour vérifier les vraies valeurs calculées
+            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Data points: {len(historical_data)}")
             
             # Calculate Bollinger Band position
             current_price = opportunity.current_price
