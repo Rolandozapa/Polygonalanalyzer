@@ -224,13 +224,97 @@ Respond in JSON format:
 class ProfessionalCryptoScout:
     def __init__(self):
         self.market_service = market_data_service
+        self.max_cryptos_to_analyze = 50  # Analyser top 50 par défaut pour éviter la surcharge
+        self.min_market_cap = 10_000_000  # 10M$ minimum market cap
+        self.min_volume_24h = 1_000_000   # 1M$ minimum volume 24h
     
     async def scan_opportunities(self) -> List[MarketOpportunity]:
-        """Scan real market opportunities using professional APIs"""
+        """Scan real market opportunities from top 500 cryptos by market cap"""
         try:
-            logger.info("Scanning real market opportunities...")
+            logger.info(f"Scanning top {self.max_cryptos_to_analyze} cryptos by market cap...")
             
-            # Get real market data
+            # Get top cryptos by market cap (up to 500)
+            top_cryptos = await self.market_service.get_top_cryptos_by_marketcap(limit=500)
+            
+            if not top_cryptos:
+                logger.warning("No top cryptos data available, falling back to basic scan")
+                return await self._fallback_scan()
+            
+            # Filter cryptos based on our criteria
+            filtered_cryptos = self._filter_cryptos(top_cryptos)
+            
+            # Convert to MarketOpportunity objects
+            opportunities = []
+            for crypto in filtered_cryptos[:self.max_cryptos_to_analyze]:
+                try:
+                    opportunity = MarketOpportunity(
+                        symbol=f"{crypto['symbol']}USDT",  # Add USDT pair
+                        current_price=crypto.get('price', 0),
+                        volume_24h=crypto.get('volume_24h', 0),
+                        price_change_24h=crypto.get('percent_change_24h', 0),
+                        volatility=self._calculate_volatility(crypto.get('percent_change_24h', 0)),
+                        market_cap=crypto.get('market_cap', 0),
+                        timestamp=datetime.now(timezone.utc)
+                    )
+                    opportunities.append(opportunity)
+                except Exception as e:
+                    logger.warning(f"Error processing crypto {crypto.get('symbol', 'unknown')}: {e}")
+                    continue
+            
+            logger.info(f"Found {len(opportunities)} opportunities from top {len(top_cryptos)} cryptos (source: {top_cryptos[0].get('source', 'unknown')})")
+            return opportunities
+            
+        except Exception as e:
+            logger.error(f"Error scanning top crypto opportunities: {e}")
+            # Fallback to basic scan
+            return await self._fallback_scan()
+    
+    def _filter_cryptos(self, cryptos: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Filter cryptos based on market cap, volume, and trading criteria"""
+        filtered = []
+        
+        for crypto in cryptos:
+            # Skip stablecoins and wrapped tokens (optional)
+            symbol = crypto.get('symbol', '').upper()
+            if symbol in ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD', 'WBTC', 'WETH']:
+                continue
+            
+            # Filter by market cap
+            market_cap = crypto.get('market_cap', 0)
+            if market_cap < self.min_market_cap:
+                continue
+            
+            # Filter by volume
+            volume_24h = crypto.get('volume_24h', 0)
+            if volume_24h < self.min_volume_24h:
+                continue
+            
+            # Filter by price (avoid penny coins)
+            price = crypto.get('price', 0)
+            if price < 0.0001:  # Less than $0.0001
+                continue
+            
+            # Skip if no rank (data quality check)
+            if not crypto.get('market_cap_rank'):
+                continue
+            
+            filtered.append(crypto)
+        
+        # Sort by market cap rank (ascending = higher market cap first)
+        filtered.sort(key=lambda x: x.get('market_cap_rank', 999999))
+        
+        logger.info(f"Filtered {len(filtered)} tradeable cryptos from {len(cryptos)} total")
+        return filtered
+    
+    def _calculate_volatility(self, price_change_24h: float) -> float:
+        """Calculate volatility estimate from 24h price change"""
+        # Simple volatility estimate based on 24h change
+        return abs(price_change_24h) / 100.0  # Convert percentage to decimal
+    
+    async def _fallback_scan(self) -> List[MarketOpportunity]:
+        """Fallback to original scan method"""
+        try:
+            # Get real market data using original method
             market_data_points = await self.market_service.get_crypto_opportunities()
             
             opportunities = []
@@ -246,12 +330,11 @@ class ProfessionalCryptoScout:
                 )
                 opportunities.append(opportunity)
             
-            logger.info(f"Found {len(opportunities)} real market opportunities")
+            logger.info(f"Fallback scan found {len(opportunities)} opportunities")
             return opportunities
             
         except Exception as e:
-            logger.error(f"Error scanning opportunities: {e}")
-            # Fallback to minimal mock data
+            logger.error(f"Fallback scan failed: {e}")
             return []
 
 class ProfessionalIA1TechnicalAnalyst:
