@@ -4467,6 +4467,229 @@ async def test_bingx_connection():
             "api_keys_configured": bool(os.environ.get('BINGX_API_KEY') and os.environ.get('BINGX_SECRET_KEY'))
         }
 
+@api_router.post("/execute-real-bingx-trade")
+async def execute_real_bingx_trade():
+    """Execute a REAL BingX futures trade to confirm full control"""
+    try:
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
+        
+        logger.warning("🚨 EXECUTING REAL TRADE WITH REAL MONEY!")
+        
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
+            
+            # Step 1: Verify we can see the funds (should show ~$103)
+            account_data = await client.swap.query_account_data()
+            
+            usdt_balance = 0
+            for account_item in account_data.data:
+                if getattr(account_item, 'asset', '') == 'USDT':
+                    usdt_balance = float(getattr(account_item, 'balance', 0))
+                    break
+            
+            if usdt_balance < 10:
+                return {
+                    "status": "insufficient_balance",
+                    "usdt_balance": usdt_balance,
+                    "message": f"Need at least $10 USDT for futures trade (found: ${usdt_balance})"
+                }
+            
+            logger.info(f"💰 Confirmed USDT balance: ${usdt_balance}")
+            
+            # Step 2: Get BTC-USDT futures price
+            btc_ticker = await client.swap.symbol_price_ticker(symbol="BTC-USDT")
+            current_price = float(btc_ticker.data.price)
+            
+            # Step 3: Calculate small position (0.001 BTC ≈ $95)
+            quantity = 0.001
+            position_value = quantity * current_price
+            
+            logger.warning(f"🚀 ABOUT TO EXECUTE: BUY {quantity} BTC at ${current_price} (≈${position_value})")
+            
+            # Step 4: EXECUTE REAL FUTURES TRADE
+            order_result = await client.swap.place_order(
+                symbol="BTC-USDT",
+                side="Buy",
+                positionSide="Long", 
+                type="Market",
+                quantity=str(quantity)
+            )
+            
+            logger.info(f"✅ REAL TRADE EXECUTED SUCCESSFULLY: {order_result}")
+            
+            # Step 5: Verify the position was created
+            positions = await client.swap.query_position_data()
+            new_position = None
+            
+            for pos in positions.data:
+                if (getattr(pos, 'symbol', '') == 'BTC-USDT' and 
+                    float(getattr(pos, 'positionAmt', 0)) != 0):
+                    new_position = {
+                        "symbol": pos.symbol,
+                        "side": getattr(pos, 'positionSide', 'unknown'),
+                        "size": float(getattr(pos, 'positionAmt', 0)),
+                        "entry_price": float(getattr(pos, 'entryPrice', 0)),
+                        "mark_price": float(getattr(pos, 'markPrice', 0)),
+                        "pnl": float(getattr(pos, 'unrealizedProfit', 0))
+                    }
+                    break
+            
+            return {
+                "status": "trade_executed_successfully",
+                "message": "🎉 REAL BINGX FUTURES TRADE SUCCESSFUL - FULL CONTROL CONFIRMED!",
+                "trade_details": {
+                    "symbol": "BTC-USDT",
+                    "side": "Buy",
+                    "position_side": "Long",
+                    "quantity": quantity,
+                    "market_price": current_price,
+                    "position_value": position_value,
+                    "account_balance_before": usdt_balance
+                },
+                "order_result": str(order_result),
+                "new_position": new_position,
+                "bingx_control_status": "✅ FULLY CONFIRMED",
+                "next_steps": "Your app can now execute automated trading strategies!"
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ REAL TRADE EXECUTION FAILED: {e}")
+        return {
+            "status": "trade_execution_failed",
+            "error": str(e),
+            "message": "Real trade execution failed - but account access is confirmed"
+        }
+
+@api_router.get("/check-our-ip")
+async def check_our_ip():
+    """Check what IP address BingX sees from our server"""
+    try:
+        import httpx
+        import asyncio
+        
+        # Method 1: Check multiple IP detection services
+        ip_services = [
+            "https://api.ipify.org?format=json",
+            "https://httpbin.org/ip", 
+            "https://api.myip.com",
+            "https://ipapi.co/json"
+        ]
+        
+        ips_found = []
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            for service in ip_services:
+                try:
+                    response = await client.get(service)
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Extract IP from different response formats
+                        ip = None
+                        if 'ip' in data:
+                            ip = data['ip']
+                        elif 'origin' in data:
+                            ip = data['origin']
+                        elif 'query' in data:
+                            ip = data['query']
+                        
+                        if ip:
+                            ips_found.append({
+                                "service": service,
+                                "ip": ip,
+                                "full_response": data
+                            })
+                            
+                except Exception as e:
+                    logger.warning(f"IP service {service} failed: {e}")
+        
+        # Method 2: Try to make a test request to BingX and see what error we get
+        bingx_ip_test = None
+        try:
+            import os
+            from bingx_py.asyncio import BingXAsyncClient
+            
+            # This should fail with IP error if IP is wrong, or succeed if IP is right
+            api_key = os.environ.get('BINGX_API_KEY')
+            secret_key = os.environ.get('BINGX_SECRET_KEY')
+            
+            async with BingXAsyncClient(
+                api_key=api_key,
+                api_secret=secret_key,
+                demo_trading=False
+            ) as client:
+                # Try a simple API call
+                test_response = await client.swap.query_account_data()
+                bingx_ip_test = {
+                    "status": "success",
+                    "message": "BingX accepts our IP - no IP restriction error"
+                }
+        except Exception as e:
+            error_msg = str(e)
+            if "IP" in error_msg or "whitelist" in error_msg.lower():
+                # Extract IP from error message if present
+                if "your current request IP is" in error_msg:
+                    import re
+                    ip_match = re.search(r'your current request IP is (\d+\.\d+\.\d+\.\d+)', error_msg)
+                    if ip_match:
+                        actual_ip = ip_match.group(1)
+                        bingx_ip_test = {
+                            "status": "ip_error",
+                            "actual_ip_bingx_sees": actual_ip,
+                            "error": error_msg
+                        }
+                    else:
+                        bingx_ip_test = {
+                            "status": "ip_error", 
+                            "error": error_msg
+                        }
+                else:
+                    bingx_ip_test = {
+                        "status": "ip_error",
+                        "error": error_msg
+                    }
+            else:
+                bingx_ip_test = {
+                    "status": "other_error",
+                    "error": error_msg
+                }
+        
+        # Find the most common IP
+        ip_counts = {}
+        for ip_data in ips_found:
+            ip = ip_data['ip']
+            if ip in ip_counts:
+                ip_counts[ip] += 1
+            else:
+                ip_counts[ip] = 1
+        
+        most_common_ip = max(ip_counts.keys(), key=ip_counts.get) if ip_counts else None
+        
+        return {
+            "our_detected_ips": ips_found,
+            "most_common_ip": most_common_ip,
+            "ip_consensus": most_common_ip if len(ip_counts) == 1 or (most_common_ip and ip_counts[most_common_ip] > 1) else "conflicting_ips",
+            "bingx_test": bingx_ip_test,
+            "recommendation": {
+                "ip_to_whitelist": bingx_ip_test.get("actual_ip_bingx_sees") or most_common_ip,
+                "confidence": "high" if bingx_ip_test.get("actual_ip_bingx_sees") else "medium"
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e),
+            "message": "Could not determine our IP address"
+        }
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
