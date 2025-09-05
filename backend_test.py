@@ -3234,7 +3234,7 @@ class DualAITradingBotTester:
         
         # Step 1: Clear the decision cache
         print(f"   🗑️ Step 1: Clearing decision cache...")
-        success, clear_result = self.run_test("Clear Decision Cache", "DELETE", "decisions/clear", 200)
+        success, clear_result = self.run_test("Clear Decision Cache", "POST", "decisions/clear", 200)
         
         if not success:
             print(f"   ❌ Failed to clear decision cache")
