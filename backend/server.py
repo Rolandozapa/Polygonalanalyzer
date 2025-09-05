@@ -3584,7 +3584,135 @@ async def get_scout_config():
         "min_volume_24h": scout.min_volume_24h
     }
 
-@api_router.post("/test-bingx-trade")
+@api_router.post("/test-bingx-futures")
+async def test_bingx_futures():
+    """Test BingX FUTURES account access (where user's funds are located)"""
+    try:
+        import os
+        from bingx_py.asyncio import BingXAsyncClient
+        
+        api_key = os.environ.get('BINGX_API_KEY')
+        secret_key = os.environ.get('BINGX_SECRET_KEY')
+        
+        if not api_key or not secret_key:
+            return {
+                "status": "no_api_keys",
+                "message": "BingX API keys not configured"
+            }
+        
+        async with BingXAsyncClient(
+            api_key=api_key,
+            api_secret=secret_key,
+            demo_trading=False
+        ) as client:
+            
+            # Test 1: Get FUTURES account balance (where user's funds are)
+            try:
+                logger.info("🔍 Testing FUTURES account access...")
+                futures_account = await client.swap.query_account_data()
+                logger.info(f"Futures account response: {futures_account}")
+                
+                futures_balance = 0
+                account_info = {}
+                
+                if futures_account and hasattr(futures_account, 'data'):
+                    data = futures_account.data
+                    logger.info(f"Futures account data: {data}")
+                    
+                    # Extract balance information
+                    if hasattr(data, 'balance'):
+                        futures_balance = float(getattr(data, 'balance', 0))
+                        logger.info(f"💰 FUTURES BALANCE FOUND: ${futures_balance}")
+                    
+                    # Extract other account info
+                    account_info = {
+                        "balance": getattr(data, 'balance', 0),
+                        "available_margin": getattr(data, 'availableMargin', 0),
+                        "used_margin": getattr(data, 'usedMargin', 0),
+                        "unrealized_profit": getattr(data, 'unrealizedProfit', 0)
+                    }
+                    
+                    logger.info(f"Account info: {account_info}")
+                
+            except Exception as futures_error:
+                logger.error(f"❌ Futures account failed: {futures_error}")
+                return {
+                    "status": "futures_access_failed",
+                    "error": str(futures_error),
+                    "message": "Cannot access futures account - check API permissions"
+                }
+            
+            # Test 2: Get open positions
+            try:
+                logger.info("📊 Testing open positions...")
+                positions = await client.swap.query_position_data()
+                logger.info(f"Positions response: {positions}")
+                
+                open_positions = []
+                if positions and hasattr(positions, 'data'):
+                    for pos in positions.data:
+                        if hasattr(pos, 'symbol') and float(getattr(pos, 'positionAmt', 0)) != 0:
+                            open_positions.append({
+                                "symbol": pos.symbol,
+                                "side": getattr(pos, 'positionSide', 'unknown'),
+                                "size": float(getattr(pos, 'positionAmt', 0)),
+                                "entry_price": float(getattr(pos, 'entryPrice', 0)),
+                                "pnl": float(getattr(pos, 'unrealizedProfit', 0))
+                            })
+                
+                logger.info(f"Open positions found: {len(open_positions)}")
+                
+            except Exception as pos_error:
+                logger.error(f"❌ Positions check failed: {pos_error}")
+                open_positions = []
+            
+            # Test 3: Get BTC-USDT futures price
+            try:
+                logger.info("💱 Testing BTC futures ticker...")
+                btc_ticker = await client.swap.symbol_price_ticker(symbol="BTC-USDT")
+                logger.info(f"BTC futures ticker: {btc_ticker}")
+                
+                btc_price = None
+                if btc_ticker and hasattr(btc_ticker, 'data'):
+                    btc_price = float(btc_ticker.data.price)
+                    logger.info(f"📈 BTC Futures price: ${btc_price}")
+                    
+            except Exception as ticker_error:
+                logger.error(f"❌ BTC futures ticker failed: {ticker_error}")
+                btc_price = 95000  # Fallback
+            
+            # Analysis and results
+            if futures_balance > 0:
+                min_trade_size = 10  # Minimum for futures trading
+                trading_ready = futures_balance >= min_trade_size
+                
+                return {
+                    "status": "futures_account_found",
+                    "message": f"✅ FUTURES ACCOUNT ACCESSIBLE! Balance: ${futures_balance}",
+                    "account_info": account_info,
+                    "futures_balance": futures_balance,
+                    "open_positions": open_positions,
+                    "btc_futures_price": btc_price,
+                    "trading_ready": trading_ready,
+                    "can_trade": trading_ready,
+                    "min_trade_required": min_trade_size,
+                    "next_step": "Ready for futures trading!" if trading_ready else f"Need at least ${min_trade_size} for futures trading"
+                }
+            else:
+                return {
+                    "status": "futures_account_empty",
+                    "message": "Futures account accessible but no balance found",
+                    "account_info": account_info,
+                    "suggestion": "Check if funds are in the correct futures account or verify API permissions"
+                }
+                
+    except Exception as e:
+        logger.error(f"❌ BingX futures test failed: {e}")
+        return {
+            "status": "failed",
+            "error": str(e),
+            "message": "Futures account test completely failed"
+        }
 async def test_bingx_trade():
     """Test BingX trading capabilities with correct async context"""
     try:
