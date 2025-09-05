@@ -737,17 +737,30 @@ class UltraProfessionalIA1TechnicalAnalyst:
         except:
             return 0.0, 0.0, 0.0
     
-    def _calculate_bollinger_bands(self, prices: pd.Series, period: int = 20, std_dev: int = 2):
+    def _calculate_bollinger_bands(self, prices: pd.Series, period: int = 20, std_dev: float = 2):
         """Calculate Bollinger Bands"""
         try:
-            rolling_mean = prices.rolling(window=period).mean()
-            rolling_std = prices.rolling(window=period).std()
-            upper_band = rolling_mean + (rolling_std * std_dev)
-            lower_band = rolling_mean - (rolling_std * std_dev)
+            if len(prices) < period:
+                current = float(prices.iloc[-1]) if len(prices) > 0 else 100.0
+                return current * 1.02, current, current * 0.98  # Default bands
             
-            return float(upper_band.iloc[-1]), float(rolling_mean.iloc[-1]), float(lower_band.iloc[-1])
+            middle = prices.rolling(window=period).mean()
+            std = prices.rolling(window=period).std()
+            upper = middle + (std * std_dev)
+            lower = middle - (std * std_dev)
+            
+            upper_val = float(upper.iloc[-1])
+            middle_val = float(middle.iloc[-1])
+            lower_val = float(lower.iloc[-1])
+            
+            # Ensure values are valid
+            if pd.isna(upper_val) or pd.isna(middle_val) or pd.isna(lower_val):
+                current = float(prices.iloc[-1])
+                return current * 1.02, current, current * 0.98
+            
+            return round(upper_val, 2), round(middle_val, 2), round(lower_val, 2)
         except:
-            current_price = float(prices.iloc[-1])
+            current_price = float(prices.iloc[-1]) if len(prices) > 0 else 100.0
             return current_price * 1.02, current_price, current_price * 0.98
     
     def _calculate_fibonacci_retracement(self, historical_data: pd.DataFrame) -> float:
