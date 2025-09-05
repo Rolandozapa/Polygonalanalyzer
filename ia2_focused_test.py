@@ -21,9 +21,9 @@ class IA2FocusedTester:
                         base_url = line.split('=', 1)[1].strip()
                         break
                 else:
-                    base_url = "https://cryptobot-plus.preview.emergentagent.com"
+                    base_url = "https://dual-ai-trader-2.preview.emergentagent.com"
         except:
-            base_url = "https://cryptobot-plus.preview.emergentagent.com"
+            base_url = "https://dual-ai-trader-2.preview.emergentagent.com"
         
         self.api_url = f"{base_url}/api"
         print(f"🎯 Testing IA2 Decision Agent at: {self.api_url}")

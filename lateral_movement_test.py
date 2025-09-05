@@ -19,9 +19,9 @@ class LateralMovementFilterTester:
                             base_url = line.split('=', 1)[1].strip()
                             break
                 if not base_url:
-                    base_url = "https://cryptobot-plus.preview.emergentagent.com"
+                    base_url = "https://dual-ai-trader-2.preview.emergentagent.com"
             except:
-                base_url = "https://cryptobot-plus.preview.emergentagent.com"
+                base_url = "https://dual-ai-trader-2.preview.emergentagent.com"
         
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
