@@ -602,10 +602,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
             response = await self.chat.send_message(UserMessage(text=prompt))
             
             # Enrichir le raisonnement avec le pattern technique détecté
-            reasoning = response[:1200] if response else "Ultra professional analysis with multi-source validation"
+            reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
             if detected_pattern:
-                reasoning += f"\n\n🎯 TECHNICAL PATTERN DETECTED: {detected_pattern.pattern_type.value} (strength: {detected_pattern.strength:.2f}, confidence: {detected_pattern.confidence:.2f})"
-                reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f}, Target: ${detected_pattern.target_price:.2f}, Stop: ${detected_pattern.stop_loss:.2f}"
+                direction_emoji = "📈" if detected_pattern.trading_direction == "long" else "📉" if detected_pattern.trading_direction == "short" else "⚖️"
+                reasoning += f"\n\n🎯 TECHNICAL PATTERN: {detected_pattern.pattern_type.value}"
+                reasoning += f"\n{direction_emoji} Direction: {detected_pattern.trading_direction.upper()} (strength: {detected_pattern.strength:.2f})"
+                reasoning += f"\nTrend Duration: {detected_pattern.trend_duration_days} days"
+                reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
             
             # Create ultra professional analysis
             analysis_data = {
