@@ -374,6 +374,362 @@ class DualAITradingBotTester:
             print(f"   ⚠️  Limited evidence of IA1 optimization")
             return optimization_rate > 0
 
+    def test_ia2_decision_confidence_levels(self):
+        """Test IA2 decision confidence levels are more balanced"""
+        print(f"\n🎯 Testing IA2 Decision Confidence Levels...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for confidence testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for confidence testing")
+            return False
+        
+        print(f"   📊 Analyzing confidence levels of {len(decisions)} decisions...")
+        
+        confidences = []
+        reasoning_quality = []
+        
+        for i, decision in enumerate(decisions[:10]):  # Test up to 10 most recent
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            signal = decision.get('signal', 'hold')
+            
+            confidences.append(confidence)
+            reasoning_quality.append(len(reasoning) > 0 and reasoning != "null")
+            
+            print(f"   Decision {i+1} - {symbol}:")
+            print(f"      Signal: {signal}")
+            print(f"      Confidence: {confidence:.3f}")
+            print(f"      Reasoning: {'✅ Present' if reasoning and reasoning != 'null' else '❌ Missing/Null'}")
+        
+        if confidences:
+            avg_confidence = sum(confidences) / len(confidences)
+            min_confidence = min(confidences)
+            max_confidence = max(confidences)
+            reasoning_rate = sum(reasoning_quality) / len(reasoning_quality)
+            
+            print(f"\n   📊 Confidence Analysis:")
+            print(f"      Average Confidence: {avg_confidence:.3f}")
+            print(f"      Min Confidence: {min_confidence:.3f}")
+            print(f"      Max Confidence: {max_confidence:.3f}")
+            print(f"      Reasoning Present: {reasoning_rate*100:.1f}%")
+            
+            # Check if confidence is higher than the problematic 37.3% (0.373)
+            confidence_improved = avg_confidence > 0.40  # Should be significantly higher than 37.3%
+            reasoning_fixed = reasoning_rate > 0.8  # 80% should have proper reasoning
+            
+            print(f"\n   🎯 IA2 Fix Validation:")
+            print(f"      Confidence > 40%: {'✅' if confidence_improved else '❌'} (was 37.3%)")
+            print(f"      Reasoning Fixed: {'✅' if reasoning_fixed else '❌'} (was null)")
+            
+            return confidence_improved and reasoning_fixed
+        
+        return False
+
+    def test_ia2_trading_signal_thresholds(self):
+        """Test IA2 trading signal thresholds are more realistic"""
+        print(f"\n📈 Testing IA2 Trading Signal Thresholds...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for threshold testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for threshold testing")
+            return False
+        
+        print(f"   📊 Analyzing trading signals of {len(decisions)} decisions...")
+        
+        signal_counts = {'long': 0, 'short': 0, 'hold': 0}
+        trading_decisions = []  # Non-hold decisions
+        
+        for decision in decisions:
+            signal = decision.get('signal', 'hold').lower()
+            confidence = decision.get('confidence', 0)
+            
+            if signal in signal_counts:
+                signal_counts[signal] += 1
+            
+            if signal in ['long', 'short']:
+                trading_decisions.append({
+                    'signal': signal,
+                    'confidence': confidence,
+                    'symbol': decision.get('symbol', 'Unknown')
+                })
+        
+        total_decisions = len(decisions)
+        trading_rate = len(trading_decisions) / total_decisions if total_decisions > 0 else 0
+        
+        print(f"\n   📊 Signal Distribution:")
+        print(f"      LONG signals: {signal_counts['long']} ({signal_counts['long']/total_decisions*100:.1f}%)")
+        print(f"      SHORT signals: {signal_counts['short']} ({signal_counts['short']/total_decisions*100:.1f}%)")
+        print(f"      HOLD signals: {signal_counts['hold']} ({signal_counts['hold']/total_decisions*100:.1f}%)")
+        print(f"      Trading Rate: {trading_rate*100:.1f}%")
+        
+        # Analyze confidence levels of trading decisions
+        if trading_decisions:
+            trading_confidences = [td['confidence'] for td in trading_decisions]
+            avg_trading_confidence = sum(trading_confidences) / len(trading_confidences)
+            min_trading_confidence = min(trading_confidences)
+            
+            print(f"\n   🎯 Trading Decision Analysis:")
+            print(f"      Avg Trading Confidence: {avg_trading_confidence:.3f}")
+            print(f"      Min Trading Confidence: {min_trading_confidence:.3f}")
+            
+            # Check if thresholds are more realistic (should see some trading decisions with confidence >0.65)
+            moderate_signals = sum(1 for conf in trading_confidences if conf >= 0.65)
+            strong_signals = sum(1 for conf in trading_confidences if conf >= 0.75)
+            
+            print(f"      Moderate Signals (≥0.65): {moderate_signals}")
+            print(f"      Strong Signals (≥0.75): {strong_signals}")
+            
+            # Validation: Should have more realistic trading with lowered thresholds
+            realistic_thresholds = (
+                trading_rate > 0.1 and  # At least 10% trading decisions
+                avg_trading_confidence >= 0.65 and  # Average confidence reasonable
+                moderate_signals > 0  # Some moderate confidence trades
+            )
+            
+            print(f"\n   ✅ Threshold Validation: {'✅ PASSED' if realistic_thresholds else '❌ FAILED'}")
+            return realistic_thresholds
+        else:
+            print(f"   ⚠️  No trading decisions found - may indicate overly strict thresholds")
+            return False
+
+    def test_ia2_reasoning_quality(self):
+        """Test IA2 reasoning field is properly populated and not null"""
+        print(f"\n🧠 Testing IA2 Reasoning Quality...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for reasoning testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for reasoning testing")
+            return False
+        
+        print(f"   📊 Analyzing reasoning quality of {len(decisions)} decisions...")
+        
+        reasoning_stats = {
+            'total': len(decisions),
+            'has_reasoning': 0,
+            'null_reasoning': 0,
+            'empty_reasoning': 0,
+            'quality_reasoning': 0
+        }
+        
+        for i, decision in enumerate(decisions[:5]):  # Analyze first 5 in detail
+            symbol = decision.get('symbol', 'Unknown')
+            reasoning = decision.get('ia2_reasoning', '')
+            confidence = decision.get('confidence', 0)
+            signal = decision.get('signal', 'hold')
+            
+            print(f"\n   Decision {i+1} - {symbol} ({signal}):")
+            
+            if reasoning is None or reasoning == "null" or reasoning == "None":
+                reasoning_stats['null_reasoning'] += 1
+                print(f"      Reasoning: ❌ NULL")
+            elif len(reasoning.strip()) == 0:
+                reasoning_stats['empty_reasoning'] += 1
+                print(f"      Reasoning: ❌ EMPTY")
+            else:
+                reasoning_stats['has_reasoning'] += 1
+                print(f"      Reasoning: ✅ Present ({len(reasoning)} chars)")
+                print(f"      Preview: {reasoning[:100]}...")
+                
+                # Check for quality indicators
+                quality_indicators = 0
+                if 'analysis' in reasoning.lower(): quality_indicators += 1
+                if 'confidence' in reasoning.lower(): quality_indicators += 1
+                if any(word in reasoning.lower() for word in ['rsi', 'macd', 'technical', 'signal']): quality_indicators += 1
+                if len(reasoning) >= 50: quality_indicators += 1
+                
+                if quality_indicators >= 3:
+                    reasoning_stats['quality_reasoning'] += 1
+                    print(f"      Quality: ✅ HIGH ({quality_indicators}/4 indicators)")
+                else:
+                    print(f"      Quality: ⚠️  MODERATE ({quality_indicators}/4 indicators)")
+        
+        # Calculate overall statistics for all decisions
+        for decision in decisions:
+            reasoning = decision.get('ia2_reasoning', '')
+            if reasoning and reasoning != "null" and reasoning != "None" and len(reasoning.strip()) > 0:
+                reasoning_stats['has_reasoning'] += 1
+                if len(reasoning) >= 50 and any(word in reasoning.lower() for word in ['analysis', 'confidence', 'rsi', 'macd']):
+                    reasoning_stats['quality_reasoning'] += 1
+        
+        reasoning_rate = reasoning_stats['has_reasoning'] / reasoning_stats['total']
+        quality_rate = reasoning_stats['quality_reasoning'] / reasoning_stats['total']
+        
+        print(f"\n   📊 Overall Reasoning Statistics:")
+        print(f"      Total Decisions: {reasoning_stats['total']}")
+        print(f"      Has Reasoning: {reasoning_stats['has_reasoning']} ({reasoning_rate*100:.1f}%)")
+        print(f"      Quality Reasoning: {reasoning_stats['quality_reasoning']} ({quality_rate*100:.1f}%)")
+        print(f"      Null/Empty: {reasoning_stats['null_reasoning'] + reasoning_stats['empty_reasoning']}")
+        
+        # Validation: Reasoning should be fixed (not null) and of good quality
+        reasoning_fixed = reasoning_rate >= 0.8  # 80% should have reasoning
+        quality_good = quality_rate >= 0.6  # 60% should be quality reasoning
+        
+        print(f"\n   🎯 Reasoning Fix Validation:")
+        print(f"      Reasoning Present: {'✅' if reasoning_fixed else '❌'} (≥80%)")
+        print(f"      Quality Reasoning: {'✅' if quality_good else '❌'} (≥60%)")
+        
+        return reasoning_fixed and quality_good
+
+    async def test_ia2_end_to_end_flow(self):
+        """Test complete IA2 decision-making flow"""
+        print(f"\n🔄 Testing IA2 End-to-End Decision Flow...")
+        
+        # Start the trading system to generate fresh decisions
+        print(f"   🚀 Starting trading system for fresh IA2 decisions...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for the system to generate decisions
+        print(f"   ⏱️  Waiting for IA2 to generate decisions (45 seconds)...")
+        
+        decision_start_time = time.time()
+        new_decisions_found = False
+        max_wait_time = 45
+        check_interval = 5
+        
+        initial_success, initial_data = self.test_get_decisions()
+        initial_count = len(initial_data.get('decisions', [])) if initial_success else 0
+        
+        while time.time() - decision_start_time < max_wait_time:
+            time.sleep(check_interval)
+            
+            success, current_data = self.test_get_decisions()
+            if success:
+                current_count = len(current_data.get('decisions', []))
+                elapsed_time = time.time() - decision_start_time
+                
+                print(f"   📈 After {elapsed_time:.1f}s: {current_count} decisions (was {initial_count})")
+                
+                if current_count > initial_count:
+                    print(f"   ✅ New IA2 decisions generated!")
+                    new_decisions_found = True
+                    break
+        
+        # Stop the trading system
+        print(f"   🛑 Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        if not new_decisions_found:
+            print(f"   ⚠️  Using existing decisions for testing...")
+        
+        # Test the complete flow components
+        print(f"\n   🔍 Testing IA2 Decision Components:")
+        
+        # 1. Test confidence levels
+        confidence_test = self.test_ia2_decision_confidence_levels()
+        print(f"      Confidence Levels: {'✅' if confidence_test else '❌'}")
+        
+        # 2. Test trading thresholds
+        threshold_test = self.test_ia2_trading_signal_thresholds()
+        print(f"      Trading Thresholds: {'✅' if threshold_test else '❌'}")
+        
+        # 3. Test reasoning quality
+        reasoning_test = self.test_ia2_reasoning_quality()
+        print(f"      Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        
+        # Overall assessment
+        components_passed = sum([confidence_test, threshold_test, reasoning_test])
+        flow_success = components_passed >= 2  # At least 2/3 components working
+        
+        print(f"\n   🎯 End-to-End Flow Assessment:")
+        print(f"      Components Passed: {components_passed}/3")
+        print(f"      Flow Status: {'✅ SUCCESS' if flow_success else '❌ FAILED'}")
+        
+        return flow_success
+
+    async def run_ia2_decision_agent_tests(self):
+        """Run comprehensive IA2 Decision Agent tests"""
+        print("🤖 Starting IA2 Decision Agent Tests")
+        print("=" * 70)
+        print(f"🎯 Testing IA2 fixes: LLM parsing, confidence calculation, trading thresholds")
+        print(f"🔧 Expected: Higher confidence (>40%), proper reasoning, realistic signals")
+        print("=" * 70)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. IA2 Decision availability test
+        print(f"\n2️⃣ IA2 DECISION AVAILABILITY TEST")
+        decision_success, _ = self.test_get_decisions()
+        
+        # 3. IA2 Confidence levels test
+        print(f"\n3️⃣ IA2 CONFIDENCE CALCULATION TEST")
+        confidence_test = self.test_ia2_decision_confidence_levels()
+        
+        # 4. IA2 Trading thresholds test
+        print(f"\n4️⃣ IA2 TRADING SIGNAL THRESHOLDS TEST")
+        threshold_test = self.test_ia2_trading_signal_thresholds()
+        
+        # 5. IA2 Reasoning quality test
+        print(f"\n5️⃣ IA2 REASONING QUALITY TEST")
+        reasoning_test = self.test_ia2_reasoning_quality()
+        
+        # 6. IA2 End-to-end flow test
+        print(f"\n6️⃣ IA2 END-TO-END FLOW TEST")
+        flow_test = await self.test_ia2_end_to_end_flow()
+        
+        # Results Summary
+        print("\n" + "=" * 70)
+        print("📊 IA2 DECISION AGENT TEST RESULTS")
+        print("=" * 70)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • IA2 Decision Availability: {'✅' if decision_success else '❌'}")
+        print(f"   • IA2 Confidence Calculation: {'✅' if confidence_test else '❌'}")
+        print(f"   • IA2 Trading Thresholds: {'✅' if threshold_test else '❌'}")
+        print(f"   • IA2 Reasoning Quality: {'✅' if reasoning_test else '❌'}")
+        print(f"   • IA2 End-to-End Flow: {'✅' if flow_test else '❌'}")
+        
+        # Overall assessment
+        critical_tests = [decision_success, confidence_test, threshold_test, reasoning_test]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 Overall Assessment:")
+        if critical_passed == 4:
+            print(f"   ✅ IA2 DECISION AGENT FIXES SUCCESSFUL - All critical tests passed")
+            ia2_status = "SUCCESS"
+        elif critical_passed >= 3:
+            print(f"   ⚠️  IA2 DECISION AGENT FIXES PARTIAL - Some issues detected")
+            ia2_status = "PARTIAL"
+        else:
+            print(f"   ❌ IA2 DECISION AGENT FIXES FAILED - Major issues detected")
+            ia2_status = "FAILED"
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return ia2_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "ia2_available": decision_success,
+            "confidence_fixed": confidence_test,
+            "thresholds_realistic": threshold_test,
+            "reasoning_quality": reasoning_test,
+            "end_to_end_working": flow_test
+        }
+
     async def run_ia1_optimization_tests(self):
         """Run comprehensive IA1 performance optimization tests"""
         print("🚀 Starting IA1 Performance Optimization Tests")
