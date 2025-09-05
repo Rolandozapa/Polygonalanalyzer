@@ -1453,8 +1453,8 @@ class DualAITradingBotTester:
         }
 
     async def run_all_tests(self):
-        """Run all tests focusing on IA2 enhanced decision agent improvements"""
-        return await self.run_ia2_enhanced_decision_agent_tests()
+        """Run all tests focusing on IA2 confidence minimum fix"""
+        return await self.run_ia2_confidence_minimum_fix_tests()
 
 async def main():
     """Main test function"""
