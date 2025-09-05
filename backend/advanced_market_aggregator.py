@@ -505,6 +505,7 @@ class AdvancedMarketAggregator:
                     price=quote.get('price', 0),
                     volume_24h=quote.get('volume_24h', 0),
                     price_change_24h=quote.get('percent_change_24h', 0),
+                    volatility=abs(quote.get('percent_change_24h', 0)) / 100.0,  # Estimate volatility from 24h change
                     market_cap=quote.get('market_cap', 0),
                     market_cap_rank=crypto.get('cmc_rank'),
                     source="coinmarketcap",
