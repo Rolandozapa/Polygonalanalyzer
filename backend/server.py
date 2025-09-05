@@ -257,25 +257,38 @@ ADVANCED STRATEGY APPROACH:
 4. Market Condition Optimization: Volatility and trend strength influence TP positioning
 5. Technical Confluence Weighting: Multiple indicator alignment affects TP distribution
 
-STRATEGIC TAKE PROFIT METHODOLOGY:
-- **Strong Patterns (Head&Shoulders, Double Top/Bottom):** Aggressive TP scaling with wider distances
-- **Continuation Patterns (Flags, Pennants):** Conservative early TPs, extended final targets
-- **Reversal Patterns (Wedges, Triangles):** Balanced distribution with quick profit securing
-- **High Volatility Markets:** Closer TP levels to capture quick movements
-- **Low Volatility Markets:** Extended TP distances for maximum profit potential
+MARKET SENTIMENT & DYNAMIC LEVERAGE STRATEGY:
+Adapt leverage and risk parameters based on overall crypto market conditions and trade confidence.
 
-DYNAMIC 5-LEVEL TAKE PROFIT STRATEGY:
-- **TP1 (15-25%):** Quick profit securing - Distance based on pattern reliability
-- **TP2 (20-30%):** Pattern confirmation level - Adapts to support/resistance
-- **TP3 (20-25%):** Intermediate target - Market condition dependent  
-- **TP4 (15-20%):** Extended objective - Volatility adjusted
-- **TP5 (10-15%):** Maximum target - Pattern-specific moon shot
+LEVERAGE CALCULATION RULES:
+- **Base Leverage:** 2x-3x (conservative)
+- **Confidence Multiplier:** High confidence (>90%) = +1x-2x additional
+- **Market Sentiment Multiplier:** 
+  - LONG + Bullish Market (+5% market cap) = +1x-2x additional
+  - SHORT + Bearish Market (-5% market cap) = +1x-2x additional  
+  - LONG + Bearish Market = Base leverage only (risk mitigation)
+  - SHORT + Bullish Market = Base leverage only (risk mitigation)
 
-PATTERN-SPECIFIC TP POSITIONING:
-- **Bullish Channel:** TP1: 1.0%, TP2: 2.5%, TP3: 4.5%, TP4: 7.0%, TP5: 12.0%
-- **Double Bottom:** TP1: 1.5%, TP2: 3.5%, TP3: 6.0%, TP4: 9.5%, TP5: 15.0%  
-- **Flag Continuation:** TP1: 0.8%, TP2: 2.0%, TP3: 3.8%, TP4: 6.5%, TP5: 10.5%
-- **Head & Shoulders:** TP1: 2.0%, TP2: 4.5%, TP3: 7.5%, TP4: 12.0%, TP5: 20.0%
+DYNAMIC STOP LOSS & TAKE PROFIT:
+- **Stop Loss Optimization:** Tighter SL with higher leverage (1.5-2.5% instead of 3-5%)
+- **Take Profit Scaling:** More aggressive TP with favorable sentiment
+- **Risk-Reward Adaptation:** 2:1 minimum, up to 4:1 in optimal conditions
+
+MARKET SENTIMENT INDICATORS:
+- **Total Crypto Market Cap Change (24h):** Primary sentiment indicator
+- **BTC Dominance Trend:** Secondary confirmation
+- **Volume Analysis:** Market participation strength
+- **Fear & Greed Index:** Emotional market state
+
+LEVERAGE EXAMPLES:
+- **LONG BTC, 95% confidence, +7% market cap:** 6x leverage (2x base + 2x confidence + 2x sentiment)
+- **SHORT ETH, 85% confidence, -4% market cap:** 5x leverage (2x base + 1x confidence + 2x sentiment)  
+- **LONG ALTCOIN, 75% confidence, -2% market cap:** 2x leverage (base only, unfavorable sentiment)
+
+RISK MANAGEMENT WITH LEVERAGE:
+- **Higher Leverage = Tighter Stop Loss:** Maintain same $ risk per trade
+- **Position Size Calculation:** Account balance ÷ (leverage × stop loss %) = max position
+- **Maximum Leverage Cap:** 10x absolute maximum for risk control
 
 POSITION INVERSION LOGIC:
 - Monitor for opposite signals with 10%+ higher confidence
