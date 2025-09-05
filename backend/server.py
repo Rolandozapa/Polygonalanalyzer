@@ -2704,6 +2704,8 @@ class UltraProfessionalTradingOrchestrator:
             decisions = await asyncio.gather(*decision_tasks, return_exceptions=True)
             
             valid_decisions = 0
+            ia2_api_calls_made = len(decision_tasks)
+            
             for i, decision in enumerate(decisions):
                 if isinstance(decision, TradingDecision):
                     valid_decisions += 1
@@ -2716,18 +2718,24 @@ class UltraProfessionalTradingOrchestrator:
                         "type": "trading_decision",
                         "data": decision.dict(),
                         "ultra_professional": True,
-                        "trending_focused": True
+                        "trending_focused": True,
+                        "api_optimized": True
                     })
                     
-                    # Store opportunity
-                    opportunity = valid_analyses[i][0]
+                    # Store opportunity (utilise ia2_ready_analyses au lieu de valid_analyses)
+                    opportunity = ia2_ready_analyses[i][0]
                     await db.market_opportunities.insert_one(opportunity.dict())
                     
                     logger.info(f"Ultra professional trending decision for {opportunity.symbol}: {decision.signal} (confidence: {decision.confidence:.2f})")
                 else:
                     logger.warning(f"Decision failed: {decision}")
             
-            logger.info(f"Ultra professional trending cycle #{self.cycle_count} complete: {valid_decisions} decisions generated")
+            # Statistiques d'économie d'API
+            total_analyses = len(valid_analyses)
+            api_economy_rate = skipped_for_data_quality / total_analyses if total_analyses > 0 else 0
+            
+            logger.info(f"💰 ÉCONOMIE API CLAUDE: {skipped_for_data_quality}/{total_analyses} analyses skipped ({api_economy_rate:.1%} économie)")
+            logger.info(f"📊 RÉSULTATS FINAUX: {valid_decisions} décisions valides avec {ia2_api_calls_made} appels IA2 (économie optimisée)")
             return len(opportunities)
             
         except Exception as e:
