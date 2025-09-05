@@ -24,6 +24,18 @@ class PatternType(Enum):
     MACD_BULLISH = "macd_bullish"
     SUPPORT_BOUNCE = "support_bounce"
     RESISTANCE_BREAK = "resistance_break"
+    
+    # Nouvelles tendances soutenues pour positions long/short
+    SUSTAINED_BULLISH_TREND = "sustained_bullish_trend"
+    SUSTAINED_BEARISH_TREND = "sustained_bearish_trend"
+    BULLISH_CHANNEL = "bullish_channel"
+    BEARISH_CHANNEL = "bearish_channel"
+    DYNAMIC_SUPPORT_UPTREND = "dynamic_support_uptrend"
+    DYNAMIC_RESISTANCE_DOWNTREND = "dynamic_resistance_downtrend"
+    BULLISH_MOMENTUM_CONTINUATION = "bullish_momentum_continuation"
+    BEARISH_MOMENTUM_CONTINUATION = "bearish_momentum_continuation"
+    MULTIPLE_MA_BULLISH_ALIGNMENT = "multiple_ma_bullish_alignment"
+    MULTIPLE_MA_BEARISH_ALIGNMENT = "multiple_ma_bearish_alignment"
 
 @dataclass
 class TechnicalPattern:
