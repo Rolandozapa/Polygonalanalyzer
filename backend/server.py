@@ -291,15 +291,19 @@ class UltraProfessionalCryptoScout:
                 self.trending_symbols = current_symbols
                 logger.info(f"📈 Trending symbols updated from crawler: {current_symbols}")
             else:
-                # Fallback vers des cryptos populaires avec activité récente
-                popular_trending = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']
-                self.trending_symbols = popular_trending
-                logger.info(f"📈 Using popular trending symbols (crawler failed): {popular_trending}")
+                # Fallback vers TOP 25 cryptos par market cap pour analyse technique complète
+                top25_trending = [
+                    'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC',
+                    'LINK', 'LTC', 'BCH', 'UNI', 'ATOM', 'FIL', 'APT', 'NEAR', 'VET', 'ICP', 
+                    'HBAR', 'ALGO', 'ETC', 'MANA', 'SAND'
+                ]
+                self.trending_symbols = top25_trending
+                logger.info(f"📈 Using TOP 25 crypto symbols for technical analysis: {top25_trending}")
         except Exception as e:
             logger.error(f"Error syncing trending symbols: {e}")
-            # Fallback final
-            self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP']
-            logger.info(f"📈 Using fallback trending symbols: {self.trending_symbols}")
+            # Fallback final vers top 10
+            self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']
+            logger.info(f"📈 Using fallback top 10 symbols: {self.trending_symbols}")
     
     async def scan_opportunities(self) -> List[MarketOpportunity]:
         """Ultra professional trend-focused market scanning with auto-updated trends"""
