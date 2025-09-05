@@ -1744,19 +1744,61 @@ Provide your decision in the EXACT JSON format above with complete advanced stra
             logger.error(f"❌ Error creating/executing advanced strategy for {decision.symbol}: {e}")
     
     async def _check_position_inversion(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis):
-        """Check for position inversion opportunities"""
+        """Check for position inversion opportunities using advanced strategy manager"""
         try:
-            logger.info(f"Checking position inversion opportunity for {opportunity.symbol}")
+            logger.info(f"🔄 Checking position inversion for {opportunity.symbol}")
             
-            # Check if there are existing positions that could be inverted
-            # This is a placeholder for advanced position management logic
-            # In a real implementation, this would check current positions and market conditions
+            # Determine signal direction based on technical analysis
+            signal_strength = 0
+            bullish_signals = 0
+            bearish_signals = 0
             
-            # For now, just log the check
-            logger.debug(f"Position inversion check completed for {opportunity.symbol}")
+            # RSI analysis for signal direction
+            if analysis.rsi < 30:  # Oversold - bullish
+                bullish_signals += 2
+                signal_strength += 0.2
+            elif analysis.rsi > 70:  # Overbought - bearish
+                bearish_signals += 2
+                signal_strength += 0.2
+            
+            # MACD analysis for signal direction
+            if abs(analysis.macd_signal) > 0.001:  # Significant MACD signal
+                if analysis.macd_signal > 0:
+                    bullish_signals += 1
+                    signal_strength += 0.15
+                else:
+                    bearish_signals += 1
+                    signal_strength += 0.15
+            
+            # Determine potential direction and confidence
+            net_signals = bullish_signals - bearish_signals
+            potential_direction = None
+            potential_confidence = min(analysis.analysis_confidence + signal_strength, 0.95)
+            
+            if net_signals >= 2:
+                potential_direction = PositionDirection.LONG
+            elif net_signals <= -2:
+                potential_direction = PositionDirection.SHORT
+            
+            if potential_direction and potential_confidence > 0.6:
+                # Check if this would trigger a position inversion
+                inversion_possible = await advanced_strategy_manager.check_position_inversion_signal(
+                    symbol=opportunity.symbol,
+                    new_direction=potential_direction,
+                    new_confidence=potential_confidence,
+                    ia1_analysis_id=analysis.id,
+                    reasoning=f"Position inversion check: {potential_direction} with {potential_confidence:.2%} confidence"
+                )
+                
+                if inversion_possible:
+                    logger.info(f"🔄 Position inversion opportunity detected for {opportunity.symbol}")
+                else:
+                    logger.debug(f"📊 Position inversion checked for {opportunity.symbol} - no action needed")
+            else:
+                logger.debug(f"📊 Position inversion check for {opportunity.symbol} - insufficient signal strength")
             
         except Exception as e:
-            logger.error(f"Error checking position inversion for {opportunity.symbol}: {e}")
+            logger.error(f"❌ Error checking position inversion for {opportunity.symbol}: {e}")
     
     async def _evaluate_advanced_trading_decision(self, 
                                                 opportunity: MarketOpportunity, 
