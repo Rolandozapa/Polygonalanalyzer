@@ -196,10 +196,14 @@ class DualAITradingBotTester:
         
         # Basic API tests
         self.test_root_endpoint()
+        self.test_market_status()  # Professional Edition feature
         self.test_get_opportunities()
         self.test_get_analyses()
         self.test_get_decisions()
         self.test_get_performance()
+        
+        # Professional features test
+        self.test_professional_features()
         
         # WebSocket test
         await self.test_websocket_connection()
@@ -207,7 +211,8 @@ class DualAITradingBotTester:
         # Trading system tests
         self.test_start_trading()
         
-        # AI integration test (this takes time)
+        # AI integration test (this takes time but may fail due to budget limits)
+        print(f"\n⚠️  Note: AI integration test may fail due to LLM budget limits")
         self.test_ai_integration()
         
         # Stop trading
