@@ -1501,7 +1501,7 @@ class UltraProfessionalIA2DecisionAgent:
                 "data_source": "error_fallback"
             }
     async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
-        """Make ultra professional trading decision with advanced strategies and position inversion"""
+        """Make ultra professional trading decision with advanced strategies and dynamic leverage"""
         try:
             logger.info(f"IA2 making ultra professional ADVANCED decision for {opportunity.symbol}")
             
