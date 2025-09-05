@@ -1444,32 +1444,32 @@ ADVANCED STRATEGY REQUIREMENTS:
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
-{
+{{
     "signal": "LONG",
     "confidence": 0.75,
-    "reasoning": "Comprehensive analysis: Technical confluence shows RSI oversold at 28.5 with MACD bullish crossover. Multi-level TP strategy: TP1 at 1.5% (25% position), TP2 at 3.0% (30% position), TP3 at 5.0% (25% position), TP4 at 8.0% (20% position). Position inversion enabled due to high volatility. Risk-reward optimized at 2.5:1.",
+    "reasoning": "Comprehensive analysis: Technical confluence shows RSI oversold at 28.5 with MACD bullish crossover. Multi-level TP strategy: TP1 at 1.5%% (25%% position), TP2 at 3.0%% (30%% position), TP3 at 5.0%% (25%% position), TP4 at 8.0%% (20%% position). Position inversion enabled due to high volatility. Risk-reward optimized at 2.5:1.",
     "risk_level": "MEDIUM",
     "strategy_type": "ADVANCED_TP",
-    "take_profit_strategy": {
+    "take_profit_strategy": {{
         "tp1_percentage": 1.5,
         "tp2_percentage": 3.0,
         "tp3_percentage": 5.0,
         "tp4_percentage": 8.0,
         "tp_distribution": [25, 30, 25, 20]
-    },
-    "position_management": {
+    }},
+    "position_management": {{
         "entry_strategy": "MARKET",
         "stop_loss_percentage": 3.0,
         "trailing_stop": true,
         "position_size_multiplier": 1.0
-    },
-    "inversion_criteria": {
+    }},
+    "inversion_criteria": {{
         "enable_inversion": true,
         "confidence_threshold": 0.10,
         "opposite_signal_strength": 0.6
-    },
+    }},
     "key_factors": ["RSI oversold", "MACD bullish crossover", "Support level bounce"]
-}
+}}
 
 Consider current market volatility, technical indicator alignment, and account balance for position sizing.
 Provide your decision in the EXACT JSON format above with complete advanced strategy details.
