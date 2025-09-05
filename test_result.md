@@ -264,9 +264,11 @@
 
 ## test_plan:
   current_focus:
-    - "ROBUST IA2 Confidence System Validation"
+    - "Debug BingX Balance Investigation"
+    - "Debug IA2 Confidence Uniformity Issue"
   stuck_tasks:
-    []
+    - "Debug BingX Balance Investigation"
+    - "Debug IA2 Confidence Uniformity Issue"
   test_all: false
   test_priority: "high_first"
 
