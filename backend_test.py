@@ -3528,6 +3528,292 @@ class DualAITradingBotTester:
         
         return False
 
+        return False
+
+    def test_enhanced_quality_scoring_validation(self):
+        """Test Enhanced Quality Scoring System"""
+        print(f"\n🎯 Testing Enhanced Quality Scoring System...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for quality scoring testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for quality scoring testing")
+            return False
+        
+        print(f"   📊 Analyzing enhanced quality scoring of {len(decisions)} decisions...")
+        
+        # Analyze quality scoring factors
+        volatility_adjustments = []
+        momentum_adjustments = []
+        volume_adjustments = []
+        rsi_variations = []
+        macd_variations = []
+        market_cap_influences = []
+        
+        for i, decision in enumerate(decisions[:10]):  # Analyze first 10 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            print(f"\n   Decision {i+1} - {symbol} (Confidence: {confidence:.3f}):")
+            
+            # Check for volatility factor mentions
+            volatility_mentioned = 'volatility' in reasoning.lower()
+            if volatility_mentioned:
+                volatility_adjustments.append(symbol)
+                print(f"      ✅ Volatility factor detected in reasoning")
+            
+            # Check for price momentum mentions
+            momentum_mentioned = any(word in reasoning.lower() for word in ['momentum', 'price change', '24h'])
+            if momentum_mentioned:
+                momentum_adjustments.append(symbol)
+                print(f"      ✅ Price momentum factor detected")
+            
+            # Check for volume/liquidity mentions
+            volume_mentioned = any(word in reasoning.lower() for word in ['volume', 'liquidity'])
+            if volume_mentioned:
+                volume_adjustments.append(symbol)
+                print(f"      ✅ Volume/liquidity factor detected")
+            
+            # Check for RSI deviation calculations
+            rsi_mentioned = 'rsi' in reasoning.lower()
+            if rsi_mentioned:
+                rsi_variations.append(symbol)
+                print(f"      ✅ RSI analysis detected")
+            
+            # Check for MACD strength scaling
+            macd_mentioned = 'macd' in reasoning.lower()
+            if macd_mentioned:
+                macd_variations.append(symbol)
+                print(f"      ✅ MACD analysis detected")
+            
+            # Check for market cap influence
+            market_cap_mentioned = any(word in reasoning.lower() for word in ['market cap', 'rank', 'tier'])
+            if market_cap_mentioned:
+                market_cap_influences.append(symbol)
+                print(f"      ✅ Market cap influence detected")
+            
+            if not any([volatility_mentioned, momentum_mentioned, volume_mentioned, rsi_mentioned, macd_mentioned, market_cap_mentioned]):
+                print(f"      ⚠️ Limited quality scoring factors detected")
+        
+        total_analyzed = min(10, len(decisions))
+        
+        print(f"\n   📊 Enhanced Quality Scoring Analysis:")
+        print(f"      Volatility Adjustments: {len(volatility_adjustments)}/{total_analyzed} ({len(volatility_adjustments)/total_analyzed*100:.1f}%)")
+        print(f"      Momentum Assessments: {len(momentum_adjustments)}/{total_analyzed} ({len(momentum_adjustments)/total_analyzed*100:.1f}%)")
+        print(f"      Volume Evaluations: {len(volume_adjustments)}/{total_analyzed} ({len(volume_adjustments)/total_analyzed*100:.1f}%)")
+        print(f"      RSI Deviations: {len(rsi_variations)}/{total_analyzed} ({len(rsi_variations)/total_analyzed*100:.1f}%)")
+        print(f"      MACD Strength Scaling: {len(macd_variations)}/{total_analyzed} ({len(macd_variations)/total_analyzed*100:.1f}%)")
+        print(f"      Market Cap Influences: {len(market_cap_influences)}/{total_analyzed} ({len(market_cap_influences)/total_analyzed*100:.1f}%)")
+        
+        # Validation criteria
+        volatility_working = len(volatility_adjustments) >= total_analyzed * 0.3  # 30% should mention volatility
+        momentum_working = len(momentum_adjustments) >= total_analyzed * 0.3  # 30% should mention momentum
+        volume_working = len(volume_adjustments) >= total_analyzed * 0.2  # 20% should mention volume
+        rsi_working = len(rsi_variations) >= total_analyzed * 0.4  # 40% should mention RSI
+        macd_working = len(macd_variations) >= total_analyzed * 0.2  # 20% should mention MACD
+        market_cap_working = len(market_cap_influences) >= total_analyzed * 0.2  # 20% should mention market cap
+        
+        print(f"\n   ✅ Enhanced Quality Scoring Validation:")
+        print(f"      Volatility Factor (≥30%): {'✅' if volatility_working else '❌'}")
+        print(f"      Momentum Assessment (≥30%): {'✅' if momentum_working else '❌'}")
+        print(f"      Volume Scoring (≥20%): {'✅' if volume_working else '❌'}")
+        print(f"      RSI Deviation (≥40%): {'✅' if rsi_working else '❌'}")
+        print(f"      MACD Scaling (≥20%): {'✅' if macd_working else '❌'}")
+        print(f"      Market Cap Influence (≥20%): {'✅' if market_cap_working else '❌'}")
+        
+        quality_scoring_working = sum([
+            volatility_working, momentum_working, volume_working, 
+            rsi_working, macd_working, market_cap_working
+        ]) >= 4  # At least 4/6 factors working
+        
+        print(f"\n   🎯 Enhanced Quality Scoring: {'✅ WORKING' if quality_scoring_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return quality_scoring_working
+
+    def test_real_market_data_integration(self):
+        """Test Real Market Data Integration for Confidence Variation"""
+        print(f"\n🌐 Testing Real Market Data Integration...")
+        
+        # Test different symbols produce different confidence levels
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for market data testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) < 3:
+            print(f"   ❌ Insufficient decisions for market data testing ({len(decisions)} < 3)")
+            return False
+        
+        print(f"   📊 Analyzing real market data integration across {len(decisions)} decisions...")
+        
+        # Group decisions by symbol
+        symbol_data = {}
+        for decision in decisions:
+            symbol = decision.get('symbol', 'Unknown')
+            confidence = decision.get('confidence', 0)
+            reasoning = decision.get('ia2_reasoning', '')
+            
+            if symbol not in symbol_data:
+                symbol_data[symbol] = {
+                    'confidences': [],
+                    'market_conditions': [],
+                    'technical_indicators': []
+                }
+            
+            symbol_data[symbol]['confidences'].append(confidence)
+            
+            # Extract market condition mentions
+            market_conditions = []
+            if 'volatile' in reasoning.lower(): market_conditions.append('volatile')
+            if 'stable' in reasoning.lower(): market_conditions.append('stable')
+            if 'momentum' in reasoning.lower(): market_conditions.append('momentum')
+            if 'liquidity' in reasoning.lower(): market_conditions.append('liquidity')
+            
+            symbol_data[symbol]['market_conditions'].extend(market_conditions)
+            
+            # Extract technical indicator mentions
+            technical_indicators = []
+            if 'rsi' in reasoning.lower(): technical_indicators.append('rsi')
+            if 'macd' in reasoning.lower(): technical_indicators.append('macd')
+            if 'volume' in reasoning.lower(): technical_indicators.append('volume')
+            if 'price change' in reasoning.lower(): technical_indicators.append('price_change')
+            
+            symbol_data[symbol]['technical_indicators'].extend(technical_indicators)
+        
+        print(f"\n   🔍 Symbol-Based Market Data Analysis:")
+        
+        symbol_confidence_variation = []
+        market_condition_diversity = []
+        
+        for symbol, data in list(symbol_data.items())[:5]:  # Show first 5 symbols
+            confidences = data['confidences']
+            avg_confidence = sum(confidences) / len(confidences) if confidences else 0
+            confidence_range = max(confidences) - min(confidences) if len(confidences) > 1 else 0
+            
+            unique_conditions = len(set(data['market_conditions']))
+            unique_indicators = len(set(data['technical_indicators']))
+            
+            symbol_confidence_variation.append(confidence_range)
+            market_condition_diversity.append(unique_conditions)
+            
+            print(f"   {symbol}:")
+            print(f"      Avg Confidence: {avg_confidence:.3f}")
+            print(f"      Confidence Range: {confidence_range:.3f}")
+            print(f"      Market Conditions: {unique_conditions} unique")
+            print(f"      Technical Indicators: {unique_indicators} unique")
+        
+        # Overall market data integration assessment
+        different_symbols = len(symbol_data)
+        avg_symbol_variation = sum(symbol_confidence_variation) / len(symbol_confidence_variation) if symbol_confidence_variation else 0
+        avg_condition_diversity = sum(market_condition_diversity) / len(market_condition_diversity) if market_condition_diversity else 0
+        
+        print(f"\n   📊 Market Data Integration Statistics:")
+        print(f"      Different Symbols: {different_symbols}")
+        print(f"      Avg Symbol Confidence Variation: {avg_symbol_variation:.3f}")
+        print(f"      Avg Market Condition Diversity: {avg_condition_diversity:.1f}")
+        
+        # Validation criteria
+        symbol_diversity = different_symbols >= 3  # At least 3 different symbols
+        confidence_varies_by_symbol = avg_symbol_variation >= 0.02  # At least 2% variation per symbol
+        market_conditions_detected = avg_condition_diversity >= 1.0  # At least 1 condition per symbol on average
+        
+        print(f"\n   ✅ Real Market Data Integration Validation:")
+        print(f"      Symbol Diversity (≥3): {'✅' if symbol_diversity else '❌'} ({different_symbols} symbols)")
+        print(f"      Confidence Varies by Symbol (≥2%): {'✅' if confidence_varies_by_symbol else '❌'} ({avg_symbol_variation:.3f})")
+        print(f"      Market Conditions Detected (≥1): {'✅' if market_conditions_detected else '❌'} ({avg_condition_diversity:.1f})")
+        
+        market_data_integration_working = (
+            symbol_diversity and
+            confidence_varies_by_symbol and
+            market_conditions_detected
+        )
+        
+        print(f"\n   🎯 Real Market Data Integration: {'✅ WORKING' if market_data_integration_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return market_data_integration_working
+
+    def test_system_integration_comprehensive(self):
+        """Test Complete System Integration with All Fixes"""
+        print(f"\n🔄 Testing Complete System Integration with All Fixes...")
+        
+        # Clear cache and generate multiple fresh decisions
+        print(f"   🗑️ Step 1: Clearing cache for fresh system test...")
+        cache_clear_success = self.test_decision_cache_clear_endpoint()
+        
+        print(f"   🚀 Step 2: Starting trading system for comprehensive test...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        print(f"   ⏱️ Step 3: Generating fresh decisions across multiple symbols (90s)...")
+        time.sleep(90)  # Extended time for comprehensive generation
+        
+        print(f"   🛑 Step 4: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Test all components
+        print(f"\n   🔍 Step 5: Testing all system components...")
+        
+        # 1. BingX Balance Test
+        balance_test = self.test_bingx_official_api_balance()
+        print(f"      BingX Balance Fix: {'✅' if balance_test else '❌'}")
+        
+        # 2. IA2 Confidence Variation Test
+        variation_test = self.test_ia2_confidence_real_variation()
+        print(f"      IA2 Confidence Variation: {'✅' if variation_test else '❌'}")
+        
+        # 3. Enhanced Quality Scoring Test
+        quality_test = self.test_enhanced_quality_scoring_validation()
+        print(f"      Enhanced Quality Scoring: {'✅' if quality_test else '❌'}")
+        
+        # 4. Real Market Data Integration Test
+        market_data_test = self.test_real_market_data_integration()
+        print(f"      Real Market Data Integration: {'✅' if market_data_test else '❌'}")
+        
+        # 5. 50% Minimum Confidence Test
+        confidence_minimum_test = self.test_ia2_critical_confidence_minimum_fix()
+        print(f"      50% Minimum Confidence: {'✅' if confidence_minimum_test else '❌'}")
+        
+        # Overall system integration assessment
+        components_passed = sum([
+            balance_test, variation_test, quality_test, 
+            market_data_test, confidence_minimum_test
+        ])
+        
+        integration_success = components_passed >= 4  # At least 4/5 components working
+        
+        print(f"\n   🎯 System Integration Assessment:")
+        print(f"      Components Passed: {components_passed}/5")
+        print(f"      Integration Status: {'✅ SUCCESS' if integration_success else '❌ FAILED'}")
+        
+        # Final validation summary
+        success, final_decisions = self.test_get_decisions()
+        if success:
+            decisions = final_decisions.get('decisions', [])
+            if decisions:
+                confidences = [d.get('confidence', 0) for d in decisions]
+                avg_confidence = sum(confidences) / len(confidences)
+                min_confidence = min(confidences)
+                unique_confidences = len(set(round(c, 3) for c in confidences))
+                
+                print(f"\n   📊 Final System Validation:")
+                print(f"      Total Decisions: {len(decisions)}")
+                print(f"      Average Confidence: {avg_confidence:.3f}")
+                print(f"      Minimum Confidence: {min_confidence:.3f}")
+                print(f"      Unique Confidence Values: {unique_confidences}")
+                print(f"      Balance > 0: {'✅' if balance_test else '❌'}")
+                print(f"      Confidence Varies: {'✅' if unique_confidences > 2 else '❌'}")
+                print(f"      50% Minimum Maintained: {'✅' if min_confidence >= 0.50 else '❌'}")
+        
+        return integration_success
+
     def run_comprehensive_fixes_tests(self):
         """Run comprehensive tests for BingX balance and IA2 confidence fixes"""
         print(f"🚀 Starting Comprehensive Fixes Tests")
