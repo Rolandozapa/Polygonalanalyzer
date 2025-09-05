@@ -581,7 +581,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             - Market Aggregator Status: {performance_stats.get('success_rate', 0):.2f} success rate
             - Total API Sources: {len(performance_stats.get('api_endpoints', []))} endpoints active
             
-            ADVANCED TECHNICAL INDICATORS (30-day historical analysis):
+            ADVANCED TECHNICAL INDICATORS (10-day historical analysis):
             - RSI (14): {rsi:.2f}
             - MACD Line: {macd_line:.6f}
             - MACD Signal: {macd_signal:.6f} 
