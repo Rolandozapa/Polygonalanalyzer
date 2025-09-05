@@ -1534,11 +1534,21 @@ IA1 TECHNICAL ANALYSIS:
 - RSI: {analysis.rsi:.2f} (Oversold: <30, Overbought: >70)
 - MACD Signal: {analysis.macd_signal:.6f}
 - Bollinger Position: {analysis.bollinger_position}
-- Support Levels: {', '.join([f'${level:.6f}' for level in analysis.support_levels])}
-- Resistance Levels: {', '.join([f'${level:.6f}' for level in analysis.resistance_levels])}
-- Patterns Detected: {', '.join(analysis.patterns_detected)}
-- IA1 Confidence: {analysis.analysis_confidence:.2%}
-- IA1 Reasoning: {analysis.ia1_reasoning[:500]}...
+- Support Level: ${analysis.support_levels[0] if analysis.support_levels else analysis.rsi:.6f}
+- Resistance Level: ${analysis.resistance_levels[0] if analysis.resistance_levels else analysis.rsi:.6f}
+- Detected Patterns: {', '.join(analysis.patterns_detected)}
+- Analysis Confidence: {analysis.analysis_confidence:.2%}
+
+IA1 REASONING:
+{analysis.ia1_reasoning[:500]}
+
+CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
+- Total Market Cap: ${market_sentiment['total_market_cap_usd']:,.0f}
+- 24h Volume: ${market_sentiment['total_volume_24h']:,.0f}
+- BTC Dominance: {market_sentiment['btc_dominance']:.1f}%
+- BTC 24h Change: {market_sentiment['btc_change_24h']:+.2f}% (Market Proxy)
+- Market Sentiment: {market_sentiment['market_sentiment']}
+- Sentiment Score: {market_sentiment['sentiment_score']:.2f}
 
 STRATEGIC 5-LEVEL TP REQUIREMENTS WITH DYNAMIC LEVERAGE:
 1. **Calculate optimal leverage** based on trade confidence and market sentiment
