@@ -390,6 +390,63 @@ class EnhancedOHLCVFetcher:
             logger.debug(f"Error parsing CoinAPI data for {symbol}: {e}")
             return None
     
+    def _combine_multi_source_data(self, successful_data: List[Tuple[str, pd.DataFrame]], symbol: str) -> pd.DataFrame:
+        """Combine and validate data from multiple sources"""
+        try:
+            if len(successful_data) < 2:
+                return successful_data[0][1] if successful_data else None
+            
+            # Get the two best sources (most data)
+            sorted_data = sorted(successful_data, key=lambda x: len(x[1]), reverse=True)
+            primary_source, primary_data = sorted_data[0]
+            secondary_source, secondary_data = sorted_data[1]
+            
+            logger.info(f"🔗 Combining {primary_source} ({len(primary_data)} days) with {secondary_source} ({len(secondary_data)} days)")
+            
+            # Use primary source as base and validate with secondary
+            combined_data = primary_data.copy()
+            
+            # Find overlapping date range
+            primary_dates = set(primary_data.index.date)
+            secondary_dates = set(secondary_data.index.date)
+            common_dates = primary_dates & secondary_dates
+            
+            if len(common_dates) < 30:  # Need at least 30 overlapping days for validation
+                logger.info(f"📊 Limited overlap ({len(common_dates)} days), using primary source: {primary_source}")
+                return combined_data
+            
+            # Validate prices on common dates (they should be similar)
+            validation_errors = 0
+            for date in list(common_dates)[:10]:  # Check first 10 common dates
+                try:
+                    primary_close = primary_data.loc[primary_data.index.date == date, 'Close'].iloc[0]
+                    secondary_close = secondary_data.loc[secondary_data.index.date == date, 'Close'].iloc[0]
+                    
+                    # Allow up to 5% difference between sources
+                    price_diff = abs(primary_close - secondary_close) / primary_close
+                    if price_diff > 0.05:  # 5% difference threshold
+                        validation_errors += 1
+                except:
+                    validation_errors += 1
+            
+            validation_rate = 1 - (validation_errors / 10)
+            logger.info(f"🎯 Multi-source validation rate: {validation_rate*100:.1f}% for {symbol}")
+            
+            # Add multi-source metadata
+            combined_data.attrs = {
+                'primary_source': primary_source,
+                'secondary_source': secondary_source,
+                'validation_rate': validation_rate,
+                'sources_count': len(successful_data)
+            }
+            
+            return combined_data
+            
+        except Exception as e:
+            logger.warning(f"Error combining multi-source data for {symbol}: {e}")
+            # Fallback to primary source
+            return successful_data[0][1] if successful_data else None
+    
     def _validate_and_clean_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Validate and clean OHLCV data"""
         try:
