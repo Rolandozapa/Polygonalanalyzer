@@ -1618,8 +1618,8 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
     "key_factors": ["Market sentiment analysis", "Dynamic leverage calculation", "Risk-adjusted position sizing"]
 }}
 
-Consider current market volatility, technical indicator alignment, and account balance for position sizing.
-Provide your decision in the EXACT JSON format above with complete advanced strategy details.
+Consider current market volatility, sentiment alignment, and dynamic leverage for optimal position sizing.
+Provide your decision in the EXACT JSON format above with complete market-adaptive strategy details.
 """
             
             # Send to Claude for advanced decision
