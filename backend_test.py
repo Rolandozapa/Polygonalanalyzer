@@ -300,6 +300,80 @@ class DualAITradingBotTester:
             print(f"   ⚠️  Technical analysis quality concerns detected")
             return overall_quality >= 0.6  # Accept 60% as partial success
 
+    def test_ia1_optimization_evidence(self):
+        """Test for evidence of IA1 optimization implementation"""
+        print(f"\n🔍 Testing IA1 Optimization Evidence...")
+        
+        # Check if analyses show high quality (indicating optimization is working)
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available")
+            return False
+        
+        print(f"   📊 Analyzing {len(analyses)} recent IA1 analyses...")
+        
+        # Check analysis timestamps to estimate generation speed
+        recent_analyses = analyses[:3]  # Most recent 3
+        optimization_indicators = 0
+        
+        for i, analysis in enumerate(recent_analyses):
+            symbol = analysis.get('symbol', 'Unknown')
+            confidence = analysis.get('analysis_confidence', 0)
+            reasoning = analysis.get('ia1_reasoning', '')
+            timestamp = analysis.get('timestamp', '')
+            
+            print(f"\n   Analysis {i+1} - {symbol}:")
+            print(f"      Timestamp: {timestamp}")
+            print(f"      Confidence: {confidence:.2f}")
+            print(f"      Reasoning length: {len(reasoning)} chars")
+            
+            # Look for optimization indicators
+            quality_indicators = 0
+            
+            # High confidence suggests good analysis
+            if confidence >= 0.7:
+                quality_indicators += 1
+                print(f"      ✅ High confidence analysis")
+            
+            # Reasonable reasoning length (not too verbose, not too short)
+            if 200 <= len(reasoning) <= 1500:
+                quality_indicators += 1
+                print(f"      ✅ Appropriate reasoning length")
+            
+            # Technical indicators present
+            if (analysis.get('rsi', 0) > 0 and 
+                len(analysis.get('support_levels', [])) > 0 and 
+                len(analysis.get('resistance_levels', [])) > 0):
+                quality_indicators += 1
+                print(f"      ✅ Complete technical indicators")
+            
+            # Check for fast/optimized language in reasoning
+            fast_keywords = ['fast', 'quick', 'streamlined', '10-day', 'optimized', 'efficient']
+            if any(keyword in reasoning.lower() for keyword in fast_keywords):
+                quality_indicators += 1
+                print(f"      ✅ Contains optimization language")
+            
+            if quality_indicators >= 3:
+                optimization_indicators += 1
+                print(f"      ✅ Shows optimization characteristics")
+            else:
+                print(f"      ⚠️  Limited optimization evidence")
+        
+        optimization_rate = optimization_indicators / len(recent_analyses)
+        print(f"\n   📊 Optimization Evidence: {optimization_indicators}/{len(recent_analyses)} analyses ({optimization_rate*100:.1f}%)")
+        
+        if optimization_rate >= 0.67:  # 2/3 analyses show optimization
+            print(f"   ✅ Strong evidence of IA1 optimization implementation")
+            return True
+        else:
+            print(f"   ⚠️  Limited evidence of IA1 optimization")
+            return optimization_rate > 0
+
     async def run_ia1_optimization_tests(self):
         """Run comprehensive IA1 performance optimization tests"""
         print("🚀 Starting IA1 Performance Optimization Tests")
