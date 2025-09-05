@@ -123,6 +123,31 @@ class DualAITradingBotTester:
         """Test stop trading endpoint"""
         return self.run_test("Stop Trading System", "POST", "stop-trading", 200)
 
+    def test_professional_features(self):
+        """Test Professional Edition specific features"""
+        print(f"\n🏆 Testing Professional Edition Features...")
+        
+        # Test market status
+        success, market_data = self.test_market_status()
+        if success and market_data:
+            market_status = market_data
+            print(f"✅ Market Status Retrieved:")
+            print(f"   System Status: {market_status.get('system_status', 'unknown')}")
+            
+            api_status = market_status.get('api_status', {})
+            print(f"   API Status:")
+            for api, status in api_status.items():
+                print(f"     - {api}: {status}")
+            
+            sentiment = market_status.get('market_sentiment', {})
+            if sentiment:
+                print(f"   Market Sentiment: {sentiment.get('sentiment', 'unknown')} (confidence: {sentiment.get('confidence', 0):.2f})")
+            
+            return True
+        else:
+            print("❌ Professional features test failed")
+            return False
+
     def test_ai_integration(self):
         """Test AI integration by starting trading and checking for AI-generated data"""
         print(f"\n🤖 Testing AI Integration...")
