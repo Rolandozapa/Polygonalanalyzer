@@ -587,6 +587,7 @@ class AdvancedMarketAggregator:
                         price=quote.get('price', 0),
                         volume_24h=quote.get('volume_24h', 0),
                         price_change_24h=quote.get('percent_change_24h', 0),
+                        volatility=abs(quote.get('percent_change_24h', 0)) / 100.0,  # Estimate volatility from 24h change
                         source="coinmarketcap_dex",
                         confidence=0.8,  # DEX data slightly less reliable
                         additional_data={
