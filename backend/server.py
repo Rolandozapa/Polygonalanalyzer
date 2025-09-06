@@ -3891,11 +3891,33 @@ class UltraProfessionalTradingOrchestrator:
                 "trending_auto_updated": True
             })
             
-            # 2. Ultra professional IA1 analysis (parallel processing for top opportunities)
+            # 2. Ultra professional IA1 analysis with pre-deduplication (saving LLM credits)
             top_opportunities = opportunities[:10]  # Analyze top 10 for performance
+            
+            # Initialize tracking variables
+            ia1_analyses_generated = 0
+            ia1_analyses_deduplicated = 0
             analysis_tasks = []
             
             for opportunity in top_opportunities:
+                # NOUVEAU: VÉRIFICATION DÉDUPLICATION AVANT ANALYSE IA1 (économie crédits LLM)
+                symbol = opportunity.symbol
+                recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)
+                
+                existing_recent_analysis = await db.technical_analyses.find_one({
+                    "symbol": symbol,
+                    "timestamp": {"$gte": recent_cutoff}
+                })
+                
+                if existing_recent_analysis:
+                    ia1_analyses_deduplicated += 1
+                    logger.info(f"🔄 IA1 PRE-FILTER SKIP: {symbol} - Recent analysis exists, SKIPPING IA1 (saving LLM credits)")
+                    continue  # Skip IA1 analysis completely
+                
+                # Lancer IA1 seulement si pas de doublon récent
+                logger.info(f"🤖 IA1 ANALYZING: {symbol} (no recent analysis found)")
+                ia1_analyses_generated += 1
+                
                 analysis_tasks.append(self.ia1.analyze_opportunity(opportunity))
             
             # Execute analyses in parallel
@@ -3905,8 +3927,6 @@ class UltraProfessionalTradingOrchestrator:
             valid_analyses = []
             filtered_count = 0
             rejected_no_data_count = 0
-            ia1_analyses_generated = 0
-            ia1_analyses_deduplicated = 0
             
             logger.info(f"🔍 DEBUG: Processing {len(analyses)} analyses from IA1")
             
