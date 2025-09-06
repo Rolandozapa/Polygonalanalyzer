@@ -3898,6 +3898,7 @@ class UltraProfessionalTradingOrchestrator:
             ia1_analyses_generated = 0
             ia1_analyses_deduplicated = 0
             analysis_tasks = []
+            analyzed_opportunities = []  # Track which opportunities were actually analyzed
             
             for opportunity in top_opportunities:
                 # NOUVEAU: VÉRIFICATION DÉDUPLICATION AVANT ANALYSE IA1 (économie crédits LLM)
@@ -3919,6 +3920,7 @@ class UltraProfessionalTradingOrchestrator:
                 ia1_analyses_generated += 1
                 
                 analysis_tasks.append(self.ia1.analyze_opportunity(opportunity))
+                analyzed_opportunities.append(opportunity)  # Track this opportunity
             
             # Execute analyses in parallel
             analyses = await asyncio.gather(*analysis_tasks, return_exceptions=True)
@@ -3934,7 +3936,7 @@ class UltraProfessionalTradingOrchestrator:
                 logger.info(f"🔍 DEBUG: Analysis {i}: Type={type(analysis)}, Is TechnicalAnalysis? {isinstance(analysis, TechnicalAnalysis)}")
                 
                 if isinstance(analysis, TechnicalAnalysis):
-                    valid_analyses.append((top_opportunities[i], analysis))
+                    valid_analyses.append((analyzed_opportunities[i], analysis))
                     logger.info(f"🔍 DEBUG: Added {analysis.symbol} to valid_analyses")
                     
                     # Store analysis directement (pas de re-vérification)
