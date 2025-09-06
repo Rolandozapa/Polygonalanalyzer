@@ -4195,7 +4195,7 @@ async def get_live_trading_performance():
             "live_trading_enabled": orchestrator.ia2.live_trading_enabled,
             "demo_mode": bingx_stats.get('demo_mode', False),
             "last_api_response_time": bingx_stats.get('last_request_time', 0),
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
         
         return {"performance": performance}
