@@ -563,7 +563,7 @@
 
 ## test_plan:
   current_focus:
-    - "Test IA1 Deduplication Fix"
+    - "Analyse des Filtres Scout - Restrictivité et Efficacité"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
