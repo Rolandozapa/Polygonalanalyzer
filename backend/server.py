@@ -1497,7 +1497,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             result["trend_strength"] = abs(trend_percentage)
             result["volatility_level"] = volatility
             
-            if lateral_signals >= 3:  # 3+ critères = mouvement latéral confirmé
+            if lateral_signals >= 4:  # 4 critères = mouvement latéral confirmé (PLUS STRICT POUR ÉVITER FAUX POSITIFS)
                 result["is_lateral"] = True
                 result["movement_type"] = "LATERAL"
                 result["reason"] = f"Consolidation détectée: {', '.join(lateral_reasons)}"
