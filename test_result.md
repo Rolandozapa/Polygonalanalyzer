@@ -523,11 +523,7 @@
 
 ## test_plan:
   current_focus:
-    - "BingX API Connection Verification"
-    - "Account Safety Assessment"
-    - "Trading Safety Configuration"
-    - "Trailing Stop Live Integration"
-    - "Pre-Trading Validation"
+    - "Test IA1 Deduplication Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
