@@ -764,7 +764,7 @@ class UltraProfessionalCryptoScout:
             else:
                 # Fallback to comprehensive scan
                 market_responses = await self.market_aggregator.get_comprehensive_market_data(
-                    limit=100,  # Reduced from 500
+                    limit=200,  # Augmenté pour plus de diversité
                     include_dex=True
                 )
                 unique_opportunities = self._convert_responses_to_opportunities(market_responses)
