@@ -793,8 +793,8 @@ class UltraProfessionalCryptoScout:
             
             logger.info(f"🎯 SCOUT BIDIRECTIONAL R:R PRE-FILTER RESULTS:")
             logger.info(f"   📊 Total analyzed: {scout_rr_stats['total']}")
-            logger.info(f"   ✅ Passed (best R:R ≥1.3:1): {scout_rr_stats['passed']}")
-            logger.info(f"   ❌ Rejected (best R:R <1.3:1): {scout_rr_stats['rejected']}")
+            logger.info(f"   ✅ Passed (best R:R ≥1.2:1): {scout_rr_stats['passed']}")
+            logger.info(f"   ❌ Rejected (best R:R <1.2:1): {scout_rr_stats['rejected']}")
             logger.info(f"   💰 IA1 API calls saved: {ia1_savings} ({savings_percentage:.1f}%)")
             logger.info(f"   🚀 Final opportunities: {len(final_opportunities)}")
             
