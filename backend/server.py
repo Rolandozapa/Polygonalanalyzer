@@ -5842,8 +5842,8 @@ async def ultra_professional_trading_loop():
                 "timestamp": datetime.now(timezone.utc).isoformat()
             })
             
-            # Ultra professional cycle timing - every 3 minutes for comprehensive analysis
-            await asyncio.sleep(180)
+            # Ultra professional cycle timing - every 4 hours for comprehensive analysis
+            await asyncio.sleep(14400)  # 4 heures = 14400 secondes
             
         except Exception as e:
             logger.error(f"Ultra professional trending trading loop error: {e}")
