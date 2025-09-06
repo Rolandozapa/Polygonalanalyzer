@@ -4022,11 +4022,25 @@ async def get_analyses():
 
 @api_router.get("/decisions")
 async def get_decisions():
-    """Get recent trading decisions"""
+    """Get recent trading decisions with Paris time formatting"""
     decisions = await db.trading_decisions.find().sort("timestamp", -1).limit(30).to_list(30)
+    
+    # Format decisions with Paris time
+    formatted_decisions = []
     for decision in decisions:
         decision.pop('_id', None)
-    return {"decisions": decisions, "ultra_professional": True}
+        
+        # Convert timestamp to Paris time format
+        if 'timestamp' in decision and isinstance(decision['timestamp'], datetime):
+            utc_dt = decision['timestamp']
+            if utc_dt.tzinfo is None:
+                utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+            paris_dt = utc_dt.astimezone(PARIS_TZ)
+            decision['timestamp'] = paris_dt.strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
+        
+        formatted_decisions.append(decision)
+    
+    return {"decisions": formatted_decisions, "ultra_professional": True}
 
 @api_router.get("/market-aggregator-stats")
 async def get_market_aggregator_stats():
