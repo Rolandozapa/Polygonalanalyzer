@@ -108,13 +108,18 @@ class IA1DeduplicationTester:
             timestamp_str = analysis.get('timestamp', '')
             
             try:
-                # Parse timestamp (assuming ISO format)
+                # Parse timestamp - handle both ISO and French format
                 if 'T' in timestamp_str:
+                    # ISO format
                     timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                    # Convert to Paris timezone
                     if timestamp.tzinfo is None:
                         timestamp = timestamp.replace(tzinfo=pytz.UTC)
                     timestamp_paris = timestamp.astimezone(self.PARIS_TZ)
+                elif '(Heure de Paris)' in timestamp_str:
+                    # French format: "2025-09-06 17:33:53 (Heure de Paris)"
+                    date_part = timestamp_str.split(' (Heure de Paris)')[0]
+                    timestamp_paris = datetime.strptime(date_part, '%Y-%m-%d %H:%M:%S')
+                    timestamp_paris = self.PARIS_TZ.localize(timestamp_paris)
                 else:
                     continue  # Skip if timestamp format is unexpected
                 
