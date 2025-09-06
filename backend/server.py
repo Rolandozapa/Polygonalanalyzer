@@ -616,6 +616,59 @@ class UltraProfessionalCryptoScout:
             self.trending_symbols = ['BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC']
             logger.info(f"📈 Using fallback top 10 symbols: {self.trending_symbols}")
     
+    def _calculate_scout_risk_reward(self, opportunity: MarketOpportunity) -> Dict[str, Any]:
+        """Calcul Risk-Reward approximatif par le Scout pour pré-filtrage économique"""
+        try:
+            current_price = opportunity.current_price
+            volatility = max(opportunity.volatility, 0.015)  # Min 1.5% volatility
+            
+            # ATR approximatif basé sur la volatilité 24h
+            atr_estimate = current_price * volatility
+            
+            # Supports/Résistances approximatifs basés sur les données disponibles
+            # En l'absence de données historiques complètes, utiliser des approximations
+            support_distance = atr_estimate * 2.0  # Support à 2 ATR en dessous
+            resistance_distance = atr_estimate * 2.5  # Résistance à 2.5 ATR au dessus
+            
+            # Direction basée sur le momentum 24h
+            direction = "long" if opportunity.price_change_24h > 0 else "short"
+            
+            if direction == "long":
+                entry_price = current_price
+                stop_loss = current_price - support_distance
+                take_profit = current_price + resistance_distance
+            else:  # short
+                entry_price = current_price
+                stop_loss = current_price + resistance_distance  
+                take_profit = current_price - support_distance
+            
+            # Calcul R:R approximatif
+            risk = abs(entry_price - stop_loss)
+            reward = abs(take_profit - entry_price)
+            ratio = reward / risk if risk > 0 else 0.0
+            
+            return {
+                "ratio": ratio,
+                "entry_price": entry_price,
+                "stop_loss": stop_loss,
+                "take_profit": take_profit,
+                "direction": direction,
+                "quality": "excellent" if ratio >= 2.0 else "good" if ratio >= 1.5 else "poor",
+                "calculation_method": "scout_approximation"
+            }
+            
+        except Exception as e:
+            logger.debug(f"Scout R:R calculation error for {opportunity.symbol}: {e}")
+            return {
+                "ratio": 0.0,
+                "entry_price": opportunity.current_price,
+                "stop_loss": opportunity.current_price,
+                "take_profit": opportunity.current_price,
+                "direction": "unknown",
+                "quality": "error",
+                "calculation_method": "scout_error"
+            }
+
     async def scan_opportunities(self) -> List[MarketOpportunity]:
         """Ultra professional trend-focused market scanning with auto-updated trends"""
         try:
