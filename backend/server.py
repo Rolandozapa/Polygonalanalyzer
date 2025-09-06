@@ -1472,8 +1472,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 lateral_signals += 1
                 lateral_reasons.append(f"Range limité: {price_range:.1f}%")
             
-            # Critère 4: Moving averages convergentes (< 1.5% différence)
-            if ma_convergence < 1.5:
+            # Critère 4: Moving averages convergentes (< 1.0% différence) - ASSOUPLI
+            if ma_convergence < 1.0:
                 lateral_signals += 1
                 lateral_reasons.append(f"MA convergentes: {ma_convergence:.1f}%")
             
