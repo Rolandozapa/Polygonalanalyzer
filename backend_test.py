@@ -10966,6 +10966,105 @@ if __name__ == "__main__":
         print(f"=" * 80)
         return overall_success
 
+    def run_scout_filter_diagnostic_tests(self):
+        """Run comprehensive Scout filter diagnostic tests"""
+        print(f"\n" + "="*80)
+        print(f"🎯 SCOUT FILTER DIAGNOSTIC TEST SUITE")
+        print(f"   Testing hypothesis: Lateral movement filter blocks opportunities before overrides")
+        print(f"   Expected: Passage rate should increase from 16% to 30-40% if filter disabled")
+        print(f"="*80)
+        
+        # Test 1: Lateral Movement Filter Diagnostic
+        print(f"\n🔍 TEST 1: Lateral Movement Filter Diagnostic")
+        lateral_test = self.test_scout_lateral_movement_filter_diagnostic()
+        
+        # Test 2: Scout Filter Relaxations
+        print(f"\n🔍 TEST 2: Scout Filter Aggressive Relaxations")
+        relaxation_test = self.test_scout_filter_aggressive_relaxations()
+        
+        # Test 3: Volume Filter Analysis
+        print(f"\n🔍 TEST 3: Volume Filter Analysis")
+        volume_test = self.test_scout_volume_filter_analysis()
+        
+        # Summary
+        tests_passed = sum([lateral_test, relaxation_test, volume_test])
+        print(f"\n" + "="*80)
+        print(f"🎯 SCOUT FILTER DIAGNOSTIC SUMMARY")
+        print(f"   Tests Passed: {tests_passed}/3")
+        print(f"   Lateral Movement Test: {'✅' if lateral_test else '❌'}")
+        print(f"   Filter Relaxation Test: {'✅' if relaxation_test else '❌'}")
+        print(f"   Volume Filter Test: {'✅' if volume_test else '❌'}")
+        print(f"="*80)
+        
+        return tests_passed >= 2
+
+    def test_scout_volume_filter_analysis(self):
+        """Test Scout volume filter analysis to identify if volume thresholds are too restrictive"""
+        print(f"\n💰 Testing Scout Volume Filter Analysis...")
+        
+        # Get opportunities to analyze volume distribution
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot get opportunities for volume analysis")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities found for volume analysis")
+            return False
+        
+        print(f"   📊 Analyzing volume distribution of {len(opportunities)} opportunities...")
+        
+        # Analyze volume distribution
+        volumes = [opp.get('volume_24h', 0) for opp in opportunities]
+        volumes.sort(reverse=True)  # Highest to lowest
+        
+        if volumes:
+            max_volume = max(volumes)
+            min_volume = min(volumes)
+            avg_volume = sum(volumes) / len(volumes)
+            median_volume = volumes[len(volumes)//2]
+            
+            # Volume buckets
+            high_volume = sum(1 for v in volumes if v >= 1_000_000)    # ≥$1M
+            medium_volume = sum(1 for v in volumes if 100_000 <= v < 1_000_000)  # $100K-$1M
+            low_volume = sum(1 for v in volumes if 25_000 <= v < 100_000)        # $25K-$100K
+            very_low_volume = sum(1 for v in volumes if v < 25_000)              # <$25K
+            
+            print(f"\n   📊 Volume Distribution Analysis:")
+            print(f"      Max Volume: ${max_volume:,.0f}")
+            print(f"      Min Volume: ${min_volume:,.0f}")
+            print(f"      Avg Volume: ${avg_volume:,.0f}")
+            print(f"      Median Volume: ${median_volume:,.0f}")
+            
+            print(f"\n   📊 Volume Buckets:")
+            print(f"      High (≥$1M): {high_volume} ({high_volume/len(volumes)*100:.1f}%)")
+            print(f"      Medium ($100K-$1M): {medium_volume} ({medium_volume/len(volumes)*100:.1f}%)")
+            print(f"      Low ($25K-$100K): {low_volume} ({low_volume/len(volumes)*100:.1f}%)")
+            print(f"      Very Low (<$25K): {very_low_volume} ({very_low_volume/len(volumes)*100:.1f}%)")
+            
+            # Show top volume opportunities
+            print(f"\n   💎 TOP VOLUME OPPORTUNITIES:")
+            for i, opp in enumerate(opportunities[:5]):
+                symbol = opp.get('symbol', 'Unknown')
+                volume = opp.get('volume_24h', 0)
+                price_change = opp.get('price_change_24h', 0)
+                print(f"      {i+1}. {symbol}: ${volume:,.0f} volume, {price_change:+.1f}% change")
+            
+            # Assess if volume filters are appropriate
+            has_high_volume_opps = high_volume > 0
+            reasonable_distribution = medium_volume > 0
+            not_too_restrictive = (high_volume + medium_volume) >= len(volumes) * 0.3  # At least 30% decent volume
+            
+            print(f"\n   ✅ Volume Filter Assessment:")
+            print(f"      Has High Volume Opps: {'✅' if has_high_volume_opps else '❌'}")
+            print(f"      Reasonable Distribution: {'✅' if reasonable_distribution else '❌'}")
+            print(f"      Not Too Restrictive: {'✅' if not_too_restrictive else '❌'}")
+            
+            return has_high_volume_opps and reasonable_distribution
+        
+        return False
+
 if __name__ == "__main__":
     print("🎯 SCOUT FILTER DIAGNOSTIC TEST - Testing Lateral Movement Filter Hypothesis")
     print("="*80)
