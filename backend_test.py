@@ -1310,6 +1310,151 @@ class DualAITradingBotTester:
         analyses = analyses_data.get('analyses', [])
         print(f"   📊 Found {len(analyses)} IA1 analyses")
         
+        # Step 3: Calculate pass rate (Scout → IA1)
+        if len(opportunities) == 0:
+            print(f"   ❌ Cannot calculate pass rate - no opportunities")
+            return False
+        
+        pass_rate = len(analyses) / len(opportunities)
+        pass_percentage = pass_rate * 100
+        
+        print(f"\n   🎯 SCOUT FILTER PASS RATE ANALYSIS:")
+        print(f"      Scout Opportunities: {len(opportunities)}")
+        print(f"      IA1 Analyses Generated: {len(analyses)}")
+        print(f"      Pass Rate: {pass_percentage:.1f}% (Target: 30-40%)")
+        
+        # Step 4: Analyze volume filter relaxations impact
+        print(f"\n   💰 VOLUME FILTER RELAXATION ANALYSIS:")
+        
+        # Analyze opportunities by volume ranges
+        volume_ranges = {
+            'under_50k': 0,      # Below $50K (new Scout minimum)
+            '50k_100k': 0,       # $50K-$100K (new momentum minimum)
+            '100k_250k': 0,      # $100K-$250K (new Override 5 range)
+            '250k_1m': 0,        # $250K-$1M (new Override 2 range)
+            'over_1m': 0         # Over $1M (high volume)
+        }
+        
+        high_quality_opportunities = 0
+        ktausdt_like_opportunities = 0
+        
+        for opp in opportunities:
+            volume = opp.get('volume_24h', 0)
+            price_change = abs(opp.get('price_change_24h', 0))
+            symbol = opp.get('symbol', '')
+            
+            # Categorize by volume
+            if volume < 50000:
+                volume_ranges['under_50k'] += 1
+            elif volume < 100000:
+                volume_ranges['50k_100k'] += 1
+            elif volume < 250000:
+                volume_ranges['100k_250k'] += 1
+            elif volume < 1000000:
+                volume_ranges['250k_1m'] += 1
+            else:
+                volume_ranges['over_1m'] += 1
+            
+            # Check for high quality opportunities (like KTAUSDT mentioned in review)
+            if volume >= 1000000 and price_change >= 5.0:  # High volume + significant movement
+                high_quality_opportunities += 1
+                print(f"      🎯 High Quality Opp: {symbol} - Vol: ${volume:,.0f}, Change: {opp.get('price_change_24h', 0):+.1f}%")
+            
+            # Check for KTAUSDT-like opportunities (mentioned in review request)
+            if volume >= 19000000 and price_change >= 17.0:  # Similar to KTAUSDT specs
+                ktausdt_like_opportunities += 1
+                print(f"      💎 KTAUSDT-like: {symbol} - Vol: ${volume:,.0f}, Change: {opp.get('price_change_24h', 0):+.1f}%")
+        
+        print(f"\n   📊 Volume Distribution Analysis:")
+        for range_name, count in volume_ranges.items():
+            percentage = (count / len(opportunities)) * 100 if len(opportunities) > 0 else 0
+            print(f"      {range_name}: {count} ({percentage:.1f}%)")
+        
+        print(f"\n   🎯 Quality Opportunity Analysis:")
+        print(f"      High Quality (≥$1M vol, ≥5% move): {high_quality_opportunities}")
+        print(f"      KTAUSDT-like (≥$19M vol, ≥17% move): {ktausdt_like_opportunities}")
+        
+        # Step 5: Analyze which opportunities passed to IA1
+        print(f"\n   ✅ OPPORTUNITIES THAT PASSED TO IA1:")
+        
+        # Get symbols that made it through
+        opportunity_symbols = set(opp.get('symbol', '') for opp in opportunities)
+        analysis_symbols = set(analysis.get('symbol', '') for analysis in analyses)
+        passed_symbols = opportunity_symbols.intersection(analysis_symbols)
+        
+        passed_opportunities = []
+        for opp in opportunities:
+            if opp.get('symbol', '') in passed_symbols:
+                passed_opportunities.append(opp)
+        
+        # Analyze passed opportunities by volume
+        passed_volume_ranges = {
+            'under_50k': 0, '50k_100k': 0, '100k_250k': 0, '250k_1m': 0, 'over_1m': 0
+        }
+        
+        for opp in passed_opportunities:
+            volume = opp.get('volume_24h', 0)
+            symbol = opp.get('symbol', '')
+            
+            if volume < 50000:
+                passed_volume_ranges['under_50k'] += 1
+            elif volume < 100000:
+                passed_volume_ranges['50k_100k'] += 1
+            elif volume < 250000:
+                passed_volume_ranges['100k_250k'] += 1
+            elif volume < 1000000:
+                passed_volume_ranges['250k_1m'] += 1
+            else:
+                passed_volume_ranges['over_1m'] += 1
+            
+            print(f"      ✅ {symbol}: Vol ${volume:,.0f}, Change {opp.get('price_change_24h', 0):+.1f}%")
+        
+        print(f"\n   📊 Passed Opportunities Volume Distribution:")
+        for range_name, count in passed_volume_ranges.items():
+            total_in_range = volume_ranges[range_name]
+            pass_rate_in_range = (count / total_in_range * 100) if total_in_range > 0 else 0
+            print(f"      {range_name}: {count}/{total_in_range} ({pass_rate_in_range:.1f}% pass rate)")
+        
+        # Step 6: Validation criteria for relaxed filters
+        target_pass_rate_met = 30.0 <= pass_percentage <= 45.0  # Target: 30-40% (with 5% tolerance)
+        significant_improvement = pass_percentage > 20.0  # Should be much better than old 16%
+        quality_opportunities_captured = high_quality_opportunities > 0  # Should capture quality opps
+        volume_100k_500k_captured = passed_volume_ranges['100k_250k'] + passed_volume_ranges['250k_1m'] > 0  # Key range
+        
+        print(f"\n   🎯 RELAXATION VALIDATION:")
+        print(f"      Target Pass Rate (30-40%): {'✅' if target_pass_rate_met else '❌'} ({pass_percentage:.1f}%)")
+        print(f"      Significant Improvement (>20%): {'✅' if significant_improvement else '❌'} (vs old 16%)")
+        print(f"      Quality Opportunities Captured: {'✅' if quality_opportunities_captured else '❌'} ({high_quality_opportunities} found)")
+        print(f"      $100K-$500K Range Captured: {'✅' if volume_100k_500k_captured else '❌'} (key improvement range)")
+        
+        # Step 7: Overall assessment
+        relaxation_success = (
+            target_pass_rate_met and
+            significant_improvement and
+            quality_opportunities_captured
+        )
+        
+        print(f"\n   🎯 SCOUT FILTER RELAXATION ASSESSMENT:")
+        if relaxation_success:
+            print(f"      ✅ SUCCESS - Volume filter relaxations are working!")
+            print(f"      📈 Pass rate improved to {pass_percentage:.1f}% (target: 30-40%)")
+            print(f"      💎 Capturing {high_quality_opportunities} high-quality opportunities")
+            print(f"      🎯 Filter changes successfully implemented")
+        else:
+            print(f"      ❌ NEEDS WORK - Volume filter relaxations not fully effective")
+            print(f"      📉 Pass rate: {pass_percentage:.1f}% (target: 30-40%)")
+            if not target_pass_rate_met:
+                print(f"      💡 Issue: Pass rate not in target range")
+            if not significant_improvement:
+                print(f"      💡 Issue: Improvement not significant enough")
+            if not quality_opportunities_captured:
+                print(f"      💡 Issue: Not capturing high-quality opportunities")
+        
+        return relaxation_success
+        
+        analyses = analyses_data.get('analyses', [])
+        print(f"   📊 Found {len(analyses)} IA1 analyses")
+        
         # Step 3: Calculate passage rate (Scout → IA1)
         scout_count = len(opportunities)
         ia1_count = len(analyses)
