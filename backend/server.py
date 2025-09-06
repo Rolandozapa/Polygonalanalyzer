@@ -6008,7 +6008,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         "analyses_count": analyses_count,
                         "decisions_count": decisions_count,
                         "system_status": "active",
-                        "timestamp": datetime.now(timezone.utc).isoformat()
+                        "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
                     }
                 }
                 
