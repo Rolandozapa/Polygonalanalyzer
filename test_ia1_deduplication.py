@@ -208,13 +208,21 @@ class IA1DeduplicationTester:
                     
                     try:
                         if 'T' in timestamp_str:
+                            # ISO format
                             timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
                             if timestamp.tzinfo is None:
                                 timestamp = timestamp.replace(tzinfo=pytz.UTC)
                             timestamp_paris = timestamp.astimezone(self.PARIS_TZ)
+                        elif '(Heure de Paris)' in timestamp_str:
+                            # French format
+                            date_part = timestamp_str.split(' (Heure de Paris)')[0]
+                            timestamp_paris = datetime.strptime(date_part, '%Y-%m-%d %H:%M:%S')
+                            timestamp_paris = self.PARIS_TZ.localize(timestamp_paris)
+                        else:
+                            continue
                             
-                            if timestamp_paris >= four_hours_ago:
-                                symbol_recent_count[symbol] = symbol_recent_count.get(symbol, 0) + 1
+                        if timestamp_paris >= four_hours_ago:
+                            symbol_recent_count[symbol] = symbol_recent_count.get(symbol, 0) + 1
                     except:
                         continue
                 
