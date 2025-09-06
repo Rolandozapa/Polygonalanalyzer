@@ -4702,10 +4702,10 @@ async def get_market_status():
                 "BingX live trading integration",
                 "Real-time position monitoring"
             ],
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
-        return {"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}
+        return {"error": str(e), "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"}
 
 @api_router.get("/trending-auto-status")
 async def get_trending_auto_status():
