@@ -1334,6 +1334,70 @@ class DualAITradingBotTester:
         ia1_count = len(analyses)
         print(f"   ✅ IA1 generated {ia1_count} analyses")
         
+        # Step 3: Calculate passage rate and analyze filter effectiveness
+        if scout_count > 0:
+            passage_rate = (ia1_count / scout_count) * 100
+            print(f"\n   📊 FILTER EFFECTIVENESS ANALYSIS:")
+            print(f"      Scout Opportunities: {scout_count}")
+            print(f"      IA1 Analyses: {ia1_count}")
+            print(f"      Passage Rate: {passage_rate:.1f}% (Target: 30-40%)")
+            
+            # Analyze which opportunities were filtered out
+            scout_symbols = set(opp.get('symbol', '') for opp in opportunities)
+            ia1_symbols = set(analysis.get('symbol', '') for analysis in analyses)
+            filtered_symbols = scout_symbols - ia1_symbols
+            
+            print(f"\n   🔍 FILTER IMPACT ANALYSIS:")
+            print(f"      Scout Symbols: {len(scout_symbols)}")
+            print(f"      IA1 Symbols: {len(ia1_symbols)}")
+            print(f"      Filtered Out: {len(filtered_symbols)} symbols")
+            
+            # Show examples of high-quality opportunities that were filtered
+            if filtered_symbols:
+                print(f"\n   ❌ HIGH-QUALITY OPPORTUNITIES FILTERED (examples):")
+                filtered_opps = [opp for opp in opportunities if opp.get('symbol', '') in filtered_symbols]
+                high_quality_filtered = []
+                
+                for opp in filtered_opps:
+                    symbol = opp.get('symbol', 'Unknown')
+                    price_change = opp.get('price_change_24h', 0)
+                    volume = opp.get('volume_24h', 0)
+                    
+                    # Identify high-quality opportunities (like KTAUSDT mentioned in review)
+                    is_high_quality = (
+                        abs(price_change) >= 5.0 and  # Significant movement
+                        volume >= 1_000_000           # High volume
+                    )
+                    
+                    if is_high_quality:
+                        high_quality_filtered.append({
+                            'symbol': symbol,
+                            'price_change': price_change,
+                            'volume': volume
+                        })
+                
+                # Show high-quality filtered opportunities
+                for i, opp in enumerate(high_quality_filtered[:5]):
+                    print(f"      {i+1}. {opp['symbol']}: {opp['price_change']:+.1f}% change, ${opp['volume']:,.0f} volume")
+                
+                if high_quality_filtered:
+                    print(f"   🚨 CRITICAL: {len(high_quality_filtered)} high-quality opportunities filtered out!")
+            
+            # Assessment of filter restrictiveness
+            filter_too_restrictive = passage_rate < 25.0
+            critically_restrictive = passage_rate < 20.0
+            matches_16_percent_issue = 15.0 <= passage_rate <= 17.0
+            
+            print(f"\n   🎯 FILTER RESTRICTIVENESS ASSESSMENT:")
+            print(f"      Filter Too Restrictive: {'🚨 YES' if filter_too_restrictive else '✅ NO'}")
+            print(f"      Critically Restrictive: {'🚨 YES' if critically_restrictive else '✅ NO'}")
+            print(f"      Matches 16% Issue: {'✅ CONFIRMED' if matches_16_percent_issue else '❌ DIFFERENT'}")
+            
+            return not critically_restrictive
+        else:
+            print(f"   ❌ No Scout opportunities found")
+            return False
+        
         # Step 6: Calculate passage rate
         if scout_count > 0:
             passage_rate = (ia1_count / scout_count) * 100
