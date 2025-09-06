@@ -2414,20 +2414,40 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             stop_loss = current_price
             tp1 = tp2 = tp3 = current_price
         
-        # Live trading risk-reward calculation
-        if signal != SignalType.HOLD:
+        # NOUVEAU: Utiliser le Risk-Reward d'IA1 (source unique de vérité)
+        ia1_risk_reward = getattr(analysis, 'risk_reward_ratio', 0.0)
+        ia1_entry_price = getattr(analysis, 'entry_price', current_price)
+        ia1_stop_loss = getattr(analysis, 'stop_loss_price', current_price)
+        ia1_take_profit = getattr(analysis, 'take_profit_price', current_price)
+        
+        if ia1_risk_reward > 0 and ia1_entry_price > 0:
+            # Utiliser les calculs précis d'IA1 basés sur supports/résistances + ATR
+            risk_reward = ia1_risk_reward
+            stop_loss = ia1_stop_loss
+            tp1 = ia1_take_profit
+            tp2 = tp1 + (tp1 - ia1_entry_price) * 0.5  # TP2 à 150% du gain TP1
+            tp3 = tp1 + (tp1 - ia1_entry_price) * 1.0  # TP3 à 200% du gain TP1
+            
+            reasoning += f"Using IA1 precise R:R calculation: {risk_reward:.2f}:1 (Entry: ${ia1_entry_price:.4f}, SL: ${stop_loss:.4f}, TP: ${tp1:.4f}). "
+            
+            # Vérification cohérente avec le filtre IA1→IA2 (2:1 minimum)
+            if risk_reward < 2.0:
+                signal = SignalType.HOLD
+                reasoning += f"❌ R:R below IA1 filter threshold ({risk_reward:.2f}:1 < 2:1 required). "
+                confidence = max(confidence * 0.8, 0.4)
+        else:
+            # Fallback: calcul IA2 classique si IA1 R:R non disponible
             risk = abs(current_price - stop_loss)
             reward = abs(tp1 - current_price)
             risk_reward = reward / risk if risk > 0 else 1.0
             
-            # Minimum 1.1:1 R:R for live trading (more accessible for active trading)
-            if risk_reward < 1.1:
+            reasoning += f"Fallback IA2 R:R calculation: {risk_reward:.2f}:1 (IA1 R:R unavailable). "
+            
+            # Seuil plus strict pour cohérence avec filtre IA1
+            if risk_reward < 2.0:
                 signal = SignalType.HOLD
-                reasoning += "Risk-reward ratio too low for live trading (min 1.1:1 required). "
-                # Maintain confidence floor even with R:R penalty
-                confidence = max(confidence * 0.95, 0.5)
-        else:
-            risk_reward = 1.0
+                reasoning += "Risk-reward ratio below 2:1 threshold for consistency with IA1 filter. "
+                confidence = max(confidence * 0.9, 0.5)
         
         # Live trading position sizing (more conservative)
         if signal != SignalType.HOLD:
