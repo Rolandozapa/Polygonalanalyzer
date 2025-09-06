@@ -13,6 +13,20 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from dataclasses import dataclass, field
+import pytz
+
+# Configuration du fuseau horaire de Paris
+PARIS_TZ = pytz.timezone('Europe/Paris')
+
+def get_paris_time():
+    """Obtenir l'heure actuelle en heure de Paris"""
+    return datetime.now(PARIS_TZ)
+
+def utc_to_paris(utc_dt):
+    """Convertir UTC vers heure de Paris"""
+    if utc_dt.tzinfo is None:
+        utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+    return utc_dt.astimezone(PARIS_TZ)
 import pandas as pd
 import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
