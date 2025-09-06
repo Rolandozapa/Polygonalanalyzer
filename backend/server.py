@@ -3915,6 +3915,7 @@ class UltraProfessionalTradingOrchestrator:
                 if isinstance(analysis, TechnicalAnalysis):
                     valid_analyses.append((top_opportunities[i], analysis))
                     logger.info(f"🔍 DEBUG: Added {analysis.symbol} to valid_analyses")
+                    ia1_analyses_generated += 1
                     
                     # NOUVEAU: Vérification de déduplication IA1 avant stockage (éviter analyses multiples)
                     symbol = analysis.symbol
@@ -3927,6 +3928,7 @@ class UltraProfessionalTradingOrchestrator:
                     
                     if existing_recent_analysis:
                         logger.info(f"🔄 IA1 ANALYSIS DEDUPLICATED: {symbol} - Recent analysis exists (avoiding duplicate IA1 processing, saving LLM credits)")
+                        ia1_analyses_deduplicated += 1
                         continue  # Skip storing this duplicate analysis
                     
                     # Store analysis seulement si pas de doublon récent
