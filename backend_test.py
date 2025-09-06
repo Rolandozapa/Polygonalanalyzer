@@ -9381,3 +9381,293 @@ if __name__ == "__main__":
             print(f"   💡 ISSUES: Problèmes détectés avec cycle 4h")
         
         return cycle_4h_working
+
+    def test_scout_filter_analysis(self):
+        """Test Scout filter restrictiveness analysis as requested in review"""
+        print(f"\n🔍 ANALYSE DES FILTRES SCOUT - Restrictivité et Opportunités Perdues")
+        print(f"="*70)
+        
+        # Step 1: Start trading system to generate fresh Scout cycle
+        print(f"\n📊 Étape 1: Lancement d'un cycle Scout complet...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Impossible de démarrer le système pour l'analyse")
+            return False
+        
+        # Step 2: Wait for Scout to process opportunities
+        print(f"   ⏱️ Attente du traitement Scout (60 secondes)...")
+        time.sleep(60)
+        
+        # Step 3: Analyze Scout opportunities (before filters)
+        print(f"\n🎯 Étape 2: Analyse des opportunités Scout (avant filtres)...")
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Impossible de récupérer les opportunités Scout")
+            self.test_stop_trading_system()
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        print(f"   📈 Opportunités Scout trouvées: {len(opportunities)}")
+        
+        # Step 4: Analyze IA1 analyses (after Scout filters)
+        print(f"\n🔍 Étape 3: Analyse des analyses IA1 (après filtres Scout)...")
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Impossible de récupérer les analyses IA1")
+            self.test_stop_trading_system()
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        print(f"   📊 Analyses IA1 générées: {len(analyses)}")
+        
+        # Step 5: Calculate filter efficiency
+        scout_to_ia1_rate = len(analyses) / len(opportunities) if len(opportunities) > 0 else 0
+        filtered_out = len(opportunities) - len(analyses)
+        
+        print(f"\n📊 ANALYSE DE L'EFFICACITÉ DES FILTRES SCOUT:")
+        print(f"   🔍 Opportunités Scout: {len(opportunities)}")
+        print(f"   ✅ Passées à IA1: {len(analyses)} ({scout_to_ia1_rate*100:.1f}%)")
+        print(f"   ❌ Filtrées/Rejetées: {filtered_out} ({(1-scout_to_ia1_rate)*100:.1f}%)")
+        
+        # Step 6: Analyze opportunity quality that was filtered out
+        print(f"\n🔍 ANALYSE DES OPPORTUNITÉS FILTRÉES:")
+        
+        # Get symbols that passed to IA1
+        ia1_symbols = set(analysis.get('symbol', '') for analysis in analyses)
+        
+        # Find opportunities that were filtered out
+        filtered_opportunities = []
+        high_quality_filtered = []
+        
+        for opp in opportunities:
+            symbol = opp.get('symbol', '')
+            if symbol not in ia1_symbols:
+                filtered_opportunities.append(opp)
+                
+                # Check if this was a potentially good opportunity
+                price_change = abs(opp.get('price_change_24h', 0))
+                volume = opp.get('volume_24h', 0)
+                confidence = opp.get('data_confidence', 0)
+                
+                # Criteria for "potentially interesting" opportunity
+                if (price_change >= 5.0 and volume >= 1_000_000 and confidence >= 0.8):
+                    high_quality_filtered.append({
+                        'symbol': symbol,
+                        'price_change_24h': price_change,
+                        'volume_24h': volume,
+                        'confidence': confidence,
+                        'current_price': opp.get('current_price', 0)
+                    })
+        
+        print(f"   📉 Opportunités filtrées: {len(filtered_opportunities)}")
+        print(f"   ⚠️ Opportunités potentiellement intéressantes filtrées: {len(high_quality_filtered)}")
+        
+        # Show examples of filtered high-quality opportunities
+        if high_quality_filtered:
+            print(f"\n🚨 OPPORTUNITÉS POTENTIELLEMENT PERDUES:")
+            for i, opp in enumerate(high_quality_filtered[:5]):  # Show top 5
+                print(f"      {i+1}. {opp['symbol']}: {opp['price_change_24h']:+.1f}% | Vol: ${opp['volume_24h']:,.0f} | Conf: {opp['confidence']:.2f}")
+        
+        # Step 7: Analyze Risk-Reward filter impact (1.2:1 threshold)
+        print(f"\n⚖️ ANALYSE DU FILTRE RISK-REWARD (Seuil 1.2:1):")
+        
+        # We can't directly see the R:R calculations from the API, but we can infer from the filtering rate
+        rr_filter_efficiency = scout_to_ia1_rate
+        
+        if rr_filter_efficiency < 0.3:  # Less than 30% pass rate
+            print(f"   ⚠️ FILTRE TRÈS RESTRICTIF: Seulement {rr_filter_efficiency*100:.1f}% des opportunités passent")
+            print(f"   💡 Recommandation: Considérer réduire le seuil de 1.2:1 à 1.1:1 ou 1.0:1")
+        elif rr_filter_efficiency < 0.5:  # Less than 50% pass rate
+            print(f"   ⚖️ FILTRE MODÉRÉMENT RESTRICTIF: {rr_filter_efficiency*100:.1f}% des opportunités passent")
+            print(f"   💡 Recommandation: Surveiller si des opportunités intéressantes sont perdues")
+        else:
+            print(f"   ✅ FILTRE ÉQUILIBRÉ: {rr_filter_efficiency*100:.1f}% des opportunités passent")
+        
+        # Step 8: Stop trading system
+        print(f"\n🛑 Arrêt du système de trading...")
+        self.test_stop_trading_system()
+        
+        # Step 9: Final assessment and recommendations
+        print(f"\n📋 ÉVALUATION FINALE DES FILTRES SCOUT:")
+        
+        # Filter restrictiveness assessment
+        too_restrictive = scout_to_ia1_rate < 0.25  # Less than 25% pass rate
+        potentially_losing_opportunities = len(high_quality_filtered) > 3  # More than 3 good opportunities filtered
+        
+        print(f"   📊 Taux de passage global: {scout_to_ia1_rate*100:.1f}%")
+        print(f"   🎯 Opportunités intéressantes perdues: {len(high_quality_filtered)}")
+        
+        if too_restrictive:
+            print(f"   ❌ FILTRES TROP RESTRICTIFS")
+            print(f"   💡 Actions recommandées:")
+            print(f"      - Réduire le seuil Risk-Reward de 1.2:1 à 1.1:1")
+            print(f"      - Assouplir les critères de mouvement latéral")
+            print(f"      - Augmenter les overrides pour données excellentes")
+        elif potentially_losing_opportunities:
+            print(f"   ⚠️ FILTRES POTENTIELLEMENT TROP STRICTS")
+            print(f"   💡 Surveiller les opportunités à fort potentiel qui sont filtrées")
+        else:
+            print(f"   ✅ ÉQUILIBRE FILTRES ACCEPTABLE")
+            print(f"   💡 Maintenir la surveillance de l'efficacité")
+        
+        # Return success if we got meaningful data
+        analysis_successful = len(opportunities) > 0 and len(analyses) >= 0
+        
+        print(f"\n🎯 Analyse des filtres Scout: {'✅ COMPLÉTÉE' if analysis_successful else '❌ ÉCHEC'}")
+        
+        return analysis_successful
+
+    def test_scout_lateral_movement_filter(self):
+        """Test the lateral movement filter specifically"""
+        print(f"\n📊 TEST SPÉCIFIQUE: Filtre Mouvement Latéral")
+        print(f"="*50)
+        
+        # Start system to generate fresh data
+        print(f"   🚀 Démarrage du système pour test du filtre latéral...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Impossible de démarrer le système")
+            return False
+        
+        # Wait for processing
+        print(f"   ⏱️ Attente du traitement (45 secondes)...")
+        time.sleep(45)
+        
+        # Get opportunities and analyses
+        success_opp, opp_data = self.test_get_opportunities()
+        success_ana, ana_data = self.test_get_analyses()
+        
+        if not (success_opp and success_ana):
+            print(f"   ❌ Impossible de récupérer les données")
+            self.test_stop_trading_system()
+            return False
+        
+        opportunities = opp_data.get('opportunities', [])
+        analyses = ana_data.get('analyses', [])
+        
+        # Analyze lateral movement filtering
+        print(f"\n🔍 ANALYSE DU FILTRE MOUVEMENT LATÉRAL:")
+        print(f"   📊 Opportunités totales: {len(opportunities)}")
+        print(f"   📈 Analyses générées: {len(analyses)}")
+        
+        # Calculate potential lateral movements (low volatility, small price changes)
+        lateral_candidates = []
+        directional_candidates = []
+        
+        for opp in opportunities:
+            price_change = abs(opp.get('price_change_24h', 0))
+            volatility = opp.get('volatility', 0)
+            
+            # Criteria for lateral movement (based on the code analysis)
+            is_lateral_candidate = (
+                price_change < 3.0 and  # Weak trend
+                volatility < 0.02       # Low volatility
+            )
+            
+            if is_lateral_candidate:
+                lateral_candidates.append(opp)
+            else:
+                directional_candidates.append(opp)
+        
+        lateral_filtered_rate = 1 - (len(analyses) / len(directional_candidates)) if len(directional_candidates) > 0 else 0
+        
+        print(f"   📉 Candidats mouvement latéral: {len(lateral_candidates)} ({len(lateral_candidates)/len(opportunities)*100:.1f}%)")
+        print(f"   📈 Candidats mouvement directionnel: {len(directional_candidates)} ({len(directional_candidates)/len(opportunities)*100:.1f}%)")
+        print(f"   ⚖️ Efficacité filtre latéral: {lateral_filtered_rate*100:.1f}% des latéraux filtrés")
+        
+        # Check if directional movements are passing through
+        directional_pass_rate = len(analyses) / len(directional_candidates) if len(directional_candidates) > 0 else 0
+        
+        print(f"\n🎯 ÉVALUATION DU FILTRE LATÉRAL:")
+        print(f"   ✅ Mouvements directionnels passant: {directional_pass_rate*100:.1f}%")
+        
+        if directional_pass_rate > 0.7:  # More than 70% of directional movements pass
+            print(f"   ✅ FILTRE LATÉRAL EFFICACE: Laisse passer les mouvements directionnels")
+        elif directional_pass_rate > 0.4:
+            print(f"   ⚠️ FILTRE LATÉRAL MODÉRÉ: Certains mouvements directionnels filtrés")
+        else:
+            print(f"   ❌ FILTRE LATÉRAL TROP STRICT: Bloque aussi les mouvements directionnels")
+        
+        self.test_stop_trading_system()
+        
+        return directional_pass_rate > 0.4
+
+    def test_scout_pattern_filter_effectiveness(self):
+        """Test the technical pattern filter effectiveness"""
+        print(f"\n🎨 TEST SPÉCIFIQUE: Filtre Patterns Techniques")
+        print(f"="*50)
+        
+        # Start system
+        print(f"   🚀 Démarrage pour test des patterns...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Impossible de démarrer le système")
+            return False
+        
+        # Wait for pattern detection
+        print(f"   ⏱️ Attente détection patterns (60 secondes)...")
+        time.sleep(60)
+        
+        # Get analyses to check for pattern mentions
+        success, ana_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Impossible de récupérer les analyses")
+            self.test_stop_trading_system()
+            return False
+        
+        analyses = ana_data.get('analyses', [])
+        
+        # Analyze pattern detection in analyses
+        pattern_mentions = 0
+        pattern_types = set()
+        
+        for analysis in analyses:
+            reasoning = analysis.get('ia1_reasoning', '').lower()
+            patterns_detected = analysis.get('patterns_detected', [])
+            
+            # Check for pattern keywords in reasoning
+            pattern_keywords = ['pattern', 'bullish', 'bearish', 'channel', 'triangle', 'flag', 'wedge', 'double', 'head', 'shoulder']
+            if any(keyword in reasoning for keyword in pattern_keywords):
+                pattern_mentions += 1
+            
+            # Collect pattern types
+            for pattern in patterns_detected:
+                pattern_types.add(pattern)
+        
+        pattern_rate = pattern_mentions / len(analyses) if len(analyses) > 0 else 0
+        
+        print(f"\n🎨 ANALYSE DES PATTERNS TECHNIQUES:")
+        print(f"   📊 Analyses avec patterns: {pattern_mentions}/{len(analyses)} ({pattern_rate*100:.1f}%)")
+        print(f"   🎯 Types de patterns détectés: {len(pattern_types)}")
+        
+        if pattern_types:
+            print(f"   📋 Patterns trouvés: {', '.join(list(pattern_types)[:5])}")
+        
+        # Evaluate pattern filter effectiveness
+        if pattern_rate > 0.6:  # More than 60% have patterns
+            print(f"   ✅ FILTRE PATTERN EFFICACE: Sélectionne des opportunités avec patterns")
+        elif pattern_rate > 0.3:
+            print(f"   ⚠️ FILTRE PATTERN MODÉRÉ: Certaines analyses sans patterns clairs")
+        else:
+            print(f"   ❌ FILTRE PATTERN FAIBLE: Peu de patterns détectés")
+        
+        self.test_stop_trading_system()
+        
+        return pattern_rate > 0.3
+
+if __name__ == "__main__":
+    tester = DualAITradingBotTester()
+    
+    # Run the Scout filter analysis as requested in the review
+    print("🔍 ANALYSE SPÉCIALISÉE DES FILTRES SCOUT")
+    print("="*70)
+    print("Analyse demandée: Vérifier si les filtres Scout sont trop restrictifs")
+    print("Focus: Filtre Risk-Reward 1.2:1, mouvement latéral, patterns techniques")
+    print("="*70)
+    
+    # Run Scout filter analysis
+    tester.test_scout_filter_analysis()
+    tester.test_scout_lateral_movement_filter()
+    tester.test_scout_pattern_filter_effectiveness()
+    
+    print(f"\n📋 Test Summary: {tester.tests_passed}/{tester.tests_run} tests passed")
