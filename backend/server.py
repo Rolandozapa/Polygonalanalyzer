@@ -4114,7 +4114,7 @@ async def get_bingx_status():
             "active_positions": [pos.__dict__ for pos in positions],
             "performance_stats": perf_stats,
             "live_trading_enabled": orchestrator.ia2.live_trading_enabled,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
