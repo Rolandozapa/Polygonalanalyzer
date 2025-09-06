@@ -5987,7 +5987,7 @@ async def websocket_endpoint(websocket: WebSocket):
             "type": "status",
             "status": "connected",
             "message": "Ultra Professional Trading System Connected",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         })
         
         # Keep connection alive and send updates
