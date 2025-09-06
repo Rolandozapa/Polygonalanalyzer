@@ -1467,8 +1467,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 lateral_signals += 1
                 lateral_reasons.append(f"Volatilité faible: {volatility:.1f}%")
             
-            # Critère 3: Range limité (< 8% sur la période)
-            if price_range < 8.0:
+            # Critère 3: Range limité (< 6% sur la période) - ASSOUPLI
+            if price_range < 6.0:
                 lateral_signals += 1
                 lateral_reasons.append(f"Range limité: {price_range:.1f}%")
             
