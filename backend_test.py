@@ -10526,19 +10526,68 @@ if __name__ == "__main__":
         
         return pattern_rate > 0.3
 
+    def run_scout_filter_tests(self):
+        """Run Scout Filter Aggressive Relaxations Tests - CRITICAL for 30-40% passage rate"""
+        print(f"🎯 Starting Scout Filter Aggressive Relaxations Tests")
+        print(f"Backend URL: {self.base_url}")
+        print(f"=" * 80)
+        print(f"🎯 OBJECTIVE: Test aggressive relaxations to achieve 30-40% passage rate")
+        print(f"🎯 TARGET: Recover KTAUSDT-type opportunities (5M$+ volume, 5%+ movement)")
+        print(f"🎯 FILTERS: Risk-Reward 1.05:1, Lateral Movement 4 criteria, 5 Overrides")
+        print(f"=" * 80)
+
+        # Basic connectivity
+        self.test_system_status()
+        self.test_market_status()
+
+        # Core Scout Filter Tests
+        scout_filter_success = self.test_scout_filter_aggressive_relaxations()
+        overrides_success = self.test_scout_filter_overrides_validation()
+        lateral_filter_success = self.test_lateral_movement_filter_strictness()
+
+        # Supporting tests
+        self.test_get_opportunities()
+        self.test_get_analyses()
+        self.test_get_decisions()
+
+        # Performance summary
+        print(f"\n" + "=" * 80)
+        print(f"🎯 SCOUT FILTER TEST SUMMARY")
+        print(f"=" * 80)
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+        
+        print(f"\n🎯 CRITICAL SCOUT FILTER RESULTS:")
+        print(f"   Aggressive Relaxations: {'✅ SUCCESS' if scout_filter_success else '❌ FAILED'}")
+        print(f"   Override System: {'✅ SUCCESS' if overrides_success else '❌ FAILED'}")
+        print(f"   Lateral Filter: {'✅ SUCCESS' if lateral_filter_success else '❌ FAILED'}")
+        
+        overall_success = scout_filter_success and overrides_success and lateral_filter_success
+        print(f"\n🎯 OVERALL SCOUT FILTER STATUS: {'✅ SUCCESS' if overall_success else '❌ NEEDS WORK'}")
+        
+        if overall_success:
+            print(f"💡 SUCCESS: Scout filters achieved 30-40% passage rate target!")
+            print(f"💡 KTAUSDT-type opportunities are now passing through")
+            print(f"💡 All 5 overrides working with relaxed thresholds")
+            print(f"💡 IA1 quality maintained at ≥70% confidence")
+        else:
+            print(f"💡 ISSUES: Scout filter relaxations need further adjustment")
+            print(f"💡 Current passage rate may still be below 30% target")
+            print(f"💡 Some overrides may not be working as expected")
+        
+        print(f"=" * 80)
+        return overall_success
+
 if __name__ == "__main__":
     tester = DualAITradingBotTester()
     
-    # Run the Scout filter analysis as requested in the review
-    print("🔍 ANALYSE SPÉCIALISÉE DES FILTRES SCOUT")
-    print("="*70)
-    print("Analyse demandée: Vérifier si les filtres Scout sont trop restrictifs")
-    print("Focus: Filtre Risk-Reward 1.2:1, mouvement latéral, patterns techniques")
-    print("="*70)
+    # Run Scout Filter Tests (focused on the review request)
+    print("🎯 RUNNING SCOUT FILTER AGGRESSIVE RELAXATIONS TESTS")
+    print("=" * 80)
+    scout_success = tester.run_scout_filter_tests()
     
-    # Run Scout filter analysis
-    tester.test_scout_filter_analysis()
-    tester.test_scout_lateral_movement_filter()
-    tester.test_scout_pattern_filter_effectiveness()
+    print(f"\n🎯 FINAL RESULT: {'✅ SCOUT FILTER TESTS PASSED' if scout_success else '❌ SCOUT FILTER TESTS FAILED'}")
     
-    print(f"\n📋 Test Summary: {tester.tests_passed}/{tester.tests_run} tests passed")
+    # Optionally run comprehensive tests
+    # tester.run_all_tests()
