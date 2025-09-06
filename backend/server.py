@@ -1083,7 +1083,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle, envoi à IA1")
                 
                 # Override 2: Volume et volatilité élevés (opportunités comme KTAUSDT) - ASSOUPLI
-                elif opportunity.volume_24h >= 5_000_000 and abs(opportunity.price_change_24h) >= 5.0:
+                elif opportunity.volume_24h >= 1_000_000 and abs(opportunity.price_change_24h) >= 5.0:
                     logger.info(f"🎯 OVERRIDE 2: {opportunity.symbol} - Volume élevé (${opportunity.volume_24h:,.0f}) + Mouvement ({opportunity.price_change_24h:+.1f}%), envoi à IA1")
                 
                 # Override 3: Données correctes + mouvement modéré mais significatif - ASSOUPLI
@@ -1094,8 +1094,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 elif opportunity.volatility >= 0.05 and multi_source_quality["confidence_score"] >= 0.6:  # 5% volatilité
                     logger.info(f"🎯 OVERRIDE 4: {opportunity.symbol} - Volatilité notable ({opportunity.volatility*100:.1f}%) + données acceptables, envoi à IA1")
                 
-                # Override 5: NOUVEAU - Opportunités "sleeper" avec données correctes
-                elif multi_source_quality["confidence_score"] >= 0.8 and opportunity.volume_24h >= 1_000_000:
+                # Override 5: NOUVEAU - Opportunités "sleeper" avec données correctes - ASSOUPLI
+                elif multi_source_quality["confidence_score"] >= 0.8 and opportunity.volume_24h >= 250_000:
                     logger.info(f"🎯 OVERRIDE 5: {opportunity.symbol} - Données fiables + volume correct (${opportunity.volume_24h:,.0f}), envoi à IA1")
                 
                 else:
