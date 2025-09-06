@@ -5964,7 +5964,7 @@ async def ultra_professional_trading_loop():
                 "ultra_professional": True,
                 "trending_auto_updated": True,
                 "trending_symbols": orchestrator.scout.trending_symbols,
-                "timestamp": datetime.now(timezone.utc).isoformat()
+                "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
             })
             
             # Ultra professional cycle timing - every 4 hours for comprehensive analysis
