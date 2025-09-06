@@ -4718,7 +4718,7 @@ async def get_trending_auto_status():
             "auto_update_enabled": orchestrator.scout.auto_update_trending,
             "readdy_url": trending_auto_updater.trending_url,
             "update_interval_hours": trending_auto_updater.update_interval / 3600,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
