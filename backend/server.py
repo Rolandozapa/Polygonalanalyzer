@@ -1072,48 +1072,51 @@ class UltraProfessionalIA1TechnicalAnalyst:
             should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
             
             if not should_analyze:
-                logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs (mais données OK)")
+                logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs")
                 
-                # ASSOUPLISSEMENT AGRESSIF: Contournement du filtre technique pour plus d'opportunités
+                # === 7 OVERRIDES INTELLIGENTS POUR RÉCUPÉRER LES BONNES OPPORTUNITÉS ===
+                # Ces overrides permettent de contourner l'absence de patterns techniques
+                
                 bypass_technical_filter = False
                 
-                # Override 1: Données excellentes + tendance directionnelle
+                # Override 1: Données excellentes + mouvement directionnel (non latéral)
                 if multi_source_quality["confidence_score"] >= 0.9 and not lateral_movement["is_lateral"]:
-                    logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle, envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle")
                     bypass_technical_filter = True
                 
-                # Override 2: Volume et volatilité élevés (opportunités comme KTAUSDT) - ASSOUPLI
+                # Override 2: Volume élevé + mouvement significatif (KTAUSDT type)
                 elif opportunity.volume_24h >= 1_000_000 and abs(opportunity.price_change_24h) >= 5.0:
-                    logger.info(f"🎯 OVERRIDE 2: {opportunity.symbol} - Volume élevé (${opportunity.volume_24h:,.0f}) + Mouvement ({opportunity.price_change_24h:+.1f}%), envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 2: {opportunity.symbol} - Volume élevé (${opportunity.volume_24h:,.0f}) + Mouvement ({opportunity.price_change_24h:+.1f}%)")
                     bypass_technical_filter = True
                 
-                # Override 3: Données correctes + mouvement modéré mais significatif - ASSOUPLI
+                # Override 3: Données solides + mouvement modéré
                 elif multi_source_quality["confidence_score"] >= 0.7 and abs(opportunity.price_change_24h) >= 5.0:
-                    logger.info(f"🎯 OVERRIDE 3: {opportunity.symbol} - Données correctes + mouvement significatif ({opportunity.price_change_24h:+.1f}%), envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 3: {opportunity.symbol} - Données solides + mouvement significatif ({opportunity.price_change_24h:+.1f}%)")
                     bypass_technical_filter = True
                 
-                # Override 4: Volatilité importante même sans pattern - ASSOUPLI
-                elif opportunity.volatility >= 0.05 and multi_source_quality["confidence_score"] >= 0.6:  # 5% volatilité
-                    logger.info(f"🎯 OVERRIDE 4: {opportunity.symbol} - Volatilité notable ({opportunity.volatility*100:.1f}%) + données acceptables, envoi à IA1")
+                # Override 4: Volatilité intéressante pour trading
+                elif opportunity.volatility >= 0.05 and multi_source_quality["confidence_score"] >= 0.6:
+                    logger.info(f"🎯 OVERRIDE 4: {opportunity.symbol} - Volatilité intéressante ({opportunity.volatility*100:.1f}%) + données correctes")
                     bypass_technical_filter = True
                 
-                # Override 5: NOUVEAU - Opportunités "sleeper" avec données correctes - ASSOUPLI
+                # Override 5: Opportunités "sleeper" avec données fiables
                 elif multi_source_quality["confidence_score"] >= 0.8 and opportunity.volume_24h >= 250_000:
-                    logger.info(f"🎯 OVERRIDE 5: {opportunity.symbol} - Données fiables + volume correct (${opportunity.volume_24h:,.0f}), envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 5: {opportunity.symbol} - Données fiables + volume correct (${opportunity.volume_24h:,.0f})")
                     bypass_technical_filter = True
                 
-                # Override 6: NOUVEAU - Contournement basé sur mouvement directionnel simple
+                # Override 6: Fort mouvement + volume acceptable
                 elif abs(opportunity.price_change_24h) >= 8.0 and opportunity.volume_24h >= 100_000:
-                    logger.info(f"🎯 OVERRIDE 6: {opportunity.symbol} - Fort mouvement ({opportunity.price_change_24h:+.1f}%) + volume acceptable, envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 6: {opportunity.symbol} - Fort mouvement ({opportunity.price_change_24h:+.1f}%) + volume acceptable")
                     bypass_technical_filter = True
                 
-                # Override 7: NOUVEAU - Contournement basé sur qualité des données seule
+                # Override 7: Très haute qualité de données seule
                 elif multi_source_quality["confidence_score"] >= 0.85:
-                    logger.info(f"🎯 OVERRIDE 7: {opportunity.symbol} - Très haute qualité données ({multi_source_quality['confidence_score']:.2f}), envoi à IA1")
+                    logger.info(f"🎯 OVERRIDE 7: {opportunity.symbol} - Très haute qualité données ({multi_source_quality['confidence_score']:.2f})")
                     bypass_technical_filter = True
                 
                 if not bypass_technical_filter:
-                    return None  # Vraiment aucun intérêt détecté
+                    logger.info(f"❌ OPPORTUNITÉ REJETÉE: {opportunity.symbol} - Aucun critère d'override satisfait")
+                    return None
             
             if detected_pattern:
                 logger.info(f"✅ PATTERN DÉTECTÉ: {opportunity.symbol} - {detected_pattern.pattern_type.value} (force: {detected_pattern.strength:.2f})")
