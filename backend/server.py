@@ -106,6 +106,14 @@ class TechnicalAnalysis(BaseModel):
     market_sentiment: str = "neutral"
     data_sources: List[str] = []
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # NOUVEAUX CHAMPS RISK-REWARD IA1
+    risk_reward_ratio: float = 0.0
+    entry_price: float = 0.0
+    stop_loss_price: float = 0.0
+    take_profit_price: float = 0.0
+    risk_amount: float = 0.0
+    reward_amount: float = 0.0
+    rr_reasoning: str = ""
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
