@@ -158,13 +158,20 @@ class IA1DeduplicationTester:
             
             try:
                 if 'T' in timestamp_str:
-                    # Check if timestamp appears to be in Paris timezone format
+                    # ISO format - check if timestamp appears to be in Paris timezone format
                     if '+01:00' in timestamp_str or '+02:00' in timestamp_str:
                         paris_timezone_count += 1
                         print(f"   ✅ {symbol}: Paris timezone detected ({timestamp_str})")
                     else:
                         print(f"   ⚠️  {symbol}: Non-Paris timezone ({timestamp_str})")
                         timezone_consistent = False
+                elif '(Heure de Paris)' in timestamp_str:
+                    # French format - this IS Paris timezone
+                    paris_timezone_count += 1
+                    print(f"   ✅ {symbol}: Paris timezone detected ({timestamp_str})")
+                else:
+                    print(f"   ⚠️  {symbol}: Unknown timezone format ({timestamp_str})")
+                    timezone_consistent = False
             except Exception as e:
                 print(f"   ⚠️  Error checking timezone for {symbol}: {e}")
         
