@@ -10967,14 +10967,23 @@ if __name__ == "__main__":
         return overall_success
 
 if __name__ == "__main__":
+    print("🎯 SCOUT FILTER DIAGNOSTIC TEST - Testing Lateral Movement Filter Hypothesis")
+    print("="*80)
+    
     tester = DualAITradingBotTester()
     
-    # Run Scout Filter Tests (focused on the review request)
-    print("🎯 RUNNING SCOUT FILTER AGGRESSIVE RELAXATIONS TESTS")
-    print("=" * 80)
-    scout_success = tester.run_scout_filter_tests()
+    # Run the specific diagnostic test for Scout filter restrictiveness
+    print("\n🔍 Running Scout Filter Diagnostic Tests...")
+    diagnostic_success = tester.run_scout_filter_diagnostic_tests()
     
-    print(f"\n🎯 FINAL RESULT: {'✅ SCOUT FILTER TESTS PASSED' if scout_success else '❌ SCOUT FILTER TESTS FAILED'}")
+    print(f"\n" + "="*80)
+    print(f"🎯 FINAL DIAGNOSTIC RESULTS")
+    print(f"   Scout Filter Diagnostic: {'✅ COMPLETED' if diagnostic_success else '❌ ISSUES FOUND'}")
     
-    # Optionally run comprehensive tests
-    # tester.run_all_tests()
+    if diagnostic_success:
+        print(f"   💡 CONCLUSION: Scout filters appear to be working within acceptable parameters")
+    else:
+        print(f"   🚨 CONCLUSION: Scout filters may be too restrictive - lateral movement filter hypothesis confirmed")
+        print(f"   🛠️ RECOMMENDATION: Consider disabling lateral movement filter temporarily to test passage rate improvement")
+    
+    print(f"="*80)
