@@ -6972,6 +6972,566 @@ class DualAITradingBotTester:
         
         return readiness_success and trailing_success
 
+    def test_scout_4h_cycle_configuration(self):
+        """Test Scout 4h cycle configuration (14400 seconds)"""
+        print(f"\n⏰ Testing Scout 4h Cycle Configuration...")
+        
+        # Test timing-info endpoint
+        success, timing_data = self.run_test("System Timing Info", "GET", "system/timing-info", 200)
+        if not success:
+            print(f"   ❌ Cannot retrieve timing info")
+            return False
+        
+        # Test scout-info endpoint
+        success, scout_data = self.run_test("System Scout Info", "GET", "system/scout-info", 200)
+        if not success:
+            print(f"   ❌ Cannot retrieve scout info")
+            return False
+        
+        print(f"\n   📊 Scout 4h Cycle Analysis:")
+        
+        # Validate timing-info shows 4h cycle
+        timing_valid = False
+        if timing_data:
+            cycle_description = timing_data.get('cycle_description', '')
+            cycle_seconds = timing_data.get('cycle_interval_seconds', 0)
+            
+            print(f"      Timing Info - Cycle: {cycle_description}")
+            print(f"      Timing Info - Seconds: {cycle_seconds}")
+            
+            # Check for 4h (14400 seconds) configuration
+            timing_valid = (
+                '4 heures' in cycle_description or '4h' in cycle_description.lower() or
+                cycle_seconds == 14400
+            )
+            print(f"      Timing 4h Valid: {'✅' if timing_valid else '❌'}")
+        
+        # Validate scout-info shows complete configuration
+        scout_valid = False
+        if scout_data:
+            cycle_interval = scout_data.get('cycle_interval_seconds', 0)
+            scout_description = scout_data.get('description', '')
+            
+            print(f"      Scout Info - Interval: {cycle_interval}")
+            print(f"      Scout Info - Description: {scout_description}")
+            
+            # Check for proper scout configuration
+            scout_valid = (
+                cycle_interval == 14400 and
+                ('APPROFONDIE' in scout_description or 'comprehensive' in scout_description.lower())
+            )
+            print(f"      Scout 4h Valid: {'✅' if scout_valid else '❌'}")
+        
+        cycle_4h_working = timing_valid and scout_valid
+        
+        print(f"\n   🎯 Scout 4h Cycle: {'✅ CONFIGURED' if cycle_4h_working else '❌ INCOMPLETE'}")
+        
+        if not cycle_4h_working:
+            print(f"   💡 ISSUE: Scout 4h cycle not properly configured")
+            print(f"   💡 Expected: timing-info shows '4 heures (14400 seconds)'")
+            print(f"   💡 Expected: scout-info shows cycle_interval_seconds=14400 and 'APPROFONDIE' description")
+        
+        return cycle_4h_working
+
+    def test_ia1_risk_reward_calculation(self):
+        """Test IA1 Risk-Reward calculation with new fields"""
+        print(f"\n📊 Testing IA1 Risk-Reward Calculation...")
+        
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for R:R testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for R:R testing")
+            return False
+        
+        print(f"   📊 Analyzing R:R fields in {len(analyses)} analyses...")
+        
+        rr_stats = {
+            'total': len(analyses),
+            'has_rr_ratio': 0,
+            'has_entry_price': 0,
+            'has_stop_loss_price': 0,
+            'has_take_profit_price': 0,
+            'has_rr_reasoning': 0,
+            'valid_rr_calculations': 0
+        }
+        
+        rr_ratios = []
+        
+        for i, analysis in enumerate(analyses[:10]):  # Analyze first 10 in detail
+            symbol = analysis.get('symbol', 'Unknown')
+            rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+            entry_price = analysis.get('entry_price', 0.0)
+            stop_loss_price = analysis.get('stop_loss_price', 0.0)
+            take_profit_price = analysis.get('take_profit_price', 0.0)
+            rr_reasoning = analysis.get('rr_reasoning', '')
+            
+            print(f"\n   Analysis {i+1} - {symbol}:")
+            print(f"      R:R Ratio: {rr_ratio:.2f}")
+            print(f"      Entry Price: ${entry_price:.4f}")
+            print(f"      Stop Loss: ${stop_loss_price:.4f}")
+            print(f"      Take Profit: ${take_profit_price:.4f}")
+            print(f"      R:R Reasoning: {'✅ Present' if rr_reasoning else '❌ Missing'}")
+            
+            # Count field presence
+            if rr_ratio > 0: rr_stats['has_rr_ratio'] += 1
+            if entry_price > 0: rr_stats['has_entry_price'] += 1
+            if stop_loss_price > 0: rr_stats['has_stop_loss_price'] += 1
+            if take_profit_price > 0: rr_stats['has_take_profit_price'] += 1
+            if rr_reasoning: rr_stats['has_rr_reasoning'] += 1
+            
+            # Validate calculation logic
+            if (rr_ratio > 0 and entry_price > 0 and stop_loss_price > 0 and 
+                take_profit_price > 0 and rr_reasoning):
+                rr_stats['valid_rr_calculations'] += 1
+                rr_ratios.append(rr_ratio)
+                print(f"      Calculation: ✅ COMPLETE")
+            else:
+                print(f"      Calculation: ❌ INCOMPLETE")
+        
+        # Calculate overall statistics for all analyses
+        for analysis in analyses:
+            rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+            entry_price = analysis.get('entry_price', 0.0)
+            stop_loss_price = analysis.get('stop_loss_price', 0.0)
+            take_profit_price = analysis.get('take_profit_price', 0.0)
+            rr_reasoning = analysis.get('rr_reasoning', '')
+            
+            if rr_ratio > 0: rr_stats['has_rr_ratio'] += 1
+            if entry_price > 0: rr_stats['has_entry_price'] += 1
+            if stop_loss_price > 0: rr_stats['has_stop_loss_price'] += 1
+            if take_profit_price > 0: rr_stats['has_take_profit_price'] += 1
+            if rr_reasoning: rr_stats['has_rr_reasoning'] += 1
+            
+            if (rr_ratio > 0 and entry_price > 0 and stop_loss_price > 0 and 
+                take_profit_price > 0 and rr_reasoning):
+                rr_stats['valid_rr_calculations'] += 1
+                rr_ratios.append(rr_ratio)
+        
+        # Calculate rates
+        rr_ratio_rate = rr_stats['has_rr_ratio'] / rr_stats['total']
+        entry_price_rate = rr_stats['has_entry_price'] / rr_stats['total']
+        stop_loss_rate = rr_stats['has_stop_loss_price'] / rr_stats['total']
+        take_profit_rate = rr_stats['has_take_profit_price'] / rr_stats['total']
+        reasoning_rate = rr_stats['has_rr_reasoning'] / rr_stats['total']
+        complete_calculation_rate = rr_stats['valid_rr_calculations'] / rr_stats['total']
+        
+        print(f"\n   📊 IA1 R:R Field Statistics:")
+        print(f"      Total Analyses: {rr_stats['total']}")
+        print(f"      Has R:R Ratio: {rr_stats['has_rr_ratio']} ({rr_ratio_rate*100:.1f}%)")
+        print(f"      Has Entry Price: {rr_stats['has_entry_price']} ({entry_price_rate*100:.1f}%)")
+        print(f"      Has Stop Loss: {rr_stats['has_stop_loss_price']} ({stop_loss_rate*100:.1f}%)")
+        print(f"      Has Take Profit: {rr_stats['has_take_profit_price']} ({take_profit_rate*100:.1f}%)")
+        print(f"      Has R:R Reasoning: {rr_stats['has_rr_reasoning']} ({reasoning_rate*100:.1f}%)")
+        print(f"      Complete Calculations: {rr_stats['valid_rr_calculations']} ({complete_calculation_rate*100:.1f}%)")
+        
+        # Analyze R:R ratio distribution
+        if rr_ratios:
+            avg_rr = sum(rr_ratios) / len(rr_ratios)
+            min_rr = min(rr_ratios)
+            max_rr = max(rr_ratios)
+            rr_above_2 = sum(1 for rr in rr_ratios if rr >= 2.0)
+            
+            print(f"\n   📊 R:R Ratio Analysis:")
+            print(f"      Average R:R: {avg_rr:.2f}:1")
+            print(f"      Min R:R: {min_rr:.2f}:1")
+            print(f"      Max R:R: {max_rr:.2f}:1")
+            print(f"      R:R ≥ 2:1: {rr_above_2}/{len(rr_ratios)} ({rr_above_2/len(rr_ratios)*100:.1f}%)")
+        
+        # Validation criteria for IA1 R:R implementation
+        fields_implemented = complete_calculation_rate >= 0.8  # 80% should have complete R:R
+        calculations_working = rr_ratio_rate >= 0.8  # 80% should have R:R ratios
+        reasoning_present = reasoning_rate >= 0.8  # 80% should have reasoning
+        realistic_ratios = len(rr_ratios) > 0 and avg_rr > 0 if rr_ratios else False
+        
+        print(f"\n   ✅ IA1 R:R Implementation Validation:")
+        print(f"      Complete Calculations: {'✅' if fields_implemented else '❌'} (≥80%)")
+        print(f"      R:R Ratios Present: {'✅' if calculations_working else '❌'} (≥80%)")
+        print(f"      R:R Reasoning Present: {'✅' if reasoning_present else '❌'} (≥80%)")
+        print(f"      Realistic Ratios: {'✅' if realistic_ratios else '❌'}")
+        
+        ia1_rr_working = (
+            fields_implemented and
+            calculations_working and
+            reasoning_present and
+            realistic_ratios
+        )
+        
+        print(f"\n   🎯 IA1 R:R Calculation: {'✅ IMPLEMENTED' if ia1_rr_working else '❌ NOT WORKING'}")
+        
+        if not ia1_rr_working:
+            print(f"   💡 ISSUE: IA1 R:R calculation not properly implemented")
+            print(f"   💡 Expected: _calculate_ia1_risk_reward method should populate all R:R fields")
+            print(f"   💡 Found: {complete_calculation_rate*100:.1f}% complete calculations (need ≥80%)")
+        
+        return ia1_rr_working
+
+    def test_ia2_rr_filter_2_to_1(self):
+        """Test IA2 R:R 2:1 minimum filter (_should_send_to_ia2)"""
+        print(f"\n🔍 Testing IA2 R:R 2:1 Minimum Filter...")
+        
+        # Get IA1 analyses (input to filter)
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve IA1 analyses for filter testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No IA1 analyses available for filter testing")
+            return False
+        
+        # Get IA2 decisions (output after filter)
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve IA2 decisions for filter testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        
+        print(f"   📊 Analyzing R:R 2:1 Filter Performance...")
+        print(f"      IA1 Analyses (Input): {len(analyses)}")
+        print(f"      IA2 Decisions (Output): {len(decisions)}")
+        
+        # Analyze IA1 analyses R:R ratios
+        ia1_rr_ratios = []
+        ia1_above_2_count = 0
+        ia1_below_2_count = 0
+        
+        for analysis in analyses:
+            rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+            symbol = analysis.get('symbol', 'Unknown')
+            
+            if rr_ratio > 0:
+                ia1_rr_ratios.append(rr_ratio)
+                if rr_ratio >= 2.0:
+                    ia1_above_2_count += 1
+                else:
+                    ia1_below_2_count += 1
+        
+        # Analyze IA2 decisions R:R ratios
+        ia2_rr_ratios = []
+        ia2_symbols = set()
+        
+        for decision in decisions:
+            rr_ratio = decision.get('risk_reward_ratio', 0.0)
+            symbol = decision.get('symbol', 'Unknown')
+            ia2_symbols.add(symbol)
+            
+            if rr_ratio > 0:
+                ia2_rr_ratios.append(rr_ratio)
+        
+        # Calculate filter efficiency
+        if len(analyses) > 0 and len(decisions) > 0:
+            filter_rate = len(decisions) / len(analyses)
+            expected_filter_rate = ia1_above_2_count / len(analyses) if len(analyses) > 0 else 0
+        else:
+            filter_rate = 0
+            expected_filter_rate = 0
+        
+        print(f"\n   📊 R:R Filter Analysis:")
+        print(f"      IA1 R:R Ratios Available: {len(ia1_rr_ratios)}")
+        print(f"      IA1 R:R ≥ 2:1: {ia1_above_2_count}")
+        print(f"      IA1 R:R < 2:1: {ia1_below_2_count}")
+        print(f"      IA2 R:R Ratios Available: {len(ia2_rr_ratios)}")
+        print(f"      Filter Rate: {filter_rate*100:.1f}% ({len(decisions)}/{len(analyses)})")
+        print(f"      Expected Filter Rate: {expected_filter_rate*100:.1f}%")
+        
+        # Analyze IA2 decision R:R ratios to verify filter
+        if ia2_rr_ratios:
+            avg_ia2_rr = sum(ia2_rr_ratios) / len(ia2_rr_ratios)
+            min_ia2_rr = min(ia2_rr_ratios)
+            ia2_above_2_count = sum(1 for rr in ia2_rr_ratios if rr >= 2.0)
+            
+            print(f"\n   📊 IA2 Decision R:R Analysis:")
+            print(f"      Average IA2 R:R: {avg_ia2_rr:.2f}:1")
+            print(f"      Min IA2 R:R: {min_ia2_rr:.2f}:1")
+            print(f"      IA2 R:R ≥ 2:1: {ia2_above_2_count}/{len(ia2_rr_ratios)} ({ia2_above_2_count/len(ia2_rr_ratios)*100:.1f}%)")
+        
+        # Check for API economy (fewer IA2 calls than IA1 analyses)
+        api_economy_working = len(decisions) <= len(analyses)
+        if len(analyses) > 0:
+            api_savings = (1 - len(decisions) / len(analyses)) * 100
+        else:
+            api_savings = 0
+        
+        print(f"\n   💰 API Economy Analysis:")
+        print(f"      API Calls Saved: {api_savings:.1f}%")
+        print(f"      Economy Working: {'✅' if api_economy_working else '❌'}")
+        
+        # Validation criteria for R:R 2:1 filter
+        filter_implemented = len(decisions) < len(analyses) if len(analyses) > 0 else False
+        minimum_enforced = (min_ia2_rr >= 2.0) if ia2_rr_ratios else False
+        api_economy_achieved = api_savings > 0
+        logical_filtering = (ia2_above_2_count == len(ia2_rr_ratios)) if ia2_rr_ratios else True
+        
+        print(f"\n   ✅ R:R 2:1 Filter Validation:")
+        print(f"      Filter Implemented: {'✅' if filter_implemented else '❌'}")
+        print(f"      2:1 Minimum Enforced: {'✅' if minimum_enforced else '❌'}")
+        print(f"      API Economy Achieved: {'✅' if api_economy_achieved else '❌'}")
+        print(f"      Logical Filtering: {'✅' if logical_filtering else '❌'}")
+        
+        rr_filter_working = (
+            filter_implemented and
+            minimum_enforced and
+            api_economy_achieved and
+            logical_filtering
+        )
+        
+        print(f"\n   🎯 R:R 2:1 Filter: {'✅ OPERATIONAL' if rr_filter_working else '❌ NOT WORKING'}")
+        
+        if not rr_filter_working:
+            print(f"   💡 ISSUE: _should_send_to_ia2 filter not working properly")
+            print(f"   💡 Expected: Only IA1 analyses with R:R ≥ 2:1 should reach IA2")
+            print(f"   💡 Found: Filter rate {filter_rate*100:.1f}%, min IA2 R:R {min_ia2_rr:.2f}:1")
+        
+        return rr_filter_working
+
+    def test_complete_scout_4h_rr_system(self):
+        """Test complete Scout 4h + Risk-Reward 2:1 system integration"""
+        print(f"\n🎯 Testing Complete Scout 4h + Risk-Reward 2:1 System...")
+        
+        # Test 1: Scout 4h cycle configuration
+        print(f"\n   🔍 Test 1: Scout 4h Cycle Configuration")
+        cycle_test = self.test_scout_4h_cycle_configuration()
+        print(f"      Scout 4h Cycle: {'✅' if cycle_test else '❌'}")
+        
+        # Test 2: IA1 Risk-Reward calculation
+        print(f"\n   🔍 Test 2: IA1 Risk-Reward Calculation")
+        ia1_rr_test = self.test_ia1_risk_reward_calculation()
+        print(f"      IA1 R:R Calculation: {'✅' if ia1_rr_test else '❌'}")
+        
+        # Test 3: IA2 R:R 2:1 filter
+        print(f"\n   🔍 Test 3: IA2 R:R 2:1 Filter")
+        ia2_filter_test = self.test_ia2_rr_filter_2_to_1()
+        print(f"      IA2 R:R Filter: {'✅' if ia2_filter_test else '❌'}")
+        
+        # Test 4: Generate fresh cycle to validate optimizations
+        print(f"\n   🔍 Test 4: Fresh Cycle Generation")
+        fresh_cycle_test = self.test_optimized_cycle_generation()
+        print(f"      Optimized Cycle: {'✅' if fresh_cycle_test else '❌'}")
+        
+        # Overall system assessment
+        components_passed = sum([cycle_test, ia1_rr_test, ia2_filter_test, fresh_cycle_test])
+        system_working = components_passed >= 3  # At least 3/4 components working
+        
+        print(f"\n   📊 Complete System Assessment:")
+        print(f"      Components Passed: {components_passed}/4")
+        print(f"      System Status: {'✅ OPERATIONAL' if system_working else '❌ NEEDS FIXES'}")
+        
+        if system_working:
+            print(f"   💡 SUCCESS: Scout 4h + Risk-Reward 2:1 system is operational")
+            print(f"   💡 Features: 4h cycle, IA1 R:R calculation, 2:1 filtering, API economy")
+        else:
+            print(f"   💡 ISSUES DETECTED:")
+            if not cycle_test:
+                print(f"      - Scout 4h cycle configuration incomplete")
+            if not ia1_rr_test:
+                print(f"      - IA1 R:R calculation not implemented")
+            if not ia2_filter_test:
+                print(f"      - IA2 R:R 2:1 filter not working")
+            if not fresh_cycle_test:
+                print(f"      - Optimized cycle generation issues")
+        
+        return system_working
+
+    def test_optimized_cycle_generation(self):
+        """Test optimized cycle generation with new R:R calculations"""
+        print(f"\n🔄 Testing Optimized Cycle Generation...")
+        
+        # Start trading system for fresh cycle
+        print(f"   🚀 Starting trading system for optimized cycle...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Wait for system to generate 1-2 analyses with new calculations
+        print(f"   ⏱️  Waiting for optimized cycle (60 seconds max)...")
+        
+        cycle_start_time = time.time()
+        max_wait_time = 60
+        check_interval = 10
+        
+        # Get initial counts
+        initial_success, initial_analyses = self.test_get_analyses()
+        initial_analysis_count = len(initial_analyses.get('analyses', [])) if initial_success else 0
+        
+        initial_success, initial_decisions = self.test_get_decisions()
+        initial_decision_count = len(initial_decisions.get('decisions', [])) if initial_success else 0
+        
+        new_analyses_generated = False
+        new_decisions_generated = False
+        
+        while time.time() - cycle_start_time < max_wait_time:
+            time.sleep(check_interval)
+            
+            # Check for new analyses
+            success, current_analyses = self.test_get_analyses()
+            if success:
+                current_analysis_count = len(current_analyses.get('analyses', []))
+                if current_analysis_count > initial_analysis_count:
+                    new_analyses_generated = True
+                    print(f"   ✅ New IA1 analyses generated: {current_analysis_count} (was {initial_analysis_count})")
+            
+            # Check for new decisions
+            success, current_decisions = self.test_get_decisions()
+            if success:
+                current_decision_count = len(current_decisions.get('decisions', []))
+                if current_decision_count > initial_decision_count:
+                    new_decisions_generated = True
+                    print(f"   ✅ New IA2 decisions generated: {current_decision_count} (was {initial_decision_count})")
+            
+            # Break if we have both new analyses and decisions
+            if new_analyses_generated and new_decisions_generated:
+                break
+        
+        # Stop the trading system
+        print(f"   🛑 Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Validate the optimized cycle results
+        if new_analyses_generated or new_decisions_generated:
+            print(f"\n   📊 Optimized Cycle Validation:")
+            
+            # Check latest analyses for R:R fields
+            if new_analyses_generated:
+                latest_analyses = current_analyses.get('analyses', [])[:3]  # Check first 3
+                rr_fields_present = 0
+                
+                for analysis in latest_analyses:
+                    rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+                    rr_reasoning = analysis.get('rr_reasoning', '')
+                    
+                    if rr_ratio > 0 and rr_reasoning:
+                        rr_fields_present += 1
+                
+                rr_implementation_rate = rr_fields_present / len(latest_analyses) if latest_analyses else 0
+                print(f"      R:R Fields in New Analyses: {rr_fields_present}/{len(latest_analyses)} ({rr_implementation_rate*100:.1f}%)")
+            
+            # Check API economy impact
+            if new_analyses_generated and new_decisions_generated:
+                analysis_increase = current_analysis_count - initial_analysis_count
+                decision_increase = current_decision_count - initial_decision_count
+                
+                if analysis_increase > 0:
+                    filter_efficiency = 1 - (decision_increase / analysis_increase)
+                    print(f"      Filter Efficiency: {filter_efficiency*100:.1f}% (fewer IA2 calls)")
+                
+            cycle_optimized = (
+                new_analyses_generated and
+                (rr_implementation_rate >= 0.5 if new_analyses_generated else True)
+            )
+            
+            print(f"      Cycle Optimization: {'✅' if cycle_optimized else '❌'}")
+            return cycle_optimized
+        else:
+            print(f"   ⚠️  No new analyses/decisions generated in {max_wait_time}s")
+            print(f"   💡 This may indicate system is working but no opportunities found")
+            return False
+
+    async def run_scout_4h_rr_tests(self):
+        """Run comprehensive Scout 4h + Risk-Reward 2:1 tests"""
+        print("🎯 Starting Scout 4h + Risk-Reward 2:1 System Tests")
+        print("=" * 80)
+        print(f"🔧 Testing Scout 4h + Risk-Reward 2:1 Features:")
+        print(f"   • Scout 4h Cycle Configuration (14400 seconds)")
+        print(f"   • IA1 Risk-Reward Calculation (new R:R fields)")
+        print(f"   • IA2 R:R 2:1 Minimum Filter (_should_send_to_ia2)")
+        print(f"   • API Economy through R:R filtering")
+        print(f"   • Complete System Integration")
+        print("=" * 80)
+        
+        # 1. Basic connectivity test
+        print(f"\n1️⃣ BASIC CONNECTIVITY TESTS")
+        system_success, _ = self.test_system_status()
+        market_success, _ = self.test_market_status()
+        
+        # 2. Scout 4h cycle configuration test
+        print(f"\n2️⃣ SCOUT 4H CYCLE CONFIGURATION TEST")
+        cycle_test = self.test_scout_4h_cycle_configuration()
+        
+        # 3. IA1 Risk-Reward calculation test
+        print(f"\n3️⃣ IA1 RISK-REWARD CALCULATION TEST")
+        ia1_rr_test = self.test_ia1_risk_reward_calculation()
+        
+        # 4. IA2 R:R 2:1 filter test
+        print(f"\n4️⃣ IA2 R:R 2:1 MINIMUM FILTER TEST")
+        ia2_filter_test = self.test_ia2_rr_filter_2_to_1()
+        
+        # 5. Complete system integration test
+        print(f"\n5️⃣ COMPLETE SCOUT 4H + R:R SYSTEM INTEGRATION TEST")
+        complete_system_test = self.test_complete_scout_4h_rr_system()
+        
+        # 6. Optimized cycle generation test
+        print(f"\n6️⃣ OPTIMIZED CYCLE GENERATION TEST")
+        optimized_cycle_test = self.test_optimized_cycle_generation()
+        
+        # Results Summary
+        print("\n" + "=" * 80)
+        print("📊 SCOUT 4H + RISK-REWARD 2:1 SYSTEM TEST RESULTS")
+        print("=" * 80)
+        
+        print(f"\n🔍 Test Results Summary:")
+        print(f"   • System Connectivity: {'✅' if system_success else '❌'}")
+        print(f"   • Market Status: {'✅' if market_success else '❌'}")
+        print(f"   • Scout 4h Cycle Configuration: {'✅' if cycle_test else '❌'}")
+        print(f"   • IA1 Risk-Reward Calculation: {'✅' if ia1_rr_test else '❌'}")
+        print(f"   • IA2 R:R 2:1 Filter: {'✅' if ia2_filter_test else '❌'}")
+        print(f"   • Complete System Integration: {'✅' if complete_system_test else '❌'}")
+        print(f"   • Optimized Cycle Generation: {'✅' if optimized_cycle_test else '❌'}")
+        
+        # Critical assessment for Scout 4h + R:R system
+        critical_tests = [
+            cycle_test,           # Scout 4h cycle must be configured
+            ia1_rr_test,         # IA1 R:R calculation must work
+            ia2_filter_test,     # IA2 R:R filter must be operational
+            complete_system_test # Complete system must integrate properly
+        ]
+        critical_passed = sum(critical_tests)
+        
+        print(f"\n🎯 SCOUT 4H + RISK-REWARD 2:1 SYSTEM Assessment:")
+        if critical_passed == 4:
+            print(f"   ✅ SCOUT 4H + RISK-REWARD 2:1 SYSTEM SUCCESSFUL")
+            print(f"   ✅ All critical components working: 4h cycle + R:R calculation + 2:1 filter")
+            system_status = "SUCCESS"
+        elif critical_passed >= 3:
+            print(f"   ⚠️ SCOUT 4H + RISK-REWARD 2:1 SYSTEM PARTIAL")
+            print(f"   ⚠️ Most components working, minor issues detected")
+            system_status = "PARTIAL"
+        elif critical_passed >= 2:
+            print(f"   ⚠️ SCOUT 4H + RISK-REWARD 2:1 SYSTEM LIMITED")
+            print(f"   ⚠️ Some components working, significant issues remain")
+            system_status = "LIMITED"
+        else:
+            print(f"   ❌ SCOUT 4H + RISK-REWARD 2:1 SYSTEM FAILED")
+            print(f"   ❌ Critical issues detected - system not working")
+            system_status = "FAILED"
+        
+        # Specific feedback on the Scout 4h + R:R system
+        print(f"\n📋 Scout 4h + R:R System Status:")
+        print(f"   • Scout 4h Cycle (14400s): {'✅' if cycle_test else '❌ NOT CONFIGURED'}")
+        print(f"   • IA1 R:R Fields: {'✅' if ia1_rr_test else '❌ NOT IMPLEMENTED'}")
+        print(f"   • IA2 R:R 2:1 Filter: {'✅' if ia2_filter_test else '❌ NOT WORKING'}")
+        print(f"   • API Economy: {'✅' if ia2_filter_test else '❌ NO SAVINGS'}")
+        print(f"   • System Integration: {'✅' if complete_system_test else '❌ INCOMPLETE'}")
+        
+        print(f"\n📋 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
+        
+        return system_status, {
+            "tests_passed": self.tests_passed,
+            "tests_total": self.tests_run,
+            "system_working": system_success,
+            "scout_4h_configured": cycle_test,
+            "ia1_rr_implemented": ia1_rr_test,
+            "ia2_rr_filter_working": ia2_filter_test,
+            "complete_system_working": complete_system_test,
+            "optimized_cycle_working": optimized_cycle_test
+        }
+
     async def run_all_tests(self):
         """Run comprehensive tests for API Economy Optimization"""
         return await self.run_api_economy_optimization_tests()
