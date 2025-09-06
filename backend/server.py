@@ -4042,9 +4042,23 @@ class UltraProfessionalTradingOrchestrator:
                     # Process decision results
                     for i, decision in enumerate(decisions):
                         if isinstance(decision, TradingDecision) and decision.signal != "HOLD":
-                            # Store successful decision
+                            # NOUVEAU: Vérification de déduplication IA2 avant stockage (cohérence 4h)
+                            symbol = decision.symbol
+                            recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)  # Cohérent avec Scout et IA1
+                            
+                            existing_recent_decision = await db.trading_decisions.find_one({
+                                "symbol": symbol,
+                                "timestamp": {"$gte": recent_cutoff}
+                            })
+                            
+                            if existing_recent_decision:
+                                logger.info(f"🔄 IA2 DECISION DEDUPLICATED: {symbol} - Recent decision exists (avoiding duplicate IA2 processing)")
+                                continue  # Skip storing this duplicate decision
+                            
+                            # Store decision seulement si pas de doublon récent
                             await db.trading_decisions.insert_one(decision.dict())
                             decisions_made += 1
+                            logger.info(f"📁 IA2 DECISION STORED: {symbol} (no recent duplicates)")
                             
                             # Broadcast decision to frontend
                             await manager.broadcast({
