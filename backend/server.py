@@ -3936,25 +3936,10 @@ class UltraProfessionalTradingOrchestrator:
                 if isinstance(analysis, TechnicalAnalysis):
                     valid_analyses.append((top_opportunities[i], analysis))
                     logger.info(f"🔍 DEBUG: Added {analysis.symbol} to valid_analyses")
-                    ia1_analyses_generated += 1
                     
-                    # NOUVEAU: Vérification de déduplication IA1 avant stockage (éviter analyses multiples)
-                    symbol = analysis.symbol
-                    recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)  # Cohérent avec le cycle Scout de 4h
-                    
-                    existing_recent_analysis = await db.technical_analyses.find_one({
-                        "symbol": symbol,
-                        "timestamp": {"$gte": recent_cutoff}
-                    })
-                    
-                    if existing_recent_analysis:
-                        logger.info(f"🔄 IA1 ANALYSIS DEDUPLICATED: {symbol} - Recent analysis exists (avoiding duplicate IA1 processing, saving LLM credits)")
-                        ia1_analyses_deduplicated += 1
-                        continue  # Skip storing this duplicate analysis
-                    
-                    # Store analysis seulement si pas de doublon récent
+                    # Store analysis directement (pas de re-vérification)
                     await db.technical_analyses.insert_one(analysis.dict())
-                    logger.info(f"📁 IA1 ANALYSIS STORED: {symbol} (no recent duplicates)")
+                    logger.info(f"📁 IA1 ANALYSIS STORED: {analysis.symbol} (fresh analysis)")
                     
                     # Broadcast analysis
                     await manager.broadcast({
