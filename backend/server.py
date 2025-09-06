@@ -4076,11 +4076,25 @@ async def root():
 
 @api_router.get("/opportunities")
 async def get_opportunities():
-    """Get recent market opportunities"""
+    """Get recent market opportunities with Paris time formatting"""
     opportunities = await db.market_opportunities.find().sort("timestamp", -1).limit(50).to_list(50)
+    
+    # Format opportunities with Paris time
+    formatted_opportunities = []
     for opp in opportunities:
         opp.pop('_id', None)
-    return {"opportunities": opportunities, "ultra_professional": True}
+        
+        # Convert timestamp to Paris time format
+        if 'timestamp' in opp and isinstance(opp['timestamp'], datetime):
+            utc_dt = opp['timestamp']
+            if utc_dt.tzinfo is None:
+                utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+            paris_dt = utc_dt.astimezone(PARIS_TZ)
+            opp['timestamp'] = paris_dt.strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
+        
+        formatted_opportunities.append(opp)
+    
+    return {"opportunities": formatted_opportunities, "ultra_professional": True}
 
 @api_router.get("/status")
 async def get_status():
