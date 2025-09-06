@@ -161,7 +161,7 @@ class BingXAccountInfo(BaseModel):
     used_margin: float
     unrealized_pnl: float
     total_positions: int
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 class AIConversation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
