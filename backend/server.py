@@ -1446,6 +1446,70 @@ class UltraProfessionalIA1TechnicalAnalyst:
             result["reason"] = f"Erreur validation: {str(e)}"
             return result
     
+    def _analyze_diagonal_trends(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
+        """Analyse les tendances diagonales pour identifier les mouvements directionnels forts"""
+        try:
+            result = {
+                "strong_trend": False,
+                "moderate_trend": False,
+                "direction": "neutral",
+                "strength": 0.0,
+                "reason": ""
+            }
+            
+            if historical_data is None or len(historical_data) < 10:
+                result["reason"] = "Données insuffisantes pour analyse tendance"
+                return result
+            
+            # Calcul de la tendance sur différentes périodes
+            close_prices = historical_data['Close']
+            
+            # Tendance court terme (5 jours)
+            short_trend = (close_prices.iloc[-1] - close_prices.iloc[-5]) / close_prices.iloc[-5] * 100
+            
+            # Tendance moyen terme (10 jours)
+            if len(close_prices) >= 10:
+                medium_trend = (close_prices.iloc[-1] - close_prices.iloc[-10]) / close_prices.iloc[-10] * 100
+            else:
+                medium_trend = short_trend
+            
+            # Calcul de la force de la tendance (moyenne pondérée)
+            trend_strength = abs((short_trend * 0.6) + (medium_trend * 0.4))
+            
+            # Détermination de la direction
+            if short_trend > 0 and medium_trend > 0:
+                direction = "haussière"
+            elif short_trend < 0 and medium_trend < 0:
+                direction = "baissière"
+            else:
+                direction = "mixte"
+            
+            # Classification de la force
+            if trend_strength >= 8.0:  # Tendance très forte
+                result["strong_trend"] = True
+                result["direction"] = direction
+                result["strength"] = trend_strength
+                result["reason"] = f"Tendance {direction} très forte ({trend_strength:.1f}%)"
+            elif trend_strength >= 4.0:  # Tendance modérée
+                result["moderate_trend"] = True
+                result["direction"] = direction
+                result["strength"] = trend_strength
+                result["reason"] = f"Tendance {direction} modérée ({trend_strength:.1f}%)"
+            else:
+                result["reason"] = f"Tendance faible ({trend_strength:.1f}%) - mouvement latéral probable"
+            
+            return result
+            
+        except Exception as e:
+            logger.debug(f"Erreur analyse tendance diagonale pour {symbol}: {e}")
+            return {
+                "strong_trend": False,
+                "moderate_trend": False,
+                "direction": "error",
+                "strength": 0.0,
+                "reason": f"Erreur analyse: {str(e)}"
+            }
+    
     def _detect_lateral_movement(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
         """Détecte les mouvements latéraux (consolidation) pour économiser appels API sur figures non-directionnelles"""
         try:
