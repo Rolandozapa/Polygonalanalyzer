@@ -4053,6 +4053,7 @@ class UltraProfessionalTradingOrchestrator:
                             })
                             
                             if existing_recent_decision:
+                                ia2_decisions_deduplicated += 1
                                 logger.info(f"🔄 IA2 DECISION DEDUPLICATED: {symbol} - Recent decision exists (avoiding duplicate IA2 processing)")
                                 continue  # Skip storing this duplicate decision
                             
