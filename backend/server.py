@@ -4150,8 +4150,8 @@ async def get_trailing_stop_by_symbol(symbol: str):
                     "last_tp_price": ts.last_tp_price,
                     "tp1_minimum_lock": ts.tp1_minimum_lock,
                     "status": ts.status,
-                    "created_at": ts.created_at.isoformat(),
-                    "updated_at": ts.updated_at.isoformat(),
+                    "created_at": utc_to_paris(ts.created_at).strftime('%Y-%m-%d %H:%M:%S') + " (Paris)",
+                    "updated_at": utc_to_paris(ts.updated_at).strftime('%Y-%m-%d %H:%M:%S') + " (Paris)",
                     "notifications_sent": len(ts.notifications_sent)
                 }
         
