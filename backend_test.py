@@ -8801,8 +8801,8 @@ if __name__ == "__main__":
             print(f"Unknown test type: {test_type}")
             print(f"Available types: bingx_live, enhanced_leverage, ia1, ia2, ia2_enhanced, ia2_confidence, ia2_robust, cache_clear, debug, fixes, comprehensive, api_economy, scout_4h_rr")
     else:
-        # Run Scout 4h + Risk-Reward 2:1 tests by default
-        asyncio.run(tester.run_scout_4h_rr_tests())
+        # Run Scout Filter Aggressive Relaxations tests by default
+        tester.run_scout_filter_tests()
     def test_enhanced_dynamic_leverage_system(self):
         """Test Enhanced Dynamic Leverage & 5-Level TP System Implementation"""
         print(f"\n🎯 Testing Enhanced Dynamic Leverage & 5-Level TP System...")
