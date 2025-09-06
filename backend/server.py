@@ -4236,7 +4236,7 @@ async def websocket_trailing_stops(websocket: WebSocket):
             await websocket.send_json({
                 "type": "trailing_stops_update",
                 "data": trailing_stops_data,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Paris)",
                 "count": len(trailing_stops_data)
             })
             
