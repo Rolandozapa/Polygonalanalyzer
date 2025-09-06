@@ -790,9 +790,9 @@ class UltraProfessionalCryptoScout:
                 
                 # === LOGIQUES DE FILTRE INTELLIGENTES ===
                 
-                # Option 1: Au moins un R:R ≥ 1.2 (Ajusté - plus permissif)
-                filter_passed = best_ratio >= 1.2
-                filter_reason = f"Best R:R {best_ratio:.2f}:1 ≥ 1.2:1"
+                # Option 1: Au moins un R:R ≥ 1.1 (ASSOUPLI - récupère plus d'opportunités)
+                filter_passed = best_ratio >= 1.1
+                filter_reason = f"Best R:R {best_ratio:.2f}:1 ≥ 1.1:1"
                 
                 # Option 2: Moyenne des deux R:R ≥ 1.2 (Alternative plus permissive)
                 # filter_passed = scout_rr["average_ratio"] >= 1.2
