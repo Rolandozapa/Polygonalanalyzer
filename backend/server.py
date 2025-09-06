@@ -4231,9 +4231,41 @@ async def get_analyses_simple():
 
 @api_router.get("/analyses")
 async def get_analyses():
-    """Get recent technical analyses - VRAIES valeurs IA1 avec validation JSON"""
+    """Get recent technical analyses - VRAIES valeurs IA1 avec validation JSON et déduplication"""
     try:
-        real_analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(10).to_list(10)
+        # Récupérer toutes les analyses récentes (avec plus de limite pour déduplication)
+        all_analyses = await db.technical_analyses.find().sort("timestamp", -1).limit(50).to_list(50)
+        
+        if not all_analyses:
+            return {"analyses": [], "ultra_professional": True, "note": "No analyses found"}
+        
+        # DÉDUPLICATION: Garder seulement la plus récente analyse par symbol dans les 4h
+        recent_cutoff = get_paris_time() - timedelta(hours=4)
+        deduplicated_analyses = {}  # symbol -> most recent analysis
+        
+        for analysis in all_analyses:
+            symbol = analysis.get('symbol')
+            if not symbol:
+                continue
+                
+            # Vérifier si l'analyse est dans la fenêtre de 4h
+            analysis_time = analysis.get('timestamp')
+            if isinstance(analysis_time, datetime):
+                # Convertir en Paris time pour comparaison cohérente
+                if analysis_time.tzinfo is None:
+                    analysis_time = analysis_time.replace(tzinfo=timezone.utc)
+                analysis_time = analysis_time.astimezone(PARIS_TZ)
+                
+                # Si l'analyse est récente (< 4h) et on n'a pas encore cette symbol, ou si elle est plus récente
+                if analysis_time >= recent_cutoff:
+                    if symbol not in deduplicated_analyses or analysis_time > deduplicated_analyses[symbol]['parsed_timestamp']:
+                        analysis['parsed_timestamp'] = analysis_time  # Pour comparaison
+                        deduplicated_analyses[symbol] = analysis
+        
+        # Convertir le dict en liste et prendre les 10 plus récentes
+        real_analyses = list(deduplicated_analyses.values())
+        real_analyses.sort(key=lambda x: x.get('parsed_timestamp', datetime.min.replace(tzinfo=PARIS_TZ)), reverse=True)
+        real_analyses = real_analyses[:10]  # Limiter à 10
         
         if not real_analyses:
             return {"analyses": [], "ultra_professional": True, "note": "No analyses found"}
