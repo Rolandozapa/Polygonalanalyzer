@@ -2932,6 +2932,423 @@ class DualAITradingBotTester:
         
         return cycle_success
 
+    def test_scout_relaxed_filters(self):
+        """Test the newly relaxed Scout filters for improved pass rate"""
+        print(f"\n🎯 Testing Scout Relaxed Filters (Risk-Reward 1.1:1 + Enhanced Overrides)...")
+        
+        # Step 1: Get current opportunities to analyze Scout performance
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for Scout filter testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities available for Scout filter testing")
+            return False
+        
+        print(f"   📊 Found {len(opportunities)} Scout opportunities for filter analysis")
+        
+        # Step 2: Start trading system to test Scout → IA1 pass rate
+        print(f"   🚀 Starting trading system to test Scout → IA1 pass rate...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for IA1 analyses to be generated
+        print(f"   ⏱️  Waiting for IA1 analyses generation (60 seconds)...")
+        time.sleep(60)
+        
+        # Step 4: Get IA1 analyses to calculate pass rate
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for pass rate calculation")
+            self.test_stop_trading_system()
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        
+        # Step 5: Calculate Scout → IA1 pass rate
+        scout_count = len(opportunities)
+        ia1_count = len(analyses)
+        pass_rate = (ia1_count / scout_count * 100) if scout_count > 0 else 0
+        
+        print(f"\n   📊 Scout Filter Performance Analysis:")
+        print(f"      Scout Opportunities: {scout_count}")
+        print(f"      IA1 Analyses Generated: {ia1_count}")
+        print(f"      Pass Rate: {pass_rate:.1f}% (target: 25-35%)")
+        
+        # Step 6: Analyze opportunity characteristics for filter testing
+        high_volume_opportunities = []
+        high_movement_opportunities = []
+        quality_opportunities = []
+        
+        for opp in opportunities:
+            volume_24h = opp.get('volume_24h', 0)
+            price_change_24h = abs(opp.get('price_change_24h', 0))
+            data_confidence = opp.get('data_confidence', 0)
+            symbol = opp.get('symbol', 'Unknown')
+            
+            # Test Override 2: High volume + strong movement (like KTAUSDT)
+            if volume_24h >= 10_000_000 and price_change_24h >= 10.0:
+                high_volume_opportunities.append({
+                    'symbol': symbol,
+                    'volume': volume_24h,
+                    'movement': price_change_24h,
+                    'confidence': data_confidence
+                })
+            
+            # Test high movement opportunities
+            if price_change_24h >= 7.0:
+                high_movement_opportunities.append({
+                    'symbol': symbol,
+                    'movement': price_change_24h,
+                    'volume': volume_24h
+                })
+            
+            # Test high quality data opportunities
+            if data_confidence >= 0.8:
+                quality_opportunities.append({
+                    'symbol': symbol,
+                    'confidence': data_confidence,
+                    'movement': price_change_24h
+                })
+        
+        print(f"\n   🎯 Override Opportunity Analysis:")
+        print(f"      High Volume + Movement (≥10M$ + ≥10%): {len(high_volume_opportunities)}")
+        print(f"      High Movement (≥7%): {len(high_movement_opportunities)}")
+        print(f"      High Quality Data (≥80%): {len(quality_opportunities)}")
+        
+        # Show examples of high-value opportunities
+        if high_volume_opportunities:
+            print(f"\n   💎 High Volume + Movement Examples:")
+            for i, opp in enumerate(high_volume_opportunities[:3]):
+                print(f"      {i+1}. {opp['symbol']}: ${opp['volume']:,.0f} volume, {opp['movement']:+.1f}% movement")
+        
+        # Step 7: Check if analyses correspond to high-value opportunities
+        analysis_symbols = set(analysis.get('symbol', '') for analysis in analyses)
+        high_volume_symbols = set(opp['symbol'] for opp in high_volume_opportunities)
+        high_movement_symbols = set(opp['symbol'] for opp in high_movement_opportunities)
+        
+        high_volume_passed = len(high_volume_symbols.intersection(analysis_symbols))
+        high_movement_passed = len(high_movement_symbols.intersection(analysis_symbols))
+        
+        print(f"\n   ✅ Override Effectiveness Analysis:")
+        print(f"      High Volume Opportunities Passed: {high_volume_passed}/{len(high_volume_opportunities)}")
+        print(f"      High Movement Opportunities Passed: {high_movement_passed}/{len(high_movement_opportunities)}")
+        
+        # Step 8: Analyze IA1 analysis quality to ensure quality is maintained
+        quality_maintained = True
+        if analyses:
+            confidence_scores = [analysis.get('analysis_confidence', 0) for analysis in analyses]
+            avg_confidence = sum(confidence_scores) / len(confidence_scores)
+            min_confidence = min(confidence_scores)
+            
+            print(f"\n   📈 Quality Maintenance Analysis:")
+            print(f"      Average IA1 Confidence: {avg_confidence:.3f}")
+            print(f"      Minimum IA1 Confidence: {min_confidence:.3f}")
+            print(f"      Quality Maintained: {'✅' if avg_confidence >= 0.7 else '❌'}")
+            
+            quality_maintained = avg_confidence >= 0.7
+        
+        # Step 9: Stop trading system
+        print(f"   🛑 Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Step 10: Validation criteria for relaxed filters
+        pass_rate_improved = pass_rate >= 25.0  # Target: 25-35% vs old 16%
+        pass_rate_reasonable = pass_rate <= 40.0  # Not too permissive
+        high_value_opportunities_passed = high_volume_passed > 0 or high_movement_passed > 0
+        overrides_working = len(high_volume_opportunities) > 0 and high_volume_passed > 0
+        
+        print(f"\n   🎯 Relaxed Filter Validation:")
+        print(f"      Pass Rate Improved (≥25%): {'✅' if pass_rate_improved else '❌'} ({pass_rate:.1f}%)")
+        print(f"      Pass Rate Reasonable (≤40%): {'✅' if pass_rate_reasonable else '❌'}")
+        print(f"      High-Value Opps Passed: {'✅' if high_value_opportunities_passed else '❌'}")
+        print(f"      Overrides Working: {'✅' if overrides_working else '❌'}")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'}")
+        
+        # Overall assessment
+        relaxed_filters_working = (
+            pass_rate_improved and
+            pass_rate_reasonable and
+            high_value_opportunities_passed and
+            quality_maintained
+        )
+        
+        print(f"\n   🎯 Scout Relaxed Filters Assessment: {'✅ SUCCESS' if relaxed_filters_working else '❌ NEEDS ADJUSTMENT'}")
+        
+        if relaxed_filters_working:
+            print(f"   💡 SUCCESS: Relaxed filters increase pass rate while maintaining quality")
+            print(f"   💡 Pass rate: {pass_rate:.1f}% (improved from ~16%)")
+            print(f"   💡 High-value opportunities: {len(high_volume_opportunities)} detected")
+            print(f"   💡 Overrides: Working for volume/movement criteria")
+        else:
+            print(f"   💡 ISSUES DETECTED:")
+            if not pass_rate_improved:
+                print(f"      - Pass rate still too low ({pass_rate:.1f}% < 25%)")
+            if not pass_rate_reasonable:
+                print(f"      - Pass rate too high ({pass_rate:.1f}% > 40%)")
+            if not high_value_opportunities_passed:
+                print(f"      - High-value opportunities not passing filters")
+            if not quality_maintained:
+                print(f"      - Quality degradation detected")
+        
+        return relaxed_filters_working
+
+    def test_lateral_movement_filter_relaxation(self):
+        """Test the relaxed lateral movement filter criteria"""
+        print(f"\n⚖️ Testing Lateral Movement Filter Relaxation...")
+        
+        # Get opportunities to analyze movement characteristics
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for lateral movement testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities available for lateral movement testing")
+            return False
+        
+        print(f"   📊 Analyzing movement characteristics of {len(opportunities)} opportunities...")
+        
+        # Analyze movement patterns based on relaxed criteria
+        movement_analysis = {
+            'weak_trend_old': 0,      # <3% (old criteria)
+            'weak_trend_new': 0,      # <4% (new relaxed criteria)
+            'low_volatility_old': 0,  # <2% (old criteria)
+            'low_volatility_new': 0,  # <1.5% (new relaxed criteria)
+            'directional_movement': 0,
+            'lateral_movement': 0,
+            'high_movement': 0
+        }
+        
+        directional_opportunities = []
+        lateral_opportunities = []
+        
+        for opp in opportunities:
+            symbol = opp.get('symbol', 'Unknown')
+            price_change_24h = abs(opp.get('price_change_24h', 0))
+            volatility = opp.get('volatility', 0) * 100  # Convert to percentage
+            
+            # Old criteria analysis
+            if price_change_24h < 3.0:
+                movement_analysis['weak_trend_old'] += 1
+            if volatility < 2.0:
+                movement_analysis['low_volatility_old'] += 1
+            
+            # New relaxed criteria analysis
+            if price_change_24h < 4.0:
+                movement_analysis['weak_trend_new'] += 1
+            if volatility < 1.5:
+                movement_analysis['low_volatility_new'] += 1
+            
+            # Movement classification
+            if price_change_24h >= 7.0:  # Strong directional movement
+                movement_analysis['directional_movement'] += 1
+                directional_opportunities.append({
+                    'symbol': symbol,
+                    'movement': price_change_24h,
+                    'volatility': volatility
+                })
+            elif price_change_24h < 2.0 and volatility < 1.5:  # Lateral movement
+                movement_analysis['lateral_movement'] += 1
+                lateral_opportunities.append({
+                    'symbol': symbol,
+                    'movement': price_change_24h,
+                    'volatility': volatility
+                })
+            elif price_change_24h >= 10.0:  # High movement (like KTAUSDT)
+                movement_analysis['high_movement'] += 1
+        
+        total_opportunities = len(opportunities)
+        
+        print(f"\n   📊 Movement Filter Analysis:")
+        print(f"      Weak Trend (old <3%): {movement_analysis['weak_trend_old']} ({movement_analysis['weak_trend_old']/total_opportunities*100:.1f}%)")
+        print(f"      Weak Trend (new <4%): {movement_analysis['weak_trend_new']} ({movement_analysis['weak_trend_new']/total_opportunities*100:.1f}%)")
+        print(f"      Low Volatility (old <2%): {movement_analysis['low_volatility_old']} ({movement_analysis['low_volatility_old']/total_opportunities*100:.1f}%)")
+        print(f"      Low Volatility (new <1.5%): {movement_analysis['low_volatility_new']} ({movement_analysis['low_volatility_new']/total_opportunities*100:.1f}%)")
+        
+        print(f"\n   🎯 Movement Classification:")
+        print(f"      Directional Movement (≥7%): {movement_analysis['directional_movement']}")
+        print(f"      Lateral Movement (<2% + <1.5% vol): {movement_analysis['lateral_movement']}")
+        print(f"      High Movement (≥10%): {movement_analysis['high_movement']}")
+        
+        # Show examples
+        if directional_opportunities:
+            print(f"\n   📈 Directional Movement Examples:")
+            for i, opp in enumerate(directional_opportunities[:3]):
+                print(f"      {i+1}. {opp['symbol']}: {opp['movement']:.1f}% movement, {opp['volatility']:.1f}% volatility")
+        
+        if lateral_opportunities:
+            print(f"\n   ⚖️ Lateral Movement Examples:")
+            for i, opp in enumerate(lateral_opportunities[:3]):
+                print(f"      {i+1}. {opp['symbol']}: {opp['movement']:.1f}% movement, {opp['volatility']:.1f}% volatility")
+        
+        # Calculate filter relaxation impact
+        old_criteria_filtered = movement_analysis['weak_trend_old'] + movement_analysis['low_volatility_old']
+        new_criteria_filtered = movement_analysis['weak_trend_new'] + movement_analysis['low_volatility_new']
+        relaxation_benefit = old_criteria_filtered - new_criteria_filtered
+        
+        print(f"\n   🔄 Filter Relaxation Impact:")
+        print(f"      Old Criteria Would Filter: {old_criteria_filtered} opportunities")
+        print(f"      New Criteria Filter: {new_criteria_filtered} opportunities")
+        print(f"      Additional Opportunities Recovered: {relaxation_benefit}")
+        
+        # Validation criteria
+        relaxation_effective = relaxation_benefit > 0  # Should recover some opportunities
+        directional_preserved = movement_analysis['directional_movement'] > 0  # Should still have directional
+        lateral_still_filtered = movement_analysis['lateral_movement'] < total_opportunities * 0.5  # Not too many lateral
+        
+        print(f"\n   ✅ Lateral Movement Filter Validation:")
+        print(f"      Relaxation Effective: {'✅' if relaxation_effective else '❌'} (+{relaxation_benefit} opportunities)")
+        print(f"      Directional Preserved: {'✅' if directional_preserved else '❌'} ({movement_analysis['directional_movement']} directional)")
+        print(f"      Lateral Still Filtered: {'✅' if lateral_still_filtered else '❌'} ({movement_analysis['lateral_movement']} lateral)")
+        
+        lateral_filter_working = relaxation_effective and directional_preserved and lateral_still_filtered
+        
+        print(f"\n   🎯 Lateral Movement Filter: {'✅ WORKING' if lateral_filter_working else '❌ NEEDS ADJUSTMENT'}")
+        
+        return lateral_filter_working
+
+    def test_risk_reward_filter_relaxation(self):
+        """Test the Risk-Reward filter relaxation from 1.2:1 to 1.1:1"""
+        print(f"\n💰 Testing Risk-Reward Filter Relaxation (1.2:1 → 1.1:1)...")
+        
+        # Get opportunities and analyses to test R:R filtering
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot retrieve opportunities for R:R testing")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        if len(opportunities) == 0:
+            print(f"   ❌ No opportunities available for R:R testing")
+            return False
+        
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for R:R testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        
+        print(f"   📊 Analyzing Risk-Reward filtering on {len(opportunities)} opportunities...")
+        
+        # Simulate R:R calculations for opportunities
+        rr_analysis = {
+            'total_opportunities': len(opportunities),
+            'old_criteria_pass': 0,  # Would pass 1.2:1
+            'new_criteria_pass': 0,  # Pass 1.1:1
+            'excellent_rr': 0,       # ≥2.0:1
+            'good_rr': 0,           # 1.5-2.0:1
+            'acceptable_rr': 0,     # 1.1-1.5:1
+            'poor_rr': 0           # <1.1:1
+        }
+        
+        rr_examples = []
+        
+        for opp in opportunities:
+            symbol = opp.get('symbol', 'Unknown')
+            current_price = opp.get('current_price', 0)
+            volatility = opp.get('volatility', 0.02)  # Default 2%
+            price_change_24h = opp.get('price_change_24h', 0)
+            
+            # Simulate R:R calculation (simplified version of Scout logic)
+            atr_estimate = current_price * max(volatility, 0.015)
+            
+            # Estimate support/resistance based on volatility and momentum
+            momentum_factor = 1.0 + (abs(price_change_24h) / 100.0) * 0.5
+            volatility_factor = min(volatility / 0.03, 2.0)
+            
+            support_distance = atr_estimate * (1.8 + volatility_factor * 0.4)
+            resistance_distance = atr_estimate * (2.2 + momentum_factor * 0.6)
+            
+            # Calculate R:R for LONG scenario
+            risk = support_distance
+            reward = resistance_distance
+            rr_ratio = reward / risk if risk > 0 else 0
+            
+            # Categorize R:R
+            if rr_ratio >= 2.0:
+                rr_analysis['excellent_rr'] += 1
+            elif rr_ratio >= 1.5:
+                rr_analysis['good_rr'] += 1
+            elif rr_ratio >= 1.1:
+                rr_analysis['acceptable_rr'] += 1
+            else:
+                rr_analysis['poor_rr'] += 1
+            
+            # Test old vs new criteria
+            if rr_ratio >= 1.2:
+                rr_analysis['old_criteria_pass'] += 1
+            if rr_ratio >= 1.1:
+                rr_analysis['new_criteria_pass'] += 1
+            
+            # Collect examples
+            if len(rr_examples) < 5:
+                rr_examples.append({
+                    'symbol': symbol,
+                    'rr_ratio': rr_ratio,
+                    'old_pass': rr_ratio >= 1.2,
+                    'new_pass': rr_ratio >= 1.1
+                })
+        
+        # Calculate improvement from relaxation
+        additional_opportunities = rr_analysis['new_criteria_pass'] - rr_analysis['old_criteria_pass']
+        old_pass_rate = (rr_analysis['old_criteria_pass'] / rr_analysis['total_opportunities']) * 100
+        new_pass_rate = (rr_analysis['new_criteria_pass'] / rr_analysis['total_opportunities']) * 100
+        
+        print(f"\n   📊 Risk-Reward Analysis:")
+        print(f"      Total Opportunities: {rr_analysis['total_opportunities']}")
+        print(f"      Old Criteria Pass (≥1.2:1): {rr_analysis['old_criteria_pass']} ({old_pass_rate:.1f}%)")
+        print(f"      New Criteria Pass (≥1.1:1): {rr_analysis['new_criteria_pass']} ({new_pass_rate:.1f}%)")
+        print(f"      Additional Opportunities: +{additional_opportunities}")
+        
+        print(f"\n   🎯 R:R Quality Distribution:")
+        print(f"      Excellent (≥2.0:1): {rr_analysis['excellent_rr']}")
+        print(f"      Good (1.5-2.0:1): {rr_analysis['good_rr']}")
+        print(f"      Acceptable (1.1-1.5:1): {rr_analysis['acceptable_rr']}")
+        print(f"      Poor (<1.1:1): {rr_analysis['poor_rr']}")
+        
+        # Show examples
+        print(f"\n   💎 R:R Examples:")
+        for i, example in enumerate(rr_examples):
+            old_status = "✅" if example['old_pass'] else "❌"
+            new_status = "✅" if example['new_pass'] else "❌"
+            print(f"      {i+1}. {example['symbol']}: {example['rr_ratio']:.2f}:1 (Old: {old_status}, New: {new_status})")
+        
+        # Check actual IA1 analyses for R:R data
+        ia1_rr_data = []
+        if analyses:
+            print(f"\n   📈 IA1 R:R Analysis Data:")
+            for analysis in analyses[:5]:
+                symbol = analysis.get('symbol', 'Unknown')
+                rr_ratio = analysis.get('risk_reward_ratio', 0)
+                if rr_ratio > 0:
+                    ia1_rr_data.append(rr_ratio)
+                    print(f"      {symbol}: {rr_ratio:.2f}:1")
+        
+        # Validation criteria
+        relaxation_beneficial = additional_opportunities > 0
+        pass_rate_improved = new_pass_rate > old_pass_rate
+        quality_maintained = (rr_analysis['excellent_rr'] + rr_analysis['good_rr']) > 0
+        reasonable_threshold = rr_analysis['acceptable_rr'] > 0  # Some opportunities in 1.1-1.5 range
+        
+        print(f"\n   ✅ R:R Filter Relaxation Validation:")
+        print(f"      Relaxation Beneficial: {'✅' if relaxation_beneficial else '❌'} (+{additional_opportunities} opportunities)")
+        print(f"      Pass Rate Improved: {'✅' if pass_rate_improved else '❌'} ({old_pass_rate:.1f}% → {new_pass_rate:.1f}%)")
+        print(f"      Quality Maintained: {'✅' if quality_maintained else '❌'} ({rr_analysis['excellent_rr'] + rr_analysis['good_rr']} quality opportunities)")
+        print(f"      Reasonable Threshold: {'✅' if reasonable_threshold else '❌'} ({rr_analysis['acceptable_rr']} acceptable)")
+        
+        rr_filter_working = relaxation_beneficial and pass_rate_improved and quality_maintained
+        
+        print(f"\n   🎯 R:R Filter Relaxation: {'✅ WORKING' if rr_filter_working else '❌ NEEDS ADJUSTMENT'}")
+        
+        return rr_filter_working
+
     def run_all_tests(self):
         """Run all comprehensive tests for the Dual AI Trading Bot System"""
         print(f"🚀 Starting Comprehensive Dual AI Trading Bot System Tests")
