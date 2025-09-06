@@ -425,7 +425,7 @@ class TrailingStopManager:
                 trailing_stop.current_sl = final_sl
                 trailing_stop.last_tp_crossed = new_tp_crossed
                 trailing_stop.last_tp_price = tp_levels[new_tp_crossed.lower()]
-                trailing_stop.updated_at = datetime.now(timezone.utc)
+                trailing_stop.updated_at = get_paris_time()
                 
                 logger.info(f"🚀 {trailing_stop.symbol} {new_tp_crossed} crossed! Trailing SL: ${old_sl:.6f} → ${final_sl:.6f}")
                 
