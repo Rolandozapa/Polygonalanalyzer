@@ -105,7 +105,7 @@ class TechnicalAnalysis(BaseModel):
     ia1_reasoning: str
     market_sentiment: str = "neutral"
     data_sources: List[str] = []
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
     # NOUVEAUX CHAMPS RISK-REWARD IA1
     risk_reward_ratio: float = 0.0
     entry_price: float = 0.0
