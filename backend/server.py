@@ -4031,7 +4031,7 @@ async def get_market_aggregator_stats():
         return {
             "aggregator_stats": stats,
             "ultra_professional": True,
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
