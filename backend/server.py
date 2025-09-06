@@ -720,10 +720,10 @@ class UltraProfessionalCryptoScout:
                 if ratio >= 1.3:  # Seuil Scout: 1.3:1 minimum
                     pre_filtered_opportunities.append(opp)
                     scout_rr_stats["passed"] += 1
-                    logger.debug(f"✅ SCOUT PASS: {opp.symbol} R:R {ratio:.2f}:1 ({scout_rr['quality']}) - {scout_rr['direction'].upper()}")
+                    logger.info(f"✅ SCOUT PASS: {opp.symbol} R:R {ratio:.2f}:1 ({scout_rr['quality']}) - {scout_rr['direction'].upper()}")
                 else:
                     scout_rr_stats["rejected"] += 1
-                    logger.debug(f"❌ SCOUT REJECT: {opp.symbol} R:R {ratio:.2f}:1 (below 1.3:1 threshold) - {scout_rr['direction'].upper()}")
+                    logger.info(f"❌ SCOUT REJECT: {opp.symbol} R:R {ratio:.2f}:1 (below 1.3:1 threshold) - {scout_rr['direction'].upper()}")
             
             # Limite finale après pré-filtrage
             final_opportunities = pre_filtered_opportunities[:self.max_cryptos_to_analyze]
