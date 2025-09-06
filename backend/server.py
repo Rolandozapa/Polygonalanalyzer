@@ -926,7 +926,7 @@ class UltraProfessionalCryptoScout:
             return False
         
         # Must have decent volume
-        if response.volume_24h < 500_000:  # $500K minimum for momentum
+        if response.volume_24h < 100_000:  # $100K minimum for momentum (ASSOUPLI de $500K)
             return False
         
         # Basic quality filters
