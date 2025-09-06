@@ -980,6 +980,26 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 if detected_pattern.pattern_type.value not in validated_data["patterns_detected"]:
                     validated_data["patterns_detected"].insert(0, detected_pattern.pattern_type.value)
             
+            # NOUVEAU: CALCUL RISK-REWARD POUR IA1 
+            risk_reward_analysis = self._calculate_ia1_risk_reward(
+                opportunity, 
+                historical_data, 
+                validated_data["support_levels"], 
+                validated_data["resistance_levels"],
+                detected_pattern
+            )
+            
+            # Ajouter les données Risk-Reward à l'analyse
+            validated_data["risk_reward_ratio"] = risk_reward_analysis["ratio"]
+            validated_data["entry_price"] = risk_reward_analysis["entry_price"]
+            validated_data["stop_loss_price"] = risk_reward_analysis["stop_loss"]
+            validated_data["take_profit_price"] = risk_reward_analysis["take_profit"]
+            validated_data["risk_amount"] = risk_reward_analysis["risk_amount"]
+            validated_data["reward_amount"] = risk_reward_analysis["reward_amount"]
+            validated_data["rr_reasoning"] = risk_reward_analysis["reasoning"]
+            
+            logger.info(f"📊 {opportunity.symbol} R:R Analysis: {risk_reward_analysis['ratio']:.2f}:1 (Risk: ${risk_reward_analysis['risk_amount']:.4f}, Reward: ${risk_reward_analysis['reward_amount']:.4f})")
+            
             return TechnicalAnalysis(
                 symbol=opportunity.symbol,
                 **validated_data
