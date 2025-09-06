@@ -567,7 +567,7 @@ class UltraProfessionalCryptoScout:
     def __init__(self):
         self.market_aggregator = advanced_market_aggregator
         self.trending_updater = trending_auto_updater
-        self.max_cryptos_to_analyze = 15  # Réduit mais focus sur trending
+        self.max_cryptos_to_analyze = 30  # Augmenté pour plus d'opportunités
         self.min_market_cap = 1_000_000    # $1M minimum (plus bas pour trending coins)
         self.min_volume_24h = 100_000      # $100K minimum (plus accessible)
         self.require_multiple_sources = True
