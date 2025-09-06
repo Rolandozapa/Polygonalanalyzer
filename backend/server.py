@@ -1014,7 +1014,7 @@ class UltraProfessionalCryptoScout:
             return False
         
         # Volume filter
-        if response.volume_24h < 50_000:  # $50K minimum for trending
+        if response.volume_24h < 25_000:  # $25K minimum for trending (ASSOUPLI de $50K)
             return False
         
         # Data confidence filter
