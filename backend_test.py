@@ -7587,12 +7587,15 @@ if __name__ == "__main__":
         elif test_type == "api_economy":
             # Run API economy optimization tests
             asyncio.run(tester.run_api_economy_optimization_tests())
+        elif test_type == "scout_4h_rr":
+            # Run Scout 4h + Risk-Reward 2:1 tests
+            asyncio.run(tester.run_scout_4h_rr_tests())
         else:
             print(f"Unknown test type: {test_type}")
-            print(f"Available types: bingx_live, enhanced_leverage, ia1, ia2, ia2_enhanced, ia2_confidence, ia2_robust, cache_clear, debug, fixes, comprehensive, api_economy")
+            print(f"Available types: bingx_live, enhanced_leverage, ia1, ia2, ia2_enhanced, ia2_confidence, ia2_robust, cache_clear, debug, fixes, comprehensive, api_economy, scout_4h_rr")
     else:
-        # Run BingX Live Trading API Connection tests by default
-        tester.run_bingx_live_trading_tests()
+        # Run Scout 4h + Risk-Reward 2:1 tests by default
+        asyncio.run(tester.run_scout_4h_rr_tests())
     def test_enhanced_dynamic_leverage_system(self):
         """Test Enhanced Dynamic Leverage & 5-Level TP System Implementation"""
         print(f"\n🎯 Testing Enhanced Dynamic Leverage & 5-Level TP System...")
