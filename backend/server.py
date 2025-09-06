@@ -1065,9 +1065,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # ÉTAPE 4: NOUVEAU FILTRE - Détection mouvements latéraux (économie API optimisée)
             lateral_movement = self._detect_lateral_movement(historical_data, opportunity.symbol)
             
+            # TEST: Désactiver temporairement le filtre latéral pour diagnostiquer le taux de passage
             if lateral_movement["is_lateral"]:
-                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - Mouvement latéral détecté: {lateral_movement['reason']}")
-                return None  # Économie API - pas d'intérêt trading sur mouvements latéraux
+                logger.info(f"⚠️ MOUVEMENT LATÉRAL DÉTECTÉ: {opportunity.symbol} - {lateral_movement['reason']} (MAIS ON CONTINUE POUR TEST)")
+                # return None  # TEMPORAIREMENT DÉSACTIVÉ POUR TEST
+            else:
+                logger.info(f"✅ MOUVEMENT DIRECTIONNEL: {opportunity.symbol} - {lateral_movement['movement_type']}")
             
             # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé (seulement si tendance/patterns)
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
