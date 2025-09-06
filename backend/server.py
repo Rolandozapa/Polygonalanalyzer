@@ -4386,7 +4386,7 @@ async def update_trading_safety_config(config: Dict[str, Any]):
             "max_position_size": max_position,
             "max_leverage": max_leverage,
             "risk_per_trade_percent": risk_percent,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": get_paris_time().isoformat(),
             "updated_by": "api",
             "status": "updated"
         }
