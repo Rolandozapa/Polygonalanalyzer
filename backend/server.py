@@ -4052,7 +4052,7 @@ class UltraProfessionalTradingOrchestrator:
                         if isinstance(decision, TradingDecision) and decision.signal != "HOLD":
                             # NOUVEAU: Vérification de déduplication IA2 avant stockage (cohérence 4h)
                             symbol = decision.symbol
-                            recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)  # Cohérent avec Scout et IA1
+                            recent_cutoff = get_paris_time() - timedelta(hours=4)  # Cohérent avec Scout et IA1
                             
                             existing_recent_decision = await db.trading_decisions.find_one({
                                 "symbol": symbol,
