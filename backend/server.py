@@ -4164,7 +4164,7 @@ async def toggle_live_trading(enabled: bool):
         return {
             "live_trading_enabled": enabled,
             "message": f"Live trading {'enabled' if enabled else 'disabled'}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
