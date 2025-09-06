@@ -102,7 +102,29 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "IA1 Deduplication Fix - Fixed timezone inconsistency and added deduplication in /api/analyses endpoint to prevent same crypto being analyzed < 4h apart"
+## user_problem_statement: "il y a toujours des doublons a moins de 4h decart dans les rapport d analyse de IA1 - FIX COMPLETED"
+
+## backend:
+  - task: "Fix IA1 Deduplication Logic - Timezone Inconsistency and Display Issue"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "user"
+        - comment: "User reported: 'il y a toujours des doublons a moins de 4h decart dans les rapport d analyse de IA1' - IA1 analyses still showing duplicates within 4h"
+        - working: "NA"
+        - agent: "main"
+        - comment: "PROBLEM IDENTIFIED: Timezone inconsistency in IA1 deduplication logic - deduplication used datetime.now(timezone.utc) but documents stored with get_paris_time(). Also /api/analyses endpoint was returning all analyses without deduplication filtering, showing historical duplicates in UI."
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: (1) Fixed timezone inconsistency - changed all deduplication cutoff calculations from datetime.now(timezone.utc) to get_paris_time() for consistency (lines 3906, 3988, 4055). (2) Added deduplication logic to /api/analyses endpoint to filter out duplicates and show only one analysis per symbol within 4h window."
+        - working: true
+        - agent: "testing"
+        - comment: "✅ IA1 DEDUPLICATION FIX VALIDATED - COMPLETE SUCCESS: (1) ✅ No duplicates in /api/analyses endpoint (0/8 analyses), (2) ✅ 100% Paris timezone consistency across all timestamps, (3) ✅ Live deduplication working - system respects 4-hour window during operation, (4) ✅ Pipeline integrity maintained - IA1 shows 0 duplicates (8 analyses, 8 unique symbols) while maintaining proper Scout→IA1→IA2 flow. CONCLUSION: The IA1 deduplication fix is working perfectly - timezone inconsistency resolved and display issue fixed."
 
 ## backend:
   - task: "Test IA1 Deduplication Fix"
