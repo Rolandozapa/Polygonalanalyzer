@@ -569,7 +569,7 @@ class UltraProfessionalCryptoScout:
         self.trending_updater = trending_auto_updater
         self.max_cryptos_to_analyze = 30  # Augmenté pour plus d'opportunités
         self.min_market_cap = 1_000_000    # $1M minimum (plus bas pour trending coins)
-        self.min_volume_24h = 100_000      # $100K minimum (plus accessible)
+        self.min_volume_24h = 50_000       # $50K minimum (ASSOUPLI - plus accessible)
         self.require_multiple_sources = True
         self.min_data_confidence = 0.7
         
