@@ -3948,9 +3948,14 @@ async def get_analyses():
                 # Remove MongoDB _id
                 analysis.pop('_id', None)
                 
-                # Fix timestamp issue (seul problème JSON identifié)
+                # Fix timestamp issue - Convert to Paris time format
                 if 'timestamp' in analysis and isinstance(analysis['timestamp'], datetime):
-                    analysis['timestamp'] = analysis['timestamp'].isoformat()
+                    # Convert UTC datetime to Paris time format
+                    utc_dt = analysis['timestamp']
+                    if utc_dt.tzinfo is None:
+                        utc_dt = utc_dt.replace(tzinfo=timezone.utc)
+                    paris_dt = utc_dt.astimezone(PARIS_TZ)
+                    analysis['timestamp'] = paris_dt.strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
                 elif 'timestamp' in analysis:
                     analysis['timestamp'] = str(analysis['timestamp'])
                 
