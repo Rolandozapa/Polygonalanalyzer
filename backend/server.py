@@ -617,7 +617,7 @@ class UltraProfessionalCryptoScout:
             logger.info(f"📈 Using fallback top 10 symbols: {self.trending_symbols}")
     
     def _calculate_scout_risk_reward(self, opportunity: MarketOpportunity) -> Dict[str, Any]:
-        """Calcul Risk-Reward approximatif par le Scout pour pré-filtrage économique"""
+        """Calcul Risk-Reward bidirectionnel par le Scout pour pré-filtrage économique ultra-intelligent"""
         try:
             current_price = opportunity.current_price
             volatility = max(opportunity.volatility, 0.015)  # Min 1.5% volatility
@@ -626,47 +626,91 @@ class UltraProfessionalCryptoScout:
             atr_estimate = current_price * volatility
             
             # Supports/Résistances approximatifs basés sur les données disponibles
-            # En l'absence de données historiques complètes, utiliser des approximations
             support_distance = atr_estimate * 2.0  # Support à 2 ATR en dessous
             resistance_distance = atr_estimate * 2.5  # Résistance à 2.5 ATR au dessus
             
-            # Direction basée sur le momentum 24h
-            direction = "long" if opportunity.price_change_24h > 0 else "short"
+            # CALCUL BIDIRECTIONNEL - LONG et SHORT
             
-            if direction == "long":
-                entry_price = current_price
-                stop_loss = current_price - support_distance
-                take_profit = current_price + resistance_distance
-            else:  # short
-                entry_price = current_price
-                stop_loss = current_price + resistance_distance  
-                take_profit = current_price - support_distance
+            # === SCÉNARIO LONG ===
+            long_entry = current_price
+            long_stop_loss = current_price - support_distance
+            long_take_profit = current_price + resistance_distance
             
-            # Calcul R:R approximatif
-            risk = abs(entry_price - stop_loss)
-            reward = abs(take_profit - entry_price)
-            ratio = reward / risk if risk > 0 else 0.0
+            long_risk = abs(long_entry - long_stop_loss)
+            long_reward = abs(long_take_profit - long_entry)
+            long_ratio = long_reward / long_risk if long_risk > 0 else 0.0
+            
+            # === SCÉNARIO SHORT ===
+            short_entry = current_price
+            short_stop_loss = current_price + resistance_distance  
+            short_take_profit = current_price - support_distance
+            
+            short_risk = abs(short_stop_loss - short_entry)
+            short_reward = abs(short_entry - short_take_profit)
+            short_ratio = short_reward / short_risk if short_risk > 0 else 0.0
+            
+            # === LOGIQUE DE FILTRE COMPOSITE ===
+            best_ratio = max(long_ratio, short_ratio)
+            average_ratio = (long_ratio + short_ratio) / 2
+            
+            # Direction préférée basée sur le meilleur R:R
+            preferred_direction = "long" if long_ratio > short_ratio else "short"
+            
+            # Qualité basée sur le meilleur ratio
+            if best_ratio >= 2.0:
+                quality = "excellent"
+            elif best_ratio >= 1.5:
+                quality = "good"  
+            elif best_ratio >= 1.3:
+                quality = "acceptable"
+            else:
+                quality = "poor"
             
             return {
-                "ratio": ratio,
-                "entry_price": entry_price,
-                "stop_loss": stop_loss,
-                "take_profit": take_profit,
-                "direction": direction,
-                "quality": "excellent" if ratio >= 2.0 else "good" if ratio >= 1.5 else "poor",
-                "calculation_method": "scout_approximation"
+                # Ratios bidirectionnels
+                "long_ratio": long_ratio,
+                "short_ratio": short_ratio,
+                "best_ratio": best_ratio,
+                "average_ratio": average_ratio,
+                
+                # Détails LONG
+                "long_entry": long_entry,
+                "long_stop_loss": long_stop_loss,
+                "long_take_profit": long_take_profit,
+                
+                # Détails SHORT  
+                "short_entry": short_entry,
+                "short_stop_loss": short_stop_loss,
+                "short_take_profit": short_take_profit,
+                
+                # Méta-données
+                "preferred_direction": preferred_direction,
+                "quality": quality,
+                "calculation_method": "scout_bidirectional",
+                
+                # Pour compatibilité avec l'ancien code
+                "ratio": best_ratio,  # Utilise le meilleur ratio
+                "direction": preferred_direction
             }
             
         except Exception as e:
-            logger.debug(f"Scout R:R calculation error for {opportunity.symbol}: {e}")
+            logger.debug(f"Scout bidirectional R:R calculation error for {opportunity.symbol}: {e}")
             return {
-                "ratio": 0.0,
-                "entry_price": opportunity.current_price,
-                "stop_loss": opportunity.current_price,
-                "take_profit": opportunity.current_price,
-                "direction": "unknown",
+                "long_ratio": 0.0,
+                "short_ratio": 0.0,
+                "best_ratio": 0.0,
+                "average_ratio": 0.0,
+                "long_entry": opportunity.current_price,
+                "long_stop_loss": opportunity.current_price,
+                "long_take_profit": opportunity.current_price,
+                "short_entry": opportunity.current_price,
+                "short_stop_loss": opportunity.current_price,
+                "short_take_profit": opportunity.current_price,
+                "preferred_direction": "unknown",
                 "quality": "error",
-                "calculation_method": "scout_error"
+                "calculation_method": "scout_error",
+                "ratio": 0.0,
+                "direction": "unknown"
             }
 
     async def scan_opportunities(self) -> List[MarketOpportunity]:
