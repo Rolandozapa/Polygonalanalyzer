@@ -169,7 +169,7 @@ class AIConversation(BaseModel):
     ia1_message: str
     ia2_response: str
     conversation_type: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 class TradingPerformance(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
