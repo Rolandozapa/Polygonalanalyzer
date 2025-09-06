@@ -4169,7 +4169,7 @@ async def cancel_trailing_stop(position_id: str):
         if position_id in trailing_stop_manager.active_trailing_stops:
             ts = trailing_stop_manager.active_trailing_stops[position_id]
             ts.status = "CANCELLED"
-            ts.updated_at = datetime.now(timezone.utc)
+            ts.updated_at = get_paris_time()
             
             # Remove from active tracking
             del trailing_stop_manager.active_trailing_stops[position_id]
