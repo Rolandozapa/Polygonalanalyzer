@@ -1462,8 +1462,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 lateral_signals += 1
                 lateral_reasons.append(f"Tendance faible: {trend_percentage:+.1f}%")
             
-            # Critère 2: Volatilité faible (< 2% quotidien)
-            if volatility < 2.0:
+            # Critère 2: Volatilité faible (< 1.5% quotidien) - ASSOUPLI
+            if volatility < 1.5:
                 lateral_signals += 1
                 lateral_reasons.append(f"Volatilité faible: {volatility:.1f}%")
             
