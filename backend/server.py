@@ -715,9 +715,14 @@ class UltraProfessionalCryptoScout:
                 scout_rr = self._calculate_scout_risk_reward(opp)
                 ratio = scout_rr["ratio"]
                 
-                # Seuil permissif pour ne pas éliminer de bonnes opportunités
-                # IA1 fera le calcul précis avec seuil 2:1 après
-                if ratio >= 1.3:  # Seuil Scout: 1.3:1 minimum
+                # Seuil adaptatif selon la qualité du marché
+                # Si aucune opportunité ne passe, réduire légèrement le seuil
+                scout_threshold = 1.3  # Seuil de base
+                if scout_rr_stats["total"] > 10 and scout_rr_stats["passed"] == 0:
+                    scout_threshold = 1.2  # Seuil réduit si marché difficile
+                    logger.info(f"🔧 SCOUT ADAPTIVE: Lowering threshold to {scout_threshold}:1 (difficult market conditions)")
+                
+                if ratio >= scout_threshold:  # Seuil Scout adaptatif
                     pre_filtered_opportunities.append(opp)
                     scout_rr_stats["passed"] += 1
                     logger.info(f"✅ SCOUT PASS: {opp.symbol} R:R {ratio:.2f}:1 ({scout_rr['quality']}) - {scout_rr['direction'].upper()}")
