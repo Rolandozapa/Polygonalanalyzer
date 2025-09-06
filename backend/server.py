@@ -3901,6 +3901,7 @@ class UltraProfessionalTradingOrchestrator:
             # Execute analyses in parallel
             analyses = await asyncio.gather(*analysis_tasks, return_exceptions=True)
             
+            # Process opportunities with IA1 (with deduplication tracking)
             valid_analyses = []
             filtered_count = 0
             rejected_no_data_count = 0
