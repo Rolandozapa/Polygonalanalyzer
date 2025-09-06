@@ -1457,8 +1457,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             lateral_signals = 0
             lateral_reasons = []
             
-            # Critère 1: Tendance faible (< 3% sur 20 jours)
-            if abs(trend_percentage) < 3.0:
+            # Critère 1: Tendance faible (< 4% sur 20 jours) - ASSOUPLI
+            if abs(trend_percentage) < 4.0:
                 lateral_signals += 1
                 lateral_reasons.append(f"Tendance faible: {trend_percentage:+.1f}%")
             
