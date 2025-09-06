@@ -791,14 +791,14 @@ class UltraProfessionalCryptoScout:
             ia1_savings = scout_rr_stats["rejected"]
             savings_percentage = (ia1_savings / max(scout_rr_stats["total"], 1)) * 100
             
-            logger.info(f"🎯 SCOUT R:R PRE-FILTER RESULTS:")
+            logger.info(f"🎯 SCOUT BIDIRECTIONAL R:R PRE-FILTER RESULTS:")
             logger.info(f"   📊 Total analyzed: {scout_rr_stats['total']}")
-            logger.info(f"   ✅ Passed (≥1.3:1): {scout_rr_stats['passed']}")
-            logger.info(f"   ❌ Rejected (<1.3:1): {scout_rr_stats['rejected']}")
+            logger.info(f"   ✅ Passed (best R:R ≥1.3:1): {scout_rr_stats['passed']}")
+            logger.info(f"   ❌ Rejected (best R:R <1.3:1): {scout_rr_stats['rejected']}")
             logger.info(f"   💰 IA1 API calls saved: {ia1_savings} ({savings_percentage:.1f}%)")
             logger.info(f"   🚀 Final opportunities: {len(final_opportunities)}")
             
-            logger.info(f"TREND-FOCUSED scan + SCOUT R:R PRE-FILTER complete: {len(final_opportunities)} high-quality opportunities selected")
+            logger.info(f"TREND-FOCUSED scan + SCOUT BIDIRECTIONAL R:R PRE-FILTER complete: {len(final_opportunities)} high-quality opportunities selected")
             
             return final_opportunities
             
