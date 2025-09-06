@@ -3855,21 +3855,6 @@ async def root():
         ]
     }
 
-@api_router.post("/start-trading")
-async def start_trading():
-    """Start the ultra professional trading system"""
-    if orchestrator.is_running:
-        return {"message": "Ultra professional trading system already running", "version": "3.0.0"}
-    
-    orchestrator.is_running = True
-    asyncio.create_task(ultra_professional_trading_loop())
-    return {"message": "Ultra professional trading system started with multi-source data aggregation", "version": "3.0.0"}
-
-@api_router.post("/stop-trading")  
-async def stop_trading():
-    """Stop the ultra professional trading system"""
-    orchestrator.is_running = False
-    return {"message": "Ultra professional trading system stopped", "version": "3.0.0"}
 
 @api_router.get("/opportunities")
 async def get_opportunities():
