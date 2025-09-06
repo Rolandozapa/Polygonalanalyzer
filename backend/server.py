@@ -750,24 +750,39 @@ class UltraProfessionalCryptoScout:
             pre_filtered_opportunities = []
             scout_rr_stats = {"total": 0, "passed": 0, "rejected": 0}
             
-            logger.info(f"🔍 SCOUT R:R PRE-FILTER: Analyzing {len(sorted_opportunities)} opportunities...")
+            logger.info(f"🔍 SCOUT BIDIRECTIONAL R:R PRE-FILTER: Analyzing {len(sorted_opportunities)} opportunities...")
             
             for opp in sorted_opportunities:
                 scout_rr_stats["total"] += 1
                 
-                # Calcul R:R approximatif par le Scout
+                # Calcul R:R bidirectionnel par le Scout
                 scout_rr = self._calculate_scout_risk_reward(opp)
-                ratio = scout_rr["ratio"]
+                long_ratio = scout_rr["long_ratio"]
+                short_ratio = scout_rr["short_ratio"] 
+                best_ratio = scout_rr["best_ratio"]
+                preferred_direction = scout_rr["preferred_direction"]
                 
-                # Seuil permissif pour ne pas éliminer de bonnes opportunités
-                # IA1 fera le calcul précis avec seuil 2:1 après
-                if ratio >= 1.2:  # Seuil Scout réduit: 1.2:1 minimum (plus permissif)
+                # === LOGIQUES DE FILTRE INTELLIGENTES ===
+                
+                # Option 1: Au moins un R:R ≥ 1.3 (Recommandé - équilibré)
+                filter_passed = best_ratio >= 1.3
+                filter_reason = f"Best R:R {best_ratio:.2f}:1 ≥ 1.3:1"
+                
+                # Option 2: Moyenne des deux R:R ≥ 1.2 (Alternative plus permissive)
+                # filter_passed = scout_rr["average_ratio"] >= 1.2
+                # filter_reason = f"Avg R:R {scout_rr['average_ratio']:.2f}:1 ≥ 1.2:1"
+                
+                # Option 3: Les deux R:R ≥ 1.1 (Alternative très stricte pour opportunités bidirectionnelles)
+                # filter_passed = long_ratio >= 1.1 and short_ratio >= 1.1
+                # filter_reason = f"Both R:R (L:{long_ratio:.2f}:1, S:{short_ratio:.2f}:1) ≥ 1.1:1"
+                
+                if filter_passed:
                     pre_filtered_opportunities.append(opp)
                     scout_rr_stats["passed"] += 1
-                    logger.info(f"✅ SCOUT PASS: {opp.symbol} R:R {ratio:.2f}:1 ({scout_rr['quality']}) - {scout_rr['direction'].upper()}")
+                    logger.info(f"✅ SCOUT PASS: {opp.symbol} - LONG:{long_ratio:.2f}:1, SHORT:{short_ratio:.2f}:1 → Best:{best_ratio:.2f}:1 ({preferred_direction.upper()} preferred)")
                 else:
                     scout_rr_stats["rejected"] += 1
-                    logger.info(f"❌ SCOUT REJECT: {opp.symbol} R:R {ratio:.2f}:1 (below 1.2:1 threshold) - {scout_rr['direction'].upper()}")
+                    logger.info(f"❌ SCOUT REJECT: {opp.symbol} - LONG:{long_ratio:.2f}:1, SHORT:{short_ratio:.2f}:1 → Best:{best_ratio:.2f}:1 ({filter_reason})")
             
             # Limite finale après pré-filtrage
             final_opportunities = pre_filtered_opportunities[:self.max_cryptos_to_analyze]
