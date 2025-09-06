@@ -1063,16 +1063,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"✅ MULTI-SOURCE VALIDÉ: {opportunity.symbol} - {multi_source_quality['sources_info']}")
             
             # ÉTAPE 4: NOUVEAU FILTRE - Détection mouvements latéraux (économie API optimisée)
+            # ANALYSE MOUVEMENT : Information seulement (sans filtrage bloquant)
             lateral_movement = self._detect_lateral_movement(historical_data, opportunity.symbol)
+            logger.info(f"📊 ANALYSE MOUVEMENT: {opportunity.symbol} - {lateral_movement['movement_type']} ({lateral_movement['reason']})")
             
-            # TEST: Désactiver temporairement le filtre latéral pour diagnostiquer le taux de passage
-            if lateral_movement["is_lateral"]:
-                logger.info(f"⚠️ MOUVEMENT LATÉRAL DÉTECTÉ: {opportunity.symbol} - {lateral_movement['reason']} (MAIS ON CONTINUE POUR TEST)")
-                # return None  # TEMPORAIREMENT DÉSACTIVÉ POUR TEST
-            else:
-                logger.info(f"✅ MOUVEMENT DIRECTIONNEL: {opportunity.symbol} - {lateral_movement['movement_type']}")
-            
-            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé (seulement si tendance/patterns)
+            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé + Overrides intelligents
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
             should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
             
