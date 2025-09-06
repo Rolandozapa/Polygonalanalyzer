@@ -3948,10 +3948,30 @@ class UltraProfessionalTradingOrchestrator:
             
             logger.info(f"🚀 STARTING IA2 SECTION: Processing {len(valid_analyses)} validated analyses")
             
-            # Always store opportunities first (regardless of IA2 decisions)
+            # Store opportunities with deduplication (éviter les doublons IA2)
             opportunities_stored = 0
+            opportunities_deduplicated = 0
+            
             for opportunity, analysis in valid_analyses:
                 try:
+                    # NOUVEAU: Vérification de déduplication avant stockage
+                    symbol = opportunity.symbol
+                    current_time = get_paris_time()
+                    
+                    # Chercher des opportunités récentes (dernières 30 minutes) pour éviter les doublons
+                    recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+                    
+                    existing_recent = await db.market_opportunities.find_one({
+                        "symbol": symbol,
+                        "timestamp": {"$gte": recent_cutoff}
+                    })
+                    
+                    if existing_recent:
+                        opportunities_deduplicated += 1
+                        logger.debug(f"🔄 DEDUPLICATED: {symbol} - Recent opportunity exists (avoiding IA2 duplicate processing)")
+                        continue
+                    
+                    # Stocker uniquement si pas de doublon récent
                     await db.market_opportunities.insert_one(opportunity.dict())
                     opportunities_stored += 1
                     logger.debug(f"📁 Stored opportunity: {opportunity.symbol}")
