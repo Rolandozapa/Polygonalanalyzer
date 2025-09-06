@@ -4230,7 +4230,7 @@ async def websocket_trailing_stops(websocket: WebSocket):
                     "current_sl": ts.current_sl,
                     "last_tp_crossed": ts.last_tp_crossed,
                     "status": ts.status,
-                    "updated_at": ts.updated_at.isoformat()
+                    "updated_at": utc_to_paris(ts.updated_at).strftime('%Y-%m-%d %H:%M:%S') + " (Paris)"
                 })
             
             await websocket.send_json({
