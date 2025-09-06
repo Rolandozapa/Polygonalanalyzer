@@ -4151,7 +4151,7 @@ async def close_position(symbol: str):
         return {
             "success": result,
             "message": f"Position closure {'successful' if result else 'failed'} for {symbol}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
