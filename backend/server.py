@@ -1075,11 +1075,27 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             if not should_analyze:
                 logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs (mais données OK)")
-                # Note: On pourrait quand même envoyer à IA1 si les données sont très bonnes ET mouvement directionnel
-                if multi_source_quality["confidence_score"] >= 0.9 and not lateral_movement["is_lateral"]:  # Très haute qualité + tendance
-                    logger.info(f"🎯 OVERRIDE: {opportunity.symbol} - Données excellentes + tendance directionnelle, envoi à IA1")
+                
+                # ASSOUPLISSEMENT: Plusieurs overrides pour récupérer opportunités intéressantes
+                
+                # Override 1: Données excellentes + tendance directionnelle
+                if multi_source_quality["confidence_score"] >= 0.9 and not lateral_movement["is_lateral"]:
+                    logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle, envoi à IA1")
+                
+                # Override 2: Volume et volatilité élevés (opportunités comme KTAUSDT)
+                elif opportunity.volume_24h >= 10_000_000 and abs(opportunity.price_change_24h) >= 10.0:
+                    logger.info(f"🎯 OVERRIDE 2: {opportunity.symbol} - Volume élevé (${opportunity.volume_24h:,.0f}) + Fort mouvement ({opportunity.price_change_24h:+.1f}%), envoi à IA1")
+                
+                # Override 3: Données correctes + mouvement modéré mais significatif
+                elif multi_source_quality["confidence_score"] >= 0.8 and abs(opportunity.price_change_24h) >= 7.0:
+                    logger.info(f"🎯 OVERRIDE 3: {opportunity.symbol} - Données correctes + mouvement significatif ({opportunity.price_change_24h:+.1f}%), envoi à IA1")
+                
+                # Override 4: Volatilité importante même sans pattern
+                elif opportunity.volatility >= 0.08 and multi_source_quality["confidence_score"] >= 0.7:  # 8% volatilité
+                    logger.info(f"🎯 OVERRIDE 4: {opportunity.symbol} - Forte volatilité ({opportunity.volatility*100:.1f}%) + données correctes, envoi à IA1")
+                
                 else:
-                    return None
+                    return None  # Vraiment aucun intérêt détecté
             
             if detected_pattern:
                 logger.info(f"✅ PATTERN DÉTECTÉ: {opportunity.symbol} - {detected_pattern.pattern_type.value} (force: {detected_pattern.strength:.2f})")
