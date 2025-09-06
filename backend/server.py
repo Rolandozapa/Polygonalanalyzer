@@ -3920,7 +3920,7 @@ class UltraProfessionalTradingOrchestrator:
                     
                     # NOUVEAU: Vérification de déduplication IA1 avant stockage (éviter analyses multiples)
                     symbol = analysis.symbol
-                    recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=15)  # Fenêtre de déduplication IA1
+                    recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)  # Cohérent avec le cycle Scout de 4h
                     
                     existing_recent_analysis = await db.technical_analyses.find_one({
                         "symbol": symbol,
