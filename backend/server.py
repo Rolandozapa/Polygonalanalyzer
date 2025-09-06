@@ -1132,7 +1132,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(historical_data['Close'])
             
             # Debug logging pour vérifier les vraies valeurs calculées
-            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}, Mouvement: {lateral_movement['movement_type']}")
+            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}")
             
             # Calculate Bollinger Band position
             current_price = opportunity.current_price
