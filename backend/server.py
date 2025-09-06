@@ -3985,7 +3985,7 @@ class UltraProfessionalTradingOrchestrator:
                     current_time = get_paris_time()
                     
                     # Chercher des opportunités récentes (dernier cycle 4h) pour éviter les doublons
-                    recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)
+                    recent_cutoff = get_paris_time() - timedelta(hours=4)
                     
                     existing_recent = await db.market_opportunities.find_one({
                         "symbol": symbol,
