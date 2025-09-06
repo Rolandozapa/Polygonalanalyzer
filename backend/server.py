@@ -89,7 +89,7 @@ class MarketOpportunity(BaseModel):
     market_cap_rank: Optional[int] = None
     data_sources: List[str] = []
     data_confidence: float = 1.0
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 class TechnicalAnalysis(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
