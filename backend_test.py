@@ -7533,8 +7533,8 @@ class DualAITradingBotTester:
         }
 
     async def run_all_tests(self):
-        """Run comprehensive tests for API Economy Optimization"""
-        return await self.run_api_economy_optimization_tests()
+        """Run comprehensive tests including Scout 4h + Risk-Reward 2:1"""
+        return await self.run_scout_4h_rr_tests()
 
 async def main():
     """Main test function"""
