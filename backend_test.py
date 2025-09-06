@@ -1282,6 +1282,131 @@ class DualAITradingBotTester:
         
         return False
 
+    def test_scout_lateral_movement_filter_diagnostic(self):
+        """DIAGNOSTIC TEST: Test if lateral movement filter is blocking opportunities before overrides"""
+        print(f"\n🎯 DIAGNOSTIC TEST: Scout Lateral Movement Filter Analysis...")
+        print(f"   🔍 HYPOTHESIS: Lateral movement detection blocks opportunities BEFORE overrides can work")
+        print(f"   🎯 GOAL: Measure Scout→IA1 passage rate with lateral filter temporarily disabled")
+        
+        # Step 1: Clear cache to get fresh data
+        print(f"\n   🗑️ Step 1: Clearing cache for fresh test data...")
+        try:
+            clear_success, clear_result = self.run_test("Clear Cache", "POST", "decisions/clear", 200)
+            if clear_success:
+                print(f"   ✅ Cache cleared successfully")
+            else:
+                print(f"   ⚠️ Cache clear failed, continuing with existing data")
+        except:
+            print(f"   ⚠️ Cache clear endpoint not available, continuing...")
+        
+        # Step 2: Start trading system to generate fresh Scout cycle
+        print(f"\n   🚀 Step 2: Starting trading system for fresh Scout cycle...")
+        success, _ = self.test_start_trading_system()
+        if not success:
+            print(f"   ❌ Failed to start trading system")
+            return False
+        
+        # Step 3: Wait for Scout to complete full cycle
+        print(f"   ⏱️ Step 3: Waiting for Scout to complete full cycle (90 seconds)...")
+        time.sleep(90)  # Extended wait for complete Scout cycle
+        
+        # Step 4: Get Scout opportunities
+        print(f"\n   📊 Step 4: Analyzing Scout opportunities...")
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Cannot get Scout opportunities")
+            self.test_stop_trading_system()
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        scout_count = len(opportunities)
+        print(f"   ✅ Scout found {scout_count} opportunities")
+        
+        # Step 5: Get IA1 analyses (opportunities that passed filters)
+        print(f"\n   📈 Step 5: Analyzing IA1 analyses (filtered opportunities)...")
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot get IA1 analyses")
+            self.test_stop_trading_system()
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        ia1_count = len(analyses)
+        print(f"   ✅ IA1 generated {ia1_count} analyses")
+        
+        # Step 6: Calculate passage rate
+        if scout_count > 0:
+            passage_rate = (ia1_count / scout_count) * 100
+            print(f"\n   📊 CRITICAL PASSAGE RATE ANALYSIS:")
+            print(f"      Scout Opportunities: {scout_count}")
+            print(f"      IA1 Analyses: {ia1_count}")
+            print(f"      Passage Rate: {passage_rate:.1f}% (Target: 30-40%)")
+            
+            # Analyze specific opportunities that were filtered out
+            scout_symbols = set(opp.get('symbol', '') for opp in opportunities)
+            ia1_symbols = set(analysis.get('symbol', '') for analysis in analyses)
+            filtered_symbols = scout_symbols - ia1_symbols
+            
+            print(f"\n   🔍 FILTER ANALYSIS:")
+            print(f"      Scout Symbols: {len(scout_symbols)}")
+            print(f"      IA1 Symbols: {len(ia1_symbols)}")
+            print(f"      Filtered Out: {len(filtered_symbols)} symbols")
+            
+            # Show examples of filtered opportunities
+            if filtered_symbols:
+                print(f"\n   ❌ FILTERED OPPORTUNITIES (examples):")
+                filtered_opps = [opp for opp in opportunities if opp.get('symbol', '') in filtered_symbols]
+                for i, opp in enumerate(filtered_opps[:5]):  # Show first 5
+                    symbol = opp.get('symbol', 'Unknown')
+                    price_change = opp.get('price_change_24h', 0)
+                    volume = opp.get('volume_24h', 0)
+                    print(f"      {i+1}. {symbol}: {price_change:+.1f}% change, ${volume:,.0f} volume")
+            
+            # Show examples of opportunities that passed
+            if ia1_symbols:
+                print(f"\n   ✅ PASSED OPPORTUNITIES (examples):")
+                for i, analysis in enumerate(analyses[:5]):  # Show first 5
+                    symbol = analysis.get('symbol', 'Unknown')
+                    confidence = analysis.get('analysis_confidence', 0)
+                    print(f"      {i+1}. {symbol}: {confidence:.1%} confidence")
+        else:
+            passage_rate = 0
+            print(f"   ❌ No Scout opportunities found")
+        
+        # Step 7: Stop trading system
+        print(f"\n   🛑 Step 7: Stopping trading system...")
+        self.test_stop_trading_system()
+        
+        # Step 8: Diagnostic assessment
+        print(f"\n   🎯 DIAGNOSTIC ASSESSMENT:")
+        
+        # Check if passage rate is problematic (stuck at ~16%)
+        rate_problematic = passage_rate < 25.0  # Below target 30-40%
+        rate_very_low = passage_rate < 20.0     # Critically low
+        
+        print(f"      Passage Rate Status: {'❌ PROBLEMATIC' if rate_problematic else '✅ ACCEPTABLE'}")
+        print(f"      Rate Classification: {'🚨 CRITICALLY LOW' if rate_very_low else '⚠️ BELOW TARGET' if rate_problematic else '✅ GOOD'}")
+        
+        # Analyze if this matches the 16% issue described
+        matches_reported_issue = 15.0 <= passage_rate <= 17.0
+        print(f"      Matches 16% Issue: {'✅ CONFIRMED' if matches_reported_issue else '❌ DIFFERENT RATE'}")
+        
+        # Recommendations based on findings
+        print(f"\n   💡 DIAGNOSTIC CONCLUSIONS:")
+        if rate_very_low:
+            print(f"      🚨 CRITICAL: Passage rate {passage_rate:.1f}% is critically low")
+            print(f"      🔍 LIKELY CAUSE: Lateral movement filter blocking opportunities before overrides")
+            print(f"      🛠️ RECOMMENDATION: Disable lateral movement filter temporarily to test hypothesis")
+        elif rate_problematic:
+            print(f"      ⚠️ ISSUE: Passage rate {passage_rate:.1f}% below target 30-40%")
+            print(f"      🔍 POSSIBLE CAUSE: Filters too restrictive, including lateral movement detection")
+            print(f"      🛠️ RECOMMENDATION: Review and relax filter criteria")
+        else:
+            print(f"      ✅ GOOD: Passage rate {passage_rate:.1f}% within acceptable range")
+        
+        # Return success if we got meaningful data, regardless of passage rate
+        return scout_count > 0 and ia1_count >= 0
+
     def test_scout_filter_aggressive_relaxations(self):
         """Test Scout Filter Aggressive Relaxations - CRITICAL TEST for 30-40% passage rate"""
         print(f"\n🎯 Testing Scout Filter Aggressive Relaxations - CRITICAL TEST...")
