@@ -4250,6 +4250,77 @@ async def websocket_trailing_stops(websocket: WebSocket):
         logger.error(f"WebSocket error: {e}")
         await websocket.close()
 
+@app.get("/api/system/timing-info")
+async def get_system_timing_info():
+    """Get system timing and cycle information"""
+    try:
+        return {
+            "scout_cycle_interval": "3 minutes (180 seconds)",
+            "scout_cycle_description": "Le scout analyse le marché toutes les 3 minutes",
+            "trailing_stop_monitor": "30 seconds (30 seconds)",
+            "trending_update_interval": "6 heures (21600 seconds)",
+            "websocket_updates": "10 seconds for trailing stops, 30 seconds for general",
+            "error_recovery_wait": "2 minutes (120 seconds)",
+            "current_system_status": {
+                "is_running": orchestrator.is_running,
+                "cycle_count": orchestrator.cycle_count,
+                "monitor_active": orchestrator.trailing_stop_monitor_active,
+                "current_time_paris": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
+            },
+            "cycle_details": {
+                "phase_1": "Scout analyse le marché (scan_opportunities)",
+                "phase_2": "IA1 analyse technique (GPT-4o)",
+                "phase_3": "IA2 décisions de trading (Claude-3-7-Sonnet)",
+                "phase_4": "Création des trailing stops",
+                "phase_5": "Stockage et notifications",
+                "total_cycle_time": "Variable selon le nombre d'opportunités"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting timing info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get timing info: {str(e)}")
+
+@app.get("/api/system/scout-info")
+async def get_scout_info():
+    """Get detailed scout information and statistics"""
+    try:
+        # Get recent opportunities to see scout activity
+        recent_opportunities = await db.market_opportunities.find().sort("timestamp", -1).limit(10).to_list(10)
+        
+        # Calculate time since last scout activity
+        last_opportunity_time = None
+        if recent_opportunities:
+            last_opp = recent_opportunities[0]
+            last_opportunity_time = last_opp.get('timestamp', 'Unknown')
+        
+        return {
+            "scout_configuration": {
+                "max_cryptos_to_analyze": orchestrator.scout.max_cryptos_to_analyze,
+                "min_market_cap": f"${orchestrator.scout.min_market_cap:,}",
+                "min_volume_24h": f"${orchestrator.scout.min_volume_24h:,}", 
+                "min_price_change_threshold": f"{orchestrator.scout.min_price_change_threshold}%",
+                "trending_symbols_count": len(orchestrator.scout.trending_symbols),
+                "focus_trending": orchestrator.scout.focus_trending,
+                "auto_update_trending": orchestrator.scout.auto_update_trending
+            },
+            "scout_timing": {
+                "cycle_interval": "3 minutes",
+                "cycle_interval_seconds": 180,
+                "description": "Le scout fait une analyse complète toutes les 3 minutes",
+                "last_opportunity_found": last_opportunity_time,
+                "opportunities_in_last_cycle": len(recent_opportunities)
+            },
+            "trending_system": {
+                "update_interval": "6 heures",
+                "trending_source": "Readdy.link",
+                "symbols_tracked": orchestrator.scout.trending_symbols[:10],  # First 10 symbols
+                "auto_update_active": orchestrator.scout.auto_update_trending
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting scout info: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get scout info: {str(e)}")
+
 # BingX Live Trading API Endpoints for trailing stops integration
 @app.get("/api/bingx/balance")
 async def get_bingx_account_balance():
