@@ -3903,7 +3903,7 @@ class UltraProfessionalTradingOrchestrator:
             for opportunity in top_opportunities:
                 # NOUVEAU: VÉRIFICATION DÉDUPLICATION AVANT ANALYSE IA1 (économie crédits LLM)
                 symbol = opportunity.symbol
-                recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)
+                recent_cutoff = get_paris_time() - timedelta(hours=4)
                 
                 existing_recent_analysis = await db.technical_analyses.find_one({
                     "symbol": symbol,
