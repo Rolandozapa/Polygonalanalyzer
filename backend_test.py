@@ -2663,6 +2663,342 @@ class DualAITradingBotTester:
             "legacy_minimum_test": legacy_minimum_test
         }
 
+    def test_ia1_deduplication_fix(self):
+        """Test IA1 deduplication fix - main focus of current review request"""
+        print(f"\n🔍 Testing IA1 Deduplication Fix (MAIN FOCUS)...")
+        
+        # Test 1: Check /api/analyses endpoint for duplicates
+        print(f"\n   📊 Test 1: Checking /api/analyses endpoint for duplicates...")
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for deduplication testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for deduplication testing")
+            return False
+        
+        print(f"   📈 Found {len(analyses)} analyses to check for duplicates")
+        
+        # Check for duplicates by symbol within 4 hours
+        from datetime import datetime, timedelta
+        import pytz
+        
+        PARIS_TZ = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(PARIS_TZ)
+        four_hours_ago = now_paris - timedelta(hours=4)
+        
+        symbol_timestamps = {}
+        duplicates_found = []
+        
+        for analysis in analyses:
+            symbol = analysis.get('symbol', 'Unknown')
+            timestamp_str = analysis.get('timestamp', '')
+            
+            try:
+                # Parse timestamp (assuming ISO format)
+                if 'T' in timestamp_str:
+                    timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                    # Convert to Paris timezone
+                    if timestamp.tzinfo is None:
+                        timestamp = timestamp.replace(tzinfo=pytz.UTC)
+                    timestamp_paris = timestamp.astimezone(PARIS_TZ)
+                else:
+                    continue  # Skip if timestamp format is unexpected
+                
+                # Only check recent analyses (within last 4 hours)
+                if timestamp_paris >= four_hours_ago:
+                    if symbol in symbol_timestamps:
+                        # Check if this is a duplicate (same symbol within 4 hours)
+                        existing_timestamp = symbol_timestamps[symbol]
+                        time_diff = abs((timestamp_paris - existing_timestamp).total_seconds())
+                        
+                        if time_diff < 14400:  # 4 hours = 14400 seconds
+                            duplicates_found.append({
+                                'symbol': symbol,
+                                'timestamp1': existing_timestamp,
+                                'timestamp2': timestamp_paris,
+                                'time_diff_minutes': time_diff / 60
+                            })
+                            print(f"   ❌ DUPLICATE FOUND: {symbol} analyzed twice within {time_diff/60:.1f} minutes")
+                        else:
+                            symbol_timestamps[symbol] = timestamp_paris
+                    else:
+                        symbol_timestamps[symbol] = timestamp_paris
+                        
+            except Exception as e:
+                print(f"   ⚠️  Error parsing timestamp for {symbol}: {e}")
+                continue
+        
+        # Test 2: Check timezone consistency (Paris timezone)
+        print(f"\n   🕐 Test 2: Checking timezone consistency (Paris timezone)...")
+        timezone_consistent = True
+        paris_timezone_count = 0
+        
+        for analysis in analyses[:10]:  # Check first 10
+            timestamp_str = analysis.get('timestamp', '')
+            symbol = analysis.get('symbol', 'Unknown')
+            
+            try:
+                if 'T' in timestamp_str:
+                    # Check if timestamp appears to be in Paris timezone format
+                    if '+01:00' in timestamp_str or '+02:00' in timestamp_str:
+                        paris_timezone_count += 1
+                        print(f"   ✅ {symbol}: Paris timezone detected ({timestamp_str})")
+                    else:
+                        print(f"   ⚠️  {symbol}: Non-Paris timezone ({timestamp_str})")
+                        timezone_consistent = False
+            except Exception as e:
+                print(f"   ⚠️  Error checking timezone for {symbol}: {e}")
+        
+        # Test 3: Start system and check for new duplicates
+        print(f"\n   🚀 Test 3: Testing live deduplication during system operation...")
+        
+        # Get initial analysis count
+        initial_count = len(analyses)
+        initial_symbols = set(analysis.get('symbol') for analysis in analyses)
+        
+        # Start trading system
+        start_success, _ = self.test_start_trading_system()
+        if start_success:
+            print(f"   ⏱️  Waiting for new analyses (60 seconds)...")
+            time.sleep(60)
+            
+            # Check for new analyses
+            success, new_analyses_data = self.test_get_analyses()
+            if success:
+                new_analyses = new_analyses_data.get('analyses', [])
+                new_count = len(new_analyses)
+                new_symbols = set(analysis.get('symbol') for analysis in new_analyses)
+                
+                print(f"   📊 After 60s: {new_count} analyses (was {initial_count})")
+                
+                # Check if new analyses created duplicates
+                recent_duplicates = []
+                symbol_recent_count = {}
+                
+                # Count recent analyses per symbol (last 4 hours)
+                for analysis in new_analyses:
+                    symbol = analysis.get('symbol', 'Unknown')
+                    timestamp_str = analysis.get('timestamp', '')
+                    
+                    try:
+                        if 'T' in timestamp_str:
+                            timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                            if timestamp.tzinfo is None:
+                                timestamp = timestamp.replace(tzinfo=pytz.UTC)
+                            timestamp_paris = timestamp.astimezone(PARIS_TZ)
+                            
+                            if timestamp_paris >= four_hours_ago:
+                                symbol_recent_count[symbol] = symbol_recent_count.get(symbol, 0) + 1
+                    except:
+                        continue
+                
+                # Check for symbols with multiple recent analyses
+                for symbol, count in symbol_recent_count.items():
+                    if count > 1:
+                        recent_duplicates.append({'symbol': symbol, 'count': count})
+                        print(f"   ❌ RECENT DUPLICATE: {symbol} has {count} analyses in last 4h")
+            
+            # Stop trading system
+            self.test_stop_trading_system()
+        
+        # Test 4: Validate deduplication logic effectiveness
+        print(f"\n   🎯 Test 4: Deduplication effectiveness validation...")
+        
+        duplicate_rate = len(duplicates_found) / len(symbol_timestamps) if symbol_timestamps else 0
+        no_duplicates = len(duplicates_found) == 0
+        timezone_ok = paris_timezone_count >= len(analyses[:10]) * 0.8  # 80% should have Paris timezone
+        
+        print(f"\n   📊 Deduplication Test Results:")
+        print(f"      Total recent analyses: {len(symbol_timestamps)}")
+        print(f"      Duplicates found: {len(duplicates_found)}")
+        print(f"      Duplicate rate: {duplicate_rate*100:.1f}%")
+        print(f"      Paris timezone consistency: {paris_timezone_count}/{len(analyses[:10])} ({paris_timezone_count/len(analyses[:10])*100:.1f}%)")
+        
+        print(f"\n   ✅ Deduplication Fix Validation:")
+        print(f"      No duplicates in /api/analyses: {'✅' if no_duplicates else '❌'}")
+        print(f"      Paris timezone consistent: {'✅' if timezone_ok else '❌'}")
+        print(f"      System generates unique analyses: {'✅' if len(recent_duplicates) == 0 else '❌'}")
+        
+        deduplication_working = no_duplicates and timezone_ok and len(recent_duplicates) == 0
+        
+        print(f"\n   🎯 IA1 Deduplication Fix: {'✅ SUCCESS' if deduplication_working else '❌ FAILED'}")
+        
+        if not deduplication_working:
+            print(f"   💡 ISSUES FOUND:")
+            if not no_duplicates:
+                print(f"      - {len(duplicates_found)} duplicate analyses found in /api/analyses endpoint")
+            if not timezone_ok:
+                print(f"      - Timezone inconsistency detected (not all using Paris timezone)")
+            if len(recent_duplicates) > 0:
+                print(f"      - {len(recent_duplicates)} symbols generated duplicate analyses during testing")
+        else:
+            print(f"   💡 SUCCESS: IA1 deduplication fix is working correctly")
+            print(f"      - No duplicates in /api/analyses endpoint")
+            print(f"      - Consistent Paris timezone usage")
+            print(f"      - Live system respects 4-hour deduplication window")
+        
+        return deduplication_working
+
+    def test_complete_scout_ia1_ia2_cycle(self):
+        """Test complete Scout → IA1 → IA2 cycle for deduplication"""
+        print(f"\n🔄 Testing Complete Scout → IA1 → IA2 Cycle (Deduplication Focus)...")
+        
+        # Step 1: Check Scout opportunities
+        print(f"\n   📊 Step 1: Checking Scout opportunities...")
+        success, opportunities_data = self.test_get_opportunities()
+        if not success:
+            print(f"   ❌ Scout not working")
+            return False
+        
+        opportunities = opportunities_data.get('opportunities', [])
+        scout_symbols = set(opp.get('symbol') for opp in opportunities)
+        print(f"   ✅ Scout: {len(opportunities)} opportunities, {len(scout_symbols)} unique symbols")
+        
+        # Step 2: Check IA1 analyses
+        print(f"\n   📈 Step 2: Checking IA1 analyses...")
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ IA1 not working")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        ia1_symbols = set(analysis.get('symbol') for analysis in analyses)
+        print(f"   ✅ IA1: {len(analyses)} analyses, {len(ia1_symbols)} unique symbols")
+        
+        # Step 3: Check IA2 decisions
+        print(f"\n   🎯 Step 3: Checking IA2 decisions...")
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ IA2 not working")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        ia2_symbols = set(decision.get('symbol') for decision in decisions)
+        print(f"   ✅ IA2: {len(decisions)} decisions, {len(ia2_symbols)} unique symbols")
+        
+        # Step 4: Check pipeline integration
+        print(f"\n   🔗 Step 4: Checking pipeline integration...")
+        
+        scout_to_ia1 = scout_symbols.intersection(ia1_symbols)
+        ia1_to_ia2 = ia1_symbols.intersection(ia2_symbols)
+        full_pipeline = scout_symbols.intersection(ia1_symbols).intersection(ia2_symbols)
+        
+        print(f"   📊 Pipeline Flow Analysis:")
+        print(f"      Scout → IA1 overlap: {len(scout_to_ia1)} symbols")
+        print(f"      IA1 → IA2 overlap: {len(ia1_to_ia2)} symbols")
+        print(f"      Full pipeline (Scout→IA1→IA2): {len(full_pipeline)} symbols")
+        
+        # Step 5: Check for duplicates in each stage
+        print(f"\n   🔍 Step 5: Checking for duplicates in each stage...")
+        
+        # Check Scout duplicates
+        scout_duplicate_count = len(opportunities) - len(scout_symbols)
+        print(f"      Scout duplicates: {scout_duplicate_count}")
+        
+        # Check IA1 duplicates (same symbol, recent timestamp)
+        ia1_duplicate_count = len(analyses) - len(ia1_symbols)
+        print(f"      IA1 duplicates: {ia1_duplicate_count}")
+        
+        # Check IA2 duplicates
+        ia2_duplicate_count = len(decisions) - len(ia2_symbols)
+        print(f"      IA2 duplicates: {ia2_duplicate_count}")
+        
+        # Step 6: Validation
+        pipeline_working = len(full_pipeline) > 0
+        no_scout_duplicates = scout_duplicate_count == 0
+        no_ia1_duplicates = ia1_duplicate_count == 0
+        no_ia2_duplicates = ia2_duplicate_count == 0
+        good_flow_rate = len(scout_to_ia1) / len(scout_symbols) >= 0.1 if scout_symbols else False
+        
+        print(f"\n   ✅ Complete Cycle Validation:")
+        print(f"      Pipeline working: {'✅' if pipeline_working else '❌'} ({len(full_pipeline)} symbols)")
+        print(f"      No Scout duplicates: {'✅' if no_scout_duplicates else '❌'}")
+        print(f"      No IA1 duplicates: {'✅' if no_ia1_duplicates else '❌'}")
+        print(f"      No IA2 duplicates: {'✅' if no_ia2_duplicates else '❌'}")
+        print(f"      Good flow rate: {'✅' if good_flow_rate else '❌'} ({len(scout_to_ia1)}/{len(scout_symbols)})")
+        
+        cycle_success = (
+            pipeline_working and
+            no_scout_duplicates and
+            no_ia1_duplicates and
+            no_ia2_duplicates and
+            good_flow_rate
+        )
+        
+        print(f"\n   🎯 Complete Cycle Assessment: {'✅ SUCCESS' if cycle_success else '❌ NEEDS WORK'}")
+        
+        return cycle_success
+
+    def run_all_tests(self):
+        """Run all comprehensive tests for the Dual AI Trading Bot System"""
+        print(f"🚀 Starting Comprehensive Dual AI Trading Bot System Tests")
+        print(f"Backend URL: {self.base_url}")
+        print(f"API URL: {self.api_url}")
+        print(f"=" * 80)
+
+        # Core system tests
+        self.test_system_status()
+        self.test_market_status()
+        
+        # Scout functionality tests
+        self.test_get_opportunities()
+        
+        # IA1 DEDUPLICATION FIX TESTS (MAIN FOCUS)
+        print(f"\n" + "🎯" * 20 + " IA1 DEDUPLICATION FIX TESTS " + "🎯" * 20)
+        ia1_dedup_success = self.test_ia1_deduplication_fix()
+        complete_cycle_success = self.test_complete_scout_ia1_ia2_cycle()
+        
+        # IA1 functionality tests
+        self.test_get_analyses()
+        self.test_ia1_analysis_speed_via_system()
+        self.test_scout_ia1_integration_via_system()
+        self.test_technical_analysis_quality_from_system()
+        self.test_ia1_optimization_evidence()
+        
+        # IA2 functionality tests
+        self.test_get_decisions()
+        
+        # Historical Data Fallback System tests
+        self.test_historical_data_fallback_system()
+        
+        # IA2 Critical Fixes tests
+        self.test_ia2_critical_confidence_minimum_fix()
+        self.test_ia2_enhanced_confidence_calculation()
+        self.test_ia2_enhanced_trading_thresholds()
+        self.test_ia2_signal_generation_rate()
+        self.test_ia2_reasoning_quality()
+        
+        # Advanced IA2 tests
+        self.test_decision_cache_clear_endpoint()
+        self.test_fresh_ia2_decision_generation()
+        self.test_ia2_confidence_distribution_analysis()
+        
+        # System control tests
+        self.test_start_trading_system()
+        self.test_stop_trading_system()
+        
+        # Performance summary
+        print(f"\n" + "=" * 80)
+        print(f"🎯 TEST SUMMARY")
+        print(f"=" * 80)
+        print(f"Tests Run: {self.tests_run}")
+        print(f"Tests Passed: {self.tests_passed}")
+        print(f"Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # MAIN FOCUS RESULTS
+        print(f"\n🎯 IA1 DEDUPLICATION FIX RESULTS:")
+        print(f"   IA1 Deduplication Fix: {'✅ SUCCESS' if ia1_dedup_success else '❌ FAILED'}")
+        print(f"   Complete Cycle Test: {'✅ SUCCESS' if complete_cycle_success else '❌ FAILED'}")
+        
+        if self.ia1_performance_times:
+            avg_ia1_time = sum(self.ia1_performance_times) / len(self.ia1_performance_times)
+            print(f"Average IA1 Analysis Time: {avg_ia1_time:.2f}s")
+        
+        print(f"=" * 80)
+
     def test_bingx_balance_investigation(self):
         """Test BingX balance retrieval - Debug why balance shows 0$ instead of 11$+"""
         print(f"\n💰 Testing BingX Balance Investigation...")
