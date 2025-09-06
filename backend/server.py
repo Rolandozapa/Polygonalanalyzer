@@ -536,7 +536,7 @@ class TrailingStopManager:
             """
             
             await self._send_email(subject, body)
-            trailing_stop.notifications_sent.append(f"{tp_crossed}_{datetime.now(timezone.utc).isoformat()}")
+            trailing_stop.notifications_sent.append(f"{tp_crossed}_{get_paris_time().isoformat()}")
             
         except Exception as e:
             logger.error(f"Failed to send trailing stop notification: {e}")
