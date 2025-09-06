@@ -4378,12 +4378,13 @@ async def get_system_timing_info():
     """Get system timing and cycle information"""
     try:
         return {
-            "scout_cycle_interval": "3 minutes (180 seconds)",
-            "scout_cycle_description": "Le scout analyse le marché toutes les 3 minutes",
+            "scout_cycle_interval": "4 heures (14400 seconds)",
+            "scout_cycle_description": "Le scout analyse le marché EN PROFONDEUR toutes les 4 heures",
             "trailing_stop_monitor": "30 seconds (30 seconds)",
             "trending_update_interval": "6 heures (21600 seconds)",
             "websocket_updates": "10 seconds for trailing stops, 30 seconds for general",
             "error_recovery_wait": "2 minutes (120 seconds)",
+            "ia1_risk_reward_filter": "Minimum 2:1 Risk-Reward ratio required",
             "current_system_status": {
                 "is_running": orchestrator.is_running,
                 "cycle_count": orchestrator.cycle_count,
@@ -4392,11 +4393,12 @@ async def get_system_timing_info():
             },
             "cycle_details": {
                 "phase_1": "Scout analyse le marché (scan_opportunities)",
-                "phase_2": "IA1 analyse technique (GPT-4o)",
-                "phase_3": "IA2 décisions de trading (Claude-3-7-Sonnet)",
-                "phase_4": "Création des trailing stops",
-                "phase_5": "Stockage et notifications",
-                "total_cycle_time": "Variable selon le nombre d'opportunités"
+                "phase_2": "IA1 analyse technique + calcul Risk-Reward (GPT-4o)",
+                "phase_3": "Filtre R:R minimum 2:1 (économie API)",
+                "phase_4": "IA2 décisions de trading (Claude-3-7-Sonnet)",
+                "phase_5": "Création des trailing stops",
+                "phase_6": "Stockage et notifications",
+                "total_cycle_time": "Variable selon le nombre d'opportunités (analyses plus approfondies)"
             }
         }
     except Exception as e:
@@ -4427,11 +4429,18 @@ async def get_scout_info():
                 "auto_update_trending": orchestrator.scout.auto_update_trending
             },
             "scout_timing": {
-                "cycle_interval": "3 minutes",
-                "cycle_interval_seconds": 180,
-                "description": "Le scout fait une analyse complète toutes les 3 minutes",
+                "cycle_interval": "4 heures",
+                "cycle_interval_seconds": 14400,
+                "description": "Le scout fait une analyse APPROFONDIE toutes les 4 heures",
                 "last_opportunity_found": last_opportunity_time,
                 "opportunities_in_last_cycle": len(recent_opportunities)
+            },
+            "quality_filters": {
+                "ia1_risk_reward_minimum": "2:1 Risk-Reward ratio",
+                "confidence_minimum": "30% (défaillance système)",
+                "analysis_completeness": "50+ caractères requis",
+                "data_quality_prefilter": "OHLCV multi-sources validé",
+                "pattern_detection": "Technical patterns requis"
             },
             "trending_system": {
                 "update_interval": "6 heures",
