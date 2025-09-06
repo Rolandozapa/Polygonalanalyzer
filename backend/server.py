@@ -1009,6 +1009,109 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
             return self._create_fallback_analysis(opportunity)
     
+    def _calculate_ia1_risk_reward(self, opportunity: MarketOpportunity, historical_data: pd.DataFrame, 
+                                  support_levels: List[float], resistance_levels: List[float], 
+                                  detected_pattern: Optional[Any] = None) -> Dict[str, Any]:
+        """Calculate precise Risk-Reward ratio for IA1 strategy filtering"""
+        try:
+            current_price = opportunity.current_price
+            
+            # 1. DÉTERMINER LA DIRECTION PROBABLE
+            direction = "long"  # Default
+            if detected_pattern and hasattr(detected_pattern, 'trading_direction'):
+                direction = detected_pattern.trading_direction.lower()
+            else:
+                # Simple trend analysis basé sur les données récentes
+                recent_prices = historical_data['Close'].tail(5)
+                if recent_prices.iloc[-1] < recent_prices.iloc[0]:
+                    direction = "short"
+            
+            # 2. CALCULER STOP-LOSS BASÉ SUR ATR ET SUPPORTS/RÉSISTANCES
+            atr_estimate = current_price * max(opportunity.volatility, 0.015)  # Min 1.5% ATR
+            
+            if direction == "long":
+                # Pour LONG: SL basé sur support le plus proche ou ATR
+                if support_levels:
+                    nearest_support = max([s for s in support_levels if s < current_price], default=current_price * 0.95)
+                    stop_loss = max(nearest_support, current_price - (atr_estimate * 2.5))  # Pas trop loin du support
+                else:
+                    stop_loss = current_price - (atr_estimate * 2.5)
+                
+                # Pour LONG: TP basé sur résistance ou multiple du risk
+                if resistance_levels:
+                    nearest_resistance = min([r for r in resistance_levels if r > current_price], default=current_price * 1.08)
+                    take_profit = nearest_resistance
+                else:
+                    # Fallback: 2.5 fois le risk minimum
+                    risk_distance = current_price - stop_loss
+                    take_profit = current_price + (risk_distance * 2.5)
+                    
+            else:  # SHORT
+                # Pour SHORT: SL basé sur résistance
+                if resistance_levels:
+                    nearest_resistance = min([r for r in resistance_levels if r > current_price], default=current_price * 1.05)
+                    stop_loss = min(nearest_resistance, current_price + (atr_estimate * 2.5))
+                else:
+                    stop_loss = current_price + (atr_estimate * 2.5)
+                
+                # Pour SHORT: TP basé sur support
+                if support_levels:
+                    nearest_support = max([s for s in support_levels if s < current_price], default=current_price * 0.92)
+                    take_profit = nearest_support
+                else:
+                    risk_distance = stop_loss - current_price
+                    take_profit = current_price - (risk_distance * 2.5)
+            
+            # 3. CALCULER RISK-REWARD RATIO
+            if direction == "long":
+                risk_amount = abs(current_price - stop_loss)
+                reward_amount = abs(take_profit - current_price)
+            else:  # SHORT
+                risk_amount = abs(stop_loss - current_price)
+                reward_amount = abs(current_price - take_profit)
+            
+            # Éviter division par zéro
+            if risk_amount <= 0:
+                ratio = 0.0
+                reasoning = "❌ Risk invalide (SL trop proche ou incorrect)"
+            else:
+                ratio = reward_amount / risk_amount
+                reasoning = f"📊 {direction.upper()}: Entry ${current_price:.4f} → SL ${stop_loss:.4f} → TP ${take_profit:.4f}"
+            
+            # 4. VALIDATION QUALITÉ
+            if ratio < 1.0:
+                reasoning += " ⚠️ Ratio < 1:1 (risqué)"
+            elif ratio >= 2.0:
+                reasoning += " ✅ Ratio ≥ 2:1 (excellent)"
+            else:
+                reasoning += f" ⚡ Ratio {ratio:.1f}:1 (acceptable)"
+            
+            return {
+                "ratio": ratio,
+                "entry_price": current_price,
+                "stop_loss": stop_loss,
+                "take_profit": take_profit,
+                "risk_amount": risk_amount,
+                "reward_amount": reward_amount,
+                "direction": direction,
+                "reasoning": reasoning,
+                "quality": "excellent" if ratio >= 2.0 else "good" if ratio >= 1.5 else "poor"
+            }
+            
+        except Exception as e:
+            logger.error(f"Erreur calcul Risk-Reward IA1 pour {opportunity.symbol}: {e}")
+            return {
+                "ratio": 0.0,
+                "entry_price": opportunity.current_price,
+                "stop_loss": opportunity.current_price,
+                "take_profit": opportunity.current_price,
+                "risk_amount": 0.0,
+                "reward_amount": 0.0,
+                "direction": "unknown",
+                "reasoning": "❌ Erreur calcul R:R",
+                "quality": "error"
+            }
+
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 100) -> Optional[pd.DataFrame]:
         """Get enhanced historical data using improved OHLCV fetcher - VRAIES données seulement avec plus d'historique"""
         try:
