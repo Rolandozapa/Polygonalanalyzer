@@ -3454,7 +3454,7 @@ class UltraProfessionalTradingOrchestrator:
             await self.start_trailing_stop_monitor()
             
             # Start main trading loop in background
-            asyncio.create_task(self._run_continuous_trading())
+            asyncio.create_task(ultra_professional_trading_loop())
             
             logger.info("🚀 Ultra Professional Trading System started with trailing stops!")
             return {"status": "started", "message": "Ultra Professional Trading System activated with trailing stop monitoring"}
