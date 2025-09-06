@@ -4082,6 +4082,7 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"📊 CYCLE SUMMARY:")
             logger.info(f"   • Opportunities found: {len(opportunities)}")
             logger.info(f"   • IA1 analyses: {len(valid_analyses)}")
+            logger.info(f"   • IA1 deduplication: {ia1_analyses_generated} generated → {ia1_analyses_generated - ia1_analyses_deduplicated} stored (saved {ia1_analyses_deduplicated} duplicates)")
             logger.info(f"   • Opportunities stored: {opportunities_stored}")
             logger.info(f"   • IA2 decisions made: {decisions_made}")
             logger.info(f"   • IA2 economy rate: {ia2_economy_rate:.1%}")
