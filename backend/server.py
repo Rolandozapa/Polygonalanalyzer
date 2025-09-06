@@ -702,10 +702,44 @@ class UltraProfessionalCryptoScout:
             # Sort by trending score
             sorted_opportunities = self._sort_by_trending_score(unique_opportunities)
             
-            # Limit results for focused analysis
-            final_opportunities = sorted_opportunities[:self.max_cryptos_to_analyze]
+            # NOUVEAU: PRÉ-FILTRAGE RISK-REWARD SCOUT pour économiser les crédits IA
+            pre_filtered_opportunities = []
+            scout_rr_stats = {"total": 0, "passed": 0, "rejected": 0}
             
-            logger.info(f"TREND-FOCUSED scan complete: {len(final_opportunities)} high-potential opportunities selected")
+            logger.info(f"🔍 SCOUT R:R PRE-FILTER: Analyzing {len(sorted_opportunities)} opportunities...")
+            
+            for opp in sorted_opportunities:
+                scout_rr_stats["total"] += 1
+                
+                # Calcul R:R approximatif par le Scout
+                scout_rr = self._calculate_scout_risk_reward(opp)
+                ratio = scout_rr["ratio"]
+                
+                # Seuil permissif pour ne pas éliminer de bonnes opportunités
+                # IA1 fera le calcul précis avec seuil 2:1 après
+                if ratio >= 1.3:  # Seuil Scout: 1.3:1 minimum
+                    pre_filtered_opportunities.append(opp)
+                    scout_rr_stats["passed"] += 1
+                    logger.debug(f"✅ SCOUT PASS: {opp.symbol} R:R {ratio:.2f}:1 ({scout_rr['quality']}) - {scout_rr['direction'].upper()}")
+                else:
+                    scout_rr_stats["rejected"] += 1
+                    logger.debug(f"❌ SCOUT REJECT: {opp.symbol} R:R {ratio:.2f}:1 (below 1.3:1 threshold) - {scout_rr['direction'].upper()}")
+            
+            # Limite finale après pré-filtrage
+            final_opportunities = pre_filtered_opportunities[:self.max_cryptos_to_analyze]
+            
+            # Statistiques d'économie
+            ia1_savings = scout_rr_stats["rejected"]
+            savings_percentage = (ia1_savings / max(scout_rr_stats["total"], 1)) * 100
+            
+            logger.info(f"🎯 SCOUT R:R PRE-FILTER RESULTS:")
+            logger.info(f"   📊 Total analyzed: {scout_rr_stats['total']}")
+            logger.info(f"   ✅ Passed (≥1.3:1): {scout_rr_stats['passed']}")
+            logger.info(f"   ❌ Rejected (<1.3:1): {scout_rr_stats['rejected']}")
+            logger.info(f"   💰 IA1 API calls saved: {ia1_savings} ({savings_percentage:.1f}%)")
+            logger.info(f"   🚀 Final opportunities: {len(final_opportunities)}")
+            
+            logger.info(f"TREND-FOCUSED scan + SCOUT R:R PRE-FILTER complete: {len(final_opportunities)} high-quality opportunities selected")
             
             return final_opportunities
             
