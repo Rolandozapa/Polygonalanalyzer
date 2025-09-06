@@ -4085,7 +4085,7 @@ async def get_performance():
             "data_source_diversity": len(set([src for opp in opportunities for src in opp.get('data_sources', [])])),
             "ultra_professional": True,
             "version": "3.0.0",
-            "last_update": datetime.now(timezone.utc).isoformat()
+            "last_update": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
         
         return {"performance": performance}
