@@ -181,7 +181,7 @@ class TradingPerformance(BaseModel):
     pnl_percentage: Optional[float] = None
     duration_minutes: Optional[int] = None
     outcome: Optional[str] = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 # WebSocket connection manager
 class ConnectionManager:
