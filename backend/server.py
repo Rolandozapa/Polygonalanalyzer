@@ -6022,7 +6022,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({
                     "type": "error",
                     "message": str(e),
-                    "timestamp": datetime.now(timezone.utc).isoformat()
+                    "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
                 })
                 
     except WebSocketDisconnect:
