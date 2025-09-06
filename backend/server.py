@@ -153,7 +153,7 @@ class LiveTradingPosition(BaseModel):
     take_profit_order_id: Optional[str] = None
     decision_id: str
     status: str = "OPEN"
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 class BingXAccountInfo(BaseModel):
     total_balance: float
