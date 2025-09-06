@@ -3978,7 +3978,7 @@ class UltraProfessionalTradingOrchestrator:
                 except Exception as e:
                     logger.error(f"Failed to store opportunity {opportunity.symbol}: {e}")
             
-            logger.info(f"✅ OPPORTUNITIES STORED: {opportunities_stored}/{len(valid_analyses)}")
+            logger.info(f"✅ OPPORTUNITIES STORED: {opportunities_stored}/{len(valid_analyses)} (deduplicated: {opportunities_deduplicated})")
             
             # Prepare IA2 decision making
             perf_stats = advanced_market_aggregator.get_performance_stats()  # Use global aggregator
