@@ -384,8 +384,8 @@ class TrailingStopManager:
             trailing_percentage=trailing_percentage,
             direction="LONG" if decision.signal == SignalType.LONG else "SHORT",
             tp1_minimum_lock=tp1_price,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=get_paris_time(),
+            updated_at=get_paris_time(),
             status="ACTIVE"
         )
         
