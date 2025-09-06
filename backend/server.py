@@ -3035,17 +3035,43 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             stop_loss = current_price
             tp1 = tp2 = tp3 = current_price
         
-        # Advanced risk-reward calculation
+        # NOUVEAU: Utiliser le Risk-Reward d'IA1 (source unique de vérité) - VERSION ADVANCED
+        ia1_risk_reward = getattr(analysis, 'risk_reward_ratio', 0.0)
+        ia1_entry_price = getattr(analysis, 'entry_price', current_price)
+        ia1_stop_loss = getattr(analysis, 'stop_loss_price', current_price)
+        ia1_take_profit = getattr(analysis, 'take_profit_price', current_price)
+        
         if signal != SignalType.HOLD:
-            risk = abs(current_price - stop_loss)
-            reward = abs(tp2 - current_price)  # Use TP2 as primary target
-            risk_reward = reward / risk if risk > 0 else 1.0
-            
-            # Minimum 2:1 R:R for advanced strategies
-            if risk_reward < 2.0:
-                signal = SignalType.HOLD
-                reasoning += "Risk-reward ratio too low for advanced strategy (min 2:1 required). "
-                confidence = max(confidence * 0.9, 0.55)
+            if ia1_risk_reward > 0 and ia1_entry_price > 0:
+                # Utiliser les calculs précis d'IA1 basés sur supports/résistances + ATR
+                risk_reward = ia1_risk_reward
+                
+                # Ajuster les SL/TP avec les calculs d'IA1 comme base mais en gardant la logique advanced
+                if abs(stop_loss - ia1_stop_loss) / current_price > 0.01:  # Si différence > 1%
+                    reasoning += f"IA1 SL: ${ia1_stop_loss:.4f} vs Advanced SL: ${stop_loss:.4f} - Using advanced SL for multi-level TP strategy. "
+                else:
+                    stop_loss = ia1_stop_loss  # Utiliser IA1 SL si proche
+                    
+                reasoning += f"Using IA1 precise R:R calculation: {risk_reward:.2f}:1 (Entry: ${ia1_entry_price:.4f}, SL: ${stop_loss:.4f}, TP: ${ia1_take_profit:.4f}). "
+                
+                # Vérification cohérente avec le filtre IA1→IA2 (2:1 minimum)
+                if risk_reward < 2.0:
+                    signal = SignalType.HOLD
+                    reasoning += f"❌ Advanced R:R below IA1 filter threshold ({risk_reward:.2f}:1 < 2:1 required). "
+                    confidence = max(confidence * 0.8, 0.55)
+            else:
+                # Fallback: calcul IA2 advanced classique si IA1 R:R non disponible
+                risk = abs(current_price - stop_loss)
+                reward = abs(tp2 - current_price)  # Use TP2 as primary target
+                risk_reward = reward / risk if risk > 0 else 1.0
+                
+                reasoning += f"Fallback Advanced R:R calculation: {risk_reward:.2f}:1 (IA1 R:R unavailable). "
+                
+                # Minimum 2:1 R:R for advanced strategies (cohérence avec filtre IA1)
+                if risk_reward < 2.0:
+                    signal = SignalType.HOLD
+                    reasoning += "Advanced risk-reward ratio below 2:1 threshold for consistency with IA1 filter. "
+                    confidence = max(confidence * 0.9, 0.55)
         else:
             risk_reward = 1.0
         
