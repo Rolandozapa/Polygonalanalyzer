@@ -102,9 +102,24 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "il y a toujours des doublons a moins de 4h decart dans les rapport d analyse de IA1 - FIX COMPLETED"
+## user_problem_statement: "J'aimerais analyser si les filtres du Scout sont trop restrictifs. L'utilisateur s'inquiète que les filtres pourraient éliminer trop d'opportunités intéressantes."
 
 ## backend:
+  - task: "Analyse des Filtres Scout - Restrictivité et Efficacité"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "user"
+        - comment: "Demande d'analyse: Vérifier si les filtres Scout sont trop restrictifs et éliminent des opportunités intéressantes. Focus sur: (1) Filtre Risk-Reward bidirectionnel seuil 1.2:1, (2) Filtre mouvement latéral (tendance <3%, volatilité <2%, range <8%, MA convergence <1.5%), (3) Filtre pattern technique, (4) Override logic pour données excellentes >90% confiance"
+        - working: false
+        - agent: "testing"
+        - comment: "❌ FILTRES SCOUT TROP RESTRICTIFS - ANALYSE COMPLÈTE: (1) 📊 EFFICACITÉ GLOBALE: Seulement 16.0% des opportunités Scout passent à IA1 (8/50), soit 84.0% filtrées - TRÈS RESTRICTIF, (2) 🚨 OPPORTUNITÉS PERDUES: 8 opportunités de haute qualité filtrées (>5% mouvement, >1M$ volume, >0.8 confiance) incluant KTAUSDT avec +17.8% à +20.1% et volumes >19M$, (3) ❌ FILTRE MOUVEMENT LATÉRAL DÉFAILLANT: 0% de mouvements latéraux détectés mais seulement 16.0% de directionnels passent - filtre bloque aussi les mouvements directionnels, (4) ✅ FILTRE PATTERNS EFFICACE: 100% des analyses IA1 contiennent des patterns techniques détectés (bullish, bearish, triangles, wedges, channels), (5) 💡 RECOMMANDATIONS CRITIQUES: Réduire seuil Risk-Reward de 1.2:1 à 1.1:1, assouplir critères mouvement latéral, augmenter overrides pour données excellentes. CONCLUSION: Les filtres Scout sont TROP RESTRICTIFS et font perdre des opportunités intéressantes avec fort potentiel."
+
   - task: "Fix IA1 Deduplication Logic - Timezone Inconsistency and Display Issue"
     implemented: true
     working: true
