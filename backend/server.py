@@ -4025,6 +4025,7 @@ class UltraProfessionalTradingOrchestrator:
             # Execute IA2 decisions if we have analyses to process
             decisions_made = 0
             decisions_failed = 0
+            ia2_decisions_deduplicated = 0
             
             if decisions_to_make:
                 logger.info(f"🧠 EXECUTING IA2: Making decisions for {len(decisions_to_make)} analyses")
