@@ -3904,6 +3904,8 @@ class UltraProfessionalTradingOrchestrator:
             valid_analyses = []
             filtered_count = 0
             rejected_no_data_count = 0
+            ia1_analyses_generated = 0
+            ia1_analyses_deduplicated = 0
             
             logger.info(f"🔍 DEBUG: Processing {len(analyses)} analyses from IA1")
             
