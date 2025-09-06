@@ -136,7 +136,7 @@ class TradingDecision(BaseModel):
     actual_entry_price: Optional[float] = None
     actual_quantity: Optional[float] = None
     bingx_status: Optional[str] = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=get_paris_time)
 
 class LiveTradingPosition(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
