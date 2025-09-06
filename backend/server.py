@@ -3750,12 +3750,14 @@ async def get_opportunities():
 
 @api_router.get("/status")
 async def get_status():
-    """Get system status for frontend connectivity"""
+    """Get system status with Paris time"""
     return {
         "status": "connected",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)",
+        "timestamp_iso": get_paris_time().isoformat(),
         "version": "3.0.0",
-        "message": "Ultra Professional Trading System Active"
+        "message": "Ultra Professional Trading System Active",
+        "timezone": "Europe/Paris"
     }
 
 @api_router.get("/analyses-debug")
