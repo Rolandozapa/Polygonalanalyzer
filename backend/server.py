@@ -4758,7 +4758,7 @@ async def toggle_trending_auto_update(enabled: bool):
             "auto_update_enabled": enabled,
             "trending_updater_running": trending_auto_updater.is_running,
             "message": f"Trending auto-update {'enabled' if enabled else 'disabled'}",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
