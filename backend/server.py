@@ -3977,8 +3977,8 @@ class UltraProfessionalTradingOrchestrator:
                     symbol = opportunity.symbol
                     current_time = get_paris_time()
                     
-                    # Chercher des opportunités récentes (dernières 30 minutes) pour éviter les doublons
-                    recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+                    # Chercher des opportunités récentes (dernier cycle 4h) pour éviter les doublons
+                    recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=4)
                     
                     existing_recent = await db.market_opportunities.find_one({
                         "symbol": symbol,
