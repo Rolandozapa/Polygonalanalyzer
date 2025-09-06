@@ -3611,27 +3611,27 @@ class UltraProfessionalTradingOrchestrator:
         return await self.start_trading_system()
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """
-        Filtrage IA1→IA2 MINIMAL : Si IA1 a produit une analyse, elle est valable pour IA2
-        Les vrais filtres (mouvements latéraux, données insuffisantes) sont AVANT IA1
-        """
+        """Filtrage intelligent IA1→IA2 MINIMAL avec Risk-Reward 2:1 minimum"""
         try:
-            # PRINCIPE: Si IA1 a fait une analyse, c'est qu'elle a des données valables
-            # Les filtres de qualité de données sont appliqués AVANT IA1, pas ici
-            
-            # SEUL CAS DE REJET: Analyse IA1 complètement vide/corrompue (ne devrait jamais arriver)
+            # FILTRE 1: Vérification de base analyse IA1
             if not analysis.ia1_reasoning or len(analysis.ia1_reasoning.strip()) < 50:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Analyse IA1 vide/corrompue")
                 return False
             
-            # SEUL CAS DE REJET: Confiance IA1 extrêmement faible (analyse défaillante)
+            # FILTRE 2: Confiance IA1 extrêmement faible (analyse défaillante)
             if analysis.analysis_confidence < 0.3:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
                 return False
             
-            # SINON: TOUTES les analyses IA1 passent à IA2
-            # (Mouvements latéraux et tokens sans données déjà filtrés avant IA1)
-            logger.debug(f"✅ IA2 ACCEPTED - {analysis.symbol}: Confiance {analysis.analysis_confidence:.2%}, Patterns: {len(analysis.patterns_detected)}")
+            # FILTRE 3: NOUVEAU - Risk-Reward minimum 2:1
+            risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 0.0)
+            if risk_reward_ratio < 2.0:
+                rr_reasoning = getattr(analysis, 'rr_reasoning', 'R:R non calculé')
+                logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Risk-Reward insuffisant ({risk_reward_ratio:.2f}:1 < 2:1 requis) - {rr_reasoning}")
+                return False
+            
+            # SUCCÈS: Analyse IA1 valide + Risk-Reward ≥ 2:1
+            logger.info(f"✅ IA2 ACCEPTED - {analysis.symbol}: Confiance {analysis.analysis_confidence:.2%}, R:R {risk_reward_ratio:.2f}:1, Patterns: {len(analysis.patterns_detected)}")
             return True
             
         except Exception as e:
