@@ -617,19 +617,39 @@ class UltraProfessionalCryptoScout:
             logger.info(f"📈 Using fallback top 10 symbols: {self.trending_symbols}")
     
     def _calculate_scout_risk_reward(self, opportunity: MarketOpportunity) -> Dict[str, Any]:
-        """Calcul Risk-Reward bidirectionnel par le Scout pour pré-filtrage économique ultra-intelligent"""
+        """Calcul Risk-Reward bidirectionnel par le Scout - CORRIGÉ pour éviter les valeurs identiques"""
         try:
             current_price = opportunity.current_price
             volatility = max(opportunity.volatility, 0.015)  # Min 1.5% volatility
+            price_change_24h = opportunity.price_change_24h
             
             # ATR approximatif basé sur la volatilité 24h
             atr_estimate = current_price * volatility
             
-            # Supports/Résistances approximatifs basés sur les données disponibles
-            support_distance = atr_estimate * 2.0  # Support à 2 ATR en dessous
-            resistance_distance = atr_estimate * 2.5  # Résistance à 2.5 ATR au dessus
+            # CORRECTION: Supports/Résistances différenciés par caractéristiques du token
             
-            # CALCUL BIDIRECTIONNEL - LONG et SHORT
+            # Facteur de momentum basé sur le changement 24h
+            momentum_factor = 1.0 + (abs(price_change_24h) / 100.0) * 0.5  # 0.5 à 1.5
+            
+            # Facteur de volatilité ajusté 
+            volatility_factor = min(volatility / 0.03, 2.0)  # 0.5 à 2.0 (basé sur volatilité relative)
+            
+            # Support/Résistance avec variation selon les caractéristiques du token
+            base_support_multiplier = 1.8 + (volatility_factor * 0.4)    # 1.8 à 2.6
+            base_resistance_multiplier = 2.2 + (momentum_factor * 0.6)   # 2.2 à 3.1
+            
+            # Ajustement directionnel basé sur le momentum
+            if price_change_24h > 0:  # Momentum haussier
+                resistance_multiplier = base_resistance_multiplier * 1.1  # Résistance plus loin
+                support_multiplier = base_support_multiplier * 0.9       # Support plus proche
+            else:  # Momentum baissier  
+                resistance_multiplier = base_resistance_multiplier * 0.9  # Résistance plus proche
+                support_multiplier = base_support_multiplier * 1.1       # Support plus loin
+            
+            support_distance = atr_estimate * support_multiplier
+            resistance_distance = atr_estimate * resistance_multiplier
+            
+            # CALCUL BIDIRECTIONNEL avec valeurs différenciées
             
             # === SCÉNARIO LONG ===
             long_entry = current_price
@@ -667,7 +687,7 @@ class UltraProfessionalCryptoScout:
                 quality = "poor"
             
             return {
-                # Ratios bidirectionnels
+                # Ratios bidirectionnels (maintenant différenciés !)
                 "long_ratio": long_ratio,
                 "short_ratio": short_ratio,
                 "best_ratio": best_ratio,
@@ -683,13 +703,19 @@ class UltraProfessionalCryptoScout:
                 "short_stop_loss": short_stop_loss,
                 "short_take_profit": short_take_profit,
                 
+                # Facteurs de calcul (pour debug)
+                "momentum_factor": momentum_factor,
+                "volatility_factor": volatility_factor,
+                "support_multiplier": support_multiplier,
+                "resistance_multiplier": resistance_multiplier,
+                
                 # Méta-données
                 "preferred_direction": preferred_direction,
                 "quality": quality,
-                "calculation_method": "scout_bidirectional",
+                "calculation_method": "scout_bidirectional_v2",
                 
                 # Pour compatibilité avec l'ancien code
-                "ratio": best_ratio,  # Utilise le meilleur ratio
+                "ratio": best_ratio,
                 "direction": preferred_direction
             }
             
