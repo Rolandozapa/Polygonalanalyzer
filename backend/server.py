@@ -520,7 +520,7 @@ class TrailingStopManager:
                 
                 <h3>🔒 Profit Protection:</h3>
                 <p><strong>TP1 Minimum Lock:</strong> ${trailing_stop.tp1_minimum_lock:.6f}</p>
-                <p><strong>Time:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+                <p><strong>Time:</strong> {get_paris_time().strftime('%Y-%m-%d %H:%M:%S')} (Heure de Paris)</p>
                 
                 <p><em>Your trailing stop has been automatically updated to lock in profits! 🎉</em></p>
             </body>
