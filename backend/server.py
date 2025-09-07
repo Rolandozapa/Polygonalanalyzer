@@ -1037,18 +1037,10 @@ class UltraProfessionalCryptoScout:
             logger.info(f"   📊 Total analysées: {stats['total']}")
             logger.info(f"   ✅ BingX compatibles: {stats['bingx_passed']}")
             logger.info(f"   ❌ Non-BingX: {stats['bingx_rejected']}")
-            logger.info(f"   🚀 Envoyées à validation technique: {len(final_opportunities)}")
+            logger.info(f"   🚀 Envoyées à IA1 (avec validation technique intégrée): {len(final_opportunities)}")
+            logger.info(f"SCAN ASSOUPLI complet: {len(final_opportunities)} opportunités diverses sélectionnées")
             
-            # 🎯 POST-SCOUT TECHNICAL VALIDATOR - Filtre chartiste et tendance
-            technically_validated = await self._post_scout_technical_validation(final_opportunities)
-            
-            logger.info(f"📊 POST-SCOUT TECHNICAL VALIDATION:")
-            logger.info(f"   🔍 Entrées analysées: {len(final_opportunities)}")
-            logger.info(f"   ✅ Validation technique réussie: {len(technically_validated)}")
-            logger.info(f"   ❌ Rejetées (pas de signal chartiste): {len(final_opportunities) - len(technically_validated)}")
-            logger.info(f"SCAN + VALIDATION TECHNIQUE complet: {len(technically_validated)} opportunités premium sélectionnées")
-            
-            return technically_validated
+            return final_opportunities
             
         except Exception as e:
             logger.error(f"Error in trend-focused market scan: {e}")
