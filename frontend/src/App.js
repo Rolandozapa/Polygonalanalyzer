@@ -14,6 +14,8 @@ const TradingDashboard = () => {
   const [websocket, setWebsocket] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('Disconnected');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activePositions, setActivePositions] = useState([]);
+  const [executionMode, setExecutionMode] = useState('SIMULATION');
 
   // WebSocket connection
   useEffect(() => {
