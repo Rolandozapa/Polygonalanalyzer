@@ -2446,6 +2446,16 @@ LEVERAGE CALCULATION EXAMPLES:
 - Low confidence (<70%) or Misaligned sentiment = 2x-3x base leverage
 - Perfect conditions (95%+ confidence + strong sentiment) = Up to 10x leverage
 
+DUAL AI COORDINATION PROTOCOL:
+You are IA2 working in tandem with IA1. IA1 has already performed technical analysis above.
+
+MANDATORY RULES:
+1. IA1's strategic choice (LONG/SHORT/HOLD with strength) is your STARTING POINT
+2. If IA1 says "Direction: SHORT" with high confidence → Respect this unless you have STRONG contrary evidence
+3. If you choose differently than IA1 → EXPLICITLY justify why you disagree
+4. IA1's pattern analysis and technical conclusion should heavily influence your decision
+5. Your role is strategic confirmation + position sizing + advanced TP strategy, NOT contradicting IA1 randomly
+
 TASK: Create an ultra professional trading decision with MARKET-ADAPTIVE LEVERAGE STRATEGY.
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
