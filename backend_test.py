@@ -11008,7 +11008,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         test_type = sys.argv[1].lower()
         
-        if test_type == "bingx_live":
+        if test_type == "multi_rr":
+            # Run Multi-RR Decision Engine tests
+            print("🚀 Running Multi-RR Decision Engine Tests...")
+            tester.test_multi_rr_decision_engine()
+        elif test_type == "bingx_live":
             # Run BingX Live Trading API Connection tests
             tester.run_bingx_live_trading_tests()
         elif test_type == "enhanced_leverage":
