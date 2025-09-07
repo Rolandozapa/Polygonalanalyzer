@@ -1341,8 +1341,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             multi_rr_info = ""
             
             # 🆕 Initialize IA1 fields for hybrid approach  
-            ia1_analysis = ""
-            ia1_reasoning = ""
+            ia1_analysis = f"{opportunity.symbol} requires technical analysis of current market patterns."  # Fallback par défaut
+            ia1_reasoning = "Market conditions suggest careful evaluation of support and resistance levels."  # Fallback par défaut
+            
+            logger.info(f"🔍 IA1 fields initialized for {opportunity.symbol}")
             
             try:
                 # Try to parse JSON response from IA1
