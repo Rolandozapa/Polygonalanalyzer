@@ -208,47 +208,6 @@ class ActivePositionManager:
                 error_message=f"Trade execution error: {str(e)}"
             )
     
-    def _calculate_position_size(self, account_balance: float, risk_percentage: float, 
-                               entry_price: float, stop_loss_price: float, leverage: float) -> Dict[str, float]:
-        """Calculate position size based on risk percentage and account balance"""
-        try:
-            # Calculate risk per unit
-            risk_per_unit = abs(entry_price - stop_loss_price)
-            
-            # Calculate maximum loss allowed (2% of account balance)
-            max_loss = account_balance * (risk_percentage / 100)
-            
-            # Calculate base position size without leverage
-            base_quantity = max_loss / risk_per_unit if risk_per_unit > 0 else 0
-            
-            # Calculate position value (with leverage consideration)
-            position_value = base_quantity * entry_price
-            
-            # Apply leverage to determine actual quantity
-            leveraged_quantity = base_quantity * leverage
-            
-            # Apply safety limits
-            max_position_value = account_balance * 0.20  # Max 20% of account per trade
-            if position_value > max_position_value:
-                position_value = max_position_value
-                leveraged_quantity = position_value / entry_price
-            
-            return {
-                'quantity': round(leveraged_quantity, 6),
-                'position_value': round(position_value, 2),
-                'max_loss': round(max_loss, 2),
-                'risk_per_unit': round(risk_per_unit, 6)
-            }
-            
-        except Exception as e:
-            logger.error(f"Error calculating position size: {e}")
-            return {
-                'quantity': 0.001,  # Minimum safe quantity
-                'position_value': 10.0,  # Minimum safe position
-                'max_loss': account_balance * 0.02,
-                'risk_per_unit': 0.01
-            }
-    
     def _format_tp_levels(self, tp_levels: List[Dict], entry_price: float, signal: str) -> List[Dict[str, Any]]:
         """Format TP levels for position management"""
         formatted_levels = []
