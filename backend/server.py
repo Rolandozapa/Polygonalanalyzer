@@ -1490,17 +1490,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             # 🚀 MULTI-RR ENGINE PYTHON RÉACTIVÉ - Calculs réels avec formules améliorées
             
-            # Créer l'analyse IA1 de base
-            base_analysis = TechnicalAnalysis(
-                symbol=opportunity.symbol,
-                timestamp=get_paris_time(),
-                **validated_data
-            )
-            
-            # 🚀 APPLIQUER LE MULTI-RR ENGINE avec formules améliorées
+            # 🚀 APPLIQUER LE MULTI-RR ENGINE AVANT de créer l'analyse finale
             try:
+                # Créer une analyse temporaire pour le Multi-RR
+                temp_analysis = TechnicalAnalysis(
+                    symbol=opportunity.symbol,
+                    timestamp=get_paris_time(),
+                    **validated_data
+                )
+                
                 multi_rr_result = self._resolve_ia1_contradiction_with_multi_rr(
-                    base_analysis, opportunity, detected_pattern
+                    temp_analysis, opportunity, detected_pattern
                 )
                 
                 if multi_rr_result.get('contradiction', False):
@@ -1523,11 +1523,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     original_reasoning = validated_data.get('ia1_reasoning', '')
                     enhanced_reasoning = original_reasoning + multi_rr_display
                     
-                    # Mettre à jour le signal IA1 basé sur la résolution Multi-RR
-                    base_analysis.ia1_signal = final_recommendation
-                    base_analysis.ia1_reasoning = enhanced_reasoning
-                    
-                    # AUSSI mettre à jour dans validated_data pour s'assurer que ça persiste
+                    # Mettre à jour validated_data avec Multi-RR
                     validated_data['ia1_reasoning'] = enhanced_reasoning
                     validated_data['ia1_signal'] = final_recommendation
                     
@@ -1536,7 +1532,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             except Exception as e:
                 logger.warning(f"⚠️ Multi-RR calculation failed for {opportunity.symbol}: {e}")
             
-            return base_analysis
+            # Créer l'analyse finale avec les données Multi-RR intégrées
+            return TechnicalAnalysis(
+                symbol=opportunity.symbol,
+                timestamp=get_paris_time(),
+                **validated_data
+            )
             
         except Exception as e:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
