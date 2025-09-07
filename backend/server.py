@@ -1844,17 +1844,26 @@ class UltraProfessionalIA1TechnicalAnalyst:
             contradiction = True
             contradiction_type = f"IA1_HOLD vs PATTERN_{pattern_direction.upper()}"
             
-        # Type 2: RSI vs MACD (comme BIOUSDT)
+        # Type 2: RSI vs MACD (comme BIOUSDT) - LOGIQUE CORRIGÉE
         rsi = getattr(analysis, 'rsi', 50)
         macd = getattr(analysis, 'macd_signal', 0)
         
-        # RSI oversold (<30) + MACD bearish vs RSI overbought (>70) + MACD bullish
+        # NOUVELLE LOGIQUE: Détection des divergences réelles entre indicateurs
+        # RSI oversold (<30) + MACD encore négatif = Contradiction timing
+        # RSI overbought (>70) + MACD encore positif = Contradiction timing
+        if rsi < 30 and abs(macd) > 0.0001:  # RSI oversold avec MACD significatif
+            contradiction = True
+            macd_direction = "BULLISH" if macd > 0 else "BEARISH"
+            contradiction_type = f"RSI_OVERSOLD vs MACD_{macd_direction}"
+            
+        elif rsi > 70 and abs(macd) > 0.0001:  # RSI overbought avec MACD significatif
+            contradiction = True
+            macd_direction = "BULLISH" if macd > 0 else "BEARISH"
+            contradiction_type = f"RSI_OVERBOUGHT vs MACD_{macd_direction}"
+        
+        # Maintenir les variables pour compatibilité avec le code existant
         rsi_signal = "bullish" if rsi < 30 else "bearish" if rsi > 70 else "neutral"
         macd_signal = "bullish" if macd > 0 else "bearish" if macd < 0 else "neutral"
-        
-        if rsi_signal != "neutral" and macd_signal != "neutral" and rsi_signal != macd_signal:
-            contradiction = True
-            contradiction_type = f"RSI_{rsi_signal.upper()} vs MACD_{macd_signal.upper()}"
             
         # Type 3: Bollinger Bands vs RSI
         bb_position = getattr(analysis, 'bollinger_position', 0)
