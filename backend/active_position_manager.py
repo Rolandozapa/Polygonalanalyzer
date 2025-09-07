@@ -117,11 +117,17 @@ class ActivePositionManager:
             signal = decision_data.get('signal', '').upper()
             entry_price = float(decision_data.get('entry_price', 0))
             confidence = float(decision_data.get('confidence', 0))
+            ia2_position_size_percentage = float(decision_data.get('position_size_percentage', 0))
             
             # Skip HOLD signals
             if signal == 'HOLD':
                 logger.info(f"📝 Skipping HOLD signal for {symbol}")
                 return TradeExecutionResult(success=True, error_message="HOLD signal - no trade executed")
+            
+            # Skip if IA2 determined 0% position size
+            if ia2_position_size_percentage <= 0:
+                logger.info(f"⏭️ Skipping execution for {symbol}: IA2 determined 0% position size")
+                return TradeExecutionResult(success=True, error_message="IA2 position size 0% - no trade executed")
             
             # Extract probabilistic TP strategy
             take_profit_strategy = decision_data.get('take_profit_strategy', {})
@@ -135,17 +141,12 @@ class ActivePositionManager:
             # Get account balance for position sizing
             account_balance = await self._get_account_balance()
             
-            # Calculate position size based on 2% risk
-            risk_percentage = 2.0  # As specified in IA2 vignettes
+            # Use IA2's exact position size calculation
             stop_loss_price = float(decision_data.get('stop_loss', entry_price * 0.95))
+            position_size_usd = account_balance * ia2_position_size_percentage
+            quantity = position_size_usd / entry_price
             
-            position_size_info = self._calculate_position_size(
-                account_balance=account_balance,
-                risk_percentage=risk_percentage,
-                entry_price=entry_price,
-                stop_loss_price=stop_loss_price,
-                leverage=self.default_leverage
-            )
+            logger.info(f"💰 Using IA2 position sizing: {ia2_position_size_percentage:.1%} = ${position_size_usd:.2f} (Quantity: {quantity:.6f})")
             
             # Create active position
             position = ActivePosition(
@@ -153,17 +154,17 @@ class ActivePositionManager:
                 symbol=symbol,
                 signal=signal,
                 entry_price=entry_price,
-                quantity=position_size_info['quantity'],
+                quantity=quantity,
                 current_price=entry_price,
                 account_balance=account_balance,
-                risk_percentage=risk_percentage,
-                position_size_usd=position_size_info['position_value'],
+                risk_percentage=ia2_position_size_percentage * 100,  # Convert to percentage for display
+                position_size_usd=position_size_usd,
                 leverage=self.default_leverage,
                 tp_levels=self._format_tp_levels(tp_levels, entry_price, signal),
                 tp_total_levels=len(tp_levels),
                 initial_stop_loss=stop_loss_price,
                 current_stop_loss=stop_loss_price,
-                max_loss_usd=position_size_info['max_loss'],
+                max_loss_usd=abs(entry_price - stop_loss_price) * quantity,  # Actual risk amount
                 risk_reward_ratio=float(decision_data.get('risk_reward_ratio', 1.5))
             )
             
@@ -176,7 +177,7 @@ class ActivePositionManager:
             if execution_result.success:
                 # Add to active positions
                 self.active_positions[position.id] = position
-                logger.info(f"✅ Trade executed successfully: {symbol} {signal} - Position ID: {position.id}")
+                logger.info(f"✅ Trade executed successfully: {symbol} {signal} - Position ID: {position.id} (Size: {ia2_position_size_percentage:.1%})")
                 
                 # Start monitoring if not already active  
                 if not self.monitoring_active:
@@ -191,6 +192,7 @@ class ActivePositionManager:
                         'signal': signal,
                         'quantity': position.quantity,
                         'position_size_usd': position.position_size_usd,
+                        'position_size_percentage': ia2_position_size_percentage,
                         'tp_levels': len(position.tp_levels),
                         'leverage': position.leverage
                     }
