@@ -105,6 +105,21 @@
 ## user_problem_statement: "J'aimerais analyser si les filtres du Scout sont trop restrictifs. L'utilisateur s'inquiète que les filtres pourraient éliminer trop d'opportunités intéressantes."
 
 ## backend:
+  - task: "IA1 HOLD Filter Optimization for IA2 Economy"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "user"
+        - comment: "🎯 REVOLUTIONARY REQUEST: Implement IA1 HOLD filter optimization to save IA2 resources. Expected: IA1 uses HOLD when no clear trading opportunity (saves IA2 credits), IA1 uses LONG/SHORT for interesting cryptos (normal IA2 call), 30-50% IA2 economy through intelligent filtering. Implementation includes: (1) Enhanced IA1 prompt to encourage HOLD usage, (2) Added ia1_signal field to TechnicalAnalysis model, (3) JSON parsing of IA1 recommendations, (4) New HOLD filter in _should_send_to_ia2() that blocks HOLD analyses."
+        - working: false
+        - agent: "testing"
+        - comment: "❌ IA1 HOLD FILTER OPTIMIZATION FAILED - CRITICAL IMPLEMENTATION ISSUES DETECTED: Comprehensive testing reveals the revolutionary IA1 HOLD filter is NOT working as intended. CRITICAL FINDINGS: (1) ❌ IA1 NOT USING HOLD SIGNALS: 0/8 analyses contain HOLD signals (0.0%) - IA1 is not generating HOLD recommendations despite enhanced prompts, (2) ❌ SIGNAL PARSING COMPLETELY BROKEN: 0/8 analyses have parsed ia1_signal field (0.0% parsing rate vs 80% target) - JSON parsing of IA1 responses is failing, all signals show 'unknown', (3) ❌ IA2 ECONOMY NEGATIVE: -275.0% economy rate (30 IA2 decisions vs 8 IA1 analyses) - more IA2 calls than IA1 analyses indicates fundamental pipeline issue, (4) ❌ NO TRADING SIGNALS: 0 LONG/SHORT signals detected - IA1 not generating any directional recommendations, (5) ✅ IA2 FILTER WORKING: No HOLD leakage detected (0 HOLD signals reached IA2), but this is meaningless since no HOLD signals exist. ROOT CAUSE ANALYSIS: The IA1 prompt enhancement and JSON parsing implementation are not working - IA1 continues generating standard analyses without HOLD/LONG/SHORT signal extraction. The ia1_signal field remains 'unknown' for all analyses, indicating the GPT-4o response parsing is failing to extract the recommendation. IMPACT: Zero IA2 economy achieved, revolutionary optimization completely non-functional. RECOMMENDATION: Debug IA1 prompt structure, fix JSON response parsing, verify GPT-4o model is receiving and responding to HOLD/LONG/SHORT instruction format."
+
   - task: "Analyse des Filtres Scout - Restrictivité et Efficacité"
     implemented: true
     working: true
