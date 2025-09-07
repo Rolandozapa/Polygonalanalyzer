@@ -1,91 +1,67 @@
 <analysis>
-The trajectory details the refinement of a Dual AI Trading Bot, transitioning it to an Ultra Professional Edition. Initially, the focus was on fixing IA1 deduplication and display issues, followed by a major effort to unblock the Scout’s restrictive filters, particularly the lateral movement detection, which was permanently removed after extensive debugging. A key architectural shift involved optimizing IA1-IA2 interaction, first by implementing an IA1 confidence-based filter for IA2, then by explicitly ensuring IA2 receives and prioritizes IA1’s full reasoning and MASTER PATTERN strategic choice to resolve contradictions. Realistic Take Profit levels were implemented, and an Intelligent TP Settler was introduced, eventually shifting its logic to be handled by Claude (IA2) via prompt. Persistent issues with micro-priced tokens like BabyDogeUSDT led to a deep dive into technical indicator calculation and support/resistance rounding, ensuring accurate data handling. Finally, a robust multi-API fallback system for market data was implemented, and the agent began integrating a BingX-specific tradable symbols filter to optimize the Scout process.
+The trajectory outlines the evolution of a Dual AI Trading Bot. Initially, the AI addressed a  integration, ensuring only tradable symbols were scouted, including fixing hyphenated symbol matching. A major effort was then dedicated to reactivating and refining the Python-based Multi-RR Decision Engine, which GPT-4o was incorrectly expected to handle, integrating its sophisticated calculations and display into IA1's analysis, including a post-calculation reflection sentiment. Subsequently, numerous scout admission filters (TOP N cryptos, R:R pre-filter, volume, market cap, professional filters) were progressively relaxed to increase opportunity diversity. Finally, the restrictive IA2 filter, which previously relied solely on a 2.0 RR threshold, was replaced with a more intelligent 5-criterion probabilistic logic. The trajectory concluded with the user requesting IA2 to implement on-measure Take Profit levels with probabilistic distributions.
 </analysis>
 
 <product_requirements>
-The objective is to build a sophisticated Dual AI Trading Bot with React frontend, FastAPI backend, and MongoDB. The system uses a market scout, IA1 (GPT-4o) for technical analysis, and IA2 (Claude-3-7-Sonnet) for strategic decisions, integrating real market data from multiple APIs. Key features include multi-level take-profit strategies, automatic position inversion, dynamic leverage, BingX Futures account control, and granular AI credit consumption control.
+The goal is to build an Ultra Professional Edition Dual AI Trading Bot using React (frontend), FastAPI (backend), and MongoDB (database). It employs a market scout, IA1 (GPT-4o) for technical analysis, and IA2 (Claude-3-7-Sonnet) for strategic decisions, leveraging multi-source market data and controlling BingX Futures. Key features include dynamic TP/SL, position inversion, dynamic leverage, and granular AI credit control.
 
-Recent enhancements and fixes include:
-- Implementing robust historical data fallback.
-- Fixing IA1-IA2 data flow and LLM budget issues through refined deduplication and confidence-based filtering.
-- Establishing full BingX account control.
-- Integrating a 5-level dynamic take-profit strategy and leverage-proportional trailing stop-loss.
-- Setting application timestamps to Paris time.
-- Optimizing scout cycle frequency to 4 hours.
-- Implementing and refining Risk-Reward (R:R) filters (min 2:1 for IA1, then pre-filter in Scout) to save LLM credits, and correcting R:R calculation consistency.
-- Implementing comprehensive deduplication across opportunities, IA1 analyses, and IA2 decisions, moving checks before LLM calls.
-- Relaxing scout filters (R:R, lateral movement, volume) to increase opportunity pass rate, eventually leading to the permanent removal of the restrictive lateral movement filter.
-- Optimizing IA1 to recommend HOLD for uninteresting cryptos, filtering these before IA2.
-- Refining IA1-IA2 communication to ensure IA2 prioritizes IA1's strategic choice and full reasoning, including a MASTER PATTERN designation.
-- Adjusting Take Profit levels to be more realistic (TP1 at 0.5%) and implementing an Intelligent TP Settler concept, evolved to be handled by IA2 through prompt engineering.
-- Resolving technical indicator calculation issues for micro-priced tokens to ensure accurate analysis and confidence scoring.
-- Implementing an Ultra-Robust Market Aggregator with 10+ external APIs for reliable data sourcing.
-- Integrating a filter to ensure the scout only analyzes tokens tradable on BingX.
+Recent enhancements focus on:
+- Robust data aggregation and deduplication.
+- Confidence-based IA1-IA2 filtering.
+- Multi-level TP strategies (now evolving to probabilistic).
+- Accurate technical indicator calculation for micro-priced tokens.
+- Relaxing scout filters (e.g., from TOP 25 to TOP 50, removing R:R pre-filter, lowering volume/market cap thresholds) to increase opportunity diversity and include small caps, while ensuring BingX tradability.
+- Reactivating and enhancing a Python-based Multi-RR Decision Engine for IA1, displaying actual Risk-Reward ratios and a post-calculation reflection sentiment.
+- Replacing the simple  IA2 admission filter with a more intelligent, multi-criteria (confidence, master pattern, expected value) probabilistic logic.
 </product_requirements>
 
 <key_technical_concepts>
--   **FastAPI**: Python web framework for backend.
--   **React**: JavaScript library for frontend UI.
--   **MongoDB**: NoSQL database for data storage (UUIDs for IDs).
--   **OpenAI GPT-4o, Claude-3-7-Sonnet**: AI models (IA1/IA2).
--   **Multi-threading/AsyncIO**: Parallel data processing.
--   **BingX API ( SDK)**: Live crypto trading, balance, order execution.
--   **Technical Analysis**: RSI, MACD, Bollinger Bands, Fibonacci, chart patterns, Risk-Reward calculation.
--   **WebSockets**: Real-time frontend updates.
--   **Dynamic Leverage/SL/TP/Trailing Stop-Loss**: Adaptive trading parameters.
--   ****: Python library for Paris timezone management.
--   ****: Data manipulation for technical indicators.
--   **, **: Asynchronous/synchronous HTTP requests for market data.
+- **FastAPI**: Backend Python framework.
+- **React**: Frontend JavaScript library.
+- **MongoDB**: NoSQL database for data storage using UUIDs.
+- **OpenAI GPT-4o, Claude-3-7-Sonnet**: AI models (IA1/IA2).
+- **BingX API**: Crypto trading and market data.
+- **Technical Analysis**: RSI, MACD, Bollinger Bands, Support/Resistance, Risk-Reward.
+- ****: Data manipulation for indicators.
+- **Asynchronous Programming**: .
 </key_technical_concepts>
 
 <code_architecture>
 
 
-
--   : Main FastAPI entry point and orchestrator, housing the  class.
-    -   **Importance**: Coordinates AI analysis, market data, trading, WebSockets, and manages the entire trading cycle. It's the central hub.
+-   : The core FastAPI application, orchestrating the trading system.
+    -   **Importance**: Handles market data, AI analysis (IA1/IA2), trading, and WebSockets. It contains the  class and various filtering/analysis methods.
     -   **Changes Made**:
-        -   IA1 deduplication logic moved before LLM calls.
-        -   Deduplication added to  endpoint and Paris timezone consistency ensured.
-        -   Scout filters (R:R, lateral movement, volume) were extensively modified and eventually the lateral movement filter was permanently removed.
-        -   IA1's prompt and  model updated to include  (HOLD/LONG/SHORT).
-        -    now filters based on IA1 confidence (>=70%).
-        -   Claude (IA2) override logic implemented to prioritize its decisions when highly confident (Hierarchie Clara).
-        -   IA2 prompt updated with realistic Take Profit levels (TP1 0.5%, TP2 1.0%, etc.) and later evolved to include  managed by Claude.
-        -   IA1-IA2 communication enhanced to send full IA1 reasoning and a MASTER PATTERN designation to IA2.
-        -   IA1's RR calculation corrected to use Master Pattern targets, and RR is displayed in reports.
-        -   , , ,  were updated to handle micro-priced tokens accurately (e.g., using  for RSI,  for S/R).
-        -   References to the old  replaced with .
-        -   Integration of  import and filtering logic added to the Scout.
--   : Environment variables.
-    -   **Importance**: Stores API keys and database connection string.
-    -   **Changes Made**: Updated with new API keys for CoinMarketCap, CoinAPI, TwelveData, Binance.
--   : Pre-filters opportunities by detecting chart patterns.
-    -   **Importance**: Filters low-quality opportunities before costly AI analysis.
-    -   **Changes Made**: No direct explicit changes to its core logic, but its output is now heavily relied upon by IA1's MASTER PATTERN logic, and its integration within the scout's  function has changed.
--   : Aggregates market data from various sources.
-    -   **Importance**: Provides reliable, multi-source market data for the trading system.
-    -   **Changes Made**: Replaced with  to incorporate 10+ external APIs with robust fallback mechanisms.
--   : *New file created*.
-    -   **Importance**: Fetches and filters a list of tradable futures symbols from BingX to ensure the bot only processes relevant opportunities.
-    -   **Changes Made**: Contains the  class, as provided by the user.
+        -   Initialization of  at startup for tradable symbols.
+        -   Reactivation and refinement of the Python-based Multi-RR Decision Engine logic.
+        -   Enhancements to IA1's prompt and parsing logic to integrate full JSON analysis, , and a post-calculation reflection sentiment alongside Multi-RR results.
+        -   Removal of the restrictive lateral movement filter and the Scout R:R pre-filter.
+        -   Expansion of  from TOP 25 to TOP 50.
+        -   Reduction of minimum volume and market cap thresholds in scouting and momentum filters.
+        -   Complete removal of  function.
+        -   Simplification of  overrides from 7 complex rules to 3 concise ones (Strong Signal, Premium Data, Tradable).
+        -   Replacement of the single RR < 2.0 IA2 admission filter with a 5-criteria probabilistic logic (high confidence, Multi-RR resolved, Master Pattern, significant movement, expected value).
+        -   Multiple debugging iterations to ensure IA1's full JSON output (analysis, reasoning, technical signals) is correctly parsed and passed through the system.
+
+-   : Contains the  class.
+    -   **Importance**: Fetches, filters, and caches tradable futures symbols from BingX.
+    -   **Changes Made**: The  method was updated to handle variations in BingX symbol naming conventions (e.g.,  vs ).
+
+-   : Detects chart patterns.
+    -   **Importance**: Used by the  for pre-filtering opportunities.
+    -   **Changes Made**: No direct changes to its core logic, but its integration was part of ensuring the existing technical validation was used instead of adding redundant logic.
 </code_architecture>
 
 <pending_tasks>
-- Initialize the  instance to load tradable symbols at system startup and ensure the  list is available for the scout.
+- Design and implement a probabilistic optimal TP system for IA2 to generate on-measure Take Profit levels with corresponding calibrated distributions.
 </pending_tasks>
 
 <current_work>
-The AI engineer is currently in the process of integrating a BingX-specific tradable symbols filter into the Scout. This involves using the  class, recently created in , to obtain an up-to-date list of symbols available for trading on BingX.
+Immediately before this summary request, the AI engineer was tasked with enhancing IA2's Take Profit (TP) strategy. The user requested to modify IA2's settings to generate on-measure TP levels with corresponding probabilistically calibrated optimal gain distributions.
 
-The work completed immediately before this summary request includes:
-1.  **Creation of **: A new file was created containing the  class, which handles fetching, filtering (by quote currency, keywords, and status), caching, and loading BingX tradable symbols.
-2.  **Import in **: The  has been successfully imported into .
-3.  **Integration of Filter in Scout**: The actual filtering logic has been added to the  method in . This filter checks if an  is present in the  list *before* proceeding with costly R:R calculations, optimizing resource usage.
-
-The immediate next step, which was in progress, is to ensure that the  is initialized and its  method is called at application startup to populate the  list. The trajectory ended while searching for an appropriate initialization section in .
+The AI acknowledged that IA2 already has an advanced TP structure. The current work involved planning how to integrate this new, more sophisticated, probabilistic TP system. The trajectory ended after the AI outlined its plan for this probabilistic optimal TP system and was about to initiate the testing of this new feature. The core idea is to move beyond fixed TP levels to dynamically calculated ones based on market conditions and probabilistic outcomes.
 </current_work>
 
 <optional_next_step>
-Initialize the  instance at system startup to load tradable symbols.
+Test the new probabilistic optimal TP system for IA2.
 </optional_next_step>

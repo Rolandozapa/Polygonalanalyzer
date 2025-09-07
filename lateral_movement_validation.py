@@ -14,7 +14,7 @@ class LateralMovementValidation:
                         self.base_url = line.split('=', 1)[1].strip()
                         break
         except:
-            self.base_url = "https://smart-crypto-bot-14.preview.emergentagent.com"
+            self.base_url = "https://aitra-platform.preview.emergentagent.com"
         
         self.api_url = f"{self.base_url}/api"
 

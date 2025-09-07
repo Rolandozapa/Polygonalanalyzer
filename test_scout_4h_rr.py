@@ -19,9 +19,9 @@ class Scout4hRiskRewardTester:
                         base_url = line.split('=', 1)[1].strip()
                         break
                 else:
-                    base_url = "https://smart-crypto-bot-14.preview.emergentagent.com"
+                    base_url = "https://aitra-platform.preview.emergentagent.com"
         except:
-            base_url = "https://smart-crypto-bot-14.preview.emergentagent.com"
+            base_url = "https://aitra-platform.preview.emergentagent.com"
         
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
