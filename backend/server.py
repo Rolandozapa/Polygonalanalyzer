@@ -4066,58 +4066,96 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         }
     
     async def _create_and_execute_advanced_strategy(self, decision: TradingDecision, claude_decision: Dict, analysis: TechnicalAnalysis):
-        """Create and execute advanced trading strategy with multi-level TPs and position inversion"""
+        """Create and execute advanced strategy with probabilistic optimal TP system"""
         try:
-            logger.info(f"Creating advanced strategy for {decision.symbol}")
+            logger.info(f"Creating probabilistic optimal TP strategy for {decision.symbol}")
             
             # Extract advanced strategy parameters from Claude decision
-            strategy_type = claude_decision.get("strategy_type", "ADVANCED_TP")
+            strategy_type = claude_decision.get("strategy_type", "PROBABILISTIC_OPTIMAL_TP")
             take_profit_strategy = claude_decision.get("take_profit_strategy", {})
             position_management = claude_decision.get("position_management", {})
             inversion_criteria = claude_decision.get("inversion_criteria", {})
             
-            # Create advanced strategy configuration
-            strategy_config = {
-                "symbol": decision.symbol,
-                "signal": decision.signal,
-                "entry_price": decision.entry_price,
-                "stop_loss": decision.stop_loss,
-                "strategy_type": strategy_type,
-                "take_profit_levels": {
-                    "tp1": {
-                        "price": decision.take_profit_1,
-                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[0]
-                    },
-                    "tp2": {
-                        "price": decision.take_profit_2,
-                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[1]
-                    },
-                    "tp3": {
-                        "price": decision.take_profit_3,
-                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[2]
-                    },
-                    "tp4": {
-                        "price": decision.take_profit_3 * 1.6,  # Extended target
-                        "percentage": take_profit_strategy.get("tp_distribution", [25, 30, 25, 20])[3]
+            # Only create TP strategy for LONG/SHORT signals
+            if decision.signal != SignalType.HOLD and take_profit_strategy:
+                # Extract probabilistic TP levels
+                tp_levels = take_profit_strategy.get("tp_levels", [])
+                total_tp_levels = take_profit_strategy.get("total_tp_levels", len(tp_levels))
+                distribution_logic = take_profit_strategy.get("tp_distribution_logic", "Custom probabilistic distribution")
+                
+                # Create dynamic TP configuration
+                probabilistic_tp_config = {}
+                total_distribution = 0
+                
+                for i, tp_level in enumerate(tp_levels):
+                    level_num = tp_level.get("level", i + 1)
+                    percentage_from_entry = tp_level.get("percentage_from_entry", 0)
+                    position_distribution = tp_level.get("position_distribution", 0)
+                    probability_reasoning = tp_level.get("probability_reasoning", "")
+                    
+                    # Calculate TP price based on percentage from entry
+                    if decision.signal == SignalType.LONG:
+                        tp_price = decision.entry_price * (1 + percentage_from_entry / 100)
+                    else:  # SHORT
+                        tp_price = decision.entry_price * (1 - percentage_from_entry / 100)
+                    
+                    probabilistic_tp_config[f"tp{level_num}"] = {
+                        "price": tp_price,
+                        "percentage_from_entry": percentage_from_entry,
+                        "position_distribution": position_distribution,
+                        "probability_reasoning": probability_reasoning
                     }
-                },
-                "position_management": position_management,
-                "inversion_criteria": inversion_criteria,
-                "confidence": decision.confidence,
-                "ia1_analysis_id": decision.ia1_analysis_id
-            }
-            
-            # Log the advanced strategy creation
-            logger.info(f"Advanced strategy created for {decision.symbol}: {strategy_type}")
-            logger.info(f"TP Distribution: {take_profit_strategy.get('tp_distribution', [25, 30, 25, 20])}")
-            logger.info(f"Inversion enabled: {inversion_criteria.get('enable_inversion', False)}")
-            
-            # Here you would integrate with the advanced_strategy_manager
-            # For now, we'll just log the strategy details
-            logger.info(f"Advanced strategy configuration: {strategy_config}")
+                    
+                    total_distribution += position_distribution
+                
+                # Validate distribution totals to 100%
+                if abs(total_distribution - 100) > 1:  # Allow 1% tolerance
+                    logger.warning(f"TP distribution total is {total_distribution}%, not 100%")
+                
+                # Create comprehensive strategy configuration
+                strategy_config = {
+                    "symbol": decision.symbol,
+                    "signal": decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                    "entry_price": decision.entry_price,
+                    "stop_loss": decision.stop_loss,
+                    "strategy_type": strategy_type,
+                    "probabilistic_tp_levels": probabilistic_tp_config,
+                    "total_tp_levels": total_tp_levels,
+                    "distribution_logic": distribution_logic,
+                    "market_conditions_factor": take_profit_strategy.get("market_conditions_factor", ""),
+                    "probabilistic_optimization": take_profit_strategy.get("probabilistic_optimization", True),
+                    "position_management": position_management,
+                    "inversion_criteria": inversion_criteria,
+                    "confidence": decision.confidence,
+                    "ia1_analysis_id": decision.ia1_analysis_id
+                }
+                
+                # Log the probabilistic TP strategy details
+                logger.info(f"🎯 Probabilistic TP strategy created for {decision.symbol}: {total_tp_levels} levels")
+                logger.info(f"📊 TP Distribution Logic: {distribution_logic}")
+                
+                # Log each TP level details
+                for level_key, level_data in probabilistic_tp_config.items():
+                    logger.info(f"   {level_key.upper()}: {level_data['percentage_from_entry']:.1f}% @ ${level_data['price']:.6f} ({level_data['position_distribution']}%)")
+                    logger.info(f"      Reasoning: {level_data['probability_reasoning']}")
+                
+                # Update decision reasoning with TP details
+                tp_details = f"PROBABILISTIC TP STRATEGY: {total_tp_levels}-level optimal distribution - "
+                tp_details += ", ".join([f"{k.upper()}({v['position_distribution']}%)" for k, v in probabilistic_tp_config.items()])
+                
+                if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
+                    decision.ia2_reasoning = (decision.ia2_reasoning + " | " + tp_details)[:1500]
+                
+                # Store strategy config for potential future use
+                logger.info(f"✅ Probabilistic optimal TP strategy configured: {strategy_config}")
+                
+            else:
+                logger.info(f"📝 HOLD signal for {decision.symbol} - no TP strategy generated (correct behavior)")
             
         except Exception as e:
-            logger.error(f"Error creating advanced strategy for {decision.symbol}: {e}")
+            logger.error(f"❌ Error creating probabilistic TP strategy for {decision.symbol}: {e}")
+            # Fallback to ensure system continues working
+            logger.info(f"🔄 Falling back to basic strategy logging for {decision.symbol}")
     
     async def _execute_live_trade(self, decision: TradingDecision):
         """Execute live trade on BingX"""
