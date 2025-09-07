@@ -1499,8 +1499,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 else:
                     stop_loss = current_price + (atr_estimate * 2.5)
                 
-                # Pour SHORT: TP basé sur support
-                if support_levels:
+                # Pour SHORT: TP basé sur MASTER PATTERN target prioritaire, sinon support
+                if detected_pattern and hasattr(detected_pattern, 'target_price') and detected_pattern.target_price < current_price:
+                    take_profit = detected_pattern.target_price  # PRIORITÉ AU TARGET PATTERN
+                    logger.info(f"📊 RR using MASTER PATTERN target: ${take_profit:.4f} for {opportunity.symbol}")
+                elif support_levels:
                     nearest_support = max([s for s in support_levels if s < current_price], default=current_price * 0.92)
                     take_profit = nearest_support
                 else:
