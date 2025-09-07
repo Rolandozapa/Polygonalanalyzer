@@ -1276,10 +1276,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
         try:
             logger.info(f"🔍 MULTI-SOURCE CHECK: Validation données pour {opportunity.symbol}...")
             
-            # NOUVEAU: Filtrage micro-prix pour éviter erreurs de calcul
-            if opportunity.current_price < 0.0001:  # Moins de 0.01 cent
-                logger.warning(f"⚠️ MICRO-PRIX DÉTECTÉ: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
-                return None
+            # NOUVEAU: Normalisation prix pour éviter notation scientifique
+            if opportunity.current_price > 0:
+                # Convertir notation scientifique en décimal normal
+                try:
+                    normalized_price = float(f"{opportunity.current_price:.12f}")
+                    if normalized_price != opportunity.current_price:
+                        logger.info(f"📊 PRIX NORMALISÉ: {opportunity.symbol} {opportunity.current_price} → {normalized_price}")
+                        opportunity.current_price = normalized_price
+                except (ValueError, OverflowError):
+                    logger.warning(f"⚠️ ERREUR NORMALISATION PRIX: {opportunity.symbol} - Prix: {opportunity.current_price}")
+                    return None
             
             # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
             logger.info(f"📊 SOURCING: Récupération OHLCV multi-sources pour {opportunity.symbol}")
