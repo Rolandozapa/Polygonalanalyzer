@@ -2407,14 +2407,15 @@ IA1 TECHNICAL ANALYSIS:
 - Bollinger Position: {analysis.bollinger_position}
 - Support Level: ${analysis.support_levels[0] if analysis.support_levels else analysis.rsi:.6f}
 - Resistance Level: ${analysis.resistance_levels[0] if analysis.resistance_levels else analysis.rsi:.6f}
-- Detected Patterns: {', '.join(analysis.patterns_detected)}
+- ALL Patterns Detected: {', '.join(analysis.patterns_detected)}
 - Analysis Confidence: {analysis.analysis_confidence:.2%}
 
 IA1 COMPLETE REASONING & STRATEGIC CHOICE:
 {analysis.ia1_reasoning}
 
-⚠️ CRITICAL: IA1's strategic conclusion above is the foundation for your decision. 
-If you disagree with IA1's choice, you MUST explicitly justify why in your reasoning.
+⚠️ CRITICAL PATTERN HIERARCHY: 
+Look for "MASTER PATTERN (IA1 STRATEGIC CHOICE)" in the reasoning above - this pattern is IA1's PRIMARY basis for direction.
+Other patterns are supplementary. If you disagree with the MASTER PATTERN conclusion, you MUST explicitly justify why.
 
 CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
 - Total Market Cap: ${market_sentiment['total_market_cap_usd']:,.0f}
