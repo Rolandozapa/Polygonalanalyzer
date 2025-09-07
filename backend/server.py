@@ -3501,14 +3501,41 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             leverage_multiplier = max(0.4, 2.0 / applied_leverage)  # 0.4x to 1.0x multiplier
             reasoning += f"LEVERAGE-ADJUSTED SL: {leverage_multiplier:.2f}x tighter due to {applied_leverage:.1f}x leverage. "
         
+        # NOUVELLE LOGIQUE: Utiliser la stratégie TP INTELLIGENTE de Claude au lieu du hardcodé
+        claude_tp_strategy = None
+        try:
+            if claude_decision and isinstance(claude_decision, dict):
+                claude_tp_strategy = claude_decision.get("intelligent_tp_strategy", {})
+                if claude_tp_strategy:
+                    logger.info(f"🎯 Claude TP Strategy detected for {opportunity.symbol}: {claude_tp_strategy.get('pattern_analysis', 'No pattern analysis')}")
+        except Exception as e:
+            logger.warning(f"⚠️ Error parsing Claude TP strategy: {e}")
+        
         if signal == SignalType.LONG:
-            # Dynamic leverage-adjusted stop-loss calculation
+            # Dynamic leverage-adjusted stop-loss calculation (unchanged)
             base_stop_distance = max(atr_estimate * 2.5, current_price * 0.025)  # Min 2.5% stop
             stop_loss_distance = base_stop_distance * leverage_multiplier  # Tighter with higher leverage
             stop_loss = current_price - stop_loss_distance
             
-            # 5-LEVEL TAKE PROFITS (leverage and sentiment adjusted)
-            if five_level_tp_data:
+            # CLAUDE INTELLIGENT TP STRATEGY (prioritaire sur hardcodé)
+            if claude_tp_strategy and "base_scenario" in claude_tp_strategy:
+                base_scenario = claude_tp_strategy["base_scenario"]
+                tp1_pct = base_scenario.get("tp1_percentage", 0.5) / 100.0
+                tp2_pct = base_scenario.get("tp2_percentage", 1.0) / 100.0  
+                tp3_pct = base_scenario.get("tp3_percentage", 1.8) / 100.0
+                tp4_pct = base_scenario.get("tp4_percentage", 3.0) / 100.0
+                
+                tp1 = current_price * (1 + tp1_pct)
+                tp2 = current_price * (1 + tp2_pct)
+                tp3 = current_price * (1 + tp3_pct)
+                tp4 = current_price * (1 + tp4_pct)
+                tp5 = current_price * (1 + tp4_pct * 1.2)  # TP5 = TP4 + 20%
+                
+                reasoning += f"CLAUDE TP STRATEGY: {base_scenario.get('reasoning', 'Intelligent TP based on pattern analysis')}. "
+                logger.info(f"✅ Using Claude TP Strategy: TP1={tp1_pct:.1%}, TP2={tp2_pct:.1%}, TP3={tp3_pct:.1%}, TP4={tp4_pct:.1%}")
+                
+            # FALLBACK: 5-LEVEL TAKE PROFITS hardcodés si Claude strategy manquante
+            elif five_level_tp_data:
                 tp1_pct = five_level_tp_data["tp1_percentage"] / 100.0
                 tp2_pct = five_level_tp_data["tp2_percentage"] / 100.0  
                 tp3_pct = five_level_tp_data["tp3_percentage"] / 100.0
