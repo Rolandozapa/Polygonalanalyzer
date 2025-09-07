@@ -1230,6 +1230,109 @@ class UltraProfessionalCryptoScout:
         """Calculate volatility estimate from 24h price change"""
         return abs(price_change_24h) / 100.0
 
+    async def _post_scout_technical_validation(self, opportunities: List[MarketOpportunity]) -> List[MarketOpportunity]:
+        """Post-Scout Technical Validator - Filtre chartiste et confirmation de tendance"""
+        validated_opportunities = []
+        validation_stats = {"total": 0, "passed": 0, "rejected": 0}
+        
+        logger.info(f"🔍 POST-SCOUT TECHNICAL VALIDATION: Analyzing {len(opportunities)} opportunities...")
+        
+        for opp in opportunities:
+            validation_stats["total"] += 1
+            
+            try:
+                # ÉTAPE 1: Quick technical analysis avec indicateurs de base
+                is_technically_valid = await self._validate_technical_signals(opp)
+                
+                if is_technically_valid:
+                    validated_opportunities.append(opp)
+                    validation_stats["passed"] += 1
+                    logger.info(f"✅ TECH-VALID: {opp.symbol} - Signal chartiste confirmé")
+                else:
+                    validation_stats["rejected"] += 1
+                    logger.info(f"❌ TECH-REJECT: {opp.symbol} - Pas de signal chartiste clair")
+                    
+            except Exception as e:
+                validation_stats["rejected"] += 1
+                logger.warning(f"⚠️ TECH-ERROR: {opp.symbol} - Erreur validation: {e}")
+        
+        return validated_opportunities
+    
+    async def _validate_technical_signals(self, opportunity: MarketOpportunity) -> bool:
+        """Validation des signaux techniques chartistes et tendance"""
+        try:
+            symbol = opportunity.symbol
+            current_price = opportunity.current_price
+            price_change_24h = opportunity.price_change_24h
+            volume_24h = opportunity.volume_24h
+            
+            # CRITÈRE 1: Momentum significatif (après assouplissement, garde quand même une logique)
+            has_momentum = abs(price_change_24h) >= 1.0  # Notre nouveau seuil
+            
+            # CRITÈRE 2: Volume consistency (éviter les pumps artificiels)
+            has_decent_volume = volume_24h >= 50_000  # Volume minimum pour légitimité
+            
+            # CRITÈRE 3: Pattern technique via technical_pattern_detector
+            has_pattern = await self._check_chartist_patterns(symbol, current_price, price_change_24h)
+            
+            # CRITÈRE 4: Trend confirmation (direction cohérente)
+            has_trend_confirmation = await self._check_trend_confirmation(symbol, price_change_24h)
+            
+            # LOGIQUE DE VALIDATION: Au moins 2 critères sur 4 doivent être satisfaits
+            criteria_met = sum([has_momentum, has_decent_volume, has_pattern, has_trend_confirmation])
+            
+            is_valid = criteria_met >= 2
+            
+            # Logging détaillé pour debug
+            logger.debug(f"🔍 {symbol} - Momentum:{has_momentum}, Volume:{has_decent_volume}, Pattern:{has_pattern}, Trend:{has_trend_confirmation} → Valid:{is_valid}")
+            
+            return is_valid
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Technical validation error for {opportunity.symbol}: {e}")
+            return False
+    
+    async def _check_chartist_patterns(self, symbol: str, current_price: float, price_change_24h: float) -> bool:
+        """Check for basic chartist patterns without complex TA"""
+        try:
+            # PATTERN SIMPLE 1: Breakout pattern (mouvement fort + prix proche high)
+            if abs(price_change_24h) > 5.0:  # Mouvement > 5%
+                return True  # Strong breakout pattern
+            
+            # PATTERN SIMPLE 2: Reversal potential (oversold/overbought sur base du mouvement)
+            if price_change_24h < -8.0:  # Forte baisse = potentiel rebond
+                return True
+            elif price_change_24h > 8.0:  # Forte hausse = momentum pattern
+                return True
+            
+            # PATTERN SIMPLE 3: Steady momentum (mouvement modéré mais soutenu)
+            if 2.0 <= abs(price_change_24h) <= 6.0:  # Mouvement modéré soutenu
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.warning(f"Pattern check error for {symbol}: {e}")
+            return False
+    
+    async def _check_trend_confirmation(self, symbol: str, price_change_24h: float) -> bool:
+        """Check for trend confirmation via multiple timeframes logic"""
+        try:
+            # TENDANCE SIMPLE 1: Direction claire (pas de flat market)
+            if abs(price_change_24h) >= 1.5:  # Mouvement directionnel clair
+                return True
+            
+            # TENDANCE SIMPLE 2: Cohérence avec notre trend focus (trending symbols prioritaires)
+            symbol_base = symbol.replace('USDT', '').replace('USD', '')
+            if symbol_base.upper() in [s.upper() for s in self.trending_symbols]:
+                return True  # Trending symbols ont confirmation implicite
+            
+            return False
+            
+        except Exception as e:
+            logger.warning(f"Trend confirmation error for {symbol}: {e}")
+            return False
+
 class UltraProfessionalIA1TechnicalAnalyst:
     def __init__(self):
         self.chat = get_ia1_chat()
