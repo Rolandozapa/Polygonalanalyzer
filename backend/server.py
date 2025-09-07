@@ -1285,10 +1285,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"📊 SOURCING: Récupération OHLCV multi-sources pour {opportunity.symbol}")
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
             
-            # ÉTAPE 2: Vérification disponibilité de base (au moins quelques données)
+            # Validation données minimales pour calculs techniques
             if historical_data is None or len(historical_data) < 20:
-                logger.info(f"💰 API ÉCONOMIE: SKIP IA1 pour {opportunity.symbol} - AUCUN OHLCV récupérable ({len(historical_data) if historical_data is not None else 0} jours)")
-                return None  # Économie API seulement si AUCUNE donnée possible
+                logger.warning(f"⚠️ DONNÉES INSUFFISANTES: {opportunity.symbol} - {len(historical_data) if historical_data is not None else 0} jours (min: 20)")
+                return None
             
             # ÉTAPE 3: Validation qualité multi-sources (si on a des données)
             multi_source_quality = self._validate_multi_source_quality(historical_data, opportunity.symbol)
