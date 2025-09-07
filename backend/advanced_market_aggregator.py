@@ -1288,4 +1288,4 @@ class AdvancedMarketAggregator:
         return parsed_data
 
 # Global instance
-advanced_market_aggregator = AdvancedMarketAggregator()
+advanced_market_aggregator = UltraRobustMarketAggregator()
