@@ -587,8 +587,10 @@
 
 ## test_plan:
   current_focus:
+    - "IA1 HOLD Filter Optimization for IA2 Economy"
     - "Analyse des Filtres Scout - Restrictivité et Efficacité"
-  stuck_tasks: []
+  stuck_tasks: 
+    - "IA1 HOLD Filter Optimization for IA2 Economy"
   test_all: false
   test_priority: "high_first"
 
