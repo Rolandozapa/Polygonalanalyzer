@@ -1286,9 +1286,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"✅ MULTI-SOURCE VALIDÉ: {opportunity.symbol} - {multi_source_quality['sources_info']}")
             
             # ÉTAPE 4: NOUVEAU FILTRE - Détection mouvements latéraux (économie API optimisée)
-            # ANALYSE MOUVEMENT : Information seulement (sans filtrage bloquant)
-            lateral_movement = self._detect_lateral_movement(historical_data, opportunity.symbol)
-            logger.info(f"📊 ANALYSE MOUVEMENT: {opportunity.symbol} - {lateral_movement['movement_type']} ({lateral_movement['reason']})")
+            # ANALYSE MOUVEMENT : Information seulement (sans filtrage bloquant) - REMPLACÉ PAR MULTI-RR
+            # lateral_movement = self._detect_lateral_movement(historical_data, opportunity.symbol)
+            # logger.info(f"📊 ANALYSE MOUVEMENT: {opportunity.symbol} - {lateral_movement['movement_type']} ({lateral_movement['reason']})")
+            # Note: Le filtrage latéral est maintenant géré par le Multi-RR Decision Engine
             
             # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé + Overrides intelligents
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
@@ -1302,8 +1303,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 
                 bypass_technical_filter = False
                 
-                # Override 1: Données excellentes + mouvement directionnel (non latéral)
-                if multi_source_quality["confidence_score"] >= 0.9 and not lateral_movement["is_lateral"]:
+                # Override 1: Données excellentes + mouvement directionnel (remplacé par Multi-RR)
+                if multi_source_quality["confidence_score"] >= 0.9:
                     logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle")
                     bypass_technical_filter = True
                 
