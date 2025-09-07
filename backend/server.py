@@ -5768,6 +5768,87 @@ async def get_bingx_account_info():
         logger.error(f"Error getting BingX account info: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get account info: {str(e)}")
 
+@app.get("/api/active-positions")
+async def get_active_positions():
+    """Get all active trading positions with real-time data"""
+    try:
+        positions_summary = orchestrator.active_position_manager.get_active_positions_summary()
+        return {
+            "success": True,
+            "data": positions_summary,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting active positions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get active positions: {str(e)}")
+
+@app.post("/api/active-positions/close/{position_id}")
+async def close_active_position(position_id: str):
+    """Manually close an active position"""
+    try:
+        if position_id not in orchestrator.active_position_manager.active_positions:
+            raise HTTPException(status_code=404, detail=f"Position {position_id} not found")
+        
+        position = orchestrator.active_position_manager.active_positions[position_id]
+        position.status = "CLOSING"
+        
+        logger.info(f"🔒 Manual close requested for position: {position.symbol}")
+        
+        return {
+            "success": True,
+            "message": f"Position {position_id} marked for closing",
+            "position_id": position_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error closing position {position_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to close position: {str(e)}")
+
+@app.post("/api/trading/execution-mode")
+async def set_trading_execution_mode(request: Dict[str, Any]):
+    """Set trading execution mode (LIVE or SIMULATION)"""
+    try:
+        mode = request.get('mode', 'SIMULATION').upper()
+        
+        if mode not in ['LIVE', 'SIMULATION']:
+            raise HTTPException(status_code=400, detail="Invalid execution mode. Use 'LIVE' or 'SIMULATION'")
+        
+        # Update execution mode
+        orchestrator.active_position_manager.execution_mode = TradeExecutionMode(mode)
+        
+        logger.info(f"🔄 Trading execution mode changed to: {mode}")
+        
+        return {
+            "success": True,
+            "message": f"Execution mode set to {mode}",
+            "current_mode": mode,
+            "warning": "LIVE mode will execute real trades with real money!" if mode == 'LIVE' else None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error setting execution mode: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to set execution mode: {str(e)}")
+
+@app.get("/api/trading/execution-mode")  
+async def get_trading_execution_mode():
+    """Get current trading execution mode"""
+    try:
+        current_mode = orchestrator.active_position_manager.execution_mode.value
+        active_positions = len(orchestrator.active_position_manager.active_positions)
+        
+        return {
+            "success": True,
+            "execution_mode": current_mode,
+            "active_positions": active_positions,
+            "monitoring_active": orchestrator.active_position_manager.monitoring_active,
+            "safety_status": "SIMULATION" if current_mode == "SIMULATION" else "LIVE_TRADING_ACTIVE"
+        }
+    except Exception as e:
+        logger.error(f"Error getting execution mode: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get execution mode: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
