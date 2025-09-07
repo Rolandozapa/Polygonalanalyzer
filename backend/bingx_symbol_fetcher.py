@@ -160,9 +160,27 @@ class BingXFuturesFetcher:
         return tradable_symbols
     
     def is_symbol_tradable(self, symbol: str) -> bool:
-        """Vérifie si un symbole spécifique est tradable sur BingX"""
+        """Vérifie si un symbole spécifique est tradable sur BingX - Format flexible"""
         tradable_symbols = self.get_tradable_symbols()
-        return symbol in tradable_symbols
+        
+        # Test direct
+        if symbol in tradable_symbols:
+            return True
+        
+        # Test avec tiret : WLDUSDT → WLD-USDT
+        if symbol.endswith('USDT') and '-' not in symbol:
+            base = symbol[:-4]  # Enlever USDT
+            dash_format = f"{base}-USDT"
+            if dash_format in tradable_symbols:
+                return True
+        
+        # Test sans tiret : WLD-USDT → WLDUSDT  
+        if '-USDT' in symbol:
+            no_dash_format = symbol.replace('-', '')
+            if no_dash_format in tradable_symbols:
+                return True
+        
+        return False
 
 # Instance globale
 bingx_fetcher = BingXFuturesFetcher()
