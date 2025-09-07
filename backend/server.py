@@ -2298,7 +2298,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["patterns_detected"] = analysis_data.get("patterns_detected", ["No patterns detected"])
             
             # Validation des strings
+            cleaned_data["analysis"] = str(analysis_data.get("analysis", "Technical analysis completed"))  # 🆕
+            cleaned_data["reasoning"] = str(analysis_data.get("reasoning", "Analysis suggests monitoring key levels"))  # 🆕
             cleaned_data["ia1_reasoning"] = str(analysis_data.get("ia1_reasoning", "Analysis completed"))
+            cleaned_data["ia1_signal"] = str(analysis_data.get("ia1_signal", "hold"))  # 🆕
             cleaned_data["market_sentiment"] = str(analysis_data.get("market_sentiment", "neutral"))
             cleaned_data["data_sources"] = analysis_data.get("data_sources", ["internal"])
             
