@@ -11897,8 +11897,7 @@ if __name__ == "__main__":
 
     def test_scout_option_a_implementation(self):
         """Test Scout Option A Implementation - Lateral Filter Removed + 7 Overrides Optimized"""
-        print(f"
-🎯 TESTING SCOUT OPTION A IMPLEMENTATION...")
+        print(f"\n🎯 TESTING SCOUT OPTION A IMPLEMENTATION...")
         print(f"   📋 EXPECTED: Lateral filter REMOVED + 7 overrides optimized")
         print(f"   🎯 TARGET: Pass rate 20-25% (up from 16%)")
         print(f"   🔍 FOCUS: KTAUSDT-type opportunities should now pass")
