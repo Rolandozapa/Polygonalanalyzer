@@ -325,103 +325,17 @@ DECISION OUTPUT FORMAT (JSON):
             "probability_based_sl": 0.88,  // Keep SL where 88% probability of pattern holding
             "adaptive_sl": "Trail SL at 50% of TP1 once TP1 hit, optimize risk-free trades"
         }
-    },
-    "position_management": {
-        "entry_strategy": "MARKET|LIMIT|DCA",
-        "stop_loss_percentage": 3.0,
-        "trailing_stop": true,
-        "position_size_multiplier": 1.0  // 0.5-2.0 based on conviction
-    },
-    "inversion_criteria": {
-        "enable_inversion": true,
-        "confidence_threshold": 0.10,  // 10% higher confidence required for inversion
-        "opposite_signal_strength": 0.6  // Minimum opposite signal strength for inversion
-    },
-    "key_factors": ["factor1", "factor2", "factor3"]
+    }
 }
 
-ADVANCED STRATEGY APPROACH AVEC INTELLIGENT TP PLANNER:
+🧮 PROBABILISTIC CALCULATIONS:
+- Use Bayesian probability updates based on real-time data
+- Factor in token's historical volatility patterns  
+- Weight by pattern success rates and market conditions
+- Optimize allocation to maximize expected value while limiting tail risk
+- Consider correlation with BTC/market movements
 
-Tu es maintenant responsable de créer une STRATÉGIE TP INTELLIGENTE personnalisée basée sur ton analyse chartiste et tes prévisions de mouvement. 
-
-INTELLIGENT TP PLANNER INSTRUCTIONS:
-1. Analyse le pattern chartiste détecté et prédis le mouvement probable
-2. Crée des TP ADAPTATIFS basés sur:
-   - La force du pattern (faible/moyen/fort)
-   - Les niveaux de support/résistance identifiés
-   - La volatilité attendue du crypto
-   - Le contexte marché global (bull/bear/neutral)
-   
-3. Génère 3 SCÉNARIOS TP:
-   - SCENARIO CONSERVATEUR: Si le mouvement est plus faible que prévu
-   - SCENARIO BASE: Si le mouvement suit tes prévisions normales  
-   - SCENARIO OPTIMISTE: Si le mouvement dépasse tes attentes (bull run/forte cassure)
-
-4. Pour chaque scénario, définis:
-   - TP niveaux spécifiques (en % depuis entry)
-   - Distribution de position (% à vendre à chaque TP)
-   - Critères de déclenchement du scénario
-   - Stop-loss adaptatif si le pattern échoue
-
-RÈGLES TP INTELLIGENTES:
-- TP1 toujours RÉALISTE (0.3% à 0.8% max) pour sécurisation rapide
-- TP suivants basés sur la force de ton signal et résistances techniques
-- Si pattern FAIBLE: TP max 2% | Si pattern FORT: TP max 5%
-- Intègre les niveaux Fibonacci et résistances dans tes TP
-- Prévois des ajustements si volume/momentum change
-
-EXEMPLE de raisonnement attendu:
-"Pattern Double Bottom détecté avec cassure de résistance à $X. 
-SCENARIO BASE: TP1 0.5% (sécurisation), TP2 1.2% (résistance mineure), TP3 2.1% (résistance majeure)
-SCENARIO OPTIMISTE: Si volume +20% après TP1 → Extension TP2→1.8%, TP3→3.2%
-SCENARIO CONSERVATEUR: Si rejet à résistance → Compression TP2→0.9%, TP3→1.5%"
-
-MARKET SENTIMENT & DYNAMIC LEVERAGE STRATEGY:
-Adapt leverage and risk parameters based on overall crypto market conditions and trade confidence.
-
-LEVERAGE CALCULATION RULES:
-- **Base Leverage:** 2x-3x (conservative)
-- **Confidence Multiplier:** High confidence (>90%) = +1x-2x additional
-- **Market Sentiment Multiplier:** 
-  - LONG + Bullish Market (+5% market cap) = +1x-2x additional
-  - SHORT + Bearish Market (-5% market cap) = +1x-2x additional  
-  - LONG + Bearish Market = Base leverage only (risk mitigation)
-  - SHORT + Bullish Market = Base leverage only (risk mitigation)
-
-DYNAMIC STOP LOSS & TAKE PROFIT:
-- **Stop Loss Optimization:** Tighter SL with higher leverage (1.5-2.5% instead of 3-5%)
-- **Take Profit Scaling:** More aggressive TP with favorable sentiment
-- **Risk-Reward Adaptation:** 2:1 minimum, up to 4:1 in optimal conditions
-
-MARKET SENTIMENT INDICATORS:
-- **Total Crypto Market Cap Change (24h):** Primary sentiment indicator
-- **BTC Dominance Trend:** Secondary confirmation
-- **Volume Analysis:** Market participation strength
-- **Fear & Greed Index:** Emotional market state
-
-LEVERAGE EXAMPLES:
-- **LONG BTC, 95% confidence, +7% market cap:** 6x leverage (2x base + 2x confidence + 2x sentiment)
-- **SHORT ETH, 85% confidence, -4% market cap:** 5x leverage (2x base + 1x confidence + 2x sentiment)  
-- **LONG ALTCOIN, 75% confidence, -2% market cap:** 2x leverage (base only, unfavorable sentiment)
-
-RISK MANAGEMENT WITH LEVERAGE:
-- **Higher Leverage = Tighter Stop Loss:** Maintain same $ risk per trade
-- **Position Size Calculation:** Account balance ÷ (leverage × stop loss %) = max position
-- **Maximum Leverage Cap:** 10x absolute maximum for risk control
-
-POSITION INVERSION LOGIC:
-- Monitor for opposite signals with 10%+ higher confidence
-- Automatically close current position and open reverse position
-- Maintain risk management throughout inversion process
-
-CONFIDENCE SCORING:
-- 0.85-1.0: High conviction with position size standard et TP RÉALISTES (0.5%, 1%, 1.8%, 3%)
-- 0.70-0.84: Good setup avec TP conservateurs (0.5%, 1%, 1.5%)
-- 0.55-0.69: Moderate setup avec TP très serrés (0.5%, 1%)
-- 0.40-0.54: Weak setup, TP minimal à 0.5% ou attendre meilleur entry
-- Below 0.40: HOLD - Pas de TP définis, trop risqué
-
-Be thorough, strategic, and provide advanced trading insights."""
+BE MATHEMATICAL: Show probability calculations, expected values, and optimization reasoning."""
         ).with_model("anthropic", "claude-3-7-sonnet-20250219")
         
         logger.info("✅ IA2 Claude decision agent initialized successfully")
