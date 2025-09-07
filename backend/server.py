@@ -1497,6 +1497,42 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 **validated_data
             )
             
+            # 🚀 APPLIQUER LE MULTI-RR ENGINE avec formules améliorées
+            try:
+                multi_rr_result = self._resolve_ia1_contradiction_with_multi_rr(
+                    base_analysis, opportunity, detected_pattern
+                )
+                
+                if multi_rr_result.get('contradiction', False):
+                    # Contradiction détectée - intégrer les calculs Multi-RR dans le reasoning
+                    rr_details = multi_rr_result.get('multi_rr_results', {})
+                    final_recommendation = multi_rr_result.get('final_recommendation', 'hold')
+                    
+                    # Construire les détails Multi-RR pour l'affichage
+                    multi_rr_display = "\n\n🤖 **MULTI-RR ANALYSIS:**"
+                    
+                    for option, data in rr_details.items():
+                        rr_ratio = data.get('rr_ratio', 0)
+                        reasoning = data.get('reasoning', '')
+                        multi_rr_display += f"\n  • {option.upper()}: **{rr_ratio:.2f}:1** - {reasoning}"
+                    
+                    multi_rr_display += f"\n\n🏆 **WINNER:** {final_recommendation.upper()}"
+                    multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
+                    
+                    # Enrichir le reasoning avec les calculs Multi-RR
+                    enhanced_reasoning = reasoning + multi_rr_display
+                    
+                    # Mettre à jour le signal IA1 basé sur la résolution Multi-RR
+                    base_analysis.ia1_signal = final_recommendation
+                    base_analysis.ia1_reasoning = enhanced_reasoning
+                    
+                    logger.info(f"🎯 Multi-RR applied for {opportunity.symbol}: {final_recommendation.upper()} chosen")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Multi-RR calculation failed for {opportunity.symbol}: {e}")
+            
+            return base_analysis
+            
         except Exception as e:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
             return self._create_fallback_analysis(opportunity)
