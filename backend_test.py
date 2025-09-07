@@ -258,7 +258,7 @@ class ChartistPatternIntegrationTestSuite:
                         
             # Check database for pattern storage
             pattern_storage_success = False
-            if self.db:
+            if self.db is not None:
                 try:
                     # Check if technical_analyses collection has pattern data
                     analyses_cursor = self.db.technical_analyses.find().limit(10)
