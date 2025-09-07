@@ -11903,8 +11903,7 @@ if __name__ == "__main__":
         print(f"   🔍 FOCUS: KTAUSDT-type opportunities should now pass")
         
         # Step 1: Clear cache for fresh test
-        print(f"
-   🗑️ Step 1: Clearing cache for fresh Option A test...")
+        print(f"\n   🗑️ Step 1: Clearing cache for fresh Option A test...")
         try:
             clear_success, clear_result = self.run_test("Clear Cache", "POST", "decisions/clear", 200)
             if clear_success:
