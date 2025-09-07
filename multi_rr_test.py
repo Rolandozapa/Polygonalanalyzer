@@ -37,6 +37,7 @@ class MultiRRTester:
                 return True, response.json()
             else:
                 print(f"❌ Failed to get analyses: {response.status_code}")
+                print(f"   Response: {response.text[:200]}")
                 return False, {}
         except Exception as e:
             print(f"❌ Error getting analyses: {e}")
