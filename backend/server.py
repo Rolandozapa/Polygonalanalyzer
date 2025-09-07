@@ -330,11 +330,11 @@ POSITION INVERSION LOGIC:
 - Maintain risk management throughout inversion process
 
 CONFIDENCE SCORING:
-- 0.85-1.0: High conviction with full position size and aggressive TP levels
-- 0.70-0.84: Good setup with standard position and TP strategy
-- 0.55-0.69: Moderate setup with conservative position sizing
-- 0.40-0.54: Weak setup, smaller position or wait for better entry
-- Below 0.40: High risk, likely HOLD unless exceptional circumstances
+- 0.85-1.0: High conviction with position size standard et TP RÉALISTES (0.5%, 1%, 1.8%, 3%)
+- 0.70-0.84: Good setup avec TP conservateurs (0.5%, 1%, 1.5%)
+- 0.55-0.69: Moderate setup avec TP très serrés (0.5%, 1%)
+- 0.40-0.54: Weak setup, TP minimal à 0.5% ou attendre meilleur entry
+- Below 0.40: HOLD - Pas de TP définis, trop risqué
 
 Be thorough, strategic, and provide advanced trading insights."""
         ).with_model("anthropic", "claude-3-7-sonnet-20250219")
