@@ -33,33 +33,48 @@ class MultiRRTester:
 
         print(f"\n🔍 Testing {name}...")
         
-        start_time = time.time()
-        try:
-            if method == 'GET':
-                response = requests.get(url, headers=headers, timeout=timeout)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers, timeout=timeout)
+        # Retry logic for network issues
+        max_retries = 3
+        for attempt in range(max_retries):
+            start_time = time.time()
+            try:
+                if method == 'GET':
+                    response = requests.get(url, headers=headers, timeout=timeout)
+                elif method == 'POST':
+                    response = requests.post(url, json=data, headers=headers, timeout=timeout)
 
-            end_time = time.time()
-            response_time = end_time - start_time
-            
-            success = response.status_code == expected_status
-            if success:
-                print(f"✅ Passed - Status: {response.status_code} - Time: {response_time:.2f}s")
-                try:
-                    response_data = response.json()
-                    return True, response_data
-                except:
-                    return True, {}
-            else:
-                print(f"❌ Failed - Expected {expected_status}, got {response.status_code} - Time: {response_time:.2f}s")
-                return False, {}
+                end_time = time.time()
+                response_time = end_time - start_time
+                
+                success = response.status_code == expected_status
+                if success:
+                    print(f"✅ Passed - Status: {response.status_code} - Time: {response_time:.2f}s")
+                    try:
+                        response_data = response.json()
+                        return True, response_data
+                    except:
+                        return True, {}
+                else:
+                    if attempt < max_retries - 1:
+                        print(f"⚠️  Attempt {attempt + 1} failed - Status: {response.status_code}, retrying...")
+                        time.sleep(2)
+                        continue
+                    else:
+                        print(f"❌ Failed - Expected {expected_status}, got {response.status_code} - Time: {response_time:.2f}s")
+                        return False, {}
 
-        except Exception as e:
-            end_time = time.time()
-            response_time = end_time - start_time
-            print(f"❌ Failed - Error: {str(e)} - Time: {response_time:.2f}s")
-            return False, {}
+            except Exception as e:
+                end_time = time.time()
+                response_time = end_time - start_time
+                if attempt < max_retries - 1:
+                    print(f"⚠️  Attempt {attempt + 1} failed - Error: {str(e)}, retrying...")
+                    time.sleep(2)
+                    continue
+                else:
+                    print(f"❌ Failed - Error: {str(e)} - Time: {response_time:.2f}s")
+                    return False, {}
+        
+        return False, {}
 
     def test_start_trading_system(self):
         """Test starting the trading system"""
