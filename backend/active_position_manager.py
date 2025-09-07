@@ -45,11 +45,13 @@ class ActivePosition:
     # Take Profit Strategy (Probabilistic)
     tp_levels: List[Dict[str, Any]]  # [{"level": 1, "price": 1.234, "percentage": 35, "filled": False}]
     tp_total_levels: int
-    tp_filled_levels: int = 0
     
     # Stop Loss & Trailing
     initial_stop_loss: float
     current_stop_loss: float
+    
+    # Fields with defaults
+    tp_filled_levels: int = 0
     trailing_sl_active: bool = False
     trailing_sl_percentage: float = 3.0  # Default 3%
     tp1_activated: bool = False
