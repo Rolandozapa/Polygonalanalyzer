@@ -819,7 +819,7 @@ class UltraProfessionalCryptoScout:
             'KSM', 'ZRX', 'REN', 'LRC', '1INCH'
         ]  # Top 50 pour analyse patterns techniques plus diversifiée
         self.focus_trending = True
-        self.min_price_change_threshold = 3.0  # Focus sur les mouvements >3%
+        self.min_price_change_threshold = 1.0  # Focus sur les mouvements >1% (TRÈS ASSOUPLI)
         self.volume_spike_multiplier = 2.0     # Volume >2x moyenne
         self.auto_update_trending = True       # Auto-update depuis Readdy
     
