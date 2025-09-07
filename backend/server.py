@@ -1385,6 +1385,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 
             except (json.JSONDecodeError, ValueError, KeyError) as e:
                 logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using defaults")
+                # Fallback analysis and reasoning
+                ia1_analysis = f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators."
+                ia1_reasoning = "Technical analysis suggests monitoring key support and resistance levels for directional signals."
             
             # Enrichir le raisonnement avec les informations extraites
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
