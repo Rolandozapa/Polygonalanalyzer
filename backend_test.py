@@ -26,16 +26,8 @@ class PositionSizingTestSuite:
     """Test suite for Position Sizing fixes in Active Trading System"""
     
     def __init__(self):
-        # Get backend URL from frontend env
-        self.base_url = "http://localhost:8001"  # Default
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        self.base_url = line.split('=')[1].strip()
-                        break
-        except Exception:
-            pass
+        # Use localhost for internal testing
+        self.base_url = "http://localhost:8001"
         
         self.api_url = f"{self.base_url}/api"
         logger.info(f"Testing backend at: {self.api_url}")
