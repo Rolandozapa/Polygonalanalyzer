@@ -2874,8 +2874,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     }
                     
                     # Execute trade through Active Position Manager
-                    from server import orchestrator  # Import here to avoid circular import
-                    execution_result = await orchestrator.active_position_manager.execute_trade_from_ia2_decision(trade_data)
+                    execution_result = await self.active_position_manager.execute_trade_from_ia2_decision(trade_data)
                     
                     if execution_result.success:
                         logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
