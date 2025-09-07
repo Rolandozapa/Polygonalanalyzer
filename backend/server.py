@@ -1349,21 +1349,29 @@ class UltraProfessionalIA1TechnicalAnalyst:
             master_pattern = None
             multi_rr_info = ""
             
-            # 🆕 JSON complet de l'IA1 avec patterns détectés intégrés
+            # 🆕 JSON complet de l'IA1 avec patterns détectés intégrés et structure améliorée
             detected_pattern_names = [p.pattern_type.value for p in all_detected_patterns]
+            primary_pattern = all_detected_patterns[0] if all_detected_patterns else None
             
             ia1_complete_json = {
-                "analysis": f"{opportunity.symbol} technical analysis incorporating {len(all_detected_patterns)} detected chartist patterns.",
-                "reasoning": f"Analysis includes detected patterns: {', '.join(detected_pattern_names[:3]) if detected_pattern_names else 'No significant patterns'}. Technical indicators and pattern confluence guide the assessment.",
+                "analysis": f"{opportunity.symbol} technical analysis with {len(all_detected_patterns)} detected chartist patterns: {', '.join(detected_pattern_names[:3]) if detected_pattern_names else 'No significant patterns'}. Pattern-based assessment suggests monitoring key levels for directional confirmation.",
+                "reasoning": f"PATTERN ANALYSIS: The detected {detected_pattern_names[0] if detected_pattern_names else 'baseline'} formation provides the primary technical framework. {f'This {detected_pattern_names[0]} pattern typically indicates {primary_pattern.trading_direction} bias' if primary_pattern else 'Technical indicators'} combined with current market structure guide the strategic assessment.",
                 "rsi_signal": "neutral",
                 "macd_trend": "neutral", 
                 "patterns": detected_pattern_names,
+                "pattern_analysis": {
+                    "primary_pattern": detected_pattern_names[0] if detected_pattern_names else "none",
+                    "pattern_strength": primary_pattern.strength if primary_pattern else 0,
+                    "pattern_direction": primary_pattern.trading_direction if primary_pattern else "neutral", 
+                    "pattern_confidence": primary_pattern.confidence if primary_pattern else 0,
+                    "total_patterns": len(all_detected_patterns)
+                },
                 "support": [],
                 "resistance": [],
-                "confidence": 0.7,
-                "recommendation": "hold",
+                "confidence": max(0.7, primary_pattern.confidence if primary_pattern else 0.7),
+                "recommendation": primary_pattern.trading_direction if primary_pattern and primary_pattern.trading_direction != "neutral" else "hold",
                 "master_pattern": detected_pattern_names[0] if detected_pattern_names else None,
-                "patterns_detected": detected_pattern_names,  # Nouveau champ pour compatibility
+                "patterns_detected": detected_pattern_names,  # Compatibility field
                 "detected_patterns_count": len(all_detected_patterns)
             }
             
