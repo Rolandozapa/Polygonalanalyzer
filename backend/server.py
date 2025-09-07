@@ -1012,66 +1012,33 @@ class UltraProfessionalCryptoScout:
             # Sort by trending score
             sorted_opportunities = self._sort_by_trending_score(unique_opportunities)
             
-            # NOUVEAU: PRÉ-FILTRAGE RISK-REWARD SCOUT pour économiser les crédits IA
-            pre_filtered_opportunities = []
-            scout_rr_stats = {"total": 0, "passed": 0, "rejected": 0}
+            # FILTRE SIMPLIFIÉ : Garde uniquement BingX + limite volume
+            filtered_opportunities = []
+            stats = {"total": 0, "bingx_passed": 0, "bingx_rejected": 0}
             
-            logger.info(f"🔍 SCOUT BIDIRECTIONAL R:R PRE-FILTER: Analyzing {len(sorted_opportunities)} opportunities...")
+            logger.info(f"📊 OPPORTUNITÉS SANS PRÉ-FILTRE R:R: Analyzing {len(sorted_opportunities)} opportunities...")
             
             for opp in sorted_opportunities:
-                scout_rr_stats["total"] += 1
+                stats["total"] += 1
                 
-                # === FILTRE BINGX PRIORITAIRE ===
-                # Vérifie d'abord si le token est tradable sur BingX (économie calculs)
-                if not is_bingx_tradable(opp.symbol):
-                    logger.info(f"🚫 BINGX FILTER: {opp.symbol} - Pas disponible sur BingX Futures, SKIP")
-                    scout_rr_stats["rejected"] += 1
-                    continue
-                
-                # Calcul R:R bidirectionnel par le Scout
-                scout_rr = self._calculate_scout_risk_reward(opp)
-                long_ratio = scout_rr["long_ratio"]
-                short_ratio = scout_rr["short_ratio"] 
-                best_ratio = scout_rr["best_ratio"]
-                preferred_direction = scout_rr["preferred_direction"]
-                
-                # === LOGIQUES DE FILTRE INTELLIGENTES ===
-                
-                # Option 1: Au moins un R:R ≥ 1.05 (TRÈS ASSOUPLI - récupère beaucoup plus d'opportunités)
-                filter_passed = best_ratio >= 1.05
-                filter_reason = f"Best R:R {best_ratio:.2f}:1 ≥ 1.05:1"
-                
-                # Option 2: Moyenne des deux R:R ≥ 1.2 (Alternative plus permissive)
-                # filter_passed = scout_rr["average_ratio"] >= 1.2
-                # filter_reason = f"Avg R:R {scout_rr['average_ratio']:.2f}:1 ≥ 1.2:1"
-                
-                # Option 3: Les deux R:R ≥ 1.1 (Alternative très stricte pour opportunités bidirectionnelles)
-                # filter_passed = long_ratio >= 1.1 and short_ratio >= 1.1
-                # filter_reason = f"Both R:R (L:{long_ratio:.2f}:1, S:{short_ratio:.2f}:1) ≥ 1.1:1"
-                
-                if filter_passed:
-                    pre_filtered_opportunities.append(opp)
-                    scout_rr_stats["passed"] += 1
-                    logger.info(f"✅ SCOUT PASS: {opp.symbol} - LONG:{long_ratio:.2f}:1, SHORT:{short_ratio:.2f}:1 → Best:{best_ratio:.2f}:1 ({preferred_direction.upper()} preferred)")
+                # Seul filtre : Disponibilité BingX (pour trading réel)
+                if is_bingx_tradable(opp.symbol):
+                    filtered_opportunities.append(opp)
+                    stats["bingx_passed"] += 1
+                    logger.info(f"✅ ADMIT: {opp.symbol} - BingX tradable, admitted for IA1 analysis")
                 else:
-                    scout_rr_stats["rejected"] += 1
-                    logger.info(f"❌ SCOUT REJECT: {opp.symbol} - LONG:{long_ratio:.2f}:1, SHORT:{short_ratio:.2f}:1 → Best:{best_ratio:.2f}:1 ({filter_reason})")
+                    stats["bingx_rejected"] += 1
+                    logger.info(f"🚫 SKIP: {opp.symbol} - Not available on BingX Futures")
             
-            # Limite finale après pré-filtrage
-            final_opportunities = pre_filtered_opportunities[:self.max_cryptos_to_analyze]
+            # Limite finale (plus élevée avec les filtres assouplis)
+            final_opportunities = filtered_opportunities[:self.max_cryptos_to_analyze]
             
-            # Statistiques d'économie
-            ia1_savings = scout_rr_stats["rejected"]
-            savings_percentage = (ia1_savings / max(scout_rr_stats["total"], 1)) * 100
-            
-            logger.info(f"🎯 SCOUT BIDIRECTIONAL R:R PRE-FILTER RESULTS:")
-            logger.info(f"   📊 Total analyzed: {scout_rr_stats['total']}")
-            logger.info(f"   ✅ Passed (best R:R ≥1.2:1): {scout_rr_stats['passed']}")
-            logger.info(f"   ❌ Rejected (best R:R <1.2:1): {scout_rr_stats['rejected']}")
-            logger.info(f"   💰 IA1 API calls saved: {ia1_savings} ({savings_percentage:.1f}%)")
-            logger.info(f"   🚀 Final opportunities: {len(final_opportunities)}")
-            
-            logger.info(f"TREND-FOCUSED scan + SCOUT BIDIRECTIONAL R:R PRE-FILTER complete: {len(final_opportunities)} high-quality opportunities selected")
+            logger.info(f"🎯 RÉSULTATS FILTRAGE ASSOUPLI:")
+            logger.info(f"   📊 Total analysées: {stats['total']}")
+            logger.info(f"   ✅ BingX compatibles: {stats['bingx_passed']}")
+            logger.info(f"   ❌ Non-BingX: {stats['bingx_rejected']}")
+            logger.info(f"   🚀 Envoyées à IA1: {len(final_opportunities)}")
+            logger.info(f"SCAN ASSOUPLI complet: {len(final_opportunities)} opportunités diverses sélectionnées")
             
             return final_opportunities
             
