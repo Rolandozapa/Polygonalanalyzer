@@ -2862,29 +2862,35 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 
                 # EXECUTE LIVE TRADE through Active Position Manager
                 try:
-                    trade_data = {
-                        'symbol': decision.symbol,
-                        'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
-                        'entry_price': decision.entry_price,
-                        'stop_loss': decision.stop_loss,
-                        'confidence': decision.confidence,
-                        'risk_reward_ratio': decision.risk_reward_ratio,
-                        'take_profit_strategy': claude_decision.get("take_profit_strategy", {}),
-                        'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 3.0)
-                    }
-                    
-                    # Execute trade through Active Position Manager
-                    execution_result = await self.active_position_manager.execute_trade_from_ia2_decision(trade_data)
-                    
-                    if execution_result.success:
-                        logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
-                        # Add execution details to decision reasoning
-                        execution_info = f" | TRADE EXECUTED: Position ID {execution_result.position_id} | "
-                        if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
-                            decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
+                    # Skip execution if position size is 0%
+                    ia2_position_size = decision_logic["position_size"]
+                    if ia2_position_size <= 0:
+                        logger.info(f"⏭️ Skipping trade execution for {decision.symbol}: Position size is 0% (IA2 determined no position)")
                     else:
-                        logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                        trade_data = {
+                            'symbol': decision.symbol,
+                            'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                            'entry_price': decision.entry_price,
+                            'stop_loss': decision.stop_loss,
+                            'confidence': decision.confidence,
+                            'risk_reward_ratio': decision.risk_reward_ratio,
+                            'position_size_percentage': ia2_position_size,  # Use exact IA2 position size
+                            'take_profit_strategy': claude_decision.get("take_profit_strategy", {}),
+                            'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 3.0)
+                        }
                         
+                        # Execute trade through Active Position Manager
+                        execution_result = await self.active_position_manager.execute_trade_from_ia2_decision(trade_data)
+                        
+                        if execution_result.success:
+                            logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
+                            # Add execution details to decision reasoning
+                            execution_info = f" | TRADE EXECUTED: Position ID {execution_result.position_id} ({ia2_position_size:.1%} position size) | "
+                            if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
+                                decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
+                        else:
+                            logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                            
                 except Exception as e:
                     logger.error(f"❌ Error executing trade for {decision.symbol}: {e}")
                 
