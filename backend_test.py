@@ -11925,7 +11925,7 @@ if __name__ == "__main__":
         time.sleep(90)
         
         # Step 4: Analyze Scout opportunities
-        print(f"
+        print(f"\n   ⏱️ Step 3: Waiting for Scout→IA1 cycle (90 seconds)...")
    📊 Step 4: Analyzing Scout opportunities...")
         success, opportunities_data = self.test_get_opportunities()
         if not success:
@@ -11938,7 +11938,7 @@ if __name__ == "__main__":
         print(f"   ✅ Scout found {scout_count} opportunities")
         
         # Step 5: Analyze IA1 analyses (what passed Scout filters)
-        print(f"
+        print(f"\n   📊 Step 4: Analyzing Scout→IA1 pass rate...")
    📊 Step 5: Analyzing IA1 analyses...")
         success, analyses_data = self.test_get_analyses()
         if not success:
@@ -11953,7 +11953,7 @@ if __name__ == "__main__":
         # Step 6: Calculate pass rate
         if scout_count > 0:
             pass_rate = (ia1_count / scout_count) * 100
-            print(f"
+            print(f"\n      ✅ Found {len(fresh_opportunities)} fresh opportunities")
    📈 SCOUT→IA1 PASS RATE: {pass_rate:.1f}% ({ia1_count}/{scout_count})")
         else:
             print(f"   ❌ No Scout opportunities to calculate pass rate")
@@ -11961,7 +11961,7 @@ if __name__ == "__main__":
             return False
         
         # Step 7: Look for KTAUSDT-type opportunities
-        print(f"
+        print(f"\n   📈 Step 5: Analyzing IA1 analyses generation...")
    🔍 Step 7: Searching for KTAUSDT-type opportunities...")
         ktausdt_type_opportunities = []
         ktausdt_type_analyses = []
@@ -11991,7 +11991,7 @@ if __name__ == "__main__":
         ktausdt_pass_rate = (len(ktausdt_type_analyses) / len(ktausdt_type_opportunities)) * 100 if ktausdt_type_opportunities else 0
         
         # Step 8: Analyze override effectiveness
-        print(f"
+        print(f"\n   🎯 Option A Assessment Results:")
    🎯 Step 8: Analyzing 7 Override Effectiveness...")
         
         # Look for override indicators in IA1 reasoning
@@ -12029,12 +12029,12 @@ if __name__ == "__main__":
         override_rate = (override_mentions / ia1_count) * 100 if ia1_count > 0 else 0
         
         # Step 9: Stop system
-        print(f"
+        print(f"\n🎯 TESTING SCOUT OPTION B IMPLEMENTATION...")
    🛑 Step 9: Stopping trading system...")
         self.test_stop_trading_system()
         
         # Step 10: Comprehensive Option A validation
-        print(f"
+        print(f"\n   🗑️ Step 1: Clearing cache for fresh Option B test...")
    📊 OPTION A COMPREHENSIVE ANALYSIS:")
         print(f"      Scout Opportunities: {scout_count}")
         print(f"      IA1 Analyses: {ia1_count}")
@@ -12052,7 +12052,7 @@ if __name__ == "__main__":
         overrides_working = override_mentions > 0 or high_volume_passes > 0  # Overrides should be active
         lateral_filter_removed = pass_rate > 16.0  # Should be better than old 16%
         
-        print(f"
+        print(f"\n   🚀 Step 2: Starting system to test Option B improvements...")
    ✅ OPTION A VALIDATION:")
         print(f"      Pass Rate 20-25%: {\"✅\" if pass_rate_improved else \"❌\"} ({pass_rate:.1f}%)")
         print(f"      KTAUSDT Recovery: {\"✅\" if ktausdt_recovery else \"❌\"} ({len(ktausdt_type_analyses)}/{len(ktausdt_type_opportunities)})")
@@ -12065,7 +12065,7 @@ if __name__ == "__main__":
             lateral_filter_removed
         )
         
-        print(f"
+        print(f"\n   ⏱️ Step 3: Waiting for Scout→IA1 cycle (90 seconds)...")
    🎯 OPTION A IMPLEMENTATION: {\"✅ SUCCESS\" if option_a_success else \"❌ NEEDS WORK\"}")
         
         if not option_a_success:
