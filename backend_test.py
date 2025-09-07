@@ -12149,8 +12149,7 @@ if __name__ == "__main__":
         # Step 6: Calculate pass rate
         if scout_count > 0:
             pass_rate = (ia1_count / scout_count) * 100
-            print(f"\n      ✅ Found {len(fresh_opportunities)} fresh opportunities")
-   📈 SCOUT→IA1 PASS RATE: {pass_rate:.1f}% ({ia1_count}/{scout_count})")
+            print(f"\n   📈 SCOUT→IA1 PASS RATE: {pass_rate:.1f}% ({ia1_count}/{scout_count})")
         else:
             print(f"   ❌ No Scout opportunities to calculate pass rate")
             self.test_stop_trading_system()
