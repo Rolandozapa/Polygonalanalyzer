@@ -2724,16 +2724,38 @@ MANDATORY RULES:
 4. IA1's pattern analysis and technical conclusion should heavily influence your decision
 5. Your role is strategic confirmation + position sizing + advanced TP strategy, NOT contradicting IA1 randomly
 
-TASK: Create an ultra professional trading decision with MARKET-ADAPTIVE LEVERAGE STRATEGY.
+TASK: Create an ultra professional trading decision with PROBABILISTIC OPTIMAL TP SYSTEM.
+
+⚠️ CRITICAL RULE: Only generate take_profit_strategy when signal is "LONG" or "SHORT". For "HOLD" signals, omit the take_profit_strategy section entirely.
+
+PROBABILISTIC TP SYSTEM REQUIREMENTS (LONG/SHORT ONLY):
+1. **Dynamic TP Levels:** Calculate custom TP levels based on:
+   - Market volatility and current price action
+   - Support/resistance level analysis  
+   - Risk-reward optimization for current market conditions
+   - Technical pattern strength and projected targets
+
+2. **Probabilistic Distribution Logic:**
+   - Assess market conditions (trending vs consolidating)
+   - Calculate optimal position exit distribution
+   - Weight early profits vs extended targets based on probability
+   - Consider volatility for distribution calibration
+
+3. **Custom TP Examples:**
+   - High volatility: TP1(40%), TP2(35%), TP3(25%) - favor early exits
+   - Low volatility trending: TP1(25%), TP2(30%), TP3(45%) - favor extended targets  
+   - Strong breakout: TP1(20%), TP2(25%), TP3(30%), TP4(25%) - multi-level scaling
+   - Uncertain conditions: TP1(50%), TP2(35%), TP3(15%) - secure early profits
 
 MANDATORY: Respond ONLY with valid JSON in the exact format below:
 
+For LONG/SHORT signals:
 {{
     "signal": "LONG",
     "confidence": 0.85,
-    "reasoning": "MARKET SENTIMENT ANALYSIS: {market_sentiment['market_sentiment']} with BTC {market_sentiment['btc_change_24h']:+.1f}% suggests {'favorable' if market_sentiment['sentiment_score'] > 0.6 else 'neutral'} conditions for {'LONG' if market_sentiment['btc_change_24h'] > 0 else 'SHORT'} positions. TECHNICAL CONFLUENCE: RSI at {analysis.rsi:.1f} with MACD {analysis.macd_signal:.4f} confirms {'bullish' if analysis.macd_signal > 0 else 'bearish'} momentum. LEVERAGE CALCULATION: {{confidence:.0%}} confidence + {market_sentiment['market_sentiment']} = {{calculated_leverage}}x leverage justified. DYNAMIC RISK: Using {{stop_loss_percentage:.1f}}% SL (tighter due to {{calculated_leverage}}x leverage) with 5-level TP strategy. Risk-reward optimized at {{risk_reward_ratio:.1f}}:1 with market-adaptive positioning.",
+    "reasoning": "MARKET SENTIMENT ANALYSIS: {market_sentiment['market_sentiment']} with BTC {market_sentiment['btc_change_24h']:+.1f}% suggests {'favorable' if market_sentiment['sentiment_score'] > 0.6 else 'neutral'} conditions for {'LONG' if market_sentiment['btc_change_24h'] > 0 else 'SHORT'} positions. TECHNICAL CONFLUENCE: RSI at {analysis.rsi:.1f} with MACD {analysis.macd_signal:.4f} confirms {'bullish' if analysis.macd_signal > 0 else 'bearish'} momentum. PROBABILISTIC TP ANALYSIS: Based on current volatility {{volatility:.1%}} and technical patterns, implementing {{tp_count}}-level TP strategy with {{main_distribution}}% allocated to TP{{main_tp}} for optimal risk-reward. Market conditions favor {{tp_logic}} approach.",
     "risk_level": "MEDIUM",
-    "strategy_type": "DYNAMIC_LEVERAGE_TP",
+    "strategy_type": "PROBABILISTIC_OPTIMAL_TP",
     "leverage": {{
         "calculated_leverage": 4.5,
         "base_leverage": 2.5,
@@ -2743,14 +2765,30 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
         "max_leverage_cap": 10.0
     }},
     "take_profit_strategy": {{
-        "tp1_percentage": 1.2,
-        "tp2_percentage": 2.8, 
-        "tp3_percentage": 4.8,
-        "tp4_percentage": 7.5,
-        "tp5_percentage": 12.0,
-        "tp_distribution": [20, 25, 25, 20, 10],
-        "leverage_adjusted": true,
-        "market_sentiment_factor": {market_sentiment['sentiment_score']}
+        "tp_levels": [
+            {{
+                "level": 1,
+                "percentage_from_entry": 2.1,
+                "position_distribution": 35,
+                "probability_reasoning": "First resistance level with high probability of test"
+            }},
+            {{
+                "level": 2, 
+                "percentage_from_entry": 4.3,
+                "position_distribution": 40,
+                "probability_reasoning": "Key technical target with strong R:R ratio"
+            }},
+            {{
+                "level": 3,
+                "percentage_from_entry": 7.8,
+                "position_distribution": 25,
+                "probability_reasoning": "Extended target for trending continuation"
+            }}
+        ],
+        "tp_distribution_logic": "Weighted toward TP2 (40%) due to strong technical confluence at 4.3% level, with security profits at TP1 (35%) and extended upside at TP3 (25%)",
+        "total_tp_levels": 3,
+        "market_conditions_factor": "Current volatility and support/resistance analysis",
+        "probabilistic_optimization": true
     }},
     "position_management": {{
         "entry_strategy": "MARKET",
@@ -2766,7 +2804,23 @@ MANDATORY: Respond ONLY with valid JSON in the exact format below:
         "sentiment_score": {market_sentiment['sentiment_score']},
         "leverage_justification": "Market sentiment alignment with trade direction"
     }},
-    "key_factors": ["Market sentiment analysis", "Dynamic leverage calculation", "Risk-adjusted position sizing"]
+    "key_factors": ["Probabilistic TP optimization", "Dynamic market analysis", "Custom distribution calibration"]
+}}
+
+For HOLD signals (NO take_profit_strategy section):
+{{
+    "signal": "HOLD",
+    "confidence": 0.65,
+    "reasoning": "Current market conditions do not present clear directional opportunity. Analysis shows...",
+    "risk_level": "LOW",
+    "strategy_type": "MARKET_WAIT",
+    "market_analysis": {{
+        "market_sentiment": "{market_sentiment['market_sentiment']}",
+        "btc_change_24h": {market_sentiment['btc_change_24h']},
+        "sentiment_score": {market_sentiment['sentiment_score']},
+        "wait_reasoning": "Waiting for clearer technical setup"
+    }},
+    "key_factors": ["Market uncertainty", "Risk management", "Opportunity assessment"]
 }}
 
 Consider current market volatility, sentiment alignment, and dynamic leverage for optimal position sizing.
