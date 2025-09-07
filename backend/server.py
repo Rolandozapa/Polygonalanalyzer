@@ -1340,6 +1340,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             master_pattern = None
             multi_rr_info = ""
             
+            # 🆕 Initialize IA1 fields for hybrid approach  
+            ia1_analysis = ""
+            ia1_reasoning = ""
+            
             try:
                 # Try to parse JSON response from IA1
                 import json
