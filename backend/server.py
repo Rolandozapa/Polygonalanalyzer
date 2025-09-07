@@ -3562,8 +3562,25 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             stop_loss_distance = base_stop_distance * leverage_multiplier  # Tighter with higher leverage
             stop_loss = current_price + stop_loss_distance
             
-            # 5-LEVEL TAKE PROFITS (leverage and sentiment adjusted)
-            if five_level_tp_data:
+            # CLAUDE INTELLIGENT TP STRATEGY pour SHORT (prioritaire sur hardcodé)
+            if claude_tp_strategy and "base_scenario" in claude_tp_strategy:
+                base_scenario = claude_tp_strategy["base_scenario"]
+                tp1_pct = base_scenario.get("tp1_percentage", 0.5) / 100.0
+                tp2_pct = base_scenario.get("tp2_percentage", 1.0) / 100.0  
+                tp3_pct = base_scenario.get("tp3_percentage", 1.8) / 100.0
+                tp4_pct = base_scenario.get("tp4_percentage", 3.0) / 100.0
+                
+                tp1 = current_price * (1 - tp1_pct)  # SHORT: prix diminue
+                tp2 = current_price * (1 - tp2_pct)
+                tp3 = current_price * (1 - tp3_pct)
+                tp4 = current_price * (1 - tp4_pct)
+                tp5 = current_price * (1 - tp4_pct * 1.2)  # TP5 = TP4 + 20%
+                
+                reasoning += f"CLAUDE TP STRATEGY SHORT: {base_scenario.get('reasoning', 'Intelligent TP based on pattern analysis')}. "
+                logger.info(f"✅ Using Claude SHORT TP Strategy: TP1={tp1_pct:.1%}, TP2={tp2_pct:.1%}, TP3={tp3_pct:.1%}, TP4={tp4_pct:.1%}")
+                
+            # FALLBACK: 5-LEVEL TAKE PROFITS hardcodés si Claude strategy manquante
+            elif five_level_tp_data:
                 tp1_pct = five_level_tp_data["tp1_percentage"] / 100.0
                 tp2_pct = five_level_tp_data["tp2_percentage"] / 100.0
                 tp3_pct = five_level_tp_data["tp3_percentage"] / 100.0
