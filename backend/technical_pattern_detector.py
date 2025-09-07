@@ -1289,30 +1289,451 @@ class TechnicalPatternDetector:
 
         return patterns
 
-    # Méthodes stub pour les autres patterns (à implémenter si nécessaire)
     def _detect_triple_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte Triple Top et Triple Bottom - version simplifiée"""
-        return []  # TODO: Implémenter si nécessaire
+        """Détecte Triple Top et Triple Bottom - implémentation complète"""
+        patterns = []
+        
+        try:
+            if len(df) < 30:
+                return patterns
+            
+            highs = df['High'].rolling(3, center=True).max() == df['High']
+            lows = df['Low'].rolling(3, center=True).min() == df['Low']
+            current_price = df['Close'].iloc[-1]
+            
+            # Triple Top (bearish reversal)
+            high_peaks = df[highs]['High'].iloc[-20:]  # Derniers 20 pics
+            if len(high_peaks) >= 3:
+                for i in range(len(high_peaks) - 2):
+                    peak1 = high_peaks.iloc[i]
+                    peak2 = high_peaks.iloc[i + 1] 
+                    peak3 = high_peaks.iloc[i + 2]
+                    
+                    # Les 3 pics doivent être à des niveaux similaires (±2%)
+                    avg_peak = (peak1 + peak2 + peak3) / 3
+                    if (abs(peak1 - avg_peak) / avg_peak < 0.02 and 
+                        abs(peak2 - avg_peak) / avg_peak < 0.02 and
+                        abs(peak3 - avg_peak) / avg_peak < 0.02):
+                        
+                        # Support line (neckline)
+                        support_level = avg_peak * 0.96
+                        strength = min((avg_peak - support_level) / support_level * 4, 1.0)
+                        
+                        if strength > 0.5:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.TRIPLE_TOP,
+                                confidence=0.88,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=support_level * 0.94,
+                                stop_loss=avg_peak * 1.03,
+                                volume_confirmation=self._check_volume_decrease_on_peaks(df),
+                                trading_direction="short",
+                                trend_duration_days=self._calculate_trend_duration(df, "bearish"),
+                                trend_strength_score=strength,
+                                additional_data={
+                                    'peak1': peak1, 'peak2': peak2, 'peak3': peak3,
+                                    'support_level': support_level, 'avg_peak': avg_peak
+                                }
+                            ))
+
+            # Triple Bottom (bullish reversal)
+            low_troughs = df[lows]['Low'].iloc[-20:]
+            if len(low_troughs) >= 3:
+                for i in range(len(low_troughs) - 2):
+                    trough1 = low_troughs.iloc[i]
+                    trough2 = low_troughs.iloc[i + 1]
+                    trough3 = low_troughs.iloc[i + 2]
+                    
+                    avg_trough = (trough1 + trough2 + trough3) / 3
+                    if (abs(trough1 - avg_trough) / avg_trough < 0.02 and
+                        abs(trough2 - avg_trough) / avg_trough < 0.02 and
+                        abs(trough3 - avg_trough) / avg_trough < 0.02):
+                        
+                        resistance_level = avg_trough * 1.04
+                        strength = min((resistance_level - avg_trough) / avg_trough * 4, 1.0)
+                        
+                        if strength > 0.5:
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=PatternType.TRIPLE_BOTTOM,
+                                confidence=0.88,
+                                strength=strength,
+                                entry_price=current_price,
+                                target_price=resistance_level * 1.06,
+                                stop_loss=avg_trough * 0.97,
+                                volume_confirmation=self._check_volume_increase_on_breakout(df),
+                                trading_direction="long",
+                                trend_duration_days=self._calculate_trend_duration(df, "bullish"),
+                                trend_strength_score=strength,
+                                additional_data={
+                                    'trough1': trough1, 'trough2': trough2, 'trough3': trough3,
+                                    'resistance_level': resistance_level, 'avg_trough': avg_trough
+                                }
+                            ))
+                            
+        except Exception as e:
+            logger.debug(f"Triple patterns detection error for {symbol}: {e}")
+            
+        return patterns
 
     def _detect_symmetrical_triangle(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte Triangle Symétrique - version simplifiée"""
-        return []  # TODO: Implémenter si nécessaire
+        """Détecte Triangle Symétrique - implémentation complète"""
+        patterns = []
+        
+        try:
+            if len(df) < 25:
+                return patterns
+                
+            current_price = df['Close'].iloc[-1]
+            
+            # Détection des lignes de tendance convergentes
+            highs = df['High'].rolling(3, center=True).max() == df['High']
+            lows = df['Low'].rolling(3, center=True).min() == df['Low']
+            
+            high_peaks = df[highs]['High'].iloc[-15:]
+            low_troughs = df[lows]['Low'].iloc[-15:]
+            
+            if len(high_peaks) >= 3 and len(low_troughs) >= 3:
+                # Calculer les pentes des lignes de support et résistance
+                high_slope = self._calculate_trend_line_slope(high_peaks.values)
+                low_slope = self._calculate_trend_line_slope(low_troughs.values)
+                
+                # Triangle symétrique: pente résistance négative, pente support positive
+                if high_slope < -0.001 and low_slope > 0.001:
+                    # Point de convergence approximatif
+                    range_start = max(high_peaks.max(), low_troughs.max())
+                    range_end = min(high_peaks.min(), low_troughs.min())
+                    range_compression = (range_start - range_end) / range_start
+                    
+                    if 0.05 < range_compression < 0.25:  # Compression significative
+                        strength = min(range_compression * 3, 1.0)
+                        
+                        # Direction dépend de la tendance précédente
+                        prev_trend = self._detect_previous_trend(df)
+                        direction = prev_trend if prev_trend in ["long", "short"] else "long"
+                        
+                        target_multiplier = 1.04 if direction == "long" else 0.96
+                        stop_multiplier = 0.97 if direction == "long" else 1.03
+                        
+                        patterns.append(TechnicalPattern(
+                            symbol=symbol,
+                            pattern_type=PatternType.SYMMETRICAL_TRIANGLE,
+                            confidence=0.82,
+                            strength=strength,
+                            entry_price=current_price,
+                            target_price=current_price * target_multiplier,
+                            stop_loss=current_price * stop_multiplier,
+                            volume_confirmation=self._check_volume_contraction(df),
+                            trading_direction=direction,
+                            trend_duration_days=15,
+                            trend_strength_score=strength,
+                            additional_data={
+                                'high_slope': high_slope,
+                                'low_slope': low_slope,
+                                'range_compression': range_compression,
+                                'convergence_zone': (range_start + range_end) / 2
+                            }
+                        ))
+                        
+        except Exception as e:
+            logger.debug(f"Symmetrical triangle detection error for {symbol}: {e}")
+            
+        return patterns
 
     def _detect_enhanced_triangles(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Améliore la détection existante des triangles"""
-        return []  # TODO: Améliorer l'existant
+        """Améliore la détection existante des triangles ascendants/descendants"""
+        patterns = []
+        
+        try:
+            if len(df) < 20:
+                return patterns
+                
+            current_price = df['Close'].iloc[-1]
+            highs = df['High'].rolling(3, center=True).max() == df['High']
+            lows = df['Low'].rolling(3, center=True).min() == df['Low']
+            
+            high_peaks = df[highs]['High'].iloc[-12:]
+            low_troughs = df[lows]['Low'].iloc[-12:]
+            
+            if len(high_peaks) >= 3 and len(low_troughs) >= 3:
+                high_slope = self._calculate_trend_line_slope(high_peaks.values)
+                low_slope = self._calculate_trend_line_slope(low_troughs.values)
+                
+                # Triangle Ascendant: résistance horizontale, support ascendant
+                if abs(high_slope) < 0.0005 and low_slope > 0.002:
+                    resistance_level = high_peaks.max()
+                    strength = min(low_slope * 1000, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.ASCENDING_TRIANGLE,
+                        confidence=0.85,
+                        strength=strength,
+                        entry_price=current_price,
+                        target_price=resistance_level * 1.05,
+                        stop_loss=low_troughs.iloc[-1] * 0.98,
+                        volume_confirmation=self._check_volume_increase_on_breakout(df),
+                        trading_direction="long",
+                        trend_duration_days=12,
+                        trend_strength_score=strength,
+                        additional_data={
+                            'resistance_level': resistance_level,
+                            'support_slope': low_slope,
+                            'breakout_target': resistance_level * 1.05
+                        }
+                    ))
+                
+                # Triangle Descendant: support horizontal, résistance descendante  
+                elif abs(low_slope) < 0.0005 and high_slope < -0.002:
+                    support_level = low_troughs.min()
+                    strength = min(abs(high_slope) * 1000, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.DESCENDING_TRIANGLE,
+                        confidence=0.85,
+                        strength=strength,
+                        entry_price=current_price,
+                        target_price=support_level * 0.95,
+                        stop_loss=high_peaks.iloc[-1] * 1.02,
+                        volume_confirmation=self._check_volume_increase_on_breakdown(df),
+                        trading_direction="short",
+                        trend_duration_days=12,
+                        trend_strength_score=strength,
+                        additional_data={
+                            'support_level': support_level,
+                            'resistance_slope': high_slope,
+                            'breakdown_target': support_level * 0.95
+                        }
+                    ))
+                    
+        except Exception as e:
+            logger.debug(f"Enhanced triangles detection error for {symbol}: {e}")
+            
+        return patterns
 
     def _detect_pennant_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte les Pennants - version simplifiée"""
-        return []  # TODO: Implémenter si nécessaire
+        """Détecte les Pennants - implémentation complète"""
+        patterns = []
+        
+        try:
+            if len(df) < 15:
+                return patterns
+                
+            current_price = df['Close'].iloc[-1]
+            
+            # Pennant: petite consolidation triangulaire après mouvement fort
+            # 1. Détecter mouvement initial fort (flagpole)
+            price_change_10d = (df['Close'].iloc[-1] / df['Close'].iloc[-11] - 1) * 100
+            
+            if abs(price_change_10d) > 5:  # Mouvement d'au moins 5% en 10 jours
+                # 2. Détecter consolidation triangulaire (5-8 jours)
+                recent_df = df.iloc[-8:]
+                if len(recent_df) >= 5:
+                    high_range = recent_df['High'].max() - recent_df['High'].min()
+                    low_range = recent_df['Low'].max() - recent_df['Low'].min()
+                    avg_range = (high_range + low_range) / 2
+                    
+                    # Contraction du range (caractéristique du pennant)
+                    range_contraction = avg_range / current_price
+                    
+                    if 0.01 < range_contraction < 0.05:  # 1-5% de contraction
+                        direction = "long" if price_change_10d > 0 else "short"
+                        strength = min(abs(price_change_10d) / 10, 1.0)
+                        
+                        # Le pennant continue généralement la tendance initiale
+                        if direction == "long":
+                            target_price = current_price * (1 + abs(price_change_10d) / 200)
+                            stop_loss = recent_df['Low'].min() * 0.99
+                            pattern_type = PatternType.PENNANT_BULLISH
+                        else:
+                            target_price = current_price * (1 - abs(price_change_10d) / 200)
+                            stop_loss = recent_df['High'].max() * 1.01
+                            pattern_type = PatternType.PENNANT_BEARISH
+                        
+                        patterns.append(TechnicalPattern(
+                            symbol=symbol,
+                            pattern_type=pattern_type,
+                            confidence=0.83,
+                            strength=strength,
+                            entry_price=current_price,
+                            target_price=target_price,
+                            stop_loss=stop_loss,
+                            volume_confirmation=self._check_volume_contraction(df),
+                            trading_direction=direction,
+                            trend_duration_days=8,
+                            trend_strength_score=strength,
+                            additional_data={
+                                'flagpole_move': price_change_10d,
+                                'range_contraction': range_contraction,
+                                'consolidation_days': len(recent_df)
+                            }
+                        ))
+                        
+        except Exception as e:
+            logger.debug(f"Pennant patterns detection error for {symbol}: {e}")
+            
+        return patterns
 
     def _detect_rectangle_consolidation(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
         """Détecte les consolidations rectangulaires"""
-        return []  # TODO: Implémenter si nécessaire
+        patterns = []
+        
+        try:
+            if len(df) < 20:
+                return patterns
+                
+            current_price = df['Close'].iloc[-1]
+            
+            # Analyser les 15 derniers jours pour détecter un rectangle
+            recent_df = df.iloc[-15:]
+            
+            # Identifier les niveaux de support et résistance horizontaux
+            resistance_level = recent_df['High'].max()
+            support_level = recent_df['Low'].min()
+            range_size = (resistance_level - support_level) / current_price
+            
+            # Rectangle valide: range entre 2-8%, prix oscille entre support/résistance
+            if 0.02 < range_size < 0.08:
+                # Vérifier que le prix teste les niveaux plusieurs fois
+                resistance_tests = (recent_df['High'] > resistance_level * 0.99).sum()
+                support_tests = (recent_df['Low'] < support_level * 1.01).sum()
+                
+                if resistance_tests >= 2 and support_tests >= 2:
+                    # Position dans le rectangle
+                    position_in_range = (current_price - support_level) / (resistance_level - support_level)
+                    
+                    # Détecter la direction probable du breakout
+                    trend_before = self._detect_previous_trend(df.iloc[:-15])
+                    
+                    if trend_before == "long":
+                        direction = "long"
+                        target_price = resistance_level * (1 + range_size)
+                        stop_loss = support_level * 0.99
+                    elif trend_before == "short":
+                        direction = "short"  
+                        target_price = support_level * (1 - range_size)
+                        stop_loss = resistance_level * 1.01
+                    else:
+                        # Neutral - attendre le breakout
+                        direction = "long" if position_in_range < 0.5 else "short"
+                        target_price = resistance_level * 1.03 if direction == "long" else support_level * 0.97
+                        stop_loss = support_level * 0.99 if direction == "long" else resistance_level * 1.01
+                    
+                    strength = min(range_size * 10 + (resistance_tests + support_tests) * 0.1, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.RECTANGLE_CONSOLIDATION,
+                        confidence=0.80,
+                        strength=strength, 
+                        entry_price=current_price,
+                        target_price=target_price,
+                        stop_loss=stop_loss,
+                        volume_confirmation=self._check_volume_contraction(df),
+                        trading_direction=direction,
+                        trend_duration_days=15,
+                        trend_strength_score=strength,
+                        additional_data={
+                            'resistance_level': resistance_level,
+                            'support_level': support_level,
+                            'range_size': range_size,
+                            'resistance_tests': resistance_tests,
+                            'support_tests': support_tests,
+                            'position_in_range': position_in_range
+                        }
+                    ))
+                    
+        except Exception as e:
+            logger.debug(f"Rectangle consolidation detection error for {symbol}: {e}")
+            
+        return patterns
 
     def _detect_rounding_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
         """Détecte Rounding Top et Bottom"""
-        return []  # TODO: Implémenter si nécessaire
+        patterns = []
+        
+        try:
+            if len(df) < 30:
+                return patterns
+                
+            current_price = df['Close'].iloc[-1]
+            
+            # Analyser les 25 derniers jours pour forme arrondie
+            recent_df = df.iloc[-25:]
+            prices = recent_df['Close'].values
+            
+            # Fitting polynômial de degré 2 pour détecter la courbure
+            x = np.arange(len(prices))
+            coeffs = np.polyfit(x, prices, 2)
+            
+            # Coefficient du terme quadratique indique la courbure
+            curvature = coeffs[0]
+            r_squared = self._calculate_r_squared(prices, np.polyval(coeffs, x))
+            
+            # Rounding Bottom: courbure positive (forme de U)
+            if curvature > 0 and r_squared > 0.7:
+                lowest_point = prices.min()
+                current_position = len(prices) - 1
+                
+                # Vérifier que nous sommes dans la partie droite de la courbe
+                if current_position > len(prices) * 0.6 and current_price > lowest_point * 1.02:
+                    strength = min(curvature * 10000 + r_squared, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.ROUNDING_BOTTOM,
+                        confidence=0.85,
+                        strength=strength,
+                        entry_price=current_price,
+                        target_price=lowest_point * 1.15,  # 15% au-dessus du creux
+                        stop_loss=lowest_point * 0.95,
+                        volume_confirmation=self._check_volume_expansion(df),
+                        trading_direction="long",
+                        trend_duration_days=25,
+                        trend_strength_score=strength,
+                        additional_data={
+                            'curvature': curvature,
+                            'r_squared': r_squared,
+                            'lowest_point': lowest_point,
+                            'polynomial_coeffs': coeffs.tolist()
+                        }
+                    ))
+            
+            # Rounding Top: courbure négative (forme de ∩)
+            elif curvature < 0 and r_squared > 0.7:
+                highest_point = prices.max()
+                current_position = len(prices) - 1
+                
+                if current_position > len(prices) * 0.6 and current_price < highest_point * 0.98:
+                    strength = min(abs(curvature) * 10000 + r_squared, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.ROUNDING_TOP,
+                        confidence=0.85,
+                        strength=strength,
+                        entry_price=current_price,
+                        target_price=highest_point * 0.85,  # 15% en-dessous du pic
+                        stop_loss=highest_point * 1.05,
+                        volume_confirmation=self._check_volume_decrease_on_peaks(df),
+                        trading_direction="short",
+                        trend_duration_days=25,
+                        trend_strength_score=strength,
+                        additional_data={
+                            'curvature': curvature,
+                            'r_squared': r_squared,
+                            'highest_point': highest_point,
+                            'polynomial_coeffs': coeffs.tolist()
+                        }
+                    ))
+                    
+        except Exception as e:
+            logger.debug(f"Rounding patterns detection error for {symbol}: {e}")
+            
+        return patterns
 
     async def _fetch_binance_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
         """Récupère OHLCV depuis Binance API (1,200 req/min - ULTRA GÉNÉREUX!)"""
