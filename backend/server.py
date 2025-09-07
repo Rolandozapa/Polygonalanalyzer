@@ -1218,32 +1218,6 @@ class UltraProfessionalCryptoScout:
         
         return sorted(opportunities, key=trending_score, reverse=True)
     
-    def _passes_professional_filters(self, response: MarketDataResponse) -> bool:
-        """Apply professional-grade filters to market data (same as before)"""
-        # Price validation
-        if response.price <= 0:
-            return False
-        
-        # Market cap filter (très assoupli pour small caps)
-        if response.market_cap and response.market_cap < 100_000:  # $100K minimum (TRÈS PERMISSIF pour micro caps)
-            return False
-        
-        # Volume filter (très assoupli pour small caps)
-        if response.volume_24h < 5_000:  # $5K minimum (ULTRA PERMISSIF pour small caps)
-            return False
-        
-        # Data confidence filter
-        if response.confidence < 0.6:  # Lower for trending
-            return False
-        
-        # Skip obvious stablecoins
-        symbol = response.symbol.upper()
-        stablecoins = ['USDT', 'USDC', 'BUSD', 'DAI', 'TUSD', 'FRAX', 'LUSD']
-        if any(stable in symbol for stable in stablecoins):
-            return False
-        
-        return True
-    
     def _calculate_volatility(self, price_change_24h: float) -> float:
         """Calculate volatility estimate from 24h price change"""
         return abs(price_change_24h) / 100.0
