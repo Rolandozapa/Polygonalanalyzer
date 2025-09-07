@@ -88,17 +88,12 @@ class ChartistPatternIntegrationTestSuite:
             'timestamp': datetime.now().isoformat()
         })
         
-    async def test_pattern_detection_flow(self):
-        """Test 1: Pattern Integration Flow - Verify pattern detector correctly detects patterns"""
-        logger.info("\n🔍 TEST 1: Pattern Integration Flow")
-        
+    def get_analyses_from_api(self):
+        """Helper method to get analyses from API with proper format handling"""
         try:
-            # Get recent IA1 analyses to check for pattern detection
             response = requests.get(f"{self.api_url}/analyses", timeout=30)
-            
             if response.status_code != 200:
-                self.log_test_result("Pattern Detection Flow", False, f"API error: {response.status_code}")
-                return
+                return None, f"API error: {response.status_code}"
                 
             data = response.json()
             
@@ -107,7 +102,22 @@ class ChartistPatternIntegrationTestSuite:
                 analyses = data['analyses']
             else:
                 analyses = data
+                
+            return analyses, None
+        except Exception as e:
+            return None, f"Exception: {str(e)}"
+        
+    async def test_pattern_detection_flow(self):
+        """Test 1: Pattern Integration Flow - Verify pattern detector correctly detects patterns"""
+        logger.info("\n🔍 TEST 1: Pattern Integration Flow")
+        
+        try:
+            analyses, error = self.get_analyses_from_api()
             
+            if error:
+                self.log_test_result("Pattern Detection Flow", False, error)
+                return
+                
             if not analyses:
                 self.log_test_result("Pattern Detection Flow", False, "No IA1 analyses found")
                 return
@@ -117,7 +127,7 @@ class ChartistPatternIntegrationTestSuite:
             total_analyses = 0
             pattern_types_found = set()
             
-            for analysis in analyses[:10]:  # Check last 10 analyses
+            for analysis in analyses:
                 total_analyses += 1
                 symbol = analysis.get('symbol', 'UNKNOWN')
                 patterns_detected = analysis.get('patterns_detected', [])
@@ -138,7 +148,7 @@ class ChartistPatternIntegrationTestSuite:
                     logger.info(f"      ⚠️ No pattern analysis in reasoning")
                     
             success = patterns_detected_count > 0 and len(pattern_types_found) > 0
-            details = f"Patterns detected in {patterns_detected_count}/{total_analyses} analyses, {len(pattern_types_found)} unique pattern types: {list(pattern_types_found)[:5]}"
+            details = f"Patterns detected in {patterns_detected_count}/{total_analyses} analyses, {len(pattern_types_found)} unique pattern types: {list(pattern_types_found)}"
             
             self.log_test_result("Pattern Detection Flow", success, details)
             
@@ -183,13 +193,11 @@ class ChartistPatternIntegrationTestSuite:
                 logger.info(f"   📝 Sample detected log: {detected_patterns_logs[-1][:100]}...")
                 
             # Check IA1 analyses for pattern awareness
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            analyses, error = self.get_analyses_from_api()
             pattern_aware_analyses = 0
             
-            if response.status_code == 200:
-                analyses = response.json()
-                
-                for analysis in analyses[:10]:
+            if not error and analyses:
+                for analysis in analyses:
                     ia1_reasoning = analysis.get('ia1_reasoning', '')
                     patterns_detected = analysis.get('patterns_detected', [])
                     
@@ -197,7 +205,7 @@ class ChartistPatternIntegrationTestSuite:
                     if patterns_detected and any(pattern.lower() in ia1_reasoning.lower() for pattern in patterns_detected):
                         pattern_aware_analyses += 1
                         
-                logger.info(f"   📊 Pattern-aware analyses: {pattern_aware_analyses}/10")
+                logger.info(f"   📊 Pattern-aware analyses: {pattern_aware_analyses}/{len(analyses)}")
                 
             success = len(pattern_integration_logs) > 0 or pattern_aware_analyses > 0
             details = f"Integration logs: {len(pattern_integration_logs)}, Pattern-aware analyses: {pattern_aware_analyses}"
@@ -212,15 +220,12 @@ class ChartistPatternIntegrationTestSuite:
         logger.info("\n🔍 TEST 3: Pattern Data Flow")
         
         try:
-            # Get recent IA1 analyses and check pattern data flow
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            analyses, error = self.get_analyses_from_api()
             
-            if response.status_code != 200:
-                self.log_test_result("Pattern Data Flow", False, f"API error: {response.status_code}")
+            if error:
+                self.log_test_result("Pattern Data Flow", False, error)
                 return
                 
-            analyses = response.json()
-            
             if not analyses:
                 self.log_test_result("Pattern Data Flow", False, "No analyses found")
                 return
@@ -230,7 +235,7 @@ class ChartistPatternIntegrationTestSuite:
             total_patterns_count = 0
             multiple_patterns_count = 0
             
-            for analysis in analyses[:15]:  # Check last 15 analyses
+            for analysis in analyses:
                 symbol = analysis.get('symbol', 'UNKNOWN')
                 patterns_detected = analysis.get('patterns_detected', [])
                 ia1_reasoning = analysis.get('ia1_reasoning', '')
@@ -272,7 +277,7 @@ class ChartistPatternIntegrationTestSuite:
                     logger.debug(f"Database check failed: {e}")
                     
             success = analyses_with_patterns > 0 and total_patterns_count > 0
-            details = f"Analyses with patterns: {analyses_with_patterns}/15, Total patterns: {total_patterns_count}, Multiple patterns: {multiple_patterns_count}, DB storage: {pattern_storage_success}"
+            details = f"Analyses with patterns: {analyses_with_patterns}/{len(analyses)}, Total patterns: {total_patterns_count}, Multiple patterns: {multiple_patterns_count}, DB storage: {pattern_storage_success}"
             
             self.log_test_result("Pattern Data Flow", success, details)
             
@@ -284,15 +289,12 @@ class ChartistPatternIntegrationTestSuite:
         logger.info("\n🔍 TEST 4: New Pattern Types Detection")
         
         try:
-            # Get recent analyses and check for new pattern types
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            analyses, error = self.get_analyses_from_api()
             
-            if response.status_code != 200:
-                self.log_test_result("New Pattern Types", False, f"API error: {response.status_code}")
+            if error:
+                self.log_test_result("New Pattern Types", False, error)
                 return
                 
-            analyses = response.json()
-            
             # Define expected new pattern types from the review request
             new_pattern_types = {
                 'harmonic': ['harmonic', 'gartley', 'butterfly', 'bat', 'crab'],
@@ -305,22 +307,23 @@ class ChartistPatternIntegrationTestSuite:
             found_pattern_categories = set()
             all_detected_patterns = []
             
-            for analysis in analyses[:20]:  # Check last 20 analyses
-                symbol = analysis.get('symbol', 'UNKNOWN')
-                patterns_detected = analysis.get('patterns_detected', [])
-                
-                for pattern in patterns_detected:
-                    all_detected_patterns.append(pattern.lower())
+            if analyses:
+                for analysis in analyses:
+                    symbol = analysis.get('symbol', 'UNKNOWN')
+                    patterns_detected = analysis.get('patterns_detected', [])
                     
-                    # Check which category this pattern belongs to
-                    for category, pattern_list in new_pattern_types.items():
-                        if any(p in pattern.lower() for p in pattern_list):
-                            found_pattern_categories.add(category)
-                            logger.info(f"   🎯 {symbol}: Found {category} pattern - {pattern}")
-                            
+                    for pattern in patterns_detected:
+                        all_detected_patterns.append(pattern.lower())
+                        
+                        # Check which category this pattern belongs to
+                        for category, pattern_list in new_pattern_types.items():
+                            if any(p in pattern.lower() for p in pattern_list):
+                                found_pattern_categories.add(category)
+                                logger.info(f"   🎯 {symbol}: Found {category} pattern - {pattern}")
+                                
             # Check backend logs for pattern detection messages
             import subprocess
-            log_cmd = "tail -n 300 /var/log/supervisor/backend.*.log 2>/dev/null | grep -i 'pattern\\|triangle\\|wedge\\|diamond\\|harmonic\\|rectangle\\|pennant' || echo 'No pattern logs'"
+            log_cmd = "tail -n 300 /var/log/supervisor/backend.*.log 2>/dev/null | grep -i 'pattern' | grep -i 'triangle\\|wedge\\|diamond\\|harmonic\\|rectangle\\|pennant' || echo 'No pattern logs'"
             result = subprocess.run(log_cmd, shell=True, capture_output=True, text=True)
             
             pattern_logs = result.stdout
@@ -376,7 +379,7 @@ class ChartistPatternIntegrationTestSuite:
                     
             # Check backend logs for errors related to pattern detection
             import subprocess
-            log_cmd = "tail -n 200 /var/log/supervisor/backend.*.log 2>/dev/null | grep -i 'error\\|exception\\|traceback' | grep -i 'pattern' || echo 'No pattern errors'"
+            log_cmd = "tail -n 200 /var/log/supervisor/backend.*.log 2>/dev/null | grep -i 'error' | grep -i 'pattern' || echo 'No pattern errors'"
             result = subprocess.run(log_cmd, shell=True, capture_output=True, text=True)
             
             pattern_errors = result.stdout.strip()
@@ -394,21 +397,19 @@ class ChartistPatternIntegrationTestSuite:
             total_endpoints = len(endpoints_to_test)
             
             # Check if analyses are being generated normally
-            analyses_response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            analyses, error = self.get_analyses_from_api()
             normal_operation = False
             
-            if analyses_response.status_code == 200:
-                analyses = analyses_response.json()
-                if len(analyses) > 0:
-                    # Check if recent analyses exist (within reasonable time)
-                    recent_analyses = 0
-                    for analysis in analyses[:5]:
-                        timestamp = analysis.get('timestamp', '')
-                        if timestamp:  # If we have timestamps, that's good
-                            recent_analyses += 1
-                            
-                    normal_operation = recent_analyses > 0
-                    logger.info(f"   📊 Recent analyses: {recent_analyses}/5")
+            if not error and analyses and len(analyses) > 0:
+                # Check if recent analyses exist (within reasonable time)
+                recent_analyses = 0
+                for analysis in analyses[:5]:
+                    timestamp = analysis.get('timestamp', '')
+                    if timestamp:  # If we have timestamps, that's good
+                        recent_analyses += 1
+                        
+                normal_operation = recent_analyses > 0
+                logger.info(f"   📊 Recent analyses: {recent_analyses}/5")
                     
             success = (working_endpoints >= total_endpoints * 0.8) and not has_pattern_errors and normal_operation
             details = f"Working endpoints: {working_endpoints}/{total_endpoints}, Pattern errors: {has_pattern_errors}, Normal operation: {normal_operation}"
@@ -423,15 +424,12 @@ class ChartistPatternIntegrationTestSuite:
         logger.info("\n🔍 TEST 6: Pattern Integration Examples")
         
         try:
-            # Get recent analyses with detailed pattern information
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            analyses, error = self.get_analyses_from_api()
             
-            if response.status_code != 200:
-                self.log_test_result("Pattern Integration Examples", False, f"API error: {response.status_code}")
+            if error:
+                self.log_test_result("Pattern Integration Examples", False, error)
                 return
                 
-            analyses = response.json()
-            
             if not analyses:
                 self.log_test_result("Pattern Integration Examples", False, "No analyses found")
                 return
@@ -440,7 +438,7 @@ class ChartistPatternIntegrationTestSuite:
             pattern_examples = []
             integration_examples = []
             
-            for analysis in analyses[:10]:
+            for analysis in analyses:
                 symbol = analysis.get('symbol', 'UNKNOWN')
                 patterns_detected = analysis.get('patterns_detected', [])
                 ia1_reasoning = analysis.get('ia1_reasoning', '')
@@ -473,7 +471,7 @@ class ChartistPatternIntegrationTestSuite:
                         
             # Check backend logs for specific pattern integration messages
             import subprocess
-            log_cmd = "tail -n 300 /var/log/supervisor/backend.*.log 2>/dev/null | grep -A2 -B2 'PATTERN\\|patterns détectés\\|IA1 ANALYSE' || echo 'No detailed logs'"
+            log_cmd = "tail -n 300 /var/log/supervisor/backend.*.log 2>/dev/null | grep -A2 -B2 'PATTERN' | grep 'patterns détectés\\|IA1 ANALYSE' || echo 'No detailed logs'"
             result = subprocess.run(log_cmd, shell=True, capture_output=True, text=True)
             
             detailed_logs = result.stdout
