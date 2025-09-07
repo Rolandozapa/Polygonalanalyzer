@@ -56,6 +56,24 @@ class PatternType(Enum):
     RECTANGLE_CONSOLIDATION = "rectangle_consolidation"
     ROUNDING_BOTTOM = "rounding_bottom"
     ROUNDING_TOP = "rounding_top"
+    
+    # PATTERNS HARMONIQUES AVANCÉS
+    GARTLEY_BULLISH = "gartley_bullish"
+    GARTLEY_BEARISH = "gartley_bearish"
+    BAT_BULLISH = "bat_bullish"
+    BAT_BEARISH = "bat_bearish"
+    BUTTERFLY_BULLISH = "butterfly_bullish"
+    BUTTERFLY_BEARISH = "butterfly_bearish"
+    CRAB_BULLISH = "crab_bullish"
+    CRAB_BEARISH = "crab_bearish"
+    
+    # PATTERNS DE VOLATILITÉ
+    DIAMOND_TOP = "diamond_top"
+    DIAMOND_BOTTOM = "diamond_bottom"
+    EXPANDING_WEDGE = "expanding_wedge"
+    CONTRACTING_WEDGE = "contracting_wedge"
+    HORN_TOP = "horn_top"
+    HORN_BOTTOM = "horn_bottom"
 
 @dataclass
 class TechnicalPattern:
