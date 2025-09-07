@@ -1433,6 +1433,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "data_sources": opportunity.data_sources
             }
             
+            logger.info(f"📋 Analysis data created for {opportunity.symbol}: analysis={len(ia1_analysis)} chars, reasoning={len(ia1_reasoning)} chars")
+            
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
             
