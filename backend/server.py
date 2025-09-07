@@ -1335,14 +1335,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
-            # Parse IA1 response to extract recommendation and master pattern
+            # 🚀 APPROCHE DIRECTE: Utiliser le JSON IA1 complet et l'enrichir avec Multi-RR
+            # Parse IA1 response to get complete JSON
             ia1_signal = "hold"  # Default fallback
             master_pattern = None
             multi_rr_info = ""
-            
-            # 🆕 Initialize IA1 fields for hybrid approach  
-            ia1_analysis = f"{opportunity.symbol} requires technical analysis of current market patterns."  # Fallback par défaut
-            ia1_reasoning = "Market conditions suggest careful evaluation of support and resistance levels."  # Fallback par défaut
+            ia1_complete_json = {}  # 🆕 JSON complet de l'IA1
             
             logger.info(f"🔍 IA1 fields initialized for {opportunity.symbol}")
             
