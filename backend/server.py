@@ -1340,9 +1340,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
             ia1_signal = "hold"  # Default fallback
             master_pattern = None
             multi_rr_info = ""
-            ia1_complete_json = {}  # 🆕 JSON complet de l'IA1
             
-            logger.info(f"🔍 IA1 fields initialized for {opportunity.symbol}")
+            # 🆕 JSON complet de l'IA1 avec fallback par défaut
+            ia1_complete_json = {
+                "analysis": f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators.",
+                "reasoning": "Technical analysis suggests monitoring key support and resistance levels for directional signals.",
+                "rsi_signal": "neutral",
+                "macd_trend": "neutral", 
+                "patterns": [],
+                "support": [],
+                "resistance": [],
+                "confidence": 0.7,
+                "recommendation": "hold",
+                "master_pattern": None
+            }
+            
+            logger.info(f"🔍 IA1 JSON initialized with defaults for {opportunity.symbol}")
             
             try:
                 # Try to parse JSON response from IA1
