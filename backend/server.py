@@ -1380,48 +1380,34 @@ class UltraProfessionalIA1TechnicalAnalyst:
             if not should_analyze:
                 logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs")
                 
-                # === 7 OVERRIDES INTELLIGENTS POUR RÉCUPÉRER LES BONNES OPPORTUNITÉS ===
-                # Ces overrides permettent de contourner l'absence de patterns techniques
+                # === 3 OVERRIDES SIMPLIFIÉS POUR RÉCUPÉRER LES BONNES OPPORTUNITÉS ===
+                # Logique simpliste: si pas de pattern technique, on accepte quand même si:
                 
                 bypass_technical_filter = False
                 
-                # Override 1: Données excellentes + mouvement directionnel (remplacé par Multi-RR)
-                if multi_source_quality["confidence_score"] >= 0.9:
-                    logger.info(f"🎯 OVERRIDE 1: {opportunity.symbol} - Données excellentes + tendance directionnelle")
-                    bypass_technical_filter = True
+                # Override 1: SIGNAL FORT (mouvement + volume significatif)
+                strong_signal = (abs(opportunity.price_change_24h) >= 5.0 and opportunity.volume_24h >= 500_000)
                 
-                # Override 2: Volume élevé + mouvement significatif (KTAUSDT type)
-                elif opportunity.volume_24h >= 1_000_000 and abs(opportunity.price_change_24h) >= 5.0:
-                    logger.info(f"🎯 OVERRIDE 2: {opportunity.symbol} - Volume élevé (${opportunity.volume_24h:,.0f}) + Mouvement ({opportunity.price_change_24h:+.1f}%)")
-                    bypass_technical_filter = True
+                # Override 2: DONNÉES PREMIUM (haute qualité justifie l'analyse)
+                premium_data = (multi_source_quality["confidence_score"] >= 0.8)
                 
-                # Override 3: Données solides + mouvement modéré
-                elif multi_source_quality["confidence_score"] >= 0.7 and abs(opportunity.price_change_24h) >= 5.0:
-                    logger.info(f"🎯 OVERRIDE 3: {opportunity.symbol} - Données solides + mouvement significatif ({opportunity.price_change_24h:+.1f}%)")
-                    bypass_technical_filter = True
+                # Override 3: TRADING VIABLE (volatilité + volume minimum)
+                trading_viable = (opportunity.volatility >= 0.04 and opportunity.volume_24h >= 200_000)
                 
-                # Override 4: Volatilité intéressante pour trading
-                elif opportunity.volatility >= 0.05 and multi_source_quality["confidence_score"] >= 0.6:
-                    logger.info(f"🎯 OVERRIDE 4: {opportunity.symbol} - Volatilité intéressante ({opportunity.volatility*100:.1f}%) + données correctes")
+                # Accepter si AU MOINS UN critère est satisfait
+                if strong_signal or premium_data or trading_viable:
                     bypass_technical_filter = True
-                
-                # Override 5: Opportunités "sleeper" avec données fiables
-                elif multi_source_quality["confidence_score"] >= 0.8 and opportunity.volume_24h >= 250_000:
-                    logger.info(f"🎯 OVERRIDE 5: {opportunity.symbol} - Données fiables + volume correct (${opportunity.volume_24h:,.0f})")
-                    bypass_technical_filter = True
-                
-                # Override 6: Fort mouvement + volume acceptable
-                elif abs(opportunity.price_change_24h) >= 8.0 and opportunity.volume_24h >= 100_000:
-                    logger.info(f"🎯 OVERRIDE 6: {opportunity.symbol} - Fort mouvement ({opportunity.price_change_24h:+.1f}%) + volume acceptable")
-                    bypass_technical_filter = True
-                
-                # Override 7: Très haute qualité de données seule
-                elif multi_source_quality["confidence_score"] >= 0.85:
-                    logger.info(f"🎯 OVERRIDE 7: {opportunity.symbol} - Très haute qualité données ({multi_source_quality['confidence_score']:.2f})")
-                    bypass_technical_filter = True
+                    
+                    # Log simple du critère satisfait
+                    if strong_signal:
+                        logger.info(f"✅ OVERRIDE-SIGNAL: {opportunity.symbol} - Mouvement {opportunity.price_change_24h:+.1f}% + Volume ${opportunity.volume_24h:,.0f}")
+                    elif premium_data:
+                        logger.info(f"✅ OVERRIDE-DATA: {opportunity.symbol} - Données premium (qualité: {multi_source_quality['confidence_score']:.2f})")
+                    elif trading_viable:
+                        logger.info(f"✅ OVERRIDE-TRADING: {opportunity.symbol} - Volatilité {opportunity.volatility*100:.1f}% + Volume viable")
                 
                 if not bypass_technical_filter:
-                    logger.info(f"❌ OPPORTUNITÉ REJETÉE: {opportunity.symbol} - Aucun critère d'override satisfait")
+                    logger.info(f"❌ REJETÉ: {opportunity.symbol} - Pas de pattern + aucun override satisfait")
                     return None
             
             if detected_pattern:
