@@ -1396,8 +1396,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
-            # Parse IA1 response to extract recommendation
+            # Parse IA1 response to extract recommendation and master pattern
             ia1_signal = "hold"  # Default fallback
+            master_pattern = None
+            multi_rr_info = ""
+            
             try:
                 # Try to parse JSON response from IA1
                 import json
@@ -1414,16 +1417,35 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     response_clean = response_clean[start_idx:end_idx]
                 
                 parsed_response = json.loads(response_clean)
-                if isinstance(parsed_response, dict) and 'recommendation' in parsed_response:
-                    ia1_signal = parsed_response['recommendation'].lower()
-                    logger.info(f"✅ IA1 recommendation extracted: {ia1_signal.upper()} for {opportunity.symbol}")
-                else:
-                    logger.warning(f"⚠️ IA1 response missing 'recommendation' field for {opportunity.symbol}, using default: hold")
+                if isinstance(parsed_response, dict):
+                    # Extract recommendation
+                    if 'recommendation' in parsed_response:
+                        ia1_signal = parsed_response['recommendation'].lower()
+                        logger.info(f"✅ IA1 recommendation: {ia1_signal.upper()} for {opportunity.symbol}")
+                    
+                    # Extract master pattern
+                    if 'master_pattern' in parsed_response and parsed_response['master_pattern']:
+                        master_pattern = parsed_response['master_pattern']
+                        logger.info(f"🎯 IA1 master pattern: {master_pattern} for {opportunity.symbol}")
+                    
+                    # Extract Multi-RR info if present
+                    if 'multi_rr_analysis' in parsed_response:
+                        rr_data = parsed_response['multi_rr_analysis']
+                        if rr_data.get('contradiction_detected', False):
+                            multi_rr_info = f"\n🤖 MULTI-RR: {rr_data.get('rr_reasoning', 'Contradiction resolved')}"
+                            logger.info(f"🎯 Multi-RR resolution for {opportunity.symbol}: {rr_data.get('chosen_option', 'unknown')}")
+                
             except (json.JSONDecodeError, ValueError, KeyError) as e:
-                logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using default: hold")
+                logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using defaults")
             
-            # Enrichir le raisonnement avec le pattern technique détecté
+            # Enrichir le raisonnement avec les informations extraites
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
+            
+            # Ajouter les informations Multi-RR et Master Pattern
+            if master_pattern:
+                reasoning += f"\n\n🎯 MASTER PATTERN (IA1 CHOICE): {master_pattern}"
+            if multi_rr_info:
+                reasoning += multi_rr_info
             if detected_pattern:
                 direction_emoji = "📈" if detected_pattern.trading_direction == "long" else "📉" if detected_pattern.trading_direction == "short" else "⚖️"
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 STRATEGIC CHOICE): {detected_pattern.pattern_type.value}"
