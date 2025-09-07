@@ -264,29 +264,38 @@ DECISION OUTPUT FORMAT (JSON):
     "risk_level": "LOW|MEDIUM|HIGH",
     "strategy_type": "STANDARD|ADVANCED_TP|SCALPING|SWING",
     "intelligent_tp_strategy": {
-        "pattern_analysis": "Description du pattern et prévision de mouvement",
+        "pattern_analysis": "Exemple: Double Bottom confirmé avec cassure neckline à $X, résistance suivante à $Y",
+        "market_context": "Bull/Bear/Neutral market avec justification",
         "base_scenario": {
-            "tp1_percentage": 0.5,  // TP1 sécurisation (toujours réaliste)
-            "tp2_percentage": 1.2,  // TP2 basé sur résistance technique
-            "tp3_percentage": 2.1,  // TP3 basé sur analyse pattern
-            "tp4_percentage": 3.2,  // TP4 objectif optimiste
-            "distribution": [40, 30, 20, 10],  // % position à vendre
-            "reasoning": "Justification des niveaux TP choisis"
+            "tp1_percentage": 0.5,
+            "tp2_percentage": 1.2,
+            "tp3_percentage": 2.1, 
+            "tp4_percentage": 3.2,
+            "position_distribution": [40, 30, 20, 10],
+            "reasoning": "TP1 sécurisation rapide, TP2 résistance mineure, TP3 résistance majeure, TP4 extension Fibonacci"
         },
         "conservative_scenario": {
-            "trigger": "Si pattern faible ou résistance forte",
-            "tp_adjustments": "TP2→0.9%, TP3→1.5%, TP4→2.2%",
-            "reasoning": "Sécurisation en cas de faiblesse"
+            "trigger_conditions": "Si volume faible OU résistance forte OU pattern weakness",
+            "tp_adjustments": {
+                "tp2_percentage": 0.9,
+                "tp3_percentage": 1.5,
+                "tp4_percentage": 2.2
+            },
+            "reasoning": "Compression défensive si pattern montre faiblesse"
         },
         "optimistic_scenario": {
-            "trigger": "Si cassure forte + volume élevé + momentum",
-            "tp_extensions": "TP2→1.8%, TP3→3.2%, TP4→4.8%",
-            "reasoning": "Extension si bull run confirmé"
+            "trigger_conditions": "Si cassure volume +20% OU momentum fort OU breakout confirmé",
+            "tp_extensions": {
+                "tp2_percentage": 1.8,
+                "tp3_percentage": 3.2,
+                "tp4_percentage": 4.8
+            },
+            "reasoning": "Extension si bull run confirmé et breakout puissant"
         },
-        "adaptive_conditions": {
-            "bull_trigger": "Critères spécifiques détectés par Claude",
-            "bear_trigger": "Critères de prudence détectés par Claude",
-            "stop_loss_adjustment": "SL adaptatif selon pattern"
+        "stop_loss_strategy": {
+            "initial_sl_percentage": 2.5,
+            "adaptive_sl": "SL ajusté selon pattern invalidation level",
+            "trailing_activation": "Après TP1 atteint"
         }
     },
     "position_management": {
