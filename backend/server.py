@@ -3963,12 +3963,12 @@ class UltraProfessionalTradingOrchestrator:
         return await self.start_trading_system()
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """Filtrage intelligent IA1→IA2 avec HOLD filter + Risk-Reward 2:1 minimum"""
+        """Filtrage intelligent IA1→IA2 avec CONFIDENCE-BASED HOLD filter + Risk-Reward 2:1 minimum"""
         try:
-            # FILTRE 0: NOUVEAU - IA1 HOLD Filter (économie LLM majeure)
-            ia1_signal = getattr(analysis, 'ia1_signal', '').lower()
-            if ia1_signal == 'hold':
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: IA1 recommande HOLD - Pas d'intérêt trading (économie crédits IA2)")
+            # FILTRE 0: CONFIDENCE-BASED HOLD Filter (économie LLM majeure)
+            # Logique: Confiance <70% = HOLD implicite, ≥70% = Signal trading potentiel
+            if analysis.analysis_confidence < 0.70:
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Confiance IA1 faible ({analysis.analysis_confidence:.1%}) → HOLD implicite (économie crédits IA2)")
                 return False
             
             # FILTRE 1: Vérification de base analyse IA1
