@@ -604,8 +604,146 @@ class TrailingStopManager:
         except Exception as e:
             logger.error(f"Failed to send email: {e}")
 
-# Global trailing stop manager
+class IntelligentTPSettlerManager:
+    """Gestionnaire du TP Settler Intelligent avec détection tropisme tendanciel"""
+    
+    def __init__(self):
+        self.active_tp_settlers: Dict[str, IntelligentTPSettler] = {}
+    
+    def create_tp_settler(self, decision: "TradingDecision", entry_price: float, current_volume: float) -> IntelligentTPSettler:
+        """Créer un TP Settler pour une décision de trading"""
+        initial_tp_levels = {
+            "tp1": decision.take_profit_1,
+            "tp2": getattr(decision, 'take_profit_2', entry_price * 1.01),
+            "tp3": getattr(decision, 'take_profit_3', entry_price * 1.018),
+            "tp4": getattr(decision, 'take_profit_4', entry_price * 1.03)
+        }
+        
+        tp_settler = IntelligentTPSettler(
+            id=str(uuid.uuid4()),
+            symbol=decision.symbol,
+            position_id=decision.id,  
+            initial_tp_levels=initial_tp_levels.copy(),
+            current_tp_levels=initial_tp_levels.copy(),
+            market_regime="NEUTRAL",
+            entry_time=get_paris_time(),
+            entry_price=entry_price,
+            current_price=entry_price,
+            direction="LONG" if decision.signal == SignalType.LONG else "SHORT",
+            volume_at_entry=current_volume
+        )
+        
+        self.active_tp_settlers[decision.id] = tp_settler
+        logger.info(f"🎯 TP Settler créé pour {decision.symbol}: TP base {initial_tp_levels}")
+        return tp_settler
+    
+    async def evaluate_and_adjust_tps(self, position_id: str, current_price: float, current_volume: float) -> bool:
+        """Évaluer le tropisme et ajuster les TP dynamiquement"""
+        if position_id not in self.active_tp_settlers:
+            return False
+        
+        tp_settler = self.active_tp_settlers[position_id]
+        tp_settler.current_price = current_price
+        tp_settler.current_volume = current_volume
+        
+        # 1. Détecter si TP1 a été atteint
+        tp1_price = tp_settler.current_tp_levels["tp1"]
+        tp1_hit = False
+        
+        if tp_settler.direction == "LONG" and current_price >= tp1_price:
+            tp1_hit = True
+        elif tp_settler.direction == "SHORT" and current_price <= tp1_price:
+            tp1_hit = True
+        
+        if tp1_hit and not tp_settler.tp1_hit_time:
+            tp_settler.tp1_hit_time = get_paris_time()
+            logger.info(f"🎯 TP1 HIT for {tp_settler.symbol} at {current_price}")
+        
+        # 2. Évaluer le tropisme tendanciel
+        new_regime = self._evaluate_market_regime(tp_settler, current_price, current_volume)
+        
+        # 3. Ajuster les TP si changement de régime significatif
+        if new_regime != tp_settler.market_regime:
+            adjustment_made = self._adjust_tp_levels(tp_settler, new_regime)
+            if adjustment_made:
+                tp_settler.market_regime = new_regime
+                tp_settler.last_evaluation = get_paris_time()
+                logger.info(f"🚀 TP ADJUSTMENT: {tp_settler.symbol} → {new_regime} mode")
+                return True
+        
+        return False
+    
+    def _evaluate_market_regime(self, tp_settler: IntelligentTPSettler, current_price: float, current_volume: float) -> str:
+        """Évaluer le tropisme tendanciel (BULL/BEAR/NEUTRAL)"""
+        now = get_paris_time()
+        time_since_entry = (now - tp_settler.entry_time).total_seconds() / 60  # minutes
+        
+        # Calculs de momentum
+        price_momentum = ((current_price - tp_settler.entry_price) / tp_settler.entry_price) * 100
+        volume_change = ((current_volume - tp_settler.volume_at_entry) / max(tp_settler.volume_at_entry, 1)) * 100
+        
+        # Ajuster selon direction
+        if tp_settler.direction == "SHORT":
+            price_momentum = -price_momentum  # Inverser pour SHORT
+        
+        tp_settler.momentum_score = price_momentum
+        tp_settler.volatility_score = abs(price_momentum)
+        
+        # BULL MODE triggers
+        if (tp_settler.tp1_hit_time and 
+            (now - tp_settler.tp1_hit_time).total_seconds() < 300 and  # TP1 hit dans les 5min
+            price_momentum > 1.0 and  # Momentum > 1%
+            volume_change > 10):  # Volume +10%
+            return "BULL"
+        
+        # BEAR MODE triggers  
+        if (price_momentum < -0.5 or  # Prix baisse >0.5%
+            tp_settler.volatility_score > 3.0 or  # Haute volatilité >3%
+            (time_since_entry > 30 and not tp_settler.tp1_hit_time)):  # TP1 pas atteint en 30min
+            return "BEAR"
+        
+        return "NEUTRAL"
+    
+    def _adjust_tp_levels(self, tp_settler: IntelligentTPSettler, regime: str) -> bool:
+        """Ajuster les niveaux TP selon le régime de marché"""
+        if regime == "BULL":
+            # Extension TP (sauf TP1 qui reste fixe)
+            multipliers = {"tp2": 1.5, "tp3": 1.5, "tp4": 1.5}
+            adjustment_desc = "BULL EXTENSION"
+        elif regime == "BEAR":
+            # Compression TP pour sécurisation
+            multipliers = {"tp2": 0.8, "tp3": 0.7, "tp4": 0.7}
+            adjustment_desc = "BEAR COMPRESSION"
+        else:
+            return False  # Pas d'ajustement en NEUTRAL
+        
+        adjustments = []
+        for tp_level, multiplier in multipliers.items():
+            if tp_level in tp_settler.current_tp_levels:
+                old_value = tp_settler.current_tp_levels[tp_level]
+                base_value = tp_settler.initial_tp_levels[tp_level]
+                
+                # Calculer nouveau niveau par rapport au prix d'entrée
+                if tp_settler.direction == "LONG":
+                    percentage_gain = ((base_value - tp_settler.entry_price) / tp_settler.entry_price) * multiplier
+                    new_value = tp_settler.entry_price * (1 + percentage_gain)
+                else:  # SHORT
+                    percentage_gain = ((tp_settler.entry_price - base_value) / tp_settler.entry_price) * multiplier
+                    new_value = tp_settler.entry_price * (1 - percentage_gain)
+                
+                tp_settler.current_tp_levels[tp_level] = new_value
+                adjustments.append(f"{tp_level}: {old_value:.6f}→{new_value:.6f}")
+        
+        if adjustments:
+            tp_settler.adjustments_made.append(f"{adjustment_desc}: {', '.join(adjustments)}")
+            logger.info(f"🎯 TP ADJUSTED for {tp_settler.symbol}: {adjustment_desc}")
+            return True
+        
+        return False
+
+# Global managers
 trailing_stop_manager = TrailingStopManager()
+intelligent_tp_settler = IntelligentTPSettlerManager()
 
 class UltraProfessionalCryptoScout:
     def __init__(self):
