@@ -72,19 +72,42 @@ const TradingDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [oppRes, analysesRes, decisionsRes, perfRes] = await Promise.all([
+      const [oppRes, analysesRes, decisionsRes, perfRes, positionsRes, modeRes] = await Promise.all([
         axios.get(`${API}/opportunities`),
         axios.get(`${API}/analyses`),
         axios.get(`${API}/decisions`),
-        axios.get(`${API}/performance`)
+        axios.get(`${API}/performance`),
+        axios.get(`${API}/active-positions`),
+        axios.get(`${API}/trading/execution-mode`)
       ]);
 
       setOpportunities(oppRes.data.opportunities || []);
       setAnalyses(analysesRes.data.analyses || []);
       setDecisions(decisionsRes.data.decisions || []);
       setPerformance(perfRes.data.performance || {});
+      setActivePositions(positionsRes.data.data?.active_positions || []);
+      setExecutionMode(modeRes.data.execution_mode || 'SIMULATION');
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const closePosition = async (positionId) => {
+    try {
+      await axios.post(`${API}/active-positions/close/${positionId}`);
+      // Refresh data after closing position
+      await fetchData();
+    } catch (error) {
+      console.error('Error closing position:', error);
+    }
+  };
+
+  const setTradingMode = async (mode) => {
+    try {
+      await axios.post(`${API}/trading/execution-mode`, { mode });
+      setExecutionMode(mode);
+    } catch (error) {
+      console.error('Error setting trading mode:', error);
     }
   };
 
