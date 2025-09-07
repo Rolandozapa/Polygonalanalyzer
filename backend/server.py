@@ -285,11 +285,11 @@ DECISION OUTPUT FORMAT (JSON):
 }
 
 ADVANCED STRATEGY APPROACH:
-1. Multi-Level Take Profits: Create 5 strategic TP levels based on pattern strength and market conditions
-2. Dynamic Position Management: Adjust position sizes and TP distances based on pattern confidence
-3. Pattern-Adaptive Scaling: Different TP strategies for different chart patterns
-4. Market Condition Optimization: Volatility and trend strength influence TP positioning
-5. Technical Confluence Weighting: Multiple indicator alignment affects TP distribution
+1. Multi-Level Take Profits: Create RÉALISTES TP levels - TP1 dès 0.5% pour sécuriser rapidement
+2. Dynamic Position Management: Ajuster TP selon volatilité et pattern strength - TP conservateurs prioritaires
+3. Pattern-Adaptive Scaling: TP plus serrés pour patterns faibles, légèrement plus larges pour patterns forts
+4. Market Condition Optimization: En haute volatilité, TP max 3% - En faible volatilité, TP max 1.5%
+5. Technical Confluence Weighting: TP1 TOUJOURS atteignable à 0.5-1% pour confiance psychologique
 
 MARKET SENTIMENT & DYNAMIC LEVERAGE STRATEGY:
 Adapt leverage and risk parameters based on overall crypto market conditions and trade confidence.
