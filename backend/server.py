@@ -1169,23 +1169,6 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
-            # Parse la réponse IA1 pour extraire la recommandation
-            ia1_signal = "hold"  # Default
-            try:
-                # Tenter de parser la réponse JSON d'IA1
-                if response and '{' in response and '}' in response:
-                    import json
-                    start = response.find('{')
-                    end = response.rfind('}') + 1
-                    json_str = response[start:end]
-                    ia1_data = json.loads(json_str)
-                    ia1_signal = ia1_data.get('recommendation', 'hold').lower()
-                    logger.info(f"🎯 IA1 SIGNAL: {opportunity.symbol} → {ia1_signal.upper()}")
-                else:
-                    logger.warning(f"⚠️ IA1 JSON parsing failed for {opportunity.symbol}, defaulting to HOLD")
-            except Exception as e:
-                logger.warning(f"⚠️ IA1 recommendation parsing error for {opportunity.symbol}: {e}, defaulting to HOLD")
-            
             # Enrichir le raisonnement avec le pattern technique détecté
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
             if detected_pattern:
@@ -1208,7 +1191,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 ),
                 "ia1_reasoning": reasoning,
-                "ia1_signal": ia1_signal,  # NOUVEAU: Signal IA1 pour filtrage IA2
+                "ia1_signal": "hold",  # NOUVEAU: Signal IA1 pour filtrage IA2
                 "market_sentiment": self._determine_market_sentiment(opportunity),
                 "data_sources": opportunity.data_sources
             }
