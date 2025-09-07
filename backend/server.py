@@ -364,6 +364,27 @@ Be thorough, strategic, and provide advanced trading insights."""
 
 # Ultra Professional Trading System Classes
 @dataclass
+class IntelligentTPSettler:
+    """TP Settler Intelligent pour ajustement dynamique selon tropisme tendanciel"""
+    id: str
+    symbol: str
+    position_id: str
+    initial_tp_levels: Dict[str, float]  # TP de base
+    current_tp_levels: Dict[str, float]  # TP ajustés
+    market_regime: str  # "BULL", "BEAR", "NEUTRAL"
+    entry_time: datetime
+    entry_price: float
+    current_price: float
+    direction: str  # "LONG" or "SHORT"
+    tp1_hit_time: Optional[datetime] = None
+    volume_at_entry: float = 0.0
+    current_volume: float = 0.0
+    momentum_score: float = 0.0
+    volatility_score: float = 0.0
+    adjustments_made: List[str] = field(default_factory=list)
+    last_evaluation: datetime = field(default_factory=get_paris_time)
+
+@dataclass
 class TrailingStopLoss:
     id: str
     symbol: str
