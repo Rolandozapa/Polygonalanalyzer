@@ -103,6 +103,7 @@ class TechnicalAnalysis(BaseModel):
     patterns_detected: List[str]
     analysis_confidence: float
     ia1_reasoning: str
+    ia1_signal: str = "hold"  # NOUVEAU: Signal IA1 (long/short/hold) pour filtrage IA2
     market_sentiment: str = "neutral"
     data_sources: List[str] = []
     timestamp: datetime = Field(default_factory=get_paris_time)
