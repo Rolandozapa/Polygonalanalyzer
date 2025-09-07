@@ -2355,7 +2355,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "ia1_reasoning": "Analysis completed with data validation",
                 "ia1_signal": "hold",  # 🆕
                 "market_sentiment": "neutral",
-                "data_sources": ["internal"]
+                "data_sources": ["internal"],
+                # 🆕 CHAMPS IA1 ORIGINAUX fallback
+                "rsi_signal": "neutral",
+                "macd_trend": "neutral",
+                "confidence": 0.7,
+                "recommendation": "hold",
+                "master_pattern": None,
+                "patterns": [],
+                "support": [],
+                "resistance": []
             }
 
     def _calculate_analysis_confidence(self, rsi: float, macd_histogram: float, bb_position: float, volatility: float, data_confidence: float) -> float:
