@@ -91,7 +91,13 @@ class PositionSizingTestSuite:
                 self.log_test_result("IA2 Position Size Matching", False, f"API error: {response.status_code}")
                 return
                 
-            decisions = response.json()
+            data = response.json()
+            
+            # Handle API response format
+            if isinstance(data, dict) and 'decisions' in data:
+                decisions = data['decisions']
+            else:
+                decisions = data
             
             if not decisions:
                 self.log_test_result("IA2 Position Size Matching", False, "No decisions found")
