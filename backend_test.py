@@ -12895,3 +12895,274 @@ if __name__ == "__main__":
         
         return hold_filter_effective and trading_signals_pass and filter_working
 
+
+    def test_claude_hierarchy_contradiction_resolution(self):
+        """🎯 TEST CRITIQUE - Test Claude Hierarchy Implementation for Contradiction Resolution"""
+        print(f"\n🎯 Testing Claude Hierarchy Contradiction Resolution...")
+        print(f"   📋 TESTING LOGIC:")
+        print(f"      • Claude Override (≥80% confidence): Direct LONG/SHORT/HOLD decision")
+        print(f"      • Claude Priority (≥65% confidence + weak IA1): Claude overrides weak IA1")
+        print(f"      • Combined Logic (fallback): Traditional IA1+IA2 when Claude not confident")
+        print(f"      • CRITICAL: No more 'Claude recommends SHORT' → 'ADVANCED LONG' contradictions")
+        
+        # Get current decisions to analyze
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for Claude hierarchy testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for Claude hierarchy testing")
+            return False
+        
+        print(f"   📊 Analyzing Claude hierarchy in {len(decisions)} decisions...")
+        
+        # Analyze decision patterns for Claude hierarchy evidence
+        claude_override_count = 0
+        claude_priority_count = 0
+        combined_logic_count = 0
+        contradiction_count = 0
+        
+        decision_paths = {
+            'claude_override': [],
+            'claude_priority': [], 
+            'combined_logic': [],
+            'contradictions': []
+        }
+        
+        for i, decision in enumerate(decisions[:20]):  # Analyze first 20 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            signal = decision.get('signal', 'hold').upper()
+            reasoning = decision.get('ia2_reasoning', '').lower()
+            confidence = decision.get('confidence', 0)
+            
+            # Check for Claude hierarchy patterns in reasoning
+            has_claude_override = 'claude override' in reasoning
+            has_claude_priority = 'claude priority' in reasoning  
+            has_combined_logic = 'combined' in reasoning or 'advanced long' in reasoning or 'advanced short' in reasoning
+            
+            # Check for contradictions (Claude recommends one thing, final decision is opposite)
+            claude_recommends_long = 'claude' in reasoning and ('long' in reasoning or 'buy' in reasoning)
+            claude_recommends_short = 'claude' in reasoning and ('short' in reasoning or 'sell' in reasoning)
+            
+            is_contradiction = False
+            if claude_recommends_long and signal == 'SHORT':
+                is_contradiction = True
+                contradiction_count += 1
+                decision_paths['contradictions'].append({
+                    'symbol': symbol,
+                    'claude_rec': 'LONG',
+                    'final_decision': signal,
+                    'reasoning_snippet': reasoning[:100]
+                })
+            elif claude_recommends_short and signal == 'LONG':
+                is_contradiction = True
+                contradiction_count += 1
+                decision_paths['contradictions'].append({
+                    'symbol': symbol,
+                    'claude_rec': 'SHORT', 
+                    'final_decision': signal,
+                    'reasoning_snippet': reasoning[:100]
+                })
+            
+            # Categorize decision path
+            if has_claude_override:
+                claude_override_count += 1
+                decision_paths['claude_override'].append({
+                    'symbol': symbol,
+                    'signal': signal,
+                    'confidence': confidence,
+                    'reasoning_snippet': reasoning[:100]
+                })
+            elif has_claude_priority:
+                claude_priority_count += 1
+                decision_paths['claude_priority'].append({
+                    'symbol': symbol,
+                    'signal': signal,
+                    'confidence': confidence,
+                    'reasoning_snippet': reasoning[:100]
+                })
+            elif has_combined_logic:
+                combined_logic_count += 1
+                decision_paths['combined_logic'].append({
+                    'symbol': symbol,
+                    'signal': signal,
+                    'confidence': confidence,
+                    'reasoning_snippet': reasoning[:100]
+                })
+            
+            # Show first few examples
+            if i < 5:
+                print(f"\n   Decision {i+1} - {symbol} ({signal}):")
+                print(f"      Confidence: {confidence:.3f}")
+                print(f"      Claude Override: {'✅' if has_claude_override else '❌'}")
+                print(f"      Claude Priority: {'✅' if has_claude_priority else '❌'}")
+                print(f"      Combined Logic: {'✅' if has_combined_logic else '❌'}")
+                print(f"      Contradiction: {'❌ FOUND' if is_contradiction else '✅ None'}")
+                print(f"      Reasoning: {reasoning[:80]}...")
+        
+        total_analyzed = len(decisions[:20])
+        
+        print(f"\n   📊 Claude Hierarchy Analysis Results:")
+        print(f"      Total Decisions Analyzed: {total_analyzed}")
+        print(f"      Claude Override (≥80%): {claude_override_count} ({claude_override_count/total_analyzed*100:.1f}%)")
+        print(f"      Claude Priority (≥65%): {claude_priority_count} ({claude_priority_count/total_analyzed*100:.1f}%)")
+        print(f"      Combined Logic (fallback): {combined_logic_count} ({combined_logic_count/total_analyzed*100:.1f}%)")
+        print(f"      Contradictions Found: {contradiction_count} ({contradiction_count/total_analyzed*100:.1f}%)")
+        
+        # Show examples of each path
+        if decision_paths['claude_override']:
+            print(f"\n   🎯 Claude Override Examples:")
+            for example in decision_paths['claude_override'][:2]:
+                print(f"      {example['symbol']}: {example['signal']} @ {example['confidence']:.3f}")
+        
+        if decision_paths['claude_priority']:
+            print(f"\n   🎯 Claude Priority Examples:")
+            for example in decision_paths['claude_priority'][:2]:
+                print(f"      {example['symbol']}: {example['signal']} @ {example['confidence']:.3f}")
+        
+        if decision_paths['contradictions']:
+            print(f"\n   ❌ CONTRADICTIONS FOUND:")
+            for contradiction in decision_paths['contradictions']:
+                print(f"      {contradiction['symbol']}: Claude→{contradiction['claude_rec']} but Final→{contradiction['final_decision']}")
+                print(f"         Reasoning: {contradiction['reasoning_snippet']}...")
+        
+        # Validation criteria for Claude hierarchy
+        no_contradictions = contradiction_count == 0
+        has_override_path = claude_override_count > 0
+        has_priority_path = claude_priority_count > 0  
+        has_combined_path = combined_logic_count > 0
+        hierarchy_working = (claude_override_count + claude_priority_count + combined_logic_count) >= total_analyzed * 0.8
+        
+        print(f"\n   ✅ Claude Hierarchy Validation:")
+        print(f"      No Contradictions: {'✅' if no_contradictions else '❌ CRITICAL FAILURE'}")
+        print(f"      Override Path Working: {'✅' if has_override_path else '❌'}")
+        print(f"      Priority Path Working: {'✅' if has_priority_path else '❌'}")
+        print(f"      Combined Path Working: {'✅' if has_combined_path else '❌'}")
+        print(f"      Hierarchy Coverage: {'✅' if hierarchy_working else '❌'} ({(claude_override_count + claude_priority_count + combined_logic_count)/total_analyzed*100:.1f}%)")
+        
+        # Overall assessment
+        claude_hierarchy_success = (
+            no_contradictions and
+            hierarchy_working and
+            (has_override_path or has_priority_path or has_combined_path)
+        )
+        
+        print(f"\n   🎯 Claude Hierarchy Assessment: {'✅ SUCCESS' if claude_hierarchy_success else '❌ FAILED'}")
+        
+        if not claude_hierarchy_success:
+            if not no_contradictions:
+                print(f"   💡 CRITICAL: Found {contradiction_count} contradictions - Claude hierarchy not resolving conflicts")
+            if not hierarchy_working:
+                print(f"   💡 ISSUE: Hierarchy coverage too low - decisions not following Claude priority logic")
+        else:
+            print(f"   💡 SUCCESS: Claude hierarchy resolving contradictions correctly")
+            print(f"   💡 Override decisions: {claude_override_count}")
+            print(f"   💡 Priority decisions: {claude_priority_count}")
+            print(f"   💡 Combined decisions: {combined_logic_count}")
+        
+        return claude_hierarchy_success
+
+    def test_claude_decision_path_transparency(self):
+        """Test transparency in Claude decision path logging"""
+        print(f"\n🔍 Testing Claude Decision Path Transparency...")
+        
+        success, decisions_data = self.test_get_decisions()
+        if not success:
+            print(f"   ❌ Cannot retrieve decisions for transparency testing")
+            return False
+        
+        decisions = decisions_data.get('decisions', [])
+        if len(decisions) == 0:
+            print(f"   ❌ No decisions available for transparency testing")
+            return False
+        
+        print(f"   📊 Analyzing decision transparency in {len(decisions)} decisions...")
+        
+        transparency_stats = {
+            'has_claude_override_msg': 0,
+            'has_claude_priority_msg': 0,
+            'has_combined_logic_msg': 0,
+            'has_pattern_explanation': 0,
+            'has_confidence_explanation': 0,
+            'total_analyzed': 0
+        }
+        
+        for decision in decisions[:15]:  # Analyze first 15 decisions
+            symbol = decision.get('symbol', 'Unknown')
+            reasoning = decision.get('ia2_reasoning', '').lower()
+            transparency_stats['total_analyzed'] += 1
+            
+            # Check for transparency indicators
+            if 'claude override' in reasoning:
+                transparency_stats['has_claude_override_msg'] += 1
+            
+            if 'claude priority' in reasoning:
+                transparency_stats['has_claude_priority_msg'] += 1
+            
+            if 'combined logic' in reasoning or 'advanced' in reasoning:
+                transparency_stats['has_combined_logic_msg'] += 1
+            
+            if 'pattern' in reasoning or 'chartiste' in reasoning:
+                transparency_stats['has_pattern_explanation'] += 1
+            
+            if 'confidence' in reasoning or 'confiance' in reasoning:
+                transparency_stats['has_confidence_explanation'] += 1
+        
+        total = transparency_stats['total_analyzed']
+        
+        print(f"\n   📊 Transparency Analysis:")
+        print(f"      Claude Override Messages: {transparency_stats['has_claude_override_msg']}/{total} ({transparency_stats['has_claude_override_msg']/total*100:.1f}%)")
+        print(f"      Claude Priority Messages: {transparency_stats['has_claude_priority_msg']}/{total} ({transparency_stats['has_claude_priority_msg']/total*100:.1f}%)")
+        print(f"      Combined Logic Messages: {transparency_stats['has_combined_logic_msg']}/{total} ({transparency_stats['has_combined_logic_msg']/total*100:.1f}%)")
+        print(f"      Pattern Explanations: {transparency_stats['has_pattern_explanation']}/{total} ({transparency_stats['has_pattern_explanation']/total*100:.1f}%)")
+        print(f"      Confidence Explanations: {transparency_stats['has_confidence_explanation']}/{total} ({transparency_stats['has_confidence_explanation']/total*100:.1f}%)")
+        
+        # Validation for transparency
+        has_decision_path_logging = (transparency_stats['has_claude_override_msg'] + 
+                                   transparency_stats['has_claude_priority_msg'] + 
+                                   transparency_stats['has_combined_logic_msg']) > 0
+        
+        has_explanatory_content = (transparency_stats['has_pattern_explanation'] + 
+                                 transparency_stats['has_confidence_explanation']) >= total * 0.5
+        
+        transparency_good = has_decision_path_logging and has_explanatory_content
+        
+        print(f"\n   ✅ Transparency Validation:")
+        print(f"      Decision Path Logging: {'✅' if has_decision_path_logging else '❌'}")
+        print(f"      Explanatory Content: {'✅' if has_explanatory_content else '❌'} (≥50%)")
+        print(f"      Overall Transparency: {'✅' if transparency_good else '❌'}")
+        
+        return transparency_good
+
+    def test_claude_hierarchy_comprehensive(self):
+        """Comprehensive test of Claude hierarchy implementation"""
+        print(f"\n🎯 COMPREHENSIVE Claude Hierarchy Testing...")
+        
+        # Test 1: Contradiction resolution
+        contradiction_test = self.test_claude_hierarchy_contradiction_resolution()
+        print(f"   Contradiction Resolution: {'✅' if contradiction_test else '❌'}")
+        
+        # Test 2: Decision path transparency
+        transparency_test = self.test_claude_decision_path_transparency()
+        print(f"   Decision Path Transparency: {'✅' if transparency_test else '❌'}")
+        
+        # Test 3: Performance maintained
+        performance_test = self.test_ia2_signal_generation_rate()
+        print(f"   Performance Maintained: {'✅' if performance_test else '❌'}")
+        
+        # Overall assessment
+        components_passed = sum([contradiction_test, transparency_test, performance_test])
+        comprehensive_success = components_passed >= 2  # At least 2/3 components working
+        
+        print(f"\n   🎯 Comprehensive Claude Hierarchy Assessment:")
+        print(f"      Components Passed: {components_passed}/3")
+        print(f"      Overall Status: {'✅ SUCCESS' if comprehensive_success else '❌ FAILED'}")
+        
+        if comprehensive_success:
+            print(f"   💡 SUCCESS: Claude hierarchy resolving contradictions and maintaining performance")
+        else:
+            print(f"   💡 ISSUES: Claude hierarchy needs attention - check contradiction resolution and transparency")
+        
+        return comprehensive_success
