@@ -2860,6 +2860,35 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             if decision.signal != SignalType.HOLD and claude_decision:
                 await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
                 
+                # EXECUTE LIVE TRADE through Active Position Manager
+                try:
+                    trade_data = {
+                        'symbol': decision.symbol,
+                        'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                        'entry_price': decision.entry_price,
+                        'stop_loss': decision.stop_loss,
+                        'confidence': decision.confidence,
+                        'risk_reward_ratio': decision.risk_reward_ratio,
+                        'take_profit_strategy': claude_decision.get("take_profit_strategy", {}),
+                        'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 3.0)
+                    }
+                    
+                    # Execute trade through Active Position Manager
+                    from server import orchestrator  # Import here to avoid circular import
+                    execution_result = await orchestrator.active_position_manager.execute_trade_from_ia2_decision(trade_data)
+                    
+                    if execution_result.success:
+                        logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
+                        # Add execution details to decision reasoning
+                        execution_info = f" | TRADE EXECUTED: Position ID {execution_result.position_id} | "
+                        if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
+                            decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
+                    else:
+                        logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Error executing trade for {decision.symbol}: {e}")
+                
                 # CREATE TRAILING STOP LOSS with leverage-proportional settings
                 leverage_data = decision_logic.get("dynamic_leverage", {})
                 applied_leverage = leverage_data.get("applied_leverage", 2.0) if leverage_data else 2.0
