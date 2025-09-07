@@ -4625,11 +4625,32 @@ class UltraProfessionalTradingOrchestrator:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
                 return False
             
-            # FILTRE 3: NOUVEAU - Risk-Reward minimum 2:1
-            risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 0.0)
-            if risk_reward_ratio < 2.0:
-                rr_reasoning = getattr(analysis, 'rr_reasoning', 'R:R non calculé')
-                logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Risk-Reward insuffisant ({risk_reward_ratio:.2f}:1 < 2:1 requis) - {rr_reasoning}")
+            # FILTRE 3: LOGIQUE INTELLIGENTE (remplace RR simpliste)
+            # Critères: High confidence OU Multi-RR resolved OU Strong pattern OU Significant movement
+            
+            high_confidence = analysis.analysis_confidence >= 0.80  # IA1 très confiant
+            has_multi_rr = "multi-rr analysis" in analysis.ia1_reasoning.lower()  # Contradiction résolue
+            has_master_pattern = getattr(analysis, 'master_pattern', None) is not None  # Pattern fort
+            significant_move = abs(opportunity.price_change_24h) >= 5.0  # Mouvement >5%
+            good_volume = opportunity.volume_24h >= 500_000  # Volume décent
+            
+            # NOUVEAU: Espérance mathématique approximative
+            confidence_as_prob = min(analysis.analysis_confidence, 0.95)  # Max 95% prob
+            risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 1.0)
+            expected_value = (confidence_as_prob * risk_reward_ratio) - ((1 - confidence_as_prob) * 1.0)
+            
+            # CRITÈRES MULTIPLES (au moins 2 sur 5)
+            criteria_met = sum([high_confidence, has_multi_rr, has_master_pattern, significant_move and good_volume, expected_value > 0.2])
+            
+            if criteria_met < 2:
+                reasons = []
+                if not high_confidence: reasons.append(f"Confidence {analysis.analysis_confidence:.1%}<80%")
+                if not has_multi_rr: reasons.append("No Multi-RR")
+                if not has_master_pattern: reasons.append("No master pattern")
+                if not (significant_move and good_volume): reasons.append(f"Movement {opportunity.price_change_24h:+.1f}% or volume ${opportunity.volume_24h:,.0f} insufficient")
+                if expected_value <= 0.2: reasons.append(f"Expected value {expected_value:.2f}≤0.2")
+                
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Critères insuffisants ({criteria_met}/5): {'; '.join(reasons[:2])}")
                 return False
             
             # SUCCÈS: Analyse IA1 valide + Risk-Reward ≥ 2:1
