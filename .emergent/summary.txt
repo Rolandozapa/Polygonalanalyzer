@@ -1,60 +1,91 @@
 <analysis>
-This trajectory chronicles the transformation of a Dual AI Trading Bot from an MVP into an Ultra Professional Edition. The AI engineer iteratively addressed user requests, starting with the implementation and verification of a dynamic leverage and 5-level take-profit system, after initial tests revealed critical missing logic despite prior claims of completion. Subsequent work focused on robust risk management, introducing a leverage-proportional trailing stop-loss system with email notifications. A significant portion of the work involved correcting discrepancies and optimizing LLM credit consumption, first by moving to a 4-hour scout cycle and then by implementing a multi-stage, bidirectional Risk-Reward filtering mechanism, ensuring only high-quality opportunities reach the costly AI models. Critical bugs related to duplicate processing by IA1 and IA2 were identified and resolved through comprehensive deduplication logic across opportunities, IA1 analyses, and IA2 decisions, aligning with the 4-hour cycle. The final major correction in progress involves moving these deduplication checks *before* LLM calls to prevent wasted credits. Localization to Paris time was also integrated across the entire application.
+The trajectory details the refinement of a Dual AI Trading Bot, transitioning it to an Ultra Professional Edition. Initially, the focus was on fixing IA1 deduplication and display issues, followed by a major effort to unblock the Scout’s restrictive filters, particularly the lateral movement detection, which was permanently removed after extensive debugging. A key architectural shift involved optimizing IA1-IA2 interaction, first by implementing an IA1 confidence-based filter for IA2, then by explicitly ensuring IA2 receives and prioritizes IA1’s full reasoning and MASTER PATTERN strategic choice to resolve contradictions. Realistic Take Profit levels were implemented, and an Intelligent TP Settler was introduced, eventually shifting its logic to be handled by Claude (IA2) via prompt. Persistent issues with micro-priced tokens like BabyDogeUSDT led to a deep dive into technical indicator calculation and support/resistance rounding, ensuring accurate data handling. Finally, a robust multi-API fallback system for market data was implemented, and the agent began integrating a BingX-specific tradable symbols filter to optimize the Scout process.
 </analysis>
 
 <product_requirements>
-The goal is to build a sophisticated Dual AI Trading Bot with React frontend, FastAPI backend, and MongoDB. The system features a scout for market opportunities, IA1 (GPT-4o) for technical analysis, and IA2 (Claude-3-7-Sonnet) for strategic decisions. It integrates real market data from 8+ APIs with multi-threaded fallback, pre-filters opportunities using a  for chart patterns, and optimizes API calls. Core features include multi-level take-profit strategies, automatic position inversion, dynamic leverage based on market sentiment and IA2 confidence, and full BingX Futures account control for trade execution and real-time balance display. The user requested granular control over AI credit consumption via Start/Stop buttons. Enhancements during this trajectory specifically included: implementing a robust historical data fallback system; fixing IA1-IA2 data flow and LLM budget issues; resolving frontend connectivity; establishing full BingX account control (IP whitelisting, API keys); integrating a 5-level dynamic take-profit strategy and dynamic leverage; implementing a leverage-proportional trailing stop-loss with email notifications; setting application timestamps to Paris time; changing the scout cycle frequency to 4 hours; implementing a Risk-Reward filter (min 2:1 for IA1, then pre-filter in Scout) to save LLM credits; fixing R:R calculation consistency between IA1 and IA2; implementing comprehensive deduplication across opportunities, IA1 analyses, and IA2 decisions to prevent re-analysis within a 4-hour cycle.
+The objective is to build a sophisticated Dual AI Trading Bot with React frontend, FastAPI backend, and MongoDB. The system uses a market scout, IA1 (GPT-4o) for technical analysis, and IA2 (Claude-3-7-Sonnet) for strategic decisions, integrating real market data from multiple APIs. Key features include multi-level take-profit strategies, automatic position inversion, dynamic leverage, BingX Futures account control, and granular AI credit consumption control.
+
+Recent enhancements and fixes include:
+- Implementing robust historical data fallback.
+- Fixing IA1-IA2 data flow and LLM budget issues through refined deduplication and confidence-based filtering.
+- Establishing full BingX account control.
+- Integrating a 5-level dynamic take-profit strategy and leverage-proportional trailing stop-loss.
+- Setting application timestamps to Paris time.
+- Optimizing scout cycle frequency to 4 hours.
+- Implementing and refining Risk-Reward (R:R) filters (min 2:1 for IA1, then pre-filter in Scout) to save LLM credits, and correcting R:R calculation consistency.
+- Implementing comprehensive deduplication across opportunities, IA1 analyses, and IA2 decisions, moving checks before LLM calls.
+- Relaxing scout filters (R:R, lateral movement, volume) to increase opportunity pass rate, eventually leading to the permanent removal of the restrictive lateral movement filter.
+- Optimizing IA1 to recommend HOLD for uninteresting cryptos, filtering these before IA2.
+- Refining IA1-IA2 communication to ensure IA2 prioritizes IA1's strategic choice and full reasoning, including a MASTER PATTERN designation.
+- Adjusting Take Profit levels to be more realistic (TP1 at 0.5%) and implementing an Intelligent TP Settler concept, evolved to be handled by IA2 through prompt engineering.
+- Resolving technical indicator calculation issues for micro-priced tokens to ensure accurate analysis and confidence scoring.
+- Implementing an Ultra-Robust Market Aggregator with 10+ external APIs for reliable data sourcing.
+- Integrating a filter to ensure the scout only analyzes tokens tradable on BingX.
 </product_requirements>
 
 <key_technical_concepts>
 -   **FastAPI**: Python web framework for backend.
 -   **React**: JavaScript library for frontend UI.
--   **MongoDB**: NoSQL database for data storage.
+-   **MongoDB**: NoSQL database for data storage (UUIDs for IDs).
 -   **OpenAI GPT-4o, Claude-3-7-Sonnet**: AI models (IA1/IA2).
 -   **Multi-threading/AsyncIO**: Parallel data processing.
 -   **BingX API ( SDK)**: Live crypto trading, balance, order execution.
--   **Technical Analysis**: RSI, MACD, Bollinger Bands, Fibonacci, chart patterns, Risk-Reward.
+-   **Technical Analysis**: RSI, MACD, Bollinger Bands, Fibonacci, chart patterns, Risk-Reward calculation.
 -   **WebSockets**: Real-time frontend updates.
 -   **Dynamic Leverage/SL/TP/Trailing Stop-Loss**: Adaptive trading parameters.
--   **pytz**: Python library for timezone management.
+-   ****: Python library for Paris timezone management.
+-   ****: Data manipulation for technical indicators.
+-   **, **: Asynchronous/synchronous HTTP requests for market data.
 </key_technical_concepts>
 
 <code_architecture>
 
--   : Main FastAPI entry point and orchestrator.
-    -   **Importance**: Coordinates AI analysis, market data, trading, WebSockets, and manages the entire trading cycle. It houses the  class.
+
+
+-   : Main FastAPI entry point and orchestrator, housing the  class.
+    -   **Importance**: Coordinates AI analysis, market data, trading, WebSockets, and manages the entire trading cycle. It's the central hub.
     -   **Changes Made**:
-        -   Fixed parsing/application of dynamic leverage and 5-level take-profit from Claude's response within  and .
-        -   Implemented leverage-proportional trailing stop-loss system: added data models, integrated logic into decision-making, created background monitor, and exposed API endpoints ().
-        -   Integrated Paris timezone ( import, , ), updating timestamps in all Pydantic data models (, , , etc.), API endpoints (, , , ), and WebSocket updates.
-        -   Corrected the  endpoint to properly call .
-        -   Modified the main scout cycle interval to 4 hours ().
-        -   Implemented IA1 Risk-Reward calculation () including , ,  fields in  model, and a pre-IA2 filter for R:R ≥ 2:1 ().
-        -   Implemented a bidirectional Risk-Reward pre-filter in the Scout, with adaptive factors for each token (momentum, volatility) to provide a nuanced R:R.
-        -   Implemented deduplication logic for , , and  based on symbol and a 4-hour window, to ensure each crypto is processed only once per cycle.
-        -   **Latest change**: Moved IA1 deduplication check to *before* the LLM call to save credits, still in progress for IA2.
+        -   IA1 deduplication logic moved before LLM calls.
+        -   Deduplication added to  endpoint and Paris timezone consistency ensured.
+        -   Scout filters (R:R, lateral movement, volume) were extensively modified and eventually the lateral movement filter was permanently removed.
+        -   IA1's prompt and  model updated to include  (HOLD/LONG/SHORT).
+        -    now filters based on IA1 confidence (>=70%).
+        -   Claude (IA2) override logic implemented to prioritize its decisions when highly confident (Hierarchie Clara).
+        -   IA2 prompt updated with realistic Take Profit levels (TP1 0.5%, TP2 1.0%, etc.) and later evolved to include  managed by Claude.
+        -   IA1-IA2 communication enhanced to send full IA1 reasoning and a MASTER PATTERN designation to IA2.
+        -   IA1's RR calculation corrected to use Master Pattern targets, and RR is displayed in reports.
+        -   , , ,  were updated to handle micro-priced tokens accurately (e.g., using  for RSI,  for S/R).
+        -   References to the old  replaced with .
+        -   Integration of  import and filtering logic added to the Scout.
 -   : Environment variables.
     -   **Importance**: Stores API keys and database connection string.
-    -   **Changes Made**: Updated BingX API key and secret key for live trading.
--   :
-    -   **Importance**: Pre-filters opportunities by detecting chart patterns.
-    -   **Changes Made**: No direct changes described, but confirmed to contain  for 20+ chart patterns (Head & Shoulders, Triangles, Flags, etc.), used as a filter before IA1.
+    -   **Changes Made**: Updated with new API keys for CoinMarketCap, CoinAPI, TwelveData, Binance.
+-   : Pre-filters opportunities by detecting chart patterns.
+    -   **Importance**: Filters low-quality opportunities before costly AI analysis.
+    -   **Changes Made**: No direct explicit changes to its core logic, but its output is now heavily relied upon by IA1's MASTER PATTERN logic, and its integration within the scout's  function has changed.
+-   : Aggregates market data from various sources.
+    -   **Importance**: Provides reliable, multi-source market data for the trading system.
+    -   **Changes Made**: Replaced with  to incorporate 10+ external APIs with robust fallback mechanisms.
+-   : *New file created*.
+    -   **Importance**: Fetches and filters a list of tradable futures symbols from BingX to ensure the bot only processes relevant opportunities.
+    -   **Changes Made**: Contains the  class, as provided by the user.
 </code_architecture>
 
 <pending_tasks>
--   Move IA2's deduplication logic to *before* its LLM call to save credits, as was done for IA1.
+- Initialize the  instance to load tradable symbols at system startup and ensure the  list is available for the scout.
 </pending_tasks>
 
 <current_work>
-The AI engineer is currently in the process of optimizing LLM credit consumption by refactoring the deduplication logic. Previously, deduplication for IA1 analyses and IA2 decisions was performed *after* the LLM calls, meaning credits were wasted on processing duplicate opportunities. This critical flaw was identified by the user.
+The AI engineer is currently in the process of integrating a BingX-specific tradable symbols filter into the Scout. This involves using the  class, recently created in , to obtain an up-to-date list of symbols available for trading on BingX.
 
-The work completed so far includes:
-1.  **IA1 Deduplication Relocation**: The deduplication check for IA1 analyses has been successfully moved to occur *before* the actual IA1 (GPT-4o) LLM call. This ensures that if a crypto has already been analyzed within the 4-hour deduplication window, IA1 is skipped entirely, saving LLM credits.
-2.  **IA2 Deduplication Relocation (In Progress)**: The AI engineer has just started to implement the same pre-LLM call deduplication for IA2 decisions. The process involves identifying the exact location in the code () where IA2 decisions are processed and stored, and then implementing a check to determine if a decision for the same crypto has already been made within the 4-hour window *before* invoking the IA2 (Claude-3-7-Sonnet) LLM. The previous attempt faced a structure mismatch, requiring further investigation into IA2's processing flow.
+The work completed immediately before this summary request includes:
+1.  **Creation of **: A new file was created containing the  class, which handles fetching, filtering (by quote currency, keywords, and status), caching, and loading BingX tradable symbols.
+2.  **Import in **: The  has been successfully imported into .
+3.  **Integration of Filter in Scout**: The actual filtering logic has been added to the  method in . This filter checks if an  is present in the  list *before* proceeding with costly R:R calculations, optimizing resource usage.
 
-The immediate goal is to ensure IA2's deduplication is correctly placed to prevent any wasted LLM credits, aligning with the IA1 = Source unique de vérité architectural principle and maximizing credit efficiency across the entire trading pipeline.
+The immediate next step, which was in progress, is to ensure that the  is initialized and its  method is called at application startup to populate the  list. The trajectory ended while searching for an appropriate initialization section in .
 </current_work>
 
 <optional_next_step>
-Identify the correct structure and location to move IA2's deduplication logic to *before* its LLM call.
+Initialize the  instance at system startup to load tradable symbols.
 </optional_next_step>
