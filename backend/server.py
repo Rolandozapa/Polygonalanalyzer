@@ -2241,9 +2241,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
             valid_supports = []
             for support in supports[:3]:
                 if support > 0 and support < current_price * 1.5:  # Valeurs raisonnables
-                    valid_supports.append(round(support, 2))
+                    # NOUVEAU: Arrondi intelligent pour micro-prix
+                    if support < 0.001:
+                        # Pour micro-prix, garder précision scientifique
+                        valid_supports.append(float(f"{support:.12g}"))
+                    else:
+                        valid_supports.append(round(support, 6))  # Plus de précision
             
-            return valid_supports if valid_supports else [current_price * 0.95]
+            return valid_supports if valid_supports else [float(f"{current_price * 0.95:.12g}")]
         except:
             return [current_price * 0.95]
     
