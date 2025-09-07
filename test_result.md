@@ -105,7 +105,17 @@
 ## user_problem_statement: "Initialize the BingXFuturesFetcher instance to load tradable symbols at system startup and ensure the tradable_symbols list is available for the scout."
 
 ## backend:
-  - task: "Initialize BingX Tradable Symbols Fetcher at Startup"
+  - task: "Multi-RR Decision Engine Integration with Enhanced Formulas"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Réactivé le Multi-RR Engine Python avec formules améliorées. Amélioration de la détection des contradictions pour inclure RSI vs MACD vs Bollinger Bands (comme cas BIOUSDT). Nouvelles méthodes: _calculate_hold_opportunity_rr (basée sur support/résistance), _calculate_pattern_rr (ATR dynamique selon force pattern), _calculate_technical_signal_rr (confluence RSI/MACD/BB). Intégration dans la vignette IA1 avec affichage détaillé des ratios RR pour chaque option. Le système peut maintenant résoudre les contradictions techniques comme RSI oversold + MACD bearish en calculant le RR réel de chaque option."
     implemented: true
     working: true
     file: "/app/backend/server.py"
