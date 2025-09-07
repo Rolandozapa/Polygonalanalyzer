@@ -4511,7 +4511,25 @@ class UltraProfessionalTradingOrchestrator:
             logger.info(f"✅ OPPORTUNITIES STORED: {opportunities_stored}/{len(valid_analyses)} (deduplicated: {opportunities_deduplicated})")
             
             # Prepare IA2 decision making
-            perf_stats = advanced_market_aggregator.get_performance_stats()  # Use global aggregator
+            # NOUVEAU: ULTRA-ROBUST DATA FETCHING avec 10+ APIs fallback
+            try:
+                # Essayer ultra-robust aggregator d'abord
+                robust_data = await ultra_robust_aggregator.get_ultra_robust_price_data(opportunity.symbol)
+                if robust_data:
+                    # Mise à jour des données avec l'ultra-robust system
+                    opportunity.current_price = robust_data.price
+                    opportunity.volume_24h = robust_data.volume_24h
+                    opportunity.price_change_24h = robust_data.price_change_24h
+                    opportunity.volatility = robust_data.volatility
+                    opportunity.data_confidence = robust_data.confidence
+                    logger.info(f"🚀 ULTRA-ROBUST DATA: {opportunity.symbol} updated via robust aggregator")
+                else:
+                    # Fallback vers l'ancien système si nécessaire
+                    logger.warning(f"⚠️ Ultra-robust failed for {opportunity.symbol}, using traditional aggregator")
+            except Exception as e:
+                logger.error(f"❌ Ultra-robust error for {opportunity.symbol}: {e}")
+            
+            perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
             decisions_to_make = []
             decisions_skipped = 0
             
