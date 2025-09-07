@@ -840,14 +840,16 @@ class UltraProfessionalCryptoScout:
                 self.trending_symbols = current_symbols
                 logger.info(f"📈 Trending symbols updated from crawler: {current_symbols}")
             else:
-                # Fallback vers TOP 25 cryptos par market cap pour analyse technique complète
-                top25_trending = [
-                    'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC',
-                    'LINK', 'LTC', 'BCH', 'UNI', 'ATOM', 'FIL', 'APT', 'NEAR', 'VET', 'ICP', 
-                    'HBAR', 'ALGO', 'ETC', 'MANA', 'SAND'
+                # Fallback vers TOP 50 cryptos par market cap pour analyse technique complète
+                top50_trending = [
+                    'BTC', 'ETH', 'SOL', 'BNB', 'XRP', 'ADA', 'DOGE', 'AVAX', 'DOT', 'MATIC', 
+                    'LINK', 'LTC', 'BCH', 'UNI', 'ATOM', 'FIL', 'APT', 'NEAR', 'VET', 'ICP',
+                    'HBAR', 'ALGO', 'ETC', 'MANA', 'SAND', 'XTZ', 'THETA', 'FTM', 'EGLD', 'AAVE', 
+                    'GRT', 'AXS', 'KLAY', 'RUNE', 'QNT', 'CRV', 'SUSHI', 'ZEC', 'COMP', 'YFI', 
+                    'SNX', 'MKR', 'ENJ', 'BAT', 'FLOW', 'KSM', 'ZRX', 'REN', 'LRC', '1INCH'
                 ]
-                self.trending_symbols = top25_trending
-                logger.info(f"📈 Using TOP 25 crypto symbols for technical analysis: {top25_trending}")
+                self.trending_symbols = top50_trending
+                logger.info(f"📈 Using TOP 50 crypto symbols for technical analysis: {top50_trending}")
         except Exception as e:
             logger.error(f"Error syncing trending symbols: {e}")
             # Fallback final vers top 10
