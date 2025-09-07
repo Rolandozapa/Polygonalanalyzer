@@ -58,6 +58,192 @@ class MarketDataResponse:
     confidence: float = 1.0  # Data quality confidence
     additional_data: Dict[str, Any] = field(default_factory=dict)
 
+class UltraRobustMarketAggregator:
+    """ULTRA-ROBUST Market Data Aggregator avec 10+ APIs fallback"""
+    
+    def __init__(self):
+        self.session = None
+        self.api_endpoints = self._initialize_ultra_robust_apis()
+        self.cache = {}
+        self.cache_ttl = 300  # 5 minutes
+        self.logger = logging.getLogger(__name__)
+        
+    def _initialize_ultra_robust_apis(self) -> List[APIEndpoint]:
+        """Initialize all premium + free APIs for maximum robustness"""
+        endpoints = []
+        
+        # TIER 1: PREMIUM APIs (High Priority)
+        
+        # 1. CoinMarketCap (Premium)
+        if os.getenv('CMC_API_KEY'):
+            endpoints.append(APIEndpoint(
+                name="CoinMarketCap",
+                url="https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest",
+                headers={"X-CMC_PRO_API_KEY": os.getenv('CMC_API_KEY')},
+                rate_limit=100,
+                priority=1
+            ))
+        
+        # 2. CoinAPI (Primary)
+        if os.getenv('COINAPI_KEY_PRIMARY'):
+            endpoints.append(APIEndpoint(
+                name="CoinAPI_Primary",
+                url="https://rest.coinapi.io/v1/exchangerate",
+                headers={"X-CoinAPI-Key": os.getenv('COINAPI_KEY_PRIMARY')},
+                rate_limit=100,
+                priority=1
+            ))
+        
+        # 3. CoinAPI (Secondary)
+        if os.getenv('COINAPI_KEY_SECONDARY'):
+            endpoints.append(APIEndpoint(
+                name="CoinAPI_Secondary", 
+                url="https://rest.coinapi.io/v1/exchangerate",
+                headers={"X-CoinAPI-Key": os.getenv('COINAPI_KEY_SECONDARY')},
+                rate_limit=100,
+                priority=2
+            ))
+        
+        # 4. TwelveData (Premium)
+        if os.getenv('TWELVEDATA_KEY'):
+            endpoints.append(APIEndpoint(
+                name="TwelveData",
+                url="https://api.twelvedata.com/price",
+                params={"apikey": os.getenv('TWELVEDATA_KEY')},
+                rate_limit=50,
+                priority=1
+            ))
+        
+        # 5. Binance (Premium)
+        if os.getenv('BINANCE_KEY'):
+            endpoints.append(APIEndpoint(
+                name="Binance",
+                url="https://api.binance.com/api/v3/ticker/24hr",
+                rate_limit=100,
+                priority=1
+            ))
+        
+        # TIER 2: FREE APIs (Medium Priority)
+        
+        # 6. CoinGecko (Free but reliable)
+        endpoints.append(APIEndpoint(
+            name="CoinGecko",
+            url="https://api.coingecko.com/api/v3/simple/price",
+            rate_limit=30,
+            priority=3
+        ))
+        
+        # 7. Bitfinex (Free)
+        endpoints.append(APIEndpoint(
+            name="Bitfinex",
+            url="https://api-pub.bitfinex.com/v2/ticker",
+            rate_limit=60,
+            priority=4
+        ))
+        
+        # 8. CryptoCompare (Free)
+        endpoints.append(APIEndpoint(
+            name="CryptoCompare",
+            url="https://min-api.cryptocompare.com/data/price",
+            rate_limit=50,
+            priority=4
+        ))
+        
+        # 9. Yahoo Finance (Free)
+        endpoints.append(APIEndpoint(
+            name="YahooFinance",
+            url="https://query1.finance.yahoo.com/v8/finance/chart",
+            rate_limit=100,
+            priority=5
+        ))
+        
+        # 10. Kraken (Free)
+        endpoints.append(APIEndpoint(
+            name="Kraken",
+            url="https://api.kraken.com/0/public/Ticker",
+            rate_limit=30,
+            priority=5
+        ))
+        
+        self.logger.info(f"🚀 ULTRA-ROBUST SYSTEM: {len(endpoints)} APIs initialized")
+        return sorted(endpoints, key=lambda x: x.priority)
+    
+    async def get_ultra_robust_price_data(self, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch price data with ultra-robust fallback across all APIs"""
+        
+        # Cache check first
+        cache_key = f"price_{symbol}"
+        if cache_key in self.cache:
+            cache_data, cache_time = self.cache[cache_key]
+            if time.time() - cache_time < self.cache_ttl:
+                return cache_data
+        
+        # Try each API in priority order
+        for api in self.api_endpoints:
+            if api.status == APIStatus.DISABLED:
+                continue
+                
+            try:
+                # Rate limiting check
+                if not self._check_rate_limit(api):
+                    continue
+                
+                # Attempt to fetch data
+                result = await self._fetch_from_api(api, symbol)
+                if result:
+                    # Cache successful result
+                    self.cache[cache_key] = (result, time.time())
+                    api.success_rate = min(api.success_rate + 0.1, 1.0)
+                    self.logger.info(f"✅ SUCCESS: {api.name} provided data for {symbol}: ${result.price:.6f}")
+                    return result
+                    
+            except Exception as e:
+                self.logger.warning(f"⚠️ {api.name} failed for {symbol}: {e}")
+                api.error_count += 1
+                api.success_rate = max(api.success_rate - 0.2, 0.0)
+                
+                # Disable API if too many errors
+                if api.error_count > 10:
+                    api.status = APIStatus.DISABLED
+                    self.logger.error(f"❌ DISABLED {api.name} due to excessive errors")
+                
+                continue
+        
+        self.logger.error(f"🚨 COMPLETE FAILURE: All {len(self.api_endpoints)} APIs failed for {symbol}")
+        return None
+    
+    async def _fetch_from_api(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch data from specific API with symbol adaptation"""
+        
+        if not self.session:
+            connector = aiohttp.TCPConnector(limit=100, limit_per_host=30)
+            self.session = aiohttp.ClientSession(connector=connector, timeout=aiohttp.ClientTimeout(total=api.timeout))
+        
+        # Adapt symbol format for each API
+        adapted_symbol = self._adapt_symbol_format(symbol, api.name)
+        
+        # Build request based on API
+        if api.name == "CoinMarketCap":
+            return await self._fetch_coinmarketcap(api, adapted_symbol)
+        elif "CoinAPI" in api.name:
+            return await self._fetch_coinapi(api, adapted_symbol)
+        elif api.name == "TwelveData":
+            return await self._fetch_twelvedata(api, adapted_symbol)
+        elif api.name == "Binance":
+            return await self._fetch_binance(api, adapted_symbol)
+        elif api.name == "CoinGecko":
+            return await self._fetch_coingecko(api, adapted_symbol)
+        elif api.name == "Bitfinex":
+            return await self._fetch_bitfinex(api, adapted_symbol)
+        elif api.name == "CryptoCompare":
+            return await self._fetch_cryptocompare(api, adapted_symbol)
+        elif api.name == "YahooFinance":
+            return await self._fetch_yahoo(api, adapted_symbol)
+        elif api.name == "Kraken":
+            return await self._fetch_kraken(api, adapted_symbol)
+        
+        return None
+
 class AdvancedMarketAggregator:
     """
     Système de fallback robuste et parallélisé pour agrégation de données de marché
