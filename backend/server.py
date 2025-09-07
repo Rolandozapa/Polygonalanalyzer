@@ -1169,10 +1169,11 @@ class UltraProfessionalCryptoScout:
         )
     
     def _convert_responses_to_opportunities(self, responses: List[MarketDataResponse]) -> List[MarketOpportunity]:
-        """Convert multiple responses to opportunities"""
+        """Convert multiple responses to opportunities - SANS FILTRES PROFESSIONNELS"""
         opportunities = []
         for response in responses:
-            if self._passes_professional_filters(response):
+            # PLUS DE FILTRES PROFESSIONNELS - Accepter toutes les réponses valides
+            if response.price > 0:  # Seule validation basique : prix positif
                 opportunity = self._convert_response_to_opportunity(response)
                 opportunities.append(opportunity)
         return opportunities
