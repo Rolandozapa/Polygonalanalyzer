@@ -102,6 +102,18 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
+  - task: "Implement Probabilistic Optimal TP System for IA2"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Enhanced IA2 to generate probabilistic optimal TP levels only for LONG/SHORT signals. Updated Claude prompt to generate dynamic TP levels with custom percentage distributions based on market conditions. Modified _create_and_execute_advanced_strategy to handle the new probabilistic TP structure with tp_levels array format. Added comprehensive logging for TP strategy details and distribution logic. Updated TP levels extraction for trailing stops to handle both legacy and new probabilistic formats. System now generates 'sur mesure' TP levels (e.g., TP1: 35%, TP2: 40%, TP3: 25%) dynamically calibrated to market conditions."
+
 ## user_problem_statement: "Initialize the BingXFuturesFetcher instance to load tradable symbols at system startup and ensure the tradable_symbols list is available for the scout."
 
 ## backend:
