@@ -1432,10 +1432,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
                 reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern is IA1's PRIMARY BASIS for strategic decision."
             
-            # Create ultra professional analysis avec validation JSON + IA1 fields
-            analysis_data = {
-                "analysis": ia1_complete_json.get('analysis', f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators."),  # 🆕 Human analysis from IA1
-                "reasoning": ia1_complete_json.get('reasoning', "Technical analysis suggests monitoring key support and resistance levels for directional signals."),  # 🆕 Human reasoning from IA1  
+            # 🚀 UTILISER LE JSON IA1 COMPLET + enrichir avec calculs techniques
+            analysis_data = ia1_complete_json.copy()  # Commencer avec IA1 JSON complet
+            
+            # Enrichir avec calculs techniques précis
+            analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": macd_signal,
                 "bollinger_position": bb_position,
@@ -1450,9 +1451,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
                 "market_sentiment": self._determine_market_sentiment(opportunity),
                 "data_sources": opportunity.data_sources
-            }
+            })
             
-            logger.info(f"📋 Analysis data created for {opportunity.symbol}: analysis={len(analysis_data['analysis'])} chars, reasoning={len(analysis_data['reasoning'])} chars")
+            logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
