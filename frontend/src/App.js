@@ -434,6 +434,251 @@ const TradingDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'positions' && (
+          <div className="space-y-6">
+            {/* Execution Mode Control */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">Trading Execution Mode</h3>
+                  <p className="text-slate-600 mt-1">Control how trades are executed</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                    executionMode === 'SIMULATION' 
+                      ? 'bg-blue-100 text-blue-800' 
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {executionMode} MODE
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTradingMode('SIMULATION')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        executionMode === 'SIMULATION'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      }`}
+                    >
+                      Simulation
+                    </button>
+                    <button
+                      onClick={() => setTradingMode('LIVE')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        executionMode === 'LIVE'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      }`}
+                    >
+                      Live Trading
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {executionMode === 'LIVE' && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 font-medium">⚠️ LIVE TRADING ACTIVE</p>
+                  <p className="text-red-700 text-sm">Trades will be executed with real money on BingX</p>
+                </div>
+              )}
+            </div>
+
+            {/* Active Positions Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Active Positions</p>
+                    <p className="text-2xl font-bold text-slate-900">{activePositions.length}</p>
+                  </div>
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">🎯</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Total P&L</p>
+                    <p className={`text-2xl font-bold ${
+                      activePositions.reduce((sum, pos) => sum + (pos.unrealized_pnl || 0), 0) >= 0 
+                        ? 'text-emerald-600' : 'text-red-600'
+                    }`}>
+                      {formatPrice(activePositions.reduce((sum, pos) => sum + (pos.unrealized_pnl || 0), 0))}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">💰</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Total Position Value</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {formatPrice(activePositions.reduce((sum, pos) => sum + (pos.position_size_usd || 0), 0))}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">📊</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-2xl p-6 shadow-sm border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Trailing SL Active</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {activePositions.filter(pos => pos.trailing_sl_active).length}
+                    </p>
+                  </div>
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <span className="text-2xl">🛡️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Positions List */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-slate-900">Active Trading Positions</h3>
+                <p className="text-slate-600 mt-1">Real-time monitoring with dynamic trailing stops</p>
+              </div>
+              
+              <div className="divide-y">
+                {activePositions.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">📋</span>
+                    </div>
+                    <p className="text-slate-600">No active positions</p>
+                    <p className="text-sm text-slate-500 mt-1">Positions will appear here when IA2 generates LONG/SHORT signals</p>
+                  </div>
+                ) : (
+                  activePositions.map((position) => (
+                    <div key={position.id} className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${
+                            position.status === 'ACTIVE' ? 'bg-emerald-500' :
+                            position.status === 'OPENING' ? 'bg-amber-500' :
+                            position.status === 'CLOSING' ? 'bg-red-500' : 'bg-slate-500'
+                          }`}></div>
+                          <h4 className="text-lg font-semibold text-slate-900">{position.symbol}</h4>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getSignalColor(position.signal.toLowerCase())}`}>
+                            {position.signal}
+                          </span>
+                          <span className="text-sm text-slate-500">
+                            {position.leverage}x leverage
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className={`text-lg font-semibold ${
+                              position.pnl_percentage >= 0 ? 'text-emerald-600' : 'text-red-600'
+                            }`}>
+                              {position.pnl_percentage >= 0 ? '+' : ''}{position.pnl_percentage.toFixed(2)}%
+                            </p>
+                            <p className="text-sm text-slate-600">
+                              {formatPrice(position.unrealized_pnl)}
+                            </p>
+                          </div>
+                          
+                          <button
+                            onClick={() => closePosition(position.id)}
+                            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                          >
+                            Close Position
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Position Details Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Entry Price</p>
+                          <p className="text-lg font-semibold text-slate-900">{formatPrice(position.entry_price)}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Current Price</p>
+                          <p className="text-lg font-semibold text-slate-900">{formatPrice(position.current_price)}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Quantity</p>
+                          <p className="text-lg font-semibold text-slate-900">{position.quantity.toFixed(6)}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Position Size</p>
+                          <p className="text-lg font-semibold text-slate-900">{formatPrice(position.position_size_usd)}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Stop Loss</p>
+                          <p className="text-lg font-semibold text-red-600">{formatPrice(position.current_stop_loss)}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-3">
+                          <p className="text-sm text-slate-600">Status</p>
+                          <p className="text-lg font-semibold text-slate-900">{position.status}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Probabilistic TP Levels */}
+                      <div className="bg-slate-50 rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h5 className="font-medium text-slate-900">Probabilistic Take Profit Strategy</h5>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-600">
+                              {position.tp_filled_levels}/{position.tp_total_levels} levels hit
+                            </span>
+                            {position.trailing_sl_active && (
+                              <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-sm font-medium">
+                                🚀 Trailing SL Active
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          {position.tp_levels && position.tp_levels.map((tp, index) => (
+                            <div key={index} className={`p-3 rounded border-2 transition-all ${
+                              tp.filled ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
+                            }`}>
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="font-medium text-slate-900">TP{tp.level}</span>
+                                <span className={`text-sm font-medium ${
+                                  tp.filled ? 'text-emerald-600' : 'text-slate-600'
+                                }`}>
+                                  {tp.position_distribution}%
+                                </span>
+                              </div>
+                              <p className="text-lg font-semibold text-slate-900 mb-1">
+                                {formatPrice(tp.price)}
+                              </p>
+                              <p className="text-sm text-slate-600">
+                                +{tp.percentage_from_entry.toFixed(1)}% from entry
+                              </p>
+                              {tp.filled && (
+                                <p className="text-sm text-emerald-600 mt-1">
+                                  ✅ Filled at {tp.filled_at ? formatTime(tp.filled_at) : 'N/A'}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'performance' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
