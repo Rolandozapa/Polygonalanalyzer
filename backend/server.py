@@ -2863,14 +2863,37 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 leverage_data = decision_logic.get("dynamic_leverage", {})
                 applied_leverage = leverage_data.get("applied_leverage", 2.0) if leverage_data else 2.0
                 
-                # Extract TP levels for trailing stop
-                tp_levels = {
-                    "tp1": decision.take_profit_1,
-                    "tp2": decision.take_profit_2, 
-                    "tp3": decision.take_profit_3,
-                    "tp4": decision_logic.get("tp4", decision.take_profit_3),
-                    "tp5": decision_logic.get("tp5", decision.take_profit_3)
-                }
+                # Extract TP levels for trailing stop - handle both legacy and probabilistic TP formats
+                take_profit_strategy = claude_decision.get("take_profit_strategy", {})
+                tp_levels = {}
+                
+                # Check if we have new probabilistic TP format
+                if "tp_levels" in take_profit_strategy:
+                    # New probabilistic format
+                    for tp_level in take_profit_strategy["tp_levels"]:
+                        level_num = tp_level.get("level", 1)
+                        percentage_from_entry = tp_level.get("percentage_from_entry", 0)
+                        
+                        # Calculate TP price based on percentage from entry
+                        if decision.signal == SignalType.LONG:
+                            tp_price = decision.entry_price * (1 + percentage_from_entry / 100)
+                        else:  # SHORT
+                            tp_price = decision.entry_price * (1 - percentage_from_entry / 100)
+                        
+                        tp_levels[f"tp{level_num}"] = tp_price
+                    
+                    logger.info(f"🎯 Using probabilistic TP levels: {len(tp_levels)} levels extracted")
+                
+                else:
+                    # Legacy format fallback
+                    tp_levels = {
+                        "tp1": decision.take_profit_1,
+                        "tp2": decision.take_profit_2, 
+                        "tp3": decision.take_profit_3,
+                        "tp4": decision_logic.get("tp4", decision.take_profit_3),
+                        "tp5": decision_logic.get("tp5", decision.take_profit_3)
+                    }
+                    logger.info(f"🔄 Using legacy TP levels format")
                 
                 # Create trailing stop with leverage-proportional trailing percentage
                 trailing_stop = trailing_stop_manager.create_trailing_stop(decision, applied_leverage, tp_levels)
