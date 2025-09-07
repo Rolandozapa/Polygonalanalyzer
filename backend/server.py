@@ -1386,6 +1386,32 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             response = await self.chat.send_message(UserMessage(text=prompt))
             
+            # Parse IA1 response to extract recommendation
+            ia1_signal = "hold"  # Default fallback
+            try:
+                # Try to parse JSON response from IA1
+                import json
+                response_clean = response.strip()
+                if response_clean.startswith('```json'):
+                    response_clean = response_clean.replace('```json', '').replace('```', '').strip()
+                elif response_clean.startswith('```'):
+                    response_clean = response_clean.replace('```', '').strip()
+                
+                # Find JSON in response if embedded in text
+                start_idx = response_clean.find('{')
+                end_idx = response_clean.rfind('}') + 1
+                if start_idx >= 0 and end_idx > start_idx:
+                    response_clean = response_clean[start_idx:end_idx]
+                
+                parsed_response = json.loads(response_clean)
+                if isinstance(parsed_response, dict) and 'recommendation' in parsed_response:
+                    ia1_signal = parsed_response['recommendation'].lower()
+                    logger.info(f"✅ IA1 recommendation extracted: {ia1_signal.upper()} for {opportunity.symbol}")
+                else:
+                    logger.warning(f"⚠️ IA1 response missing 'recommendation' field for {opportunity.symbol}, using default: hold")
+            except (json.JSONDecodeError, ValueError, KeyError) as e:
+                logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using default: hold")
+            
             # Enrichir le raisonnement avec le pattern technique détecté
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
             if detected_pattern:
