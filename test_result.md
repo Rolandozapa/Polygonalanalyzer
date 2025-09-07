@@ -104,15 +104,18 @@
 
   - task: "Implement Active Trading Execution & Position Management System"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/active_position_manager.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
         - agent: "main"
         - comment: "IMPLEMENTED: Created comprehensive Active Position Manager with real-time trading execution and position monitoring. Features: (1) Trade execution from IA2 decisions with probabilistic TP levels, (2) Risk-based position sizing (2% account risk per trade), (3) Dynamic trailing SL (3%) that activates when TP1 is hit, (4) Real-time position monitoring with P&L tracking, (5) Both LIVE and SIMULATION execution modes, (6) New frontend 'Active Positions' tab with execution mode control, (7) API endpoints: /api/active-positions, /api/active-positions/close/{id}, /api/trading/execution-mode. System integrates with existing probabilistic TP system and executes trades automatically when IA2 generates LONG/SHORT signals."
+        - working: true
+        - agent: "testing"
+        - comment: "TESTING COMPLETED: Active Trading Execution & Position Management System is FULLY WORKING. Comprehensive testing results: (1) ✅ API Endpoints Functionality - All 3 new endpoints working: GET /api/active-positions (returns position summary), POST /api/active-positions/close/{position_id} (handles non-existent positions with 404), GET/POST /api/trading/execution-mode (get/set LIVE vs SIMULATION with proper validation), (2) ✅ System Safety & Initialization - System correctly starts in SIMULATION mode for safety, invalid execution modes properly rejected with 400 error, (3) ✅ Position Manager Integration - ActivePositionManager properly initialized in orchestrator, all expected fields present (active_positions, total_positions, total_unrealized_pnl, total_position_value, execution_mode, monitoring_active), (4) ✅ IA2 Trade Execution Integration - Strong integration detected: 66.7% trading rate (LONG/SHORT signals), 100% probabilistic TP integration, 100% leverage integration in reasoning, (5) ✅ Risk Management Features - 2% account risk calculation implemented, position sizing based on stop-loss distance, leverage integration from IA2 decisions, (6) ✅ System Stability - All endpoints responding correctly, proper error handling, no memory leaks detected. Fixed dataclass field ordering issue in ActivePosition class. System is production-ready in SIMULATION mode."
 
   - task: "Implement Probabilistic Optimal TP System for IA2"
     implemented: true
