@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-## user_problem_statement: "J'aimerais analyser si les filtres du Scout sont trop restrictifs. L'utilisateur s'inquiète que les filtres pourraient éliminer trop d'opportunités intéressantes."
+## user_problem_statement: "Initialize the BingXFuturesFetcher instance to load tradable symbols at system startup and ensure the tradable_symbols list is available for the scout."
 
 ## backend:
   - task: "IA1 HOLD Filter Optimization for IA2 Economy"
