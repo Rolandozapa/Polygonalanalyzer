@@ -11926,7 +11926,7 @@ if __name__ == "__main__":
         
         # Step 4: Analyze Scout opportunities
         print(f"\n   ⏱️ Step 3: Waiting for Scout→IA1 cycle (90 seconds)...")
-   📊 Step 4: Analyzing Scout opportunities...")
+        print(f"\n   📊 Step 4: Analyzing Scout opportunities...")
         success, opportunities_data = self.test_get_opportunities()
         if not success:
             print(f"   ❌ Cannot retrieve Scout opportunities")
