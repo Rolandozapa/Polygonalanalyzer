@@ -1389,10 +1389,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
             if detected_pattern:
                 direction_emoji = "📈" if detected_pattern.trading_direction == "long" else "📉" if detected_pattern.trading_direction == "short" else "⚖️"
-                reasoning += f"\n\n🎯 TECHNICAL PATTERN: {detected_pattern.pattern_type.value}"
+                reasoning += f"\n\n🎯 MASTER PATTERN (IA1 STRATEGIC CHOICE): {detected_pattern.pattern_type.value}"
                 reasoning += f"\n{direction_emoji} Direction: {detected_pattern.trading_direction.upper()} (strength: {detected_pattern.strength:.2f})"
                 reasoning += f"\nTrend Duration: {detected_pattern.trend_duration_days} days"
                 reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
+                reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern is IA1's PRIMARY BASIS for strategic decision."
             
             # Create ultra professional analysis avec validation JSON
             analysis_data = {
