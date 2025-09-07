@@ -1872,34 +1872,60 @@ class UltraProfessionalIA1TechnicalAnalyst:
         }
     
     def _calculate_pattern_rr(self, opportunity: "MarketOpportunity", detected_pattern: Any) -> Dict[str, Any]:
-        """Calculer RR pour suivre le MASTER PATTERN"""
+        """Calculer RR pour MASTER PATTERN - Formule améliorée avec niveaux techniques réels"""
         current_price = opportunity.current_price
         entry_price = getattr(detected_pattern, 'entry_price', current_price)
         target_price = getattr(detected_pattern, 'target_price', current_price)
         direction = detected_pattern.trading_direction.lower()
+        strength = getattr(detected_pattern, 'strength', 0.5)
         
-        # Calculer SL basé sur ATR et direction
-        atr_estimate = current_price * max(opportunity.volatility, 0.015)
+        # FORMULE PATTERN AMÉLIORÉE: ATR dynamique basé sur la force du pattern
+        base_volatility = max(opportunity.volatility, 0.015)
+        # Plus le pattern est fort, plus on peut prendre de risque
+        atr_multiplier = 1.5 + (strength * 1.0)  # 1.5x à 2.5x selon force
+        atr_estimate = current_price * base_volatility * atr_multiplier
         
         if direction == 'long':
-            stop_loss = entry_price - (atr_estimate * 2.5)
+            # SL plus serré si pattern fort
+            sl_distance = atr_estimate * (2.0 - (strength * 0.5))  # 2.0x à 1.5x selon force
+            stop_loss = entry_price - sl_distance
+            
+            # Target basé sur pattern ou extension technique
+            if target_price > entry_price:
+                reward = abs(target_price - entry_price)
+            else:
+                # Extension basée sur la force du pattern
+                extension_multiplier = 1.2 + (strength * 1.3)  # 1.2x à 2.5x
+                reward = atr_estimate * extension_multiplier
+                target_price = entry_price + reward
+                
             risk = abs(entry_price - stop_loss)
-            reward = abs(target_price - entry_price) if target_price > entry_price else atr_estimate * 1.5
+            
         else:  # SHORT
-            stop_loss = entry_price + (atr_estimate * 2.5)  
+            sl_distance = atr_estimate * (2.0 - (strength * 0.5))
+            stop_loss = entry_price + sl_distance
+            
+            if target_price < entry_price:
+                reward = abs(entry_price - target_price)
+            else:
+                extension_multiplier = 1.2 + (strength * 1.3)
+                reward = atr_estimate * extension_multiplier
+                target_price = entry_price - reward
+                
             risk = abs(stop_loss - entry_price)
-            reward = abs(entry_price - target_price) if target_price < entry_price else atr_estimate * 1.5
         
-        pattern_rr = reward / max(risk, 0.001)
+        pattern_rr = reward / max(risk, current_price * 0.005)  # Min 0.5% risk
         
         return {
-            "rr_ratio": pattern_rr,
-            "reasoning": f"{direction.upper()}: Entry ${entry_price:.4f} → SL ${stop_loss:.4f} → TP ${target_price:.4f}",
+            "rr_ratio": min(pattern_rr, 5.0),  # Cap à 5:1 pour éviter valeurs irréalistes
+            "reasoning": f"{direction.upper()}: Entry ${entry_price:.4f} → SL ${stop_loss:.4f} → TP ${target_price:.4f} (Force: {strength:.1f})",
             "target_price": target_price,
             "stop_loss": stop_loss,
             "entry_price": entry_price,
             "risk": risk,
-            "reward": reward
+            "reward": reward,
+            "pattern_strength": strength,
+            "atr_multiplier": atr_multiplier
         }
     
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
