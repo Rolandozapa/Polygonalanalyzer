@@ -1947,14 +1947,33 @@ class UltraProfessionalIA1TechnicalAnalyst:
     # Note: Synthetic data generation removed - using REAL OHLCV data only
     
     def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
-        """Calculate RSI indicator"""
+        """Calculate RSI indicator avec gestion micro-prix"""
         try:
             if len(prices) < period + 1:
                 return 50.0  # Neutral RSI
             
-            delta = prices.diff()
-            gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-            loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+            # NOUVEAU: Gestion micro-prix - amplifier les variations relatives
+            if prices.iloc[-1] < 0.001:  # Micro-prix détecté
+                # Utiliser les variations relatives (%) au lieu des variations absolues
+                pct_changes = prices.pct_change()
+                # Filtrer les variations nulles
+                pct_changes = pct_changes.replace([0, float('inf'), float('-inf')], 0).fillna(0)
+                
+                if pct_changes.abs().sum() < 1e-10:  # Variations trop faibles
+                    return 50.0  # Prix stable = RSI neutre
+                
+                # Calculer RSI sur variations relatives
+                gain = (pct_changes.where(pct_changes > 0, 0)).rolling(window=period).mean()
+                loss = (-pct_changes.where(pct_changes < 0, 0)).rolling(window=period).mean()
+            else:
+                # Calcul classique pour prix normaux
+                delta = prices.diff()
+                gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+                loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+            
+            # Éviter division par zéro
+            if loss.iloc[-1] == 0 or pd.isna(loss.iloc[-1]):
+                return 70.0 if gain.iloc[-1] > 0 else 30.0  # Tendance claire vs neutre
             
             rs = gain / loss
             rsi = 100 - (100 / (1 + rs))
@@ -1966,7 +1985,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 return 50.0
             
             return round(rsi_value, 2)
-        except:
+        except Exception as e:
+            logger.debug(f"RSI calculation error: {e}")
             return 50.0
     
     def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
