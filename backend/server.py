@@ -1739,105 +1739,111 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "reason": f"Erreur analyse: {str(e)}"
             }
     
-    def _detect_lateral_movement(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
-        """Détecte les mouvements latéraux (consolidation) pour économiser appels API sur figures non-directionnelles"""
-        try:
-            result = {
-                "is_lateral": False,
-                "movement_type": "UNKNOWN",
-                "reason": "Analysis failed",
-                "trend_strength": 0.0,
-                "volatility_level": 0.0
-            }
-            
-            if len(historical_data) < 20:
-                result["reason"] = "Données insuffisantes pour analyse directionnelle"
-                return result
-            
-            # Analyse sur les 20 derniers jours pour détecter la tendance récente
-            recent_data = historical_data.tail(20)
-            prices = recent_data['Close']
-            
-            # 1. Calcul de la tendance générale (régression linéaire simple)
-            x = list(range(len(prices)))
-            n = len(x)
-            sum_x = sum(x)
-            sum_y = sum(prices)
-            sum_xy = sum(x[i] * prices.iloc[i] for i in range(n))
-            sum_x2 = sum(x[i] ** 2 for i in range(n))
-            
-            # Pente de la régression linéaire
-            slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x ** 2)
-            trend_percentage = (slope * (n-1) / prices.iloc[0]) * 100  # Pourcentage de tendance
-            
-            # 2. Calcul de la volatilité récente
-            price_changes = prices.pct_change().dropna()
-            volatility = price_changes.std() * 100  # Volatilité en pourcentage
-            
-            # 3. Range analysis (différence high-low relative)
-            price_range = (recent_data['High'].max() - recent_data['Low'].min()) / recent_data['Close'].iloc[-1] * 100
-            
-            # 4. Moving averages convergence
-            if len(prices) >= 10:
-                ma_short = prices.tail(5).mean()
-                ma_long = prices.tail(10).mean()
-                ma_convergence = abs(ma_short - ma_long) / ma_long * 100
-            else:
-                ma_convergence = 0
-            
-            # 5. Détection mouvement latéral (plusieurs critères)
-            lateral_signals = 0
-            lateral_reasons = []
-            
-            # Critère 1: Tendance faible (< 4% sur 20 jours) - ASSOUPLI
-            if abs(trend_percentage) < 4.0:
-                lateral_signals += 1
-                lateral_reasons.append(f"Tendance faible: {trend_percentage:+.1f}%")
-            
-            # Critère 2: Volatilité faible (< 1.5% quotidien) - ASSOUPLI
-            if volatility < 1.5:
-                lateral_signals += 1
-                lateral_reasons.append(f"Volatilité faible: {volatility:.1f}%")
-            
-            # Critère 3: Range limité (< 6% sur la période) - ASSOUPLI
-            if price_range < 6.0:
-                lateral_signals += 1
-                lateral_reasons.append(f"Range limité: {price_range:.1f}%")
-            
-            # Critère 4: Moving averages convergentes (< 1.0% différence) - ASSOUPLI
-            if ma_convergence < 1.0:
-                lateral_signals += 1
-                lateral_reasons.append(f"MA convergentes: {ma_convergence:.1f}%")
-            
-            # Décision finale basée sur confluence de signaux
-            result["trend_strength"] = abs(trend_percentage)
-            result["volatility_level"] = volatility
-            
-            if lateral_signals >= 4:  # 4 critères = mouvement latéral confirmé (PLUS STRICT POUR ÉVITER FAUX POSITIFS)
-                result["is_lateral"] = True
-                result["movement_type"] = "LATERAL"
-                result["reason"] = f"Consolidation détectée: {', '.join(lateral_reasons)}"
-            elif trend_percentage > 5.0:  # Tendance haussière forte
-                result["movement_type"] = "BULLISH_TREND"
-                result["reason"] = f"Tendance haussière: {trend_percentage:+.1f}%, vol: {volatility:.1f}%"
-            elif trend_percentage < -5.0:  # Tendance baissière forte
-                result["movement_type"] = "BEARISH_TREND"
-                result["reason"] = f"Tendance baissière: {trend_percentage:+.1f}%, vol: {volatility:.1f}%"
-            elif abs(trend_percentage) >= 3.0:  # Tendance modérée
-                direction = "haussière" if trend_percentage > 0 else "baissière"
-                result["movement_type"] = "MODERATE_TREND"
-                result["reason"] = f"Tendance {direction} modérée: {trend_percentage:+.1f}%"
-            else:  # Zone grise - pas assez de signaux latéraux mais pas de tendance claire
-                result["movement_type"] = "MIXED"
-                result["reason"] = f"Signaux mixtes: {lateral_signals}/4 critères latéraux"
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Erreur détection mouvement latéral pour {symbol}: {e}")
-            result["reason"] = f"Erreur analyse: {str(e)}"
-            result["movement_type"] = "ERROR"
-            return result
+    def _resolve_ia1_contradiction_with_multi_rr(self, analysis: "TechnicalAnalysis", opportunity: "MarketOpportunity", 
+                                                 detected_pattern: Optional[Any] = None) -> Dict[str, Any]:
+        """NOUVEAU: Multi-RR Decision Engine pour résoudre contradictions IA1"""
+        
+        ia1_recommendation = getattr(analysis, 'ia1_signal', 'hold').lower()
+        pattern_direction = None
+        
+        if detected_pattern and hasattr(detected_pattern, 'trading_direction'):
+            pattern_direction = detected_pattern.trading_direction.lower()
+        
+        # Détecter contradiction
+        contradiction = False
+        if ia1_recommendation == 'hold' and pattern_direction in ['long', 'short']:
+            contradiction = True
+            logger.info(f"🤔 CONTRADICTION IA1 détectée pour {opportunity.symbol}: Recommendation={ia1_recommendation.upper()} vs Pattern={pattern_direction.upper()}")
+        
+        if not contradiction:
+            return {"contradiction": False, "recommendation": ia1_recommendation}
+        
+        # CALCUL MULTI-RR pour résoudre contradiction
+        current_price = opportunity.current_price
+        results = {}
+        
+        # RR Option 1: HOLD (coût d'opportunité)
+        hold_rr = self._calculate_hold_opportunity_rr(opportunity, analysis)
+        results['hold'] = hold_rr
+        
+        # RR Option 2: PATTERN Direction (SHORT/LONG)
+        if pattern_direction and detected_pattern:
+            pattern_rr = self._calculate_pattern_rr(opportunity, detected_pattern)
+            results[pattern_direction] = pattern_rr
+        
+        # DÉCISION basée sur meilleur RR
+        best_option = max(results.keys(), key=lambda k: results[k]['rr_ratio'])
+        best_rr = results[best_option]['rr_ratio']
+        
+        logger.info(f"🎯 MULTI-RR RESOLUTION pour {opportunity.symbol}:")
+        for option, data in results.items():
+            logger.info(f"   {option.upper()}: RR {data['rr_ratio']:.2f}:1 - {data['reasoning']}")
+        
+        logger.info(f"   🏆 WINNER: {best_option.upper()} (RR {best_rr:.2f}:1)")
+        
+        return {
+            "contradiction": True,
+            "original_recommendation": ia1_recommendation,
+            "pattern_direction": pattern_direction,
+            "multi_rr_results": results,
+            "final_recommendation": best_option,
+            "resolution_reasoning": f"Multi-RR analysis: {best_option.upper()} wins with {best_rr:.2f}:1 RR"
+        }
+    
+    def _calculate_hold_opportunity_rr(self, opportunity: "MarketOpportunity", analysis: "TechnicalAnalysis") -> Dict[str, Any]:
+        """Calculer RR pour HOLD (coût d'opportunité + attente meilleur signal)"""
+        current_price = opportunity.current_price
+        volatility = max(opportunity.volatility, 0.02)  # Min 2%
+        
+        # Approche: HOLD jusqu'à signal plus clair
+        period_vol = volatility * (7/365)**0.5  # Horizon 7 jours
+        
+        # Coût d'opportunité: gains potentiels manqués
+        upside_missed = current_price * period_vol
+        # Bénéfice: pertes potentielles évitées  
+        downside_avoided = current_price * period_vol
+        
+        # RR HOLD = Risque évité / Opportunité manquée
+        hold_rr = downside_avoided / max(upside_missed, 0.001)
+        
+        return {
+            "rr_ratio": hold_rr,
+            "reasoning": f"HOLD: Éviter risque ${downside_avoided:.4f} vs manquer gain ${upside_missed:.4f}",
+            "target_price": current_price,  # Pas de mouvement
+            "stop_loss": None,  # Pas de SL pour HOLD
+            "opportunity_cost": upside_missed
+        }
+    
+    def _calculate_pattern_rr(self, opportunity: "MarketOpportunity", detected_pattern: Any) -> Dict[str, Any]:
+        """Calculer RR pour suivre le MASTER PATTERN"""
+        current_price = opportunity.current_price
+        entry_price = getattr(detected_pattern, 'entry_price', current_price)
+        target_price = getattr(detected_pattern, 'target_price', current_price)
+        direction = detected_pattern.trading_direction.lower()
+        
+        # Calculer SL basé sur ATR et direction
+        atr_estimate = current_price * max(opportunity.volatility, 0.015)
+        
+        if direction == 'long':
+            stop_loss = entry_price - (atr_estimate * 2.5)
+            risk = abs(entry_price - stop_loss)
+            reward = abs(target_price - entry_price) if target_price > entry_price else atr_estimate * 1.5
+        else:  # SHORT
+            stop_loss = entry_price + (atr_estimate * 2.5)  
+            risk = abs(stop_loss - entry_price)
+            reward = abs(entry_price - target_price) if target_price < entry_price else atr_estimate * 1.5
+        
+        pattern_rr = reward / max(risk, 0.001)
+        
+        return {
+            "rr_ratio": pattern_rr,
+            "reasoning": f"{direction.upper()}: Entry ${entry_price:.4f} → SL ${stop_loss:.4f} → TP ${target_price:.4f}",
+            "target_price": target_price,
+            "stop_loss": stop_loss,
+            "entry_price": entry_price,
+            "risk": risk,
+            "reward": reward
+        }
     
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
         """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
