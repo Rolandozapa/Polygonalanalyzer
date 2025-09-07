@@ -284,12 +284,22 @@ DECISION OUTPUT FORMAT (JSON):
     "key_factors": ["factor1", "factor2", "factor3"]
 }
 
-ADVANCED STRATEGY APPROACH:
-1. Multi-Level Take Profits: Create RÉALISTES TP levels - TP1 dès 0.5% pour sécuriser rapidement
-2. Dynamic Position Management: Ajuster TP selon volatilité et pattern strength - TP conservateurs prioritaires
-3. Pattern-Adaptive Scaling: TP plus serrés pour patterns faibles, légèrement plus larges pour patterns forts
-4. Market Condition Optimization: En haute volatilité, TP max 3% - En faible volatilité, TP max 1.5%
-5. Technical Confluence Weighting: TP1 TOUJOURS atteignable à 0.5-1% pour confiance psychologique
+ADVANCED STRATEGY APPROACH AVEC TP SETTLER INTELLIGENT:
+1. Multi-Level Take Profits: TP de base RÉALISTES (0.5%, 1%, 1.8%, 3%) puis ajustement dynamique
+2. Dynamic TP Adjustment: BULL RUN detection → Extension TP (jusqu'à +50% des targets initiaux)
+3. Tropisme Tendanciel: SUPER DIVE detection → Compression TP (jusqu'à -30% pour sécurisation rapide)
+4. Momentum-Based Scaling: Volume + Price action → Ajustement temps réel des TP restants
+5. Market Regime Detection: 
+   - BULL MOMENTUM: TP2→1.5%, TP3→2.7%, TP4→4.5% (extension progressive)
+   - BEAR MOMENTUM: TP2→0.8%, TP3→1.3%, TP4→2.0% (compression défensive)
+   - NEUTRAL: TP standards (0.5%, 1%, 1.8%, 3%)
+6. Intelligent Profit Harvesting: Après TP1 atteint, évaluation tropisme pour optimiser TP suivants
+
+TP SETTLER INTELLIGENT RULES:
+- Si TP1 atteint en <5min + volume croissant + price momentum >2% → BULL MODE (extend TP)
+- Si TP1 atteint en >30min ou prix stagne près TP1 → NEUTRAL MODE (keep standard TP)  
+- Si prix baisse après entry ou volatilité >5% → BEAR MODE (compress TP)
+- Réévaluation à chaque TP atteint pour optimiser TP restants
 
 MARKET SENTIMENT & DYNAMIC LEVERAGE STRATEGY:
 Adapt leverage and risk parameters based on overall crypto market conditions and trade confidence.
