@@ -1276,15 +1276,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
         try:
             logger.info(f"🔍 MULTI-SOURCE CHECK: Validation données pour {opportunity.symbol}...")
             
-            # BLACKLIST: Tokens problématiques pour calculs techniques
-            problematic_tokens = [
-                'BABYDOGE', 'SHIB', 'PEPE', 'FLOKI', '1000FLOKI', 
-                '1000PEPE', '1000SHIB', 'DOGE', 'LUNC', 'USTC',
-                '1000BONK', 'BONK', 'BABYDOGEUSDT', 'SHIBUSDT'
-            ]
-            
-            if any(token in opportunity.symbol.upper() for token in problematic_tokens):
-                logger.warning(f"⚠️ TOKEN PROBLÉMATIQUE: {opportunity.symbol} - Skip pour éviter erreurs de calcul (prix microscopique)")
+            # NOUVEAU: Filtrage micro-prix pour éviter erreurs de calcul
+            if opportunity.current_price < 0.0001:  # Moins de 0.01 cent
+                logger.warning(f"⚠️ MICRO-PRIX DÉTECTÉ: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
                 return None
             
             # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
