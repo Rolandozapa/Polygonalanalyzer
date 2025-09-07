@@ -105,6 +105,18 @@
 ## user_problem_statement: "Initialize the BingXFuturesFetcher instance to load tradable symbols at system startup and ensure the tradable_symbols list is available for the scout."
 
 ## backend:
+  - task: "Initialize BingX Tradable Symbols Fetcher at Startup"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Added @app.on_event('startup') to initialize BingXFuturesFetcher at system startup. Fixed import issue by removing non-existent MarketDataResponse from bingx_symbol_fetcher import. Fixed API parsing bug in get_available_symbols() where data.get('data', {}).get('contracts', []) was changed to data.get('data', []) to match actual BingX API response structure. BingX fetcher now successfully loads 476 tradable symbols at startup and saves them to cache."
+
   - task: "IA1 HOLD Filter Optimization for IA2 Economy"
     implemented: true
     working: true
