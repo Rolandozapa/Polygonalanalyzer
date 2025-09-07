@@ -2307,10 +2307,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
             cleaned_data["analysis_confidence"] = self._ensure_json_safe(analysis_data.get("analysis_confidence"), 0.5)
             
-            # Validation des listes
+            # Validation des listes avec integration des patterns détectés
             cleaned_data["support_levels"] = self._ensure_json_safe(analysis_data.get("support_levels", []), [])
             cleaned_data["resistance_levels"] = self._ensure_json_safe(analysis_data.get("resistance_levels", []), [])
-            cleaned_data["patterns_detected"] = analysis_data.get("patterns_detected", ["No patterns detected"])
+            
+            # 🆕 INTEGRATION DES PATTERNS CHARTISTES DÉTECTÉS
+            if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns:
+                detected_pattern_names = [p.pattern_type.value for p in self._current_detected_patterns]
+                cleaned_data["patterns_detected"] = detected_pattern_names
+                logger.info(f"🎯 PATTERNS INTÉGRÉS dans IA1: {len(detected_pattern_names)} patterns pour {analysis_data.get('symbol', 'UNKNOWN')}")
+            else:
+                cleaned_data["patterns_detected"] = analysis_data.get("patterns_detected", ["No significant patterns detected"])
             
             # Validation des strings
             cleaned_data["analysis"] = str(analysis_data.get("analysis", "Technical analysis completed"))  # 🆕
