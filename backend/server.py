@@ -1445,24 +1445,21 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     multi_rr_display += f"\n\n🏆 **WINNER:** {final_recommendation.upper()}"
                     multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
                     
-                    # Enrichir le reasoning avec CONFRONTATION sentiment vs Multi-RR
+                    # APPROCHE HYBRIDE: Garder analyse humaine + ajouter commentaire sentiment post Multi-RR
                     original_reasoning = validated_data.get('reasoning', '')  # IA1 utilise 'reasoning' dans JSON
-                    gut_sentiment = validated_data.get('gut_sentiment', 'NEUTRAL')
-                    
-                    # Créer confrontation explicite entre instinct IA et calculs Multi-RR
-                    confrontation_text = f"\n\n🤖💭 **SENTIMENT vs CALCULS:**"
-                    confrontation_text += f"\n• Mon instinct: {gut_sentiment}"
-                    confrontation_text += f"\n• Multi-RR gagnant: {final_recommendation.upper()}"
-                    
-                    # Analyser l'accord ou le conflit
+                    original_analysis = validated_data.get('analysis', '')
                     ia1_recommendation = validated_data.get('recommendation', 'hold').upper()
-                    if final_recommendation.upper() != ia1_recommendation:
-                        confrontation_text += f"\n⚔️ **CONFLIT**: Mon sentiment initial était {ia1_recommendation}, mais les calculs Multi-RR suggèrent {final_recommendation.upper()}"
-                        confrontation_text += f"\n🎯 **RÉSOLUTION**: Je défère aux calculs rationnels Multi-RR malgré mes instincts"
-                    else:
-                        confrontation_text += f"\n🤝 **ACCORD**: Mon instinct et les calculs Multi-RR s'alignent sur {final_recommendation.upper()}"
                     
-                    enhanced_reasoning = original_reasoning + confrontation_text + multi_rr_display
+                    # Créer commentaire sentiment post-calcul (subtil)
+                    sentiment_comment = f"\n\n💭 **REFLEXION POST-CALCUL:**"
+                    
+                    if final_recommendation.upper() != ia1_recommendation:
+                        sentiment_comment += f"\nMon instinct initial penchait vers {ia1_recommendation}, mais les calculs Multi-RR révèlent que {final_recommendation.upper()} offre un meilleur ratio risque-récompense."
+                        sentiment_comment += f"\nJe défère aux mathématiques tout en gardant mon analyse technique comme contexte."
+                    else:
+                        sentiment_comment += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
+                    
+                    enhanced_reasoning = original_reasoning + sentiment_comment + multi_rr_display
                     
                     # Mettre à jour validated_data avec Multi-RR
                     validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
