@@ -6627,6 +6627,14 @@ class DualAITradingBotTester:
         self.test_fresh_ia2_decision_generation()
         self.test_ia2_confidence_distribution_analysis()
         
+        # MULTI-RR DECISION ENGINE TESTS (NEW)
+        print(f"\n" + "🎯" * 15 + " MULTI-RR DECISION ENGINE TESTS " + "🎯" * 15)
+        multi_rr_success = self.test_multi_rr_decision_engine()
+        enhanced_formulas_success = self.test_enhanced_multi_rr_formulas()
+        contradiction_detection_success = self.test_contradiction_detection_biousdt_case()
+        technical_signal_success = self.test_technical_signal_recognition()
+        vignette_display_success = self.test_multi_rr_vignette_display()
+        
         # System control tests
         self.test_start_trading_system()
         self.test_stop_trading_system()
