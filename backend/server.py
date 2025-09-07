@@ -36,8 +36,8 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 # from email.mime.multipart import MimeMultipart
 
 # Import our advanced market aggregator, BingX trading engine, trending auto-updater, technical pattern detector, enhanced OHLCV fetcher, and advanced trading strategies
-from advanced_market_aggregator import advanced_market_aggregator, ultra_robust_aggregator
-from bingx_symbol_fetcher import get_bingx_tradable_symbols, is_bingx_tradable, MarketDataResponse, bingx_fetcher
+from advanced_market_aggregator import advanced_market_aggregator, ultra_robust_aggregator, MarketDataResponse
+from bingx_symbol_fetcher import get_bingx_tradable_symbols, is_bingx_tradable, bingx_fetcher
 from bingx_official_engine import bingx_official_engine, BingXOrderSide, BingXOrderType, BingXPositionSide
 from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
