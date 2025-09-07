@@ -1443,11 +1443,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"📊 {opportunity.symbol} R:R Analysis: {risk_reward_analysis['ratio']:.2f}:1 (Risk: ${risk_reward_analysis['risk_amount']:.4f}, Reward: ${risk_reward_analysis['reward_amount']:.4f})")
             
             # NOUVEAU: MULTI-RR DECISION ENGINE pour résoudre contradictions IA1
+            # Créer un objet temporaire pour tester les contradictions
+            temp_analysis = type('TempAnalysis', (), {
+                'ia1_signal': validated_data["ia1_signal"],
+                'symbol': opportunity.symbol,
+                'analysis_confidence': validated_data["analysis_confidence"]
+            })()
+            
             contradiction_resolution = self._resolve_ia1_contradiction_with_multi_rr(
-                TechnicalAnalysis(**validated_data, 
-                    symbol=opportunity.symbol,
-                    timestamp=get_paris_time()
-                ), 
+                temp_analysis, 
                 opportunity, 
                 detected_pattern
             )
