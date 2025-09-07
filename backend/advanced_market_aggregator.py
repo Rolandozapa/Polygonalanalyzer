@@ -1517,5 +1517,6 @@ class AdvancedMarketAggregator:
         
         return parsed_data
 
-# Global instance
-advanced_market_aggregator = UltraRobustMarketAggregator()
+# Global instances - ULTRA-ROBUST SYSTEM
+advanced_market_aggregator = AdvancedMarketAggregator()
+ultra_robust_aggregator = UltraRobustMarketAggregator()
