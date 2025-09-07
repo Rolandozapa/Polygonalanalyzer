@@ -102,6 +102,18 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
+  - task: "Fix Position Sizing to Match IA2 Vignette & Skip 0% Executions"
+    implemented: true
+    working: false
+    file: "/app/backend/active_position_manager.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Fixed critical position sizing issues: (1) Position size now matches exactly what IA2 shows in its vignette/reasoning (uses decision_logic['position_size'] directly), (2) Added check to skip trade execution when IA2 determines 0% position size, (3) Removed custom position size calculation in Active Position Manager - now uses IA2's calculated percentage directly, (4) Added logging to show IA2 position sizing decision (e.g., 'Using IA2 position sizing: 2.3% = $57.50'), (5) Updated trade execution to include position size percentage in execution details. System now respects IA2's exact position sizing logic and won't execute trades when IA2 determines position should be 0%."
+
   - task: "Implement Active Trading Execution & Position Management System"
     implemented: true
     working: true
