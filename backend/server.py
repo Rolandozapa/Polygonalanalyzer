@@ -1361,24 +1361,24 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 
                 parsed_response = json.loads(response_clean)
                 if isinstance(parsed_response, dict):
-                    # Extract recommendation
+                    # 🎯 CAPTURER LE JSON COMPLET IA1
+                    ia1_complete_json = parsed_response.copy()
+                    logger.info(f"✅ IA1 JSON complet capturé pour {opportunity.symbol}: {len(ia1_complete_json)} champs")
+                    
+                    # Extract key fields for processing
                     if 'recommendation' in parsed_response:
                         ia1_signal = parsed_response['recommendation'].lower()
                         logger.info(f"✅ IA1 recommendation: {ia1_signal.upper()} for {opportunity.symbol}")
                     
-                    # Extract master pattern
                     if 'master_pattern' in parsed_response and parsed_response['master_pattern']:
                         master_pattern = parsed_response['master_pattern']
                         logger.info(f"🎯 IA1 master pattern: {master_pattern} for {opportunity.symbol}")
                     
-                    # 🆕 EXTRACTION ANALYSIS ET REASONING pour affichage hybride
-                    ia1_analysis = parsed_response.get('analysis', '')
-                    ia1_reasoning = parsed_response.get('reasoning', '')
-                    
-                    if ia1_analysis:
-                        logger.info(f"✅ IA1 analysis extracted for {opportunity.symbol}: {len(ia1_analysis)} chars")
-                    if ia1_reasoning:
-                        logger.info(f"✅ IA1 reasoning extracted for {opportunity.symbol}: {len(ia1_reasoning)} chars")
+                    # Log analysis et reasoning capture
+                    if 'analysis' in parsed_response:
+                        logger.info(f"✅ IA1 analysis captured: {len(parsed_response['analysis'])} chars")
+                    if 'reasoning' in parsed_response:
+                        logger.info(f"✅ IA1 reasoning captured: {len(parsed_response['reasoning'])} chars")
                     
                     # Extract Multi-RR info if present
                     if 'multi_rr_analysis' in parsed_response:
@@ -1389,11 +1389,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 
             except (json.JSONDecodeError, ValueError, KeyError) as e:
                 logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using defaults")
-                # Fallback analysis and reasoning si pas encore définis
-                if not ia1_analysis:
-                    ia1_analysis = f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators."
-                if not ia1_reasoning:
-                    ia1_reasoning = "Technical analysis suggests monitoring key support and resistance levels for directional signals."
+                # Fallback will use default values from ia1_complete_json access
             
             # Enrichir le raisonnement avec les informations extraites
             reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
@@ -1413,8 +1409,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             # Create ultra professional analysis avec validation JSON + IA1 fields
             analysis_data = {
-                "analysis": ia1_analysis,  # 🆕 Human analysis from IA1
-                "reasoning": ia1_reasoning,  # 🆕 Human reasoning from IA1  
+                "analysis": ia1_complete_json.get('analysis', f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators."),  # 🆕 Human analysis from IA1
+                "reasoning": ia1_complete_json.get('reasoning', "Technical analysis suggests monitoring key support and resistance levels for directional signals."),  # 🆕 Human reasoning from IA1  
                 "rsi": rsi,
                 "macd_signal": macd_signal,
                 "bollinger_position": bb_position,
@@ -1431,7 +1427,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "data_sources": opportunity.data_sources
             }
             
-            logger.info(f"📋 Analysis data created for {opportunity.symbol}: analysis={len(ia1_analysis)} chars, reasoning={len(ia1_reasoning)} chars")
+            logger.info(f"📋 Analysis data created for {opportunity.symbol}: analysis={len(analysis_data['analysis'])} chars, reasoning={len(analysis_data['reasoning'])} chars")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
