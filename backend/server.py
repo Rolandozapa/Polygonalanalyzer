@@ -3944,8 +3944,14 @@ class UltraProfessionalTradingOrchestrator:
         return await self.start_trading_system()
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """Filtrage intelligent IA1→IA2 MINIMAL avec Risk-Reward 2:1 minimum"""
+        """Filtrage intelligent IA1→IA2 avec HOLD filter + Risk-Reward 2:1 minimum"""
         try:
+            # FILTRE 0: NOUVEAU - IA1 HOLD Filter (économie LLM majeure)
+            ia1_signal = getattr(analysis, 'ia1_signal', '').lower()
+            if ia1_signal == 'hold':
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: IA1 recommande HOLD - Pas d'intérêt trading (économie crédits IA2)")
+                return False
+            
             # FILTRE 1: Vérification de base analyse IA1
             if not analysis.ia1_reasoning or len(analysis.ia1_reasoning.strip()) < 50:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Analyse IA1 vide/corrompue")
