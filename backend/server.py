@@ -1827,7 +1827,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
     
     def _resolve_ia1_contradiction_with_multi_rr(self, analysis: "TechnicalAnalysis", opportunity: "MarketOpportunity", 
                                                  detected_pattern: Optional[Any] = None) -> Dict[str, Any]:
-        """NOUVEAU: Multi-RR Decision Engine pour résoudre contradictions IA1"""
+        """NOUVEAU: Multi-RR Decision Engine pour résoudre contradictions IA1 - Version améliorée"""
         
         ia1_recommendation = getattr(analysis, 'ia1_signal', 'hold').lower()
         pattern_direction = None
@@ -1835,14 +1835,40 @@ class UltraProfessionalIA1TechnicalAnalyst:
         if detected_pattern and hasattr(detected_pattern, 'trading_direction'):
             pattern_direction = detected_pattern.trading_direction.lower()
         
-        # Détecter contradiction
+        # 🚀 DÉTECTION CONTRADICTION AMÉLIORÉE - Inclut indicateurs techniques
         contradiction = False
+        contradiction_type = ""
+        
+        # Type 1: Recommendation vs Pattern
         if ia1_recommendation == 'hold' and pattern_direction in ['long', 'short']:
             contradiction = True
-            logger.info(f"🤔 CONTRADICTION IA1 détectée pour {opportunity.symbol}: Recommendation={ia1_recommendation.upper()} vs Pattern={pattern_direction.upper()}")
+            contradiction_type = f"IA1_HOLD vs PATTERN_{pattern_direction.upper()}"
+            
+        # Type 2: RSI vs MACD (comme BIOUSDT)
+        rsi = getattr(analysis, 'rsi', 50)
+        macd = getattr(analysis, 'macd_signal', 0)
+        
+        # RSI oversold (<30) + MACD bearish vs RSI overbought (>70) + MACD bullish
+        rsi_signal = "bullish" if rsi < 30 else "bearish" if rsi > 70 else "neutral"
+        macd_signal = "bullish" if macd > 0 else "bearish" if macd < 0 else "neutral"
+        
+        if rsi_signal != "neutral" and macd_signal != "neutral" and rsi_signal != macd_signal:
+            contradiction = True
+            contradiction_type = f"RSI_{rsi_signal.upper()} vs MACD_{macd_signal.upper()}"
+            
+        # Type 3: Bollinger Bands vs RSI
+        bb_position = getattr(analysis, 'bollinger_position', 0)
+        if abs(bb_position) > 0.8:  # En dehors des bandes
+            bb_signal = "bullish" if bb_position < -0.8 else "bearish"  # Inversion (oversold = bullish)
+            if rsi_signal != "neutral" and bb_signal != rsi_signal:
+                contradiction = True
+                contradiction_type = f"BB_{bb_signal.upper()} vs RSI_{rsi_signal.upper()}"
         
         if not contradiction:
             return {"contradiction": False, "recommendation": ia1_recommendation}
+        
+        logger.info(f"🤔 CONTRADICTION détectée pour {opportunity.symbol}: {contradiction_type}")
+        logger.info(f"   RSI: {rsi:.1f} ({rsi_signal}) | MACD: {macd:.6f} ({macd_signal}) | BB: {bb_position:.2f}")
         
         # CALCUL MULTI-RR pour résoudre contradiction
         current_price = opportunity.current_price
