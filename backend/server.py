@@ -3197,52 +3197,90 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         claude_signal_boost = 0
         
         if claude_decision:
+            # NOUVEAU: HIÉRARCHIE CLARA - Claude prioritaire pour figures chartistes
             claude_signal = claude_decision.get("signal", "").upper()
             claude_conf = claude_decision.get("confidence", 0.0)
             
-            if claude_signal in ["LONG", "BUY"] and claude_conf > 0.7:
-                claude_signal_boost = 3
-                reasoning += "Claude strongly recommends LONG for advanced strategy. "
-            elif claude_signal in ["LONG", "BUY"] and claude_conf > 0.6:
-                claude_signal_boost = 2
-                reasoning += "Claude recommends LONG for advanced strategy. "
-            elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.7:
-                claude_signal_boost = -3
-                reasoning += "Claude strongly recommends SHORT for advanced strategy. "
-            elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.6:
-                claude_signal_boost = -2
-                reasoning += "Claude recommends SHORT for advanced strategy. "
+            # CLAUDE OVERRIDE LOGIC - Priorité absolue quand confiance élevée
+            if claude_conf >= 0.80:  # Confiance très élevée (≥80%)
+                if claude_signal in ["LONG", "BUY"]:
+                    signal = SignalType.LONG
+                    confidence = min(claude_conf + 0.10, 0.98)  # Boost confiance finale
+                    reasoning += f"🎯 CLAUDE OVERRIDE: LONG with {claude_conf:.1%} confidence - Pattern chartiste prioritaire sur IA1. "
+                    logger.info(f"📈 {opportunity.symbol}: CLAUDE OVERRIDE LONG ({claude_conf:.1%}) overrides IA1 signals")
+                elif claude_signal in ["SHORT", "SELL"]:
+                    signal = SignalType.SHORT  
+                    confidence = min(claude_conf + 0.10, 0.98)
+                    reasoning += f"🎯 CLAUDE OVERRIDE: SHORT with {claude_conf:.1%} confidence - Pattern chartiste prioritaire sur IA1. "
+                    logger.info(f"📉 {opportunity.symbol}: CLAUDE OVERRIDE SHORT ({claude_conf:.1%}) overrides IA1 signals")
+                else:  # HOLD
+                    signal = SignalType.HOLD
+                    reasoning += f"🎯 CLAUDE OVERRIDE: HOLD with {claude_conf:.1%} confidence - Pas de figure chartiste claire. "
+                    logger.info(f"⏸️ {opportunity.symbol}: CLAUDE OVERRIDE HOLD ({claude_conf:.1%})")
+            
+            elif claude_conf >= 0.65 and abs(net_signals) <= 3:  # Confiance élevée + signaux IA1 faibles/modérés
+                if claude_signal in ["LONG", "BUY"]:
+                    signal = SignalType.LONG
+                    confidence = min(claude_conf + 0.05, 0.90)
+                    reasoning += f"🎯 CLAUDE PRIORITY: LONG with {claude_conf:.1%} confidence - Pattern chartiste surpasse signaux IA1 faibles. "
+                    logger.info(f"📈 {opportunity.symbol}: CLAUDE PRIORITY LONG ({claude_conf:.1%}) over weak IA1 signals")
+                elif claude_signal in ["SHORT", "SELL"]:
+                    signal = SignalType.SHORT
+                    confidence = min(claude_conf + 0.05, 0.90)
+                    reasoning += f"🎯 CLAUDE PRIORITY: SHORT with {claude_conf:.1%} confidence - Pattern chartiste surpasse signaux IA1 faibles. "
+                    logger.info(f"📉 {opportunity.symbol}: CLAUDE PRIORITY SHORT ({claude_conf:.1%}) over weak IA1 signals")
+                else:  # HOLD
+                    signal = SignalType.HOLD
+                    reasoning += f"🎯 CLAUDE PRIORITY: HOLD with {claude_conf:.1%} confidence - Pattern neutre. "
+            
+            else:
+                # LOGIQUE COMBINÉE CLASSIQUE - Quand Claude pas assez confiant
+                logger.info(f"🔄 {opportunity.symbol}: Using combined IA1+IA2 logic (Claude conf: {claude_conf:.1%})")
+                
+                # Ajouter boost Claude aux signaux IA1
+                if claude_signal in ["LONG", "BUY"] and claude_conf > 0.7:
+                    claude_signal_boost = 3
+                    reasoning += "Claude strongly recommends LONG for advanced strategy. "
+                elif claude_signal in ["LONG", "BUY"] and claude_conf > 0.6:
+                    claude_signal_boost = 2
+                    reasoning += "Claude recommends LONG for advanced strategy. "
+                elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.7:
+                    claude_signal_boost = -3
+                    reasoning += "Claude strongly recommends SHORT for advanced strategy. "
+                elif claude_signal in ["SHORT", "SELL"] and claude_conf > 0.6:
+                    claude_signal_boost = -2
+                    reasoning += "Claude recommends SHORT for advanced strategy. "
         
-        net_signals += claude_signal_boost
-        
-        # Advanced strategy decision thresholds (more selective)
-        if net_signals >= 6 and confidence > 0.75 and signal_strength > 0.6:  # Premium signals
-            signal = SignalType.LONG
-            confidence = min(confidence + 0.15, 0.98)
-            reasoning += "ADVANCED LONG: Premium bullish signals - full advanced strategy deployment. "
-        elif net_signals >= 4 and confidence > 0.65 and signal_strength > 0.4:  # Strong signals
-            signal = SignalType.LONG
-            confidence = min(confidence + 0.10, 0.90)
-            reasoning += "ADVANCED LONG: Strong bullish signals - advanced strategy confirmed. "
-        elif net_signals >= 2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate signals
-            signal = SignalType.LONG
-            confidence = min(confidence + 0.05, 0.80)
-            reasoning += "ADVANCED LONG: Moderate bullish signals - conservative advanced strategy. "
-        elif net_signals <= -6 and confidence > 0.75 and signal_strength > 0.6:  # Premium bearish
-            signal = SignalType.SHORT
-            confidence = min(confidence + 0.15, 0.98)
-            reasoning += "ADVANCED SHORT: Premium bearish signals - full advanced short strategy. "
-        elif net_signals <= -4 and confidence > 0.65 and signal_strength > 0.4:  # Strong bearish
-            signal = SignalType.SHORT
-            confidence = min(confidence + 0.10, 0.90)
-            reasoning += "ADVANCED SHORT: Strong bearish signals - advanced short strategy confirmed. "
-        elif net_signals <= -2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate bearish
-            signal = SignalType.SHORT
-            confidence = min(confidence + 0.05, 0.80)
-            reasoning += "ADVANCED SHORT: Moderate bearish signals - conservative advanced short. "
-        else:
-            signal = SignalType.HOLD
-            reasoning += f"ADVANCED HOLD: Signals below advanced threshold (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
+                net_signals += claude_signal_boost
+                
+                # Advanced strategy decision thresholds (logique combinée)
+                if net_signals >= 6 and confidence > 0.75 and signal_strength > 0.6:  # Premium signals
+                    signal = SignalType.LONG
+                    confidence = min(confidence + 0.15, 0.98)
+                    reasoning += "ADVANCED LONG: Premium bullish signals - full advanced strategy deployment. "
+                elif net_signals >= 4 and confidence > 0.65 and signal_strength > 0.4:  # Strong signals
+                    signal = SignalType.LONG
+                    confidence = min(confidence + 0.10, 0.90)
+                    reasoning += "ADVANCED LONG: Strong bullish signals - advanced strategy confirmed. "
+                elif net_signals >= 2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate signals
+                    signal = SignalType.LONG
+                    confidence = min(confidence + 0.05, 0.80)
+                    reasoning += "ADVANCED LONG: Moderate bullish signals - conservative advanced strategy. "
+                elif net_signals <= -6 and confidence > 0.75 and signal_strength > 0.6:  # Premium bearish
+                    signal = SignalType.SHORT
+                    confidence = min(confidence + 0.15, 0.98)
+                    reasoning += "ADVANCED SHORT: Premium bearish signals - full advanced short strategy. "
+                elif net_signals <= -4 and confidence > 0.65 and signal_strength > 0.4:  # Strong bearish
+                    signal = SignalType.SHORT
+                    confidence = min(confidence + 0.10, 0.90)
+                    reasoning += "ADVANCED SHORT: Strong bearish signals - advanced short strategy confirmed. "
+                elif net_signals <= -2 and confidence > 0.60 and signal_strength > 0.3:  # Moderate bearish
+                    signal = SignalType.SHORT
+                    confidence = min(confidence + 0.05, 0.80)
+                    reasoning += "ADVANCED SHORT: Moderate bearish signals - conservative advanced short. "
+                else:
+                    signal = SignalType.HOLD
+                    reasoning += f"ADVANCED HOLD: Signals below advanced threshold (net: {net_signals}, strength: {signal_strength:.2f}, conf: {confidence:.2f}). "
         
         # Calculate advanced multi-level take profits with DYNAMIC LEVERAGE & 5-LEVEL TP
         current_price = opportunity.current_price
