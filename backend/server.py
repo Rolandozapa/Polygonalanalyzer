@@ -43,6 +43,7 @@ from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 from advanced_trading_strategies import advanced_strategy_manager, PositionDirection
+from active_position_manager import ActivePositionManager, TradeExecutionMode
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
