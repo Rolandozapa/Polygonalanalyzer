@@ -1840,27 +1840,35 @@ class UltraProfessionalIA1TechnicalAnalyst:
         }
     
     def _calculate_hold_opportunity_rr(self, opportunity: "MarketOpportunity", analysis: "TechnicalAnalysis") -> Dict[str, Any]:
-        """Calculer RR pour HOLD (coût d'opportunité + attente meilleur signal)"""
+        """Calculer RR pour HOLD - Formule améliorée basée sur coût d'opportunité réel"""
         current_price = opportunity.current_price
-        volatility = max(opportunity.volatility, 0.02)  # Min 2%
+        volatility = max(opportunity.volatility, 0.015)  # Min 1.5%
         
-        # Approche: HOLD jusqu'à signal plus clair
-        period_vol = volatility * (7/365)**0.5  # Horizon 7 jours
+        # FORMULE HOLD AMÉLIORÉE: Basée sur les niveaux support/résistance de IA1
+        support_levels = getattr(analysis, 'support_levels', [current_price * 0.95])
+        resistance_levels = getattr(analysis, 'resistance_levels', [current_price * 1.05])
         
-        # Coût d'opportunité: gains potentiels manqués
-        upside_missed = current_price * period_vol
-        # Bénéfice: pertes potentielles évitées  
-        downside_avoided = current_price * period_vol
+        # Support/Résistance les plus proches
+        nearest_support = max([s for s in support_levels if s < current_price], default=current_price * 0.95)
+        nearest_resistance = min([r for r in resistance_levels if r > current_price], default=current_price * 1.05)
         
-        # RR HOLD = Risque évité / Opportunité manquée
-        hold_rr = downside_avoided / max(upside_missed, 0.001)
+        # HOLD: Attendre un signal plus clair dans la fourchette support-résistance
+        # Risque = Distance au support (perte potentielle si cassure)
+        hold_risk = abs(current_price - nearest_support)
+        # Récompense = Opportunité de trade à meilleur prix (breakout/breakdown)
+        potential_breakout_gain = abs(nearest_resistance - current_price) * 0.6  # 60% du mouvement
+        
+        # RR HOLD = Gain potentiel d'attendre / Risque de cassure support
+        hold_rr = potential_breakout_gain / max(hold_risk, current_price * 0.01)  # Min 1% risk
         
         return {
-            "rr_ratio": hold_rr,
-            "reasoning": f"HOLD: Éviter risque ${downside_avoided:.4f} vs manquer gain ${upside_missed:.4f}",
-            "target_price": current_price,  # Pas de mouvement
-            "stop_loss": None,  # Pas de SL pour HOLD
-            "opportunity_cost": upside_missed
+            "rr_ratio": min(hold_rr, 3.0),  # Cap à 3:1 pour éviter valeurs irréalistes
+            "reasoning": f"HOLD: Attendre breakout ${nearest_resistance:.4f} vs risque support ${nearest_support:.4f}",
+            "target_price": current_price,  # Position neutre
+            "stop_loss": nearest_support,  # Support comme niveau d'alerte
+            "opportunity_cost": potential_breakout_gain,
+            "support_level": nearest_support,
+            "resistance_level": nearest_resistance
         }
     
     def _calculate_pattern_rr(self, opportunity: "MarketOpportunity", detected_pattern: Any) -> Dict[str, Any]:
