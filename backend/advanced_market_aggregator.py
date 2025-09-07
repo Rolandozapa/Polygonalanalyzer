@@ -63,10 +63,10 @@ class UltraRobustMarketAggregator:
     
     def __init__(self):
         self.session = None
+        self.logger = logging.getLogger(__name__)
         self.api_endpoints = self._initialize_ultra_robust_apis()
         self.cache = {}
         self.cache_ttl = 300  # 5 minutes
-        self.logger = logging.getLogger(__name__)
         
     def _initialize_ultra_robust_apis(self) -> List[APIEndpoint]:
         """Initialize all premium + free APIs for maximum robustness"""
