@@ -11914,7 +11914,7 @@ if __name__ == "__main__":
             print(f"   ⚠️ Cache clear not available, continuing...")
         
         # Step 2: Start system and measure Scout→IA1 pass rate
-        print(f"
+        print(f"\n   🚀 Step 2: Starting system to test Option A improvements...")
    🚀 Step 2: Starting system to test Option A improvements...")
         start_success, _ = self.test_start_trading_system()
         if not start_success:
