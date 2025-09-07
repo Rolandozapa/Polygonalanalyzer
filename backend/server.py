@@ -1874,14 +1874,34 @@ class UltraProfessionalIA1TechnicalAnalyst:
         current_price = opportunity.current_price
         results = {}
         
-        # RR Option 1: HOLD (coût d'opportunité)
+        # RR Option 1: HOLD (attendre confirmation)
         hold_rr = self._calculate_hold_opportunity_rr(opportunity, analysis)
         results['hold'] = hold_rr
         
-        # RR Option 2: PATTERN Direction (SHORT/LONG)
+        # RR Option 2: PATTERN Direction (si disponible)
         if pattern_direction and detected_pattern:
             pattern_rr = self._calculate_pattern_rr(opportunity, detected_pattern)
             results[pattern_direction] = pattern_rr
+        
+        # RR Option 3 & 4: Signaux d'indicateurs techniques (RSI/MACD/BB)
+        # Cas RSI oversold + BB oversold = Signal LONG potentiel
+        if rsi < 30 and bb_position < -0.5:  # RSI oversold + en dessous BB
+            long_rr = self._calculate_technical_signal_rr(opportunity, analysis, 'long')
+            results['long'] = long_rr
+            
+        # Cas RSI overbought + BB overbought = Signal SHORT potentiel  
+        elif rsi > 70 and bb_position > 0.5:  # RSI overbought + au dessus BB
+            short_rr = self._calculate_technical_signal_rr(opportunity, analysis, 'short')
+            results['short'] = short_rr
+            
+        # Cas MACD divergence
+        elif macd_signal == "bullish" and rsi < 40:  # MACD bullish mais RSI encore faible
+            long_rr = self._calculate_technical_signal_rr(opportunity, analysis, 'long')
+            results['long'] = long_rr
+            
+        elif macd_signal == "bearish" and rsi > 60:  # MACD bearish mais RSI encore élevé
+            short_rr = self._calculate_technical_signal_rr(opportunity, analysis, 'short')
+            results['short'] = short_rr
         
         # DÉCISION basée sur meilleur RR
         best_option = max(results.keys(), key=lambda k: results[k]['rr_ratio'])
