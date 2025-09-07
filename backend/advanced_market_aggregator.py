@@ -243,6 +243,236 @@ class UltraRobustMarketAggregator:
             return await self._fetch_kraken(api, adapted_symbol)
         
         return None
+    
+    def _check_rate_limit(self, api: APIEndpoint) -> bool:
+        """Check if API is within rate limits"""
+        now = time.time()
+        if now - api.last_request_time < (60 / api.rate_limit):
+            return False
+        return True
+    
+    def _adapt_symbol_format(self, symbol: str, api_name: str) -> str:
+        """Adapt symbol format for different APIs"""
+        # Remove USDT suffix for processing
+        base_symbol = symbol.replace('USDT', '').replace('USD', '')
+        
+        if api_name == "CoinMarketCap":
+            return base_symbol
+        elif "CoinAPI" in api_name:
+            return f"{base_symbol}/USD"
+        elif api_name == "TwelveData":
+            return f"{base_symbol}/USD"
+        elif api_name == "Binance":
+            return f"{base_symbol}USDT"
+        elif api_name == "CoinGecko":
+            return base_symbol.lower()
+        elif api_name == "Bitfinex":
+            return f"t{base_symbol}USD"
+        elif api_name == "CryptoCompare":
+            return base_symbol
+        elif api_name == "YahooFinance":
+            return f"{base_symbol}-USD"
+        elif api_name == "Kraken":
+            return f"{base_symbol}USD"
+        
+        return symbol
+    
+    async def _fetch_coinmarketcap(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from CoinMarketCap API"""
+        try:
+            params = {"symbol": symbol, "convert": "USD"}
+            async with self.session.get(api.url, headers=api.headers, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if data.get('data') and symbol in data['data']:
+                        quote = data['data'][symbol]['quote']['USD']
+                        return MarketDataResponse(
+                            symbol=f"{symbol}USDT",
+                            price=quote['price'],
+                            volume_24h=quote.get('volume_24h', 0),
+                            price_change_24h=quote.get('percent_change_24h', 0),
+                            volatility=abs(quote.get('percent_change_24h', 0)) / 100.0,
+                            market_cap=quote.get('market_cap'),
+                            source="coinmarketcap",
+                            confidence=0.95
+                        )
+        except Exception as e:
+            self.logger.error(f"CoinMarketCap fetch error: {e}")
+        return None
+    
+    async def _fetch_coinapi(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from CoinAPI"""
+        try:
+            url = f"{api.url}/{symbol}"
+            async with self.session.get(url, headers=api.headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return MarketDataResponse(
+                        symbol=symbol.replace('/', '') + 'T',
+                        price=data['rate'],
+                        volume_24h=0,  # Not available in this endpoint
+                        price_change_24h=0,
+                        volatility=0.02,
+                        source="coinapi",
+                        confidence=0.9
+                    )
+        except Exception as e:
+            self.logger.error(f"CoinAPI fetch error: {e}")
+        return None
+    
+    async def _fetch_twelvedata(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from TwelveData API"""
+        try:
+            params = dict(api.params)
+            params['symbol'] = symbol
+            async with self.session.get(api.url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return MarketDataResponse(
+                        symbol=symbol.replace('/', '') + 'T',
+                        price=float(data['price']),
+                        volume_24h=0,
+                        price_change_24h=0,
+                        volatility=0.02,
+                        source="twelvedata",
+                        confidence=0.85
+                    )
+        except Exception as e:
+            self.logger.error(f"TwelveData fetch error: {e}")
+        return None
+    
+    async def _fetch_binance(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from Binance API"""
+        try:
+            params = {"symbol": symbol}
+            async with self.session.get(api.url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        ticker = data[0]
+                        return MarketDataResponse(
+                            symbol=symbol,
+                            price=float(ticker['lastPrice']),
+                            volume_24h=float(ticker['quoteVolume']),
+                            price_change_24h=float(ticker['priceChangePercent']),
+                            volatility=abs(float(ticker['priceChangePercent'])) / 100.0,
+                            source="binance",
+                            confidence=0.9
+                        )
+        except Exception as e:
+            self.logger.error(f"Binance fetch error: {e}")
+        return None
+    
+    async def _fetch_coingecko(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from CoinGecko API"""
+        try:
+            params = {"ids": symbol, "vs_currencies": "usd", "include_24hr_change": "true"}
+            async with self.session.get(api.url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if symbol in data:
+                        price_data = data[symbol]
+                        return MarketDataResponse(
+                            symbol=f"{symbol.upper()}USDT",
+                            price=price_data['usd'],
+                            volume_24h=0,
+                            price_change_24h=price_data.get('usd_24h_change', 0),
+                            volatility=abs(price_data.get('usd_24h_change', 0)) / 100.0,
+                            source="coingecko",
+                            confidence=0.85
+                        )
+        except Exception as e:
+            self.logger.error(f"CoinGecko fetch error: {e}")
+        return None
+    
+    async def _fetch_bitfinex(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from Bitfinex API"""
+        try:
+            url = f"{api.url}/{symbol}"
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if len(data) >= 7:
+                        return MarketDataResponse(
+                            symbol=symbol.replace('t', '').replace('USD', 'USDT'),
+                            price=float(data[6]),  # Last price
+                            volume_24h=float(data[7]),  # Volume
+                            price_change_24h=float(data[5]) * 100,  # Daily change %
+                            volatility=abs(float(data[5])),
+                            source="bitfinex",
+                            confidence=0.8
+                        )
+        except Exception as e:
+            self.logger.error(f"Bitfinex fetch error: {e}")
+        return None
+    
+    async def _fetch_cryptocompare(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from CryptoCompare API"""
+        try:
+            params = {"fsym": symbol, "tsyms": "USD"}
+            async with self.session.get(api.url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'USD' in data:
+                        return MarketDataResponse(
+                            symbol=f"{symbol}USDT",
+                            price=float(data['USD']),
+                            volume_24h=0,
+                            price_change_24h=0,
+                            volatility=0.02,
+                            source="cryptocompare",
+                            confidence=0.8
+                        )
+        except Exception as e:
+            self.logger.error(f"CryptoCompare fetch error: {e}")
+        return None
+    
+    async def _fetch_yahoo(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from Yahoo Finance API"""
+        try:
+            url = f"{api.url}/{symbol}"
+            async with self.session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    chart = data.get('chart', {})
+                    if 'result' in chart and len(chart['result']) > 0:
+                        result = chart['result'][0]
+                        meta = result.get('meta', {})
+                        return MarketDataResponse(
+                            symbol=symbol.replace('-USD', 'USDT'),
+                            price=float(meta.get('regularMarketPrice', 0)),
+                            volume_24h=float(meta.get('regularMarketVolume', 0)),
+                            price_change_24h=float(meta.get('regularMarketChangePercent', 0)),
+                            volatility=abs(float(meta.get('regularMarketChangePercent', 0))) / 100.0,
+                            source="yahoo_finance",
+                            confidence=0.85
+                        )
+        except Exception as e:
+            self.logger.error(f"Yahoo Finance fetch error: {e}")
+        return None
+    
+    async def _fetch_kraken(self, api: APIEndpoint, symbol: str) -> Optional[MarketDataResponse]:
+        """Fetch from Kraken API"""
+        try:
+            params = {"pair": symbol}
+            async with self.session.get(api.url, params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'result' in data:
+                        for pair_name, pair_data in data['result'].items():
+                            if pair_data and 'c' in pair_data:
+                                return MarketDataResponse(
+                                    symbol=symbol.replace('USD', 'USDT'),
+                                    price=float(pair_data['c'][0]),  # Last trade closed
+                                    volume_24h=float(pair_data.get('v', [0, 0])[1]),  # 24h volume
+                                    price_change_24h=0,  # Would need additional calculation
+                                    volatility=0.02,
+                                    source="kraken",
+                                    confidence=0.8
+                                )
+        except Exception as e:
+            self.logger.error(f"Kraken fetch error: {e}")
+        return None
 
 class AdvancedMarketAggregator:
     """
