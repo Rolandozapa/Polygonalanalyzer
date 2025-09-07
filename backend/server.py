@@ -1015,6 +1015,13 @@ class UltraProfessionalCryptoScout:
             for opp in sorted_opportunities:
                 scout_rr_stats["total"] += 1
                 
+                # === FILTRE BINGX PRIORITAIRE ===
+                # Vérifie d'abord si le token est tradable sur BingX (économie calculs)
+                if not is_bingx_tradable(opp.symbol):
+                    logger.info(f"🚫 BINGX FILTER: {opp.symbol} - Pas disponible sur BingX Futures, SKIP")
+                    scout_rr_stats["rejected"] += 1
+                    continue
+                
                 # Calcul R:R bidirectionnel par le Scout
                 scout_rr = self._calculate_scout_risk_reward(opp)
                 long_ratio = scout_rr["long_ratio"]
