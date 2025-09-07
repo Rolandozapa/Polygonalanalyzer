@@ -7090,6 +7090,10 @@ class DualAITradingBotTester:
         self.test_fresh_ia2_decision_generation()
         self.test_ia2_confidence_distribution_analysis()
         
+        # PROBABILISTIC TP SYSTEM TESTS (NEW)
+        print(f"\n" + "🎯" * 15 + " PROBABILISTIC TP SYSTEM TESTS " + "🎯" * 15)
+        probabilistic_tp_success = self.test_probabilistic_tp_system()
+        
         # MULTI-RR DECISION ENGINE TESTS (NEW)
         print(f"\n" + "🎯" * 15 + " MULTI-RR DECISION ENGINE TESTS " + "🎯" * 15)
         multi_rr_success = self.test_multi_rr_decision_engine()
