@@ -1295,29 +1295,46 @@ class UltraProfessionalIA1TechnicalAnalyst:
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
             prompt = f"""
-            FAST TECHNICAL ANALYSIS - {opportunity.symbol}
+            ADVANCED TECHNICAL ANALYSIS WITH CHARTIST PATTERNS - {opportunity.symbol}
             
+            MARKET DATA:
             Price: ${opportunity.current_price:,.2f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
             Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
             
-            TECHNICAL INDICATORS (10-day):
+            TECHNICAL INDICATORS:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | BB Position: {bb_position:.2f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
-            DETECTED CHARTIST PATTERNS:
+            🎯 DETECTED CHARTIST PATTERNS ({len(all_detected_patterns)} patterns):
             {pattern_details if pattern_details else "No significant chartist patterns detected"}
             
-            PATTERN SUMMARY: {len(all_detected_patterns)} patterns detected including: {', '.join([p.pattern_type.value for p in all_detected_patterns[:5]])}
+            PATTERN ANALYSIS REQUIREMENTS:
+            1. You MUST explicitly mention and analyze each detected pattern by name
+            2. Explain how each pattern influences your technical assessment
+            3. Use pattern-specific terminology (e.g., "Triple Top suggests bearish reversal", "Gartley pattern indicates bullish continuation")
+            4. Integrate pattern targets and breakout levels into your analysis
+            5. Your confidence should reflect pattern strength and confluence
             
-            Recent 5-day Close: {historical_data['Close'].tail().tolist()}
+            Recent Price Action: {historical_data['Close'].tail().tolist()}
             
-            INSTRUCTIONS: Analyze the technical situation including the detected chartist patterns. In your response, specifically mention the patterns found and how they influence your analysis. Provide JSON format with patterns array listing the detected patterns.
+            INSTRUCTIONS: 
+            - Analyze the technical situation with PRIMARY FOCUS on the detected chartist patterns
+            - Start your analysis by explicitly naming the patterns: "The detected [PATTERN NAME] formation..."
+            - Explain the implications of each pattern for price direction
+            - Use the patterns to support your recommendation
+            - Include pattern-specific price targets and stop-loss levels
             
-            Expected JSON format:
+            Required JSON format:
             {{
-                "analysis": "Technical analysis incorporating detected patterns",
-                "reasoning": "Reasoning including pattern analysis", 
+                "analysis": "Technical analysis incorporating detected patterns: [mention patterns by name and their implications]",
+                "reasoning": "Detailed reasoning explaining how patterns [specific pattern names] influence the assessment and recommendation",
                 "patterns": {[f'"{p.pattern_type.value}"' for p in all_detected_patterns]},
+                "pattern_analysis": {{
+                    "primary_pattern": "{all_detected_patterns[0].pattern_type.value if all_detected_patterns else 'none'}",
+                    "pattern_strength": {all_detected_patterns[0].strength if all_detected_patterns else 0},
+                    "pattern_direction": "{all_detected_patterns[0].trading_direction if all_detected_patterns else 'neutral'}",
+                    "pattern_confidence": {all_detected_patterns[0].confidence if all_detected_patterns else 0}
+                }},
                 "confidence": 0.75,
                 "recommendation": "hold/long/short"
             }}
