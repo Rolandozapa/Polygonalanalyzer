@@ -2328,6 +2328,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["market_sentiment"] = str(analysis_data.get("market_sentiment", "neutral"))
             cleaned_data["data_sources"] = analysis_data.get("data_sources", ["internal"])
             
+            # 🆕 CHAMPS IA1 ORIGINAUX pour format JSON complet
+            cleaned_data["rsi_signal"] = str(analysis_data.get("rsi_signal", "neutral"))
+            cleaned_data["macd_trend"] = str(analysis_data.get("macd_trend", "neutral"))
+            cleaned_data["confidence"] = self._ensure_json_safe(analysis_data.get("confidence"), 0.7)
+            cleaned_data["recommendation"] = str(analysis_data.get("recommendation", "hold"))
+            cleaned_data["master_pattern"] = analysis_data.get("master_pattern", None)
+            cleaned_data["patterns"] = analysis_data.get("patterns", [])
+            cleaned_data["support"] = self._ensure_json_safe(analysis_data.get("support", []), [])
+            cleaned_data["resistance"] = self._ensure_json_safe(analysis_data.get("resistance", []), [])
+            
             return cleaned_data
         except Exception as e:
             logger.error(f"Error validating analysis data: {e}")
