@@ -2011,6 +2011,81 @@ class UltraProfessionalIA1TechnicalAnalyst:
             "atr_multiplier": atr_multiplier
         }
     
+    def _calculate_technical_signal_rr(self, opportunity: "MarketOpportunity", analysis: "TechnicalAnalysis", direction: str) -> Dict[str, Any]:
+        """Calculer RR pour signaux techniques (RSI/MACD/BB) - Formule spécialisée"""
+        current_price = opportunity.current_price
+        rsi = getattr(analysis, 'rsi', 50)
+        macd = getattr(analysis, 'macd_signal', 0)
+        bb_position = getattr(analysis, 'bollinger_position', 0)
+        support_levels = getattr(analysis, 'support_levels', [current_price * 0.95])
+        resistance_levels = getattr(analysis, 'resistance_levels', [current_price * 1.05])
+        
+        # ATR basé sur volatilité + force du signal technique
+        base_volatility = max(opportunity.volatility, 0.015)
+        
+        # Force du signal basée sur confluence des indicateurs
+        signal_strength = 0.0
+        
+        if direction == 'long':
+            # Force LONG: RSI oversold + BB en dessous + MACD potentiellement haussier
+            if rsi < 30:
+                signal_strength += (30 - rsi) / 30 * 0.4  # Max 0.4 pour RSI
+            if bb_position < -0.5:
+                signal_strength += abs(bb_position + 0.5) / 0.5 * 0.3  # Max 0.3 pour BB
+            if macd > -0.001:  # MACD pas trop bearish
+                signal_strength += 0.3
+                
+            # SL au support le plus proche
+            nearest_support = max([s for s in support_levels if s < current_price], 
+                                default=current_price * 0.97)
+            stop_loss = max(nearest_support, current_price * 0.975)  # Max 2.5% de perte
+            
+            # Target à la résistance + extension selon force signal
+            nearest_resistance = min([r for r in resistance_levels if r > current_price], 
+                                   default=current_price * 1.03)
+            extension = signal_strength * 0.02 * current_price  # Max 2% extension
+            target_price = nearest_resistance + extension
+            
+        else:  # SHORT
+            # Force SHORT: RSI overbought + BB au dessus + MACD potentiellement baissier
+            if rsi > 70:
+                signal_strength += (rsi - 70) / 30 * 0.4
+            if bb_position > 0.5:
+                signal_strength += (bb_position - 0.5) / 0.5 * 0.3
+            if macd < 0.001:  # MACD pas trop bullish
+                signal_strength += 0.3
+                
+            # SL à la résistance la plus proche
+            nearest_resistance = min([r for r in resistance_levels if r > current_price], 
+                                   default=current_price * 1.03)
+            stop_loss = min(nearest_resistance, current_price * 1.025)  # Max 2.5% de perte
+            
+            # Target au support - extension selon force signal
+            nearest_support = max([s for s in support_levels if s < current_price], 
+                                default=current_price * 0.97)
+            extension = signal_strength * 0.02 * current_price
+            target_price = nearest_support - extension
+        
+        # Calcul Risk/Reward
+        risk = abs(current_price - stop_loss)
+        reward = abs(target_price - current_price)
+        technical_rr = reward / max(risk, current_price * 0.005)  # Min 0.5% risk
+        
+        # Ajustement selon force du signal
+        adjusted_rr = technical_rr * (0.5 + signal_strength)  # Facteur 0.5-1.5
+        
+        return {
+            "rr_ratio": min(adjusted_rr, 4.0),  # Cap à 4:1 pour signaux techniques
+            "reasoning": f"TECH-{direction.upper()}: RSI {rsi:.1f}, MACD {macd:.4f}, BB {bb_position:.2f} (Force: {signal_strength:.2f})",
+            "target_price": target_price,
+            "stop_loss": stop_loss,
+            "entry_price": current_price,
+            "risk": risk,
+            "reward": reward,
+            "signal_strength": signal_strength,
+            "technical_indicators": f"RSI:{rsi:.1f}|MACD:{macd:.4f}|BB:{bb_position:.2f}"
+        }
+    
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
         """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
         try:
