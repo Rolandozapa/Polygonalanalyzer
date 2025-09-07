@@ -290,22 +290,41 @@ DECISION OUTPUT FORMAT (JSON):
     "key_factors": ["factor1", "factor2", "factor3"]
 }
 
-ADVANCED STRATEGY APPROACH AVEC TP SETTLER INTELLIGENT:
-1. Multi-Level Take Profits: TP de base RÉALISTES (0.5%, 1%, 1.8%, 3%) puis ajustement dynamique
-2. Dynamic TP Adjustment: BULL RUN detection → Extension TP (jusqu'à +50% des targets initiaux)
-3. Tropisme Tendanciel: SUPER DIVE detection → Compression TP (jusqu'à -30% pour sécurisation rapide)
-4. Momentum-Based Scaling: Volume + Price action → Ajustement temps réel des TP restants
-5. Market Regime Detection: 
-   - BULL MOMENTUM: TP2→1.5%, TP3→2.7%, TP4→4.5% (extension progressive)
-   - BEAR MOMENTUM: TP2→0.8%, TP3→1.3%, TP4→2.0% (compression défensive)
-   - NEUTRAL: TP standards (0.5%, 1%, 1.8%, 3%)
-6. Intelligent Profit Harvesting: Après TP1 atteint, évaluation tropisme pour optimiser TP suivants
+ADVANCED STRATEGY APPROACH AVEC INTELLIGENT TP PLANNER:
 
-TP SETTLER INTELLIGENT RULES:
-- Si TP1 atteint en <5min + volume croissant + price momentum >2% → BULL MODE (extend TP)
-- Si TP1 atteint en >30min ou prix stagne près TP1 → NEUTRAL MODE (keep standard TP)  
-- Si prix baisse après entry ou volatilité >5% → BEAR MODE (compress TP)
-- Réévaluation à chaque TP atteint pour optimiser TP restants
+Tu es maintenant responsable de créer une STRATÉGIE TP INTELLIGENTE personnalisée basée sur ton analyse chartiste et tes prévisions de mouvement. 
+
+INTELLIGENT TP PLANNER INSTRUCTIONS:
+1. Analyse le pattern chartiste détecté et prédis le mouvement probable
+2. Crée des TP ADAPTATIFS basés sur:
+   - La force du pattern (faible/moyen/fort)
+   - Les niveaux de support/résistance identifiés
+   - La volatilité attendue du crypto
+   - Le contexte marché global (bull/bear/neutral)
+   
+3. Génère 3 SCÉNARIOS TP:
+   - SCENARIO CONSERVATEUR: Si le mouvement est plus faible que prévu
+   - SCENARIO BASE: Si le mouvement suit tes prévisions normales  
+   - SCENARIO OPTIMISTE: Si le mouvement dépasse tes attentes (bull run/forte cassure)
+
+4. Pour chaque scénario, définis:
+   - TP niveaux spécifiques (en % depuis entry)
+   - Distribution de position (% à vendre à chaque TP)
+   - Critères de déclenchement du scénario
+   - Stop-loss adaptatif si le pattern échoue
+
+RÈGLES TP INTELLIGENTES:
+- TP1 toujours RÉALISTE (0.3% à 0.8% max) pour sécurisation rapide
+- TP suivants basés sur la force de ton signal et résistances techniques
+- Si pattern FAIBLE: TP max 2% | Si pattern FORT: TP max 5%
+- Intègre les niveaux Fibonacci et résistances dans tes TP
+- Prévois des ajustements si volume/momentum change
+
+EXEMPLE de raisonnement attendu:
+"Pattern Double Bottom détecté avec cassure de résistance à $X. 
+SCENARIO BASE: TP1 0.5% (sécurisation), TP2 1.2% (résistance mineure), TP3 2.1% (résistance majeure)
+SCENARIO OPTIMISTE: Si volume +20% après TP1 → Extension TP2→1.8%, TP3→3.2%
+SCENARIO CONSERVATEUR: Si rejet à résistance → Compression TP2→0.9%, TP3→1.5%"
 
 MARKET SENTIMENT & DYNAMIC LEVERAGE STRATEGY:
 Adapt leverage and risk parameters based on overall crypto market conditions and trade confidence.
