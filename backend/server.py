@@ -324,7 +324,6 @@ DECISION OUTPUT FORMAT (JSON):
             "initial_sl_percentage": 1.8,  // Optimized for probability distribution
             "probability_based_sl": 0.88,  // Keep SL where 88% probability of pattern holding
             "adaptive_sl": "Trail SL at 50% of TP1 once TP1 hit, optimize risk-free trades"
-            "trailing_activation": "Après TP1 atteint"
         }
     },
     "position_management": {
