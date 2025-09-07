@@ -100,7 +100,13 @@ class ChartistPatternIntegrationTestSuite:
                 self.log_test_result("Pattern Detection Flow", False, f"API error: {response.status_code}")
                 return
                 
-            analyses = response.json()
+            data = response.json()
+            
+            # Handle API response format
+            if isinstance(data, dict) and 'analyses' in data:
+                analyses = data['analyses']
+            else:
+                analyses = data
             
             if not analyses:
                 self.log_test_result("Pattern Detection Flow", False, "No IA1 analyses found")
