@@ -33,7 +33,7 @@ class BingXFuturesFetcher:
             data = response.json()
             
             if data.get('code') == 0:
-                contracts = data.get('data', {}).get('contracts', [])
+                contracts = data.get('data', [])
                 logger.info(f"✅ {len(contracts)} contrats récupérés depuis BingX")
                 return contracts
             else:
