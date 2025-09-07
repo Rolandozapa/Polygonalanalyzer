@@ -1753,6 +1753,347 @@ class TechnicalPatternDetector:
             
         return patterns
 
+    # Méthodes utilitaires pour les nouveaux patterns
+    def _calculate_trend_line_slope(self, prices):
+        """Calcule la pente d'une ligne de tendance"""
+        if len(prices) < 2:
+            return 0
+        x = np.arange(len(prices))
+        slope, _ = np.polyfit(x, prices, 1)
+        return slope
+    
+    def _detect_previous_trend(self, df):
+        """Détecte la tendance précédente"""
+        if len(df) < 10:
+            return "neutral"
+        
+        recent_change = (df['Close'].iloc[-1] / df['Close'].iloc[-10] - 1) * 100
+        if recent_change > 3:
+            return "long"
+        elif recent_change < -3:
+            return "short"
+        return "neutral"
+    
+    def _check_volume_contraction(self, df):
+        """Vérifie la contraction du volume (caractéristique des consolidations)"""
+        if len(df) < 10:
+            return False
+        
+        recent_volume = df['Volume'].iloc[-5:].mean()
+        previous_volume = df['Volume'].iloc[-10:-5].mean()
+        return recent_volume < previous_volume * 0.8
+    
+    def _check_volume_expansion(self, df):
+        """Vérifie l'expansion du volume"""
+        if len(df) < 10:
+            return False
+        
+        recent_volume = df['Volume'].iloc[-5:].mean()
+        previous_volume = df['Volume'].iloc[-10:-5].mean()
+        return recent_volume > previous_volume * 1.2
+    
+    def _check_volume_decrease_on_peaks(self, df):
+        """Vérifie la diminution du volume sur les pics (bearish)"""
+        if len(df) < 8:
+            return False
+        
+        recent_high_volume = df.nlargest(3, 'High')['Volume'].mean()
+        avg_volume = df['Volume'].mean()
+        return recent_high_volume < avg_volume * 0.9
+    
+    def _check_volume_increase_on_breakout(self, df):
+        """Vérifie l'augmentation du volume sur breakout (bullish)"""
+        if len(df) < 5:
+            return False
+        
+        recent_volume = df['Volume'].iloc[-3:].mean()
+        avg_volume = df['Volume'].iloc[-10:-3].mean()
+        return recent_volume > avg_volume * 1.3
+    
+    def _check_volume_increase_on_breakdown(self, df):
+        """Vérifie l'augmentation du volume sur breakdown (bearish)"""
+        return self._check_volume_increase_on_breakout(df)  # Même logique
+    
+    def _calculate_r_squared(self, actual, predicted):
+        """Calcule le R² pour évaluer la qualité d'un fit"""
+        ss_res = np.sum((actual - predicted) ** 2)
+        ss_tot = np.sum((actual - np.mean(actual)) ** 2)
+        return 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+    
+    def _detect_harmonic_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les patterns harmoniques (Gartley, Bat, Butterfly, Crab)"""
+        patterns = []
+        
+        try:
+            if len(df) < 50:
+                return patterns
+            
+            # Identifier les points pivots significatifs
+            pivots = self._find_pivot_points(df, window=5)
+            
+            if len(pivots) >= 5:  # Besoin de 5 points pour patterns harmoniques
+                # Analyser les dernières formations de 5 points (X-A-B-C-D)
+                for i in range(len(pivots) - 4):
+                    points = pivots[i:i+5]
+                    X, A, B, C, D = [p['price'] for p in points]
+                    
+                    # Calculer les ratios de Fibonacci
+                    XA = abs(A - X)
+                    AB = abs(B - A) 
+                    BC = abs(C - B)
+                    CD = abs(D - C)
+                    
+                    if XA > 0 and AB > 0 and BC > 0:
+                        AB_XA = AB / XA
+                        BC_AB = BC / AB
+                        CD_BC = CD / BC if BC > 0 else 0
+                        
+                        # Pattern Gartley (0.618, 0.382, 1.272)
+                        if (0.58 <= AB_XA <= 0.68 and 0.35 <= BC_AB <= 0.42):
+                            direction = "long" if D < A else "short"
+                            confidence = 0.75 + (1 - abs(AB_XA - 0.618)) * 0.15
+                            
+                            if direction == "long":
+                                patterns.append(TechnicalPattern(
+                                    symbol=symbol,
+                                    pattern_type=PatternType.GARTLEY_BULLISH,
+                                    confidence=confidence,
+                                    strength=0.8,
+                                    entry_price=D,
+                                    target_price=D * 1.05,
+                                    stop_loss=D * 0.97,
+                                    volume_confirmation=True,
+                                    trading_direction="long",
+                                    additional_data={
+                                        'points': {'X': X, 'A': A, 'B': B, 'C': C, 'D': D},
+                                        'ratios': {'AB_XA': AB_XA, 'BC_AB': BC_AB}
+                                    }
+                                ))
+                            else:
+                                patterns.append(TechnicalPattern(
+                                    symbol=symbol,
+                                    pattern_type=PatternType.GARTLEY_BEARISH,
+                                    confidence=confidence,
+                                    strength=0.8,
+                                    entry_price=D,
+                                    target_price=D * 0.95,
+                                    stop_loss=D * 1.03,
+                                    volume_confirmation=True,
+                                    trading_direction="short",
+                                    additional_data={
+                                        'points': {'X': X, 'A': A, 'B': B, 'C': C, 'D': D},
+                                        'ratios': {'AB_XA': AB_XA, 'BC_AB': BC_AB}
+                                    }
+                                ))
+                        
+                        # Pattern Bat (0.382, 0.382, 0.886)
+                        elif (0.35 <= AB_XA <= 0.42 and 0.35 <= BC_AB <= 0.42):
+                            direction = "long" if D < A else "short"
+                            confidence = 0.78
+                            
+                            pattern_type = PatternType.BAT_BULLISH if direction == "long" else PatternType.BAT_BEARISH
+                            target_mult = 1.06 if direction == "long" else 0.94
+                            stop_mult = 0.96 if direction == "long" else 1.04
+                            
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=pattern_type,
+                                confidence=confidence,
+                                strength=0.82,
+                                entry_price=D,
+                                target_price=D * target_mult,
+                                stop_loss=D * stop_mult,
+                                volume_confirmation=True,
+                                trading_direction=direction,
+                                additional_data={
+                                    'points': {'X': X, 'A': A, 'B': B, 'C': C, 'D': D},
+                                    'ratios': {'AB_XA': AB_XA, 'BC_AB': BC_AB}
+                                }
+                            ))
+                        
+                        # Pattern Butterfly (0.786, 0.382, 1.618)
+                        elif (0.75 <= AB_XA <= 0.82 and 0.35 <= BC_AB <= 0.42):
+                            direction = "long" if D < A else "short"
+                            confidence = 0.73
+                            
+                            pattern_type = PatternType.BUTTERFLY_BULLISH if direction == "long" else PatternType.BUTTERFLY_BEARISH
+                            target_mult = 1.08 if direction == "long" else 0.92
+                            stop_mult = 0.95 if direction == "long" else 1.05
+                            
+                            patterns.append(TechnicalPattern(
+                                symbol=symbol,
+                                pattern_type=pattern_type,
+                                confidence=confidence,
+                                strength=0.78,
+                                entry_price=D,
+                                target_price=D * target_mult,
+                                stop_loss=D * stop_mult,
+                                volume_confirmation=True,
+                                trading_direction=direction,
+                                additional_data={
+                                    'points': {'X': X, 'A': A, 'B': B, 'C': C, 'D': D},
+                                    'ratios': {'AB_XA': AB_XA, 'BC_AB': BC_AB}
+                                }
+                            ))
+                            
+        except Exception as e:
+            logger.debug(f"Harmonic patterns detection error for {symbol}: {e}")
+            
+        return patterns
+    
+    def _find_pivot_points(self, df: pd.DataFrame, window: int = 5) -> List[Dict]:
+        """Trouve les points pivots (maxima et minima locaux)"""
+        pivots = []
+        
+        for i in range(window, len(df) - window):
+            # Maximum local
+            if all(df['High'].iloc[i] >= df['High'].iloc[i-j] for j in range(1, window+1)) and \
+               all(df['High'].iloc[i] >= df['High'].iloc[i+j] for j in range(1, window+1)):
+                pivots.append({
+                    'index': i,
+                    'price': df['High'].iloc[i],
+                    'type': 'high',
+                    'date': df.index[i] if hasattr(df.index[i], 'date') else i
+                })
+            
+            # Minimum local  
+            elif all(df['Low'].iloc[i] <= df['Low'].iloc[i-j] for j in range(1, window+1)) and \
+                 all(df['Low'].iloc[i] <= df['Low'].iloc[i+j] for j in range(1, window+1)):
+                pivots.append({
+                    'index': i,
+                    'price': df['Low'].iloc[i],
+                    'type': 'low',
+                    'date': df.index[i] if hasattr(df.index[i], 'date') else i
+                })
+        
+        return sorted(pivots, key=lambda x: x['index'])
+    
+    def _detect_diamond_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les patterns Diamant (Diamond Top/Bottom)"""
+        patterns = []
+        
+        try:
+            if len(df) < 30:
+                return patterns
+            
+            current_price = df['Close'].iloc[-1]
+            
+            # Analyser volatilité et structure en diamant
+            recent_df = df.iloc[-25:]
+            
+            # Calculer la volatilité sur période glissante
+            volatility = recent_df['Close'].rolling(5).std()
+            
+            # Pattern diamant: volatilité croissante puis décroissante
+            first_half_vol = volatility.iloc[:12].mean()
+            second_half_vol = volatility.iloc[-12:].mean()
+            
+            if first_half_vol > 0 and second_half_vol > 0:
+                vol_ratio = first_half_vol / second_half_vol
+                
+                # Diamant Top: volatilité décroissante après expansion
+                if vol_ratio > 1.5:
+                    highest_point = recent_df['High'].max()
+                    if current_price < highest_point * 0.98:
+                        patterns.append(TechnicalPattern(
+                            symbol=symbol,
+                            pattern_type=PatternType.DIAMOND_TOP,
+                            confidence=0.75,
+                            strength=min(vol_ratio / 2, 1.0),
+                            entry_price=current_price,
+                            target_price=highest_point * 0.85,
+                            stop_loss=highest_point * 1.02,
+                            volume_confirmation=self._check_volume_decrease_on_peaks(df),
+                            trading_direction="short",
+                            trend_duration_days=25,
+                            additional_data={
+                                'volatility_ratio': vol_ratio,
+                                'highest_point': highest_point,
+                                'first_half_vol': first_half_vol,
+                                'second_half_vol': second_half_vol
+                            }
+                        ))
+                
+                # Diamant Bottom: volatilité décroissante après contraction
+                elif vol_ratio < 0.7:
+                    lowest_point = recent_df['Low'].min()
+                    if current_price > lowest_point * 1.02:
+                        patterns.append(TechnicalPattern(
+                            symbol=symbol,
+                            pattern_type=PatternType.DIAMOND_BOTTOM,
+                            confidence=0.75,
+                            strength=min(1 / vol_ratio, 1.0),
+                            entry_price=current_price,
+                            target_price=lowest_point * 1.15,
+                            stop_loss=lowest_point * 0.98,
+                            volume_confirmation=self._check_volume_expansion(df),
+                            trading_direction="long",
+                            trend_duration_days=25,
+                            additional_data={
+                                'volatility_ratio': vol_ratio,
+                                'lowest_point': lowest_point,
+                                'first_half_vol': first_half_vol,
+                                'second_half_vol': second_half_vol
+                            }
+                        ))
+                        
+        except Exception as e:
+            logger.debug(f"Diamond patterns detection error for {symbol}: {e}")
+            
+        return patterns
+    
+    def _detect_expanding_wedge_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
+        """Détecte les biseaux d'élargissement (Expanding Wedges)"""
+        patterns = []
+        
+        try:
+            if len(df) < 20:
+                return patterns
+            
+            current_price = df['Close'].iloc[-1]
+            
+            # Analyser l'expansion des ranges
+            recent_df = df.iloc[-15:]
+            
+            # Calculer l'évolution du range (High - Low)
+            ranges = recent_df['High'] - recent_df['Low']
+            early_ranges = ranges.iloc[:5].mean()
+            late_ranges = ranges.iloc[-5:].mean()
+            
+            if early_ranges > 0:
+                expansion_ratio = late_ranges / early_ranges
+                
+                # Expanding Wedge: ranges croissants (instabilité croissante)
+                if expansion_ratio > 1.4:
+                    # Déterminer la direction basée sur la tendance
+                    price_trend = (recent_df['Close'].iloc[-1] / recent_df['Close'].iloc[0] - 1) * 100
+                    
+                    strength = min((expansion_ratio - 1) * 2, 1.0)
+                    
+                    patterns.append(TechnicalPattern(
+                        symbol=symbol,
+                        pattern_type=PatternType.EXPANDING_WEDGE,
+                        confidence=0.70,
+                        strength=strength,
+                        entry_price=current_price,
+                        target_price=current_price * (1.05 if price_trend > 0 else 0.95),
+                        stop_loss=current_price * (0.96 if price_trend > 0 else 1.04),
+                        volume_confirmation=self._check_volume_expansion(df),
+                        trading_direction="long" if price_trend > 0 else "short",
+                        trend_duration_days=15,
+                        additional_data={
+                            'expansion_ratio': expansion_ratio,
+                            'early_ranges': early_ranges,
+                            'late_ranges': late_ranges,
+                            'price_trend': price_trend
+                        }
+                    ))
+                    
+        except Exception as e:
+            logger.debug(f"Expanding wedge detection error for {symbol}: {e}")
+            
+        return patterns
+
     async def _fetch_binance_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
         """Récupère OHLCV depuis Binance API (1,200 req/min - ULTRA GÉNÉREUX!)"""
         try:
