@@ -1197,12 +1197,12 @@ class UltraProfessionalCryptoScout:
             # Price movement score (both directions valuable)
             score += abs(opp.price_change_24h) * 0.3
             
-            # Volume score
-            volume_score = min(opp.volume_24h / 10_000_000, 10) * 0.2  # Cap at 10
+            # Volume score (ajusté pour small caps - pas de pénalité excessive)
+            volume_score = min(opp.volume_24h / 1_000_000, 5) * 0.15  # Réduit le poids du volume
             score += volume_score
             
-            # Volatility score (but not too much)
-            volatility_score = min(opp.volatility * 100, 15) * 0.2  # Cap at 15%
+            # Volatility score (favorise les small caps volatiles)
+            volatility_score = min(opp.volatility * 100, 20) * 0.25  # Augmente le poids volatilité
             score += volatility_score
             
             # Data confidence score
