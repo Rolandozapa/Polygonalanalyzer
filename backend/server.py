@@ -3650,8 +3650,29 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         
         if signal != SignalType.HOLD:
             if ia1_risk_reward > 0 and ia1_entry_price > 0:
-                # Utiliser les calculs précis d'IA1 basés sur supports/résistances + ATR
-                risk_reward = ia1_risk_reward
+                # CORRECTION CRITIQUE: Vérifier cohérence direction SHORT/LONG avec SL/TP IA1
+                if signal == SignalType.SHORT:
+                    # Pour SHORT: SL doit être > entry et TP doit être < entry
+                    if ia1_stop_loss <= ia1_entry_price or ia1_take_profit >= ia1_entry_price:
+                        logger.warning(f"⚠️ IA1 SL/TP incoherent for SHORT {opportunity.symbol}: SL={ia1_stop_loss:.4f}, Entry={ia1_entry_price:.4f}, TP={ia1_take_profit:.4f}")
+                        # Recalcul propre du RR pour SHORT
+                        risk = abs(ia1_stop_loss - ia1_entry_price)
+                        reward = abs(ia1_entry_price - ia1_take_profit)
+                        risk_reward = reward / risk if risk > 0 else 1.0
+                    else:
+                        risk_reward = ia1_risk_reward
+                elif signal == SignalType.LONG:
+                    # Pour LONG: SL doit être < entry et TP doit être > entry  
+                    if ia1_stop_loss >= ia1_entry_price or ia1_take_profit <= ia1_entry_price:
+                        logger.warning(f"⚠️ IA1 SL/TP incoherent for LONG {opportunity.symbol}: SL={ia1_stop_loss:.4f}, Entry={ia1_entry_price:.4f}, TP={ia1_take_profit:.4f}")
+                        # Recalcul propre du RR pour LONG
+                        risk = abs(ia1_entry_price - ia1_stop_loss)
+                        reward = abs(ia1_take_profit - ia1_entry_price)
+                        risk_reward = reward / risk if risk > 0 else 1.0
+                    else:
+                        risk_reward = ia1_risk_reward
+                else:
+                    risk_reward = ia1_risk_reward
                 
                 # Ajuster les SL/TP avec les calculs d'IA1 comme base mais en gardant la logique advanced
                 if abs(stop_loss - ia1_stop_loss) / current_price > 0.01:  # Si différence > 1%
