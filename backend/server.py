@@ -1328,18 +1328,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
             master_pattern = None
             multi_rr_info = ""
             
-            # 🆕 JSON complet de l'IA1 avec fallback par défaut
+            # 🆕 JSON complet de l'IA1 avec patterns détectés intégrés
+            detected_pattern_names = [p.pattern_type.value for p in all_detected_patterns]
+            
             ia1_complete_json = {
-                "analysis": f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators.",
-                "reasoning": "Technical analysis suggests monitoring key support and resistance levels for directional signals.",
+                "analysis": f"{opportunity.symbol} technical analysis incorporating {len(all_detected_patterns)} detected chartist patterns.",
+                "reasoning": f"Analysis includes detected patterns: {', '.join(detected_pattern_names[:3]) if detected_pattern_names else 'No significant patterns'}. Technical indicators and pattern confluence guide the assessment.",
                 "rsi_signal": "neutral",
                 "macd_trend": "neutral", 
-                "patterns": [],
+                "patterns": detected_pattern_names,
                 "support": [],
                 "resistance": [],
                 "confidence": 0.7,
                 "recommendation": "hold",
-                "master_pattern": None
+                "master_pattern": detected_pattern_names[0] if detected_pattern_names else None,
+                "patterns_detected": detected_pattern_names,  # Nouveau champ pour compatibility
+                "detected_patterns_count": len(all_detected_patterns)
             }
             
             logger.info(f"🔍 IA1 JSON initialized with defaults for {opportunity.symbol}")
