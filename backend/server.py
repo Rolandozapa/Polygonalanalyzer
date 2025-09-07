@@ -1223,12 +1223,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
                             all_detected_patterns.append(pattern)
                             pattern_details += f"   • {pattern.pattern_type.value}: {pattern.confidence:.2f} confidence, {pattern.trading_direction} direction\n"
                     
+                    # 🆕 STOCKER LES PATTERNS POUR LA VALIDATION DES DONNÉES
+                    self._current_detected_patterns = all_detected_patterns
+                    
                     logger.info(f"🎯 PATTERNS COMPLETS pour {opportunity.symbol}: {len(all_detected_patterns)} patterns détectés")
                     if pattern_details:
                         logger.info(f"📊 DÉTAILS PATTERNS:\n{pattern_details}")
                         
             except Exception as e:
                 logger.debug(f"Erreur récupération patterns supplémentaires pour {opportunity.symbol}: {e}")
+                self._current_detected_patterns = []
             
             if not should_analyze:
                 logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs")
