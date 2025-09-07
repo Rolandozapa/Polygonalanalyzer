@@ -2410,6 +2410,13 @@ IA1 TECHNICAL ANALYSIS:
 - ALL Patterns Detected: {', '.join(analysis.patterns_detected)}
 - Analysis Confidence: {analysis.analysis_confidence:.2%}
 
+IA1 RISK-REWARD CALCULATION:
+- Entry Price: ${analysis.entry_price:.4f}
+- Stop Loss: ${analysis.stop_loss_price:.4f}
+- Take Profit: ${analysis.take_profit_price:.4f}
+- Risk-Reward Ratio: {analysis.risk_reward_ratio:.2f}:1
+- RR Assessment: {analysis.rr_reasoning}
+
 IA1 COMPLETE REASONING & STRATEGIC CHOICE:
 {analysis.ia1_reasoning}
 
