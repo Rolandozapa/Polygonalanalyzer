@@ -1520,11 +1520,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
                     
                     # Enrichir le reasoning avec les calculs Multi-RR
-                    original_reasoning = validated_data.get('ia1_reasoning', '')
+                    original_reasoning = validated_data.get('reasoning', '')  # IA1 utilise 'reasoning' dans JSON
                     enhanced_reasoning = original_reasoning + multi_rr_display
                     
                     # Mettre à jour validated_data avec Multi-RR
-                    validated_data['ia1_reasoning'] = enhanced_reasoning
+                    validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
+                    validated_data['ia1_reasoning'] = enhanced_reasoning  # Pour assurance
                     validated_data['ia1_signal'] = final_recommendation
                     
                     logger.info(f"🎯 Multi-RR applied for {opportunity.symbol}: {final_recommendation.upper()} chosen")
