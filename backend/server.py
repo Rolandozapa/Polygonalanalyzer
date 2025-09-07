@@ -1300,9 +1300,23 @@ class UltraProfessionalIA1TechnicalAnalyst:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | BB Position: {bb_position:.2f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
+            DETECTED CHARTIST PATTERNS:
+            {pattern_details if pattern_details else "No significant chartist patterns detected"}
+            
+            PATTERN SUMMARY: {len(all_detected_patterns)} patterns detected including: {', '.join([p.pattern_type.value for p in all_detected_patterns[:5]])}
+            
             Recent 5-day Close: {historical_data['Close'].tail().tolist()}
             
-            Provide concise technical analysis with confidence score.
+            INSTRUCTIONS: Analyze the technical situation including the detected chartist patterns. In your response, specifically mention the patterns found and how they influence your analysis. Provide JSON format with patterns array listing the detected patterns.
+            
+            Expected JSON format:
+            {{
+                "analysis": "Technical analysis incorporating detected patterns",
+                "reasoning": "Reasoning including pattern analysis", 
+                "patterns": {[f'"{p.pattern_type.value}"' for p in all_detected_patterns]},
+                "confidence": 0.75,
+                "recommendation": "hold/long/short"
+            }}
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
