@@ -1334,6 +1334,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
+            logger.info(f"🤖 IA1 raw response for {opportunity.symbol}: {len(response)} chars - {response[:200]}...")
             
             # 🚀 APPROCHE DIRECTE: Utiliser le JSON IA1 complet et l'enrichir avec Multi-RR
             # Parse IA1 response to get complete JSON
