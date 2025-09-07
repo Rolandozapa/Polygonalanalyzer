@@ -1276,17 +1276,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
         try:
             logger.info(f"🔍 MULTI-SOURCE CHECK: Validation données pour {opportunity.symbol}...")
             
-            # NOUVEAU: Normalisation prix pour éviter notation scientifique
-            if opportunity.current_price > 0:
-                # Convertir notation scientifique en décimal normal
-                try:
-                    normalized_price = float(f"{opportunity.current_price:.12f}")
-                    if normalized_price != opportunity.current_price:
-                        logger.info(f"📊 PRIX NORMALISÉ: {opportunity.symbol} {opportunity.current_price} → {normalized_price}")
-                        opportunity.current_price = normalized_price
-                except (ValueError, OverflowError):
-                    logger.warning(f"⚠️ ERREUR NORMALISATION PRIX: {opportunity.symbol} - Prix: {opportunity.current_price}")
-                    return None
+            # BLACKLIST: Tokens problématiques pour calculs techniques
+            problematic_tokens = [
+                'BABYDOGE', 'SHIB', 'PEPE', 'FLOKI', '1000FLOKI', 
+                '1000PEPE', '1000SHIB', 'DOGE', 'LUNC', 'USTC',
+                '1000BONK', 'BONK', 'BABYDOGEUSDT', 'SHIBUSDT'
+            ]
+            
+            if any(token in opportunity.symbol.upper() for token in problematic_tokens):
+                logger.warning(f"⚠️ TOKEN PROBLÉMATIQUE: {opportunity.symbol} - Skip pour éviter erreurs de calcul (prix microscopique)")
+                return None
             
             # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
             logger.info(f"📊 SOURCING: Récupération OHLCV multi-sources pour {opportunity.symbol}")
