@@ -5332,7 +5332,13 @@ class DualAITradingBotTester:
         # Scout functionality tests
         self.test_get_opportunities()
         
-        # IA1 DEDUPLICATION FIX TESTS (MAIN FOCUS)
+        # IA1→IA2 PATTERN PRIORITIZATION SYSTEM TESTS (MAIN FOCUS)
+        print(f"\n" + "🎯" * 15 + " IA1→IA2 PATTERN PRIORITIZATION SYSTEM TESTS " + "🎯" * 15)
+        ia1_pattern_success = self.test_ia1_pattern_prioritization_system()
+        ia2_comprehension_success = self.test_ia2_pattern_comprehension_system()
+        complete_pattern_cycle_success = self.test_complete_ia1_ia2_pattern_cycle()
+        
+        # IA1 DEDUPLICATION FIX TESTS (SECONDARY)
         print(f"\n" + "🎯" * 20 + " IA1 DEDUPLICATION FIX TESTS " + "🎯" * 20)
         ia1_dedup_success = self.test_ia1_deduplication_fix()
         complete_cycle_success = self.test_complete_scout_ia1_ia2_cycle()
