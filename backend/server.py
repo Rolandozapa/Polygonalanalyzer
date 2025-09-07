@@ -1276,6 +1276,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
         try:
             logger.info(f"🔍 MULTI-SOURCE CHECK: Validation données pour {opportunity.symbol}...")
             
+            # NOUVEAU: Filtrage micro-prix pour éviter erreurs de calcul
+            if opportunity.current_price < 0.0001:  # Moins de 0.01 cent
+                logger.warning(f"⚠️ MICRO-PRIX DÉTECTÉ: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
+                return None
+            
             # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
             logger.info(f"📊 SOURCING: Récupération OHLCV multi-sources pour {opportunity.symbol}")
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
