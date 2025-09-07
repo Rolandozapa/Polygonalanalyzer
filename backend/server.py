@@ -1520,7 +1520,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
                     
                     # Enrichir le reasoning avec les calculs Multi-RR
-                    enhanced_reasoning = reasoning + multi_rr_display
+                    original_reasoning = getattr(base_analysis, 'ia1_reasoning', '')
+                    enhanced_reasoning = original_reasoning + multi_rr_display
                     
                     # Mettre à jour le signal IA1 basé sur la résolution Multi-RR
                     base_analysis.ia1_signal = final_recommendation
