@@ -587,6 +587,7 @@
 
 ## test_plan:
   current_focus:
+    - "IA1 MASTER PATTERN Prioritization for IA2"
     - "IA1 HOLD Filter Optimization for IA2 Economy"
     - "Analyse des Filtres Scout - Restrictivité et Efficacité"
   stuck_tasks: 
