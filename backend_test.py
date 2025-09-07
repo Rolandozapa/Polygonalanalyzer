@@ -12135,8 +12135,7 @@ if __name__ == "__main__":
         print(f"   ✅ Scout found {scout_count} opportunities")
         
         # Step 5: Analyze IA1 analyses (what passed Scout filters)
-        print(f"\n   📊 Step 4: Analyzing Scout→IA1 pass rate...")
-   📊 Step 5: Analyzing IA1 analyses...")
+        print(f"\n   📊 Step 5: Analyzing IA1 analyses...")
         success, analyses_data = self.test_get_analyses()
         if not success:
             print(f"   ❌ Cannot retrieve IA1 analyses")
