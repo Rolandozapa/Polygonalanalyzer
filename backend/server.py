@@ -6966,6 +6966,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize systems at startup"""
+    try:
+        logger.info("🚀 Application startup - Initializing systems...")
+        
+        # Initialize orchestrator (this also initializes the trending system)
+        await orchestrator.initialize()
+        
+        # Initialize BingX tradable symbols fetcher
+        logger.info("🔄 Initializing BingX tradable symbols...")
+        tradable_symbols = bingx_fetcher.get_tradable_symbols()
+        logger.info(f"✅ BingX initialization complete: {len(tradable_symbols)} tradable symbols loaded")
+        
+        logger.info("✅ All startup systems initialized successfully")
+        
+    except Exception as e:
+        logger.error(f"❌ Startup initialization error: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
