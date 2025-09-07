@@ -27,18 +27,8 @@ class EnhancedPatternDetectionTestSuite:
     """Test suite for Enhanced Technical Pattern Detection System"""
     
     def __init__(self):
-        # Get backend URL from frontend env
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        backend_url = line.split('=')[1].strip()
-                        self.base_url = backend_url
-                        break
-                else:
-                    self.base_url = "http://localhost:8001"
-        except Exception:
-            self.base_url = "http://localhost:8001"
+        # Use localhost for internal testing
+        self.base_url = "http://localhost:8001"
         
         self.api_url = f"{self.base_url}/api"
         logger.info(f"Testing Enhanced Pattern Detection at: {self.api_url}")
