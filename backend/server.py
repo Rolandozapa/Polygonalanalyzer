@@ -1223,12 +1223,12 @@ class UltraProfessionalCryptoScout:
         if response.price <= 0:
             return False
         
-        # Market cap filter (more lenient for trending)
-        if response.market_cap and response.market_cap < 500_000:  # $500K minimum
+        # Market cap filter (très assoupli pour small caps)
+        if response.market_cap and response.market_cap < 100_000:  # $100K minimum (TRÈS PERMISSIF pour micro caps)
             return False
         
-        # Volume filter
-        if response.volume_24h < 25_000:  # $25K minimum for trending (ASSOUPLI de $50K)
+        # Volume filter (très assoupli pour small caps)
+        if response.volume_24h < 5_000:  # $5K minimum (ULTRA PERMISSIF pour small caps)
             return False
         
         # Data confidence filter
