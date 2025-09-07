@@ -2266,9 +2266,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
             valid_resistances = []
             for resistance in resistances[:3]:
                 if resistance > current_price and resistance < current_price * 2:  # Valeurs raisonnables
-                    valid_resistances.append(round(resistance, 2))
+                    # NOUVEAU: Arrondi intelligent pour micro-prix
+                    if resistance < 0.001:
+                        # Pour micro-prix, garder précision scientifique
+                        valid_resistances.append(float(f"{resistance:.12g}"))
+                    else:
+                        valid_resistances.append(round(resistance, 6))  # Plus de précision
             
-            return valid_resistances if valid_resistances else [current_price * 1.05]
+            return valid_resistances if valid_resistances else [float(f"{current_price * 1.05:.12g}")]
         except:
             return [current_price * 1.05]
     
