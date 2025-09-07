@@ -304,49 +304,69 @@ class TechnicalPatternDetector:
         return df.sort_index()
     
     def _detect_all_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
-        """Détecte tous les patterns techniques incluant les figures chartistes classiques"""
-        patterns = []
+        """Détecte tous les patterns techniques disponibles"""
+        all_patterns = []
         
-        # 1. NOUVELLES FIGURES CHARTISTES CLASSIQUES (priorité haute)
-        patterns.extend(self._detect_classic_chart_patterns(symbol, df))
-        
-        # 2. PATTERNS DE RETOURNEMENT (double top/bottom, head & shoulders)
-        patterns.extend(self._detect_reversal_patterns(symbol, df))
-        
-        # 3. TRIANGLES ET WEDGES
-        patterns.extend(self._detect_triangle_wedge_patterns(symbol, df))
-        
-        # 4. FLAGS ET PENNANTS (continuation patterns)
-        patterns.extend(self._detect_flag_pennant_patterns(symbol, df))
-        
-        # 5. Détection de tendances soutenues (existant)
-        patterns.extend(self._detect_sustained_trends(symbol, df))
-        
-        # 6. Détection d'alignements de moyennes mobiles multiples (existant)
-        patterns.extend(self._detect_multiple_ma_alignment(symbol, df))
-        
-        # 7. Détection de canaux directionnels (existant)
-        patterns.extend(self._detect_directional_channels(symbol, df))
-        
-        # 8. Détection de momentum continuation patterns (existant)
-        patterns.extend(self._detect_momentum_continuation(symbol, df))
-        
-        # 9. Détection de tendances (Golden/Death Cross) - existant
-        patterns.extend(self._detect_moving_average_patterns(symbol, df))
-        
-        # 10. Détection de breakouts - existant
-        patterns.extend(self._detect_breakout_patterns(symbol, df))
-        
-        # 11. Détection de figures chartistes - existant (simple)
-        patterns.extend(self._detect_chart_patterns(symbol, df))
-        
-        # 12. Détection de signaux volume - existant
-        patterns.extend(self._detect_volume_patterns(symbol, df))
-        
-        # 13. Détection RSI/MACD - existant
-        patterns.extend(self._detect_oscillator_patterns(symbol, df))
-        
-        return patterns
+        try:
+            # Patterns de moyennes mobiles
+            all_patterns.extend(self._detect_moving_average_patterns(symbol, df))
+            
+            # Patterns de breakout/breakdown
+            all_patterns.extend(self._detect_breakout_patterns(symbol, df))
+            
+            # Patterns de volume
+            all_patterns.extend(self._detect_volume_patterns(symbol, df))
+            
+            # Patterns d'oscillateurs
+            all_patterns.extend(self._detect_oscillator_patterns(symbol, df))
+            
+            # Patterns de tendances soutenues
+            all_patterns.extend(self._detect_sustained_trends(symbol, df))
+            
+            # Alignement des moyennes mobiles multiples
+            all_patterns.extend(self._detect_multiple_ma_alignment(symbol, df))
+            
+            # Canaux directionnels
+            all_patterns.extend(self._detect_directional_channels(symbol, df))
+            
+            # Continuation de momentum
+            all_patterns.extend(self._detect_momentum_continuation(symbol, df))
+            
+            # PATTERNS CHARTISTES CLASSIQUES
+            all_patterns.extend(self._detect_classic_chart_patterns(symbol, df))
+            
+            # PATTERNS DE RETOURNEMENT (Head & Shoulders, Double Top/Bottom, Triple)
+            all_patterns.extend(self._detect_reversal_patterns(symbol, df))
+            
+            # PATTERNS TRIANGULAIRES ET WEDGES
+            all_patterns.extend(self._detect_triangle_wedge_patterns(symbol, df))
+            
+            # PATTERNS DE CONTINUATION (Flags, Pennants)
+            all_patterns.extend(self._detect_flag_pennant_patterns(symbol, df))
+            
+            # PATTERNS HARMONIQUES AVANCÉS (Gartley, Bat, Butterfly, Crab)
+            all_patterns.extend(self._detect_harmonic_patterns(symbol, df))
+            
+            # PATTERNS DE VOLATILITÉ (Diamond, Expanding Wedge)
+            all_patterns.extend(self._detect_diamond_patterns(symbol, df))
+            all_patterns.extend(self._detect_expanding_wedge_patterns(symbol, df))
+            
+            # Filtrer par force minimale et éviter les doublons
+            filtered_patterns = []
+            seen_types = set()
+            
+            for pattern in sorted(all_patterns, key=lambda x: x.strength, reverse=True):
+                # Garder seulement les patterns uniques par type avec la plus haute force
+                if pattern.pattern_type not in seen_types and pattern.strength >= self.min_pattern_strength:
+                    filtered_patterns.append(pattern)
+                    seen_types.add(pattern.pattern_type)
+            
+            logger.info(f"Detected {len(filtered_patterns)} strong patterns for {symbol}: {[p.pattern_type.value for p in filtered_patterns]}")
+            
+        except Exception as e:
+            logger.error(f"Error in pattern detection for {symbol}: {e}")
+            
+        return filtered_patterns[:5]  # Retourner max 5 patterns les plus forts
     
     def _detect_moving_average_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
         """Détecte les patterns de moyennes mobiles"""
