@@ -1444,9 +1444,24 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     multi_rr_display += f"\n\n🏆 **WINNER:** {final_recommendation.upper()}"
                     multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
                     
-                    # Enrichir le reasoning avec les calculs Multi-RR
+                    # Enrichir le reasoning avec CONFRONTATION sentiment vs Multi-RR
                     original_reasoning = validated_data.get('reasoning', '')  # IA1 utilise 'reasoning' dans JSON
-                    enhanced_reasoning = original_reasoning + multi_rr_display
+                    gut_sentiment = validated_data.get('gut_sentiment', 'NEUTRAL')
+                    
+                    # Créer confrontation explicite entre instinct IA et calculs Multi-RR
+                    confrontation_text = f"\n\n🤖💭 **SENTIMENT vs CALCULS:**"
+                    confrontation_text += f"\n• Mon instinct: {gut_sentiment}"
+                    confrontation_text += f"\n• Multi-RR gagnant: {final_recommendation.upper()}"
+                    
+                    # Analyser l'accord ou le conflit
+                    ia1_recommendation = validated_data.get('recommendation', 'hold').upper()
+                    if final_recommendation.upper() != ia1_recommendation:
+                        confrontation_text += f"\n⚔️ **CONFLIT**: Mon sentiment initial était {ia1_recommendation}, mais les calculs Multi-RR suggèrent {final_recommendation.upper()}"
+                        confrontation_text += f"\n🎯 **RÉSOLUTION**: Je défère aux calculs rationnels Multi-RR malgré mes instincts"
+                    else:
+                        confrontation_text += f"\n🤝 **ACCORD**: Mon instinct et les calculs Multi-RR s'alignent sur {final_recommendation.upper()}"
+                    
+                    enhanced_reasoning = original_reasoning + confrontation_text + multi_rr_display
                     
                     # Mettre à jour validated_data avec Multi-RR
                     validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
