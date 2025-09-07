@@ -378,7 +378,8 @@ class ChartistPatternIntegrationTestSuite:
             
             if has_pattern_errors:
                 logger.info(f"   ⚠️ Pattern-related errors found in logs")
-                logger.info(f"   📝 Sample error: {pattern_errors.split('\\n')[0][:100]}...")
+                error_lines = pattern_errors.split('\n')
+                logger.info(f"   📝 Sample error: {error_lines[0][:100]}...")
             else:
                 logger.info(f"   ✅ No pattern-related errors in logs")
                 
