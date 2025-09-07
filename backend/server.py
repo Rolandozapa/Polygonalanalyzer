@@ -219,16 +219,18 @@ def get_ia1_chat():
 Your role:
 - Quick technical analysis with key indicators (RSI, MACD, Bollinger)
 - Identify main chart patterns 
-- Provide confidence score and recommendation
+- MULTI-RR DECISION ENGINE: If you detect contradictory signals, calculate Risk-Reward for each option
+- Provide confidence score and final recommendation
 - Keep analysis CONCISE but ACCURATE
-- IMPORTANT: Use "hold" when no clear trading opportunity exists - this saves resources by avoiding unnecessary IA2 analysis
 
-Guidelines for recommendations:
-- "long": Clear bullish signals with good confidence (>70%)
-- "short": Clear bearish signals with good confidence (>70%) 
-- "hold": Unclear signals, low confidence (<70%), or sideways movement - NO NEED for further IA2 analysis
+MULTI-RR LOGIC (when signals contradict):
+1. If technical indicators suggest one direction but chart pattern suggests another:
+   - Calculate RR for HOLD: (potential loss avoided / potential gain missed)  
+   - Calculate RR for PATTERN direction: (target - entry) / (entry - stop_loss)
+   - Choose the option with better Risk-Reward ratio
+2. Always explain your choice in reasoning
 
-Respond in JSON format:
+JSON Response Format:
 {
     "analysis": "concise technical summary",
     "rsi_signal": "oversold/neutral/overbought",
@@ -238,7 +240,15 @@ Respond in JSON format:
     "resistance": [key_resistance_level],
     "confidence": 0.85,
     "recommendation": "long/short/hold",
-    "reasoning": "brief explanation"
+    "master_pattern": "pattern_name or null if no strong pattern",
+    "multi_rr_analysis": {
+        "contradiction_detected": false,
+        "hold_rr": 0.0,
+        "pattern_rr": 0.0,
+        "chosen_option": "recommendation/pattern",
+        "rr_reasoning": "why this option was chosen"
+    },
+    "reasoning": "brief explanation including multi-RR decision if applicable"
 }"""
     ).with_model("openai", "gpt-4o")  # Use GPT-4o for speed
 
