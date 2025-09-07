@@ -1488,9 +1488,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
             
-            # ✅ PLUS DE MULTI-RR ENGINE PYTHON - GPT-4o gère tout dans son prompt
+            # 🚀 MULTI-RR ENGINE PYTHON RÉACTIVÉ - Calculs réels avec formules améliorées
             
-            return TechnicalAnalysis(
+            # Créer l'analyse IA1 de base
+            base_analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
                 timestamp=get_paris_time(),
                 **validated_data
