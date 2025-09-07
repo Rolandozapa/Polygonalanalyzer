@@ -1442,6 +1442,25 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             logger.info(f"📊 {opportunity.symbol} R:R Analysis: {risk_reward_analysis['ratio']:.2f}:1 (Risk: ${risk_reward_analysis['risk_amount']:.4f}, Reward: ${risk_reward_analysis['reward_amount']:.4f})")
             
+            # NOUVEAU: MULTI-RR DECISION ENGINE pour résoudre contradictions IA1
+            contradiction_resolution = self._resolve_ia1_contradiction_with_multi_rr(
+                TechnicalAnalysis(**validated_data, 
+                    symbol=opportunity.symbol,
+                    timestamp=get_paris_time()
+                ), 
+                opportunity, 
+                detected_pattern
+            )
+            
+            if contradiction_resolution["contradiction"]:
+                # Mettre à jour la recommandation basée sur Multi-RR
+                final_recommendation = contradiction_resolution["final_recommendation"]
+                validated_data["ia1_signal"] = final_recommendation
+                reasoning += f"\n\n🤖 MULTI-RR RESOLUTION: {contradiction_resolution['resolution_reasoning']}"
+                validated_data["ia1_reasoning"] = reasoning
+                
+                logger.info(f"✅ Contradiction IA1 résolue pour {opportunity.symbol}: {contradiction_resolution['original_recommendation'].upper()} → {final_recommendation.upper()}")
+            
             return TechnicalAnalysis(
                 symbol=opportunity.symbol,
                 **validated_data
