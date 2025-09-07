@@ -1475,57 +1475,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
             
-            # Ajuster la confiance basée sur le pattern technique
-            if detected_pattern and detected_pattern.strength > 0.7:
-                validated_data["analysis_confidence"] = min(validated_data["analysis_confidence"] + 0.1, 0.98)
-                if detected_pattern.pattern_type.value not in validated_data["patterns_detected"]:
-                    validated_data["patterns_detected"].insert(0, detected_pattern.pattern_type.value)
-            
-            # NOUVEAU: CALCUL RISK-REWARD POUR IA1 
-            risk_reward_analysis = self._calculate_ia1_risk_reward(
-                opportunity, 
-                historical_data, 
-                validated_data["support_levels"], 
-                validated_data["resistance_levels"],
-                detected_pattern
-            )
-            
-            # Ajouter les données Risk-Reward à l'analyse
-            validated_data["risk_reward_ratio"] = risk_reward_analysis["ratio"]
-            validated_data["entry_price"] = risk_reward_analysis["entry_price"]
-            validated_data["stop_loss_price"] = risk_reward_analysis["stop_loss"]
-            validated_data["take_profit_price"] = risk_reward_analysis["take_profit"]
-            validated_data["risk_amount"] = risk_reward_analysis["risk_amount"]
-            validated_data["reward_amount"] = risk_reward_analysis["reward_amount"]
-            validated_data["rr_reasoning"] = risk_reward_analysis["reasoning"]
-            
-            logger.info(f"📊 {opportunity.symbol} R:R Analysis: {risk_reward_analysis['ratio']:.2f}:1 (Risk: ${risk_reward_analysis['risk_amount']:.4f}, Reward: ${risk_reward_analysis['reward_amount']:.4f})")
-            
-            # NOUVEAU: MULTI-RR DECISION ENGINE pour résoudre contradictions IA1
-            # Créer un objet temporaire pour tester les contradictions
-            temp_analysis = type('TempAnalysis', (), {
-                'ia1_signal': ia1_signal,  # Utiliser la variable directement
-                'symbol': opportunity.symbol,
-                'analysis_confidence': validated_data["analysis_confidence"]
-            })()
-            
-            contradiction_resolution = self._resolve_ia1_contradiction_with_multi_rr(
-                temp_analysis, 
-                opportunity, 
-                detected_pattern
-            )
-            
-            if contradiction_resolution["contradiction"]:
-                # Mettre à jour la recommandation basée sur Multi-RR
-                final_recommendation = contradiction_resolution["final_recommendation"]
-                validated_data["ia1_signal"] = final_recommendation
-                reasoning += f"\n\n🤖 MULTI-RR RESOLUTION: {contradiction_resolution['resolution_reasoning']}"
-                validated_data["ia1_reasoning"] = reasoning
-                
-                logger.info(f"✅ Contradiction IA1 résolue pour {opportunity.symbol}: {contradiction_resolution['original_recommendation'].upper()} → {final_recommendation.upper()}")
+            # ✅ PLUS DE MULTI-RR ENGINE PYTHON - GPT-4o gère tout dans son prompt
             
             return TechnicalAnalysis(
                 symbol=opportunity.symbol,
+                timestamp=get_paris_time(),
                 **validated_data
             )
             
