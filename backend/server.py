@@ -1405,8 +1405,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
                 reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern is IA1's PRIMARY BASIS for strategic decision."
             
-            # Create ultra professional analysis avec validation JSON
+            # Create ultra professional analysis avec validation JSON + IA1 fields
             analysis_data = {
+                "analysis": ia1_analysis,  # 🆕 Human analysis from IA1
+                "reasoning": ia1_reasoning,  # 🆕 Human reasoning from IA1  
                 "rsi": rsi,
                 "macd_signal": macd_signal,
                 "bollinger_position": bb_position,
