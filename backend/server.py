@@ -1194,9 +1194,41 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # logger.info(f"📊 ANALYSE MOUVEMENT: {opportunity.symbol} - {lateral_movement['movement_type']} ({lateral_movement['reason']})")
             # Note: Le filtrage latéral est maintenant géré par le Multi-RR Decision Engine
             
-            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé + Overrides intelligents
+            # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé + Overrides intelligents + Récupération patterns
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
             should_analyze, detected_pattern = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
+            
+            # 🆕 RÉCUPÉRATION COMPLÈTE DES PATTERNS DÉTECTÉS
+            all_detected_patterns = []
+            pattern_details = ""
+            
+            if detected_pattern:
+                all_detected_patterns.append(detected_pattern)
+                pattern_details = f"🎯 PATTERN PRINCIPAL: {detected_pattern.pattern_type.value} (Confidence: {detected_pattern.confidence:.2f}, Strength: {detected_pattern.strength:.2f}, Direction: {detected_pattern.trading_direction})\n"
+                
+                # Ajouter détails du pattern
+                if hasattr(detected_pattern, 'additional_data') and detected_pattern.additional_data:
+                    pattern_details += f"   Détails: {detected_pattern.additional_data}\n"
+            
+            # 🔥 NOUVEAU: Récupérer tous les patterns pour enrichir l'analyse IA1
+            try:
+                # Utiliser directement _detect_all_patterns pour obtenir tous les patterns disponibles
+                historical_data = await enhanced_ohlcv_fetcher.get_ohlcv_data(opportunity.symbol, "1d", lookback_days=30)
+                if historical_data is not None and len(historical_data) >= 10:
+                    additional_patterns = technical_pattern_detector._detect_all_patterns(opportunity.symbol, historical_data)
+                    
+                    # Ajouter les patterns supplémentaires non-redondants
+                    for pattern in additional_patterns:
+                        if not detected_pattern or pattern.pattern_type != detected_pattern.pattern_type:
+                            all_detected_patterns.append(pattern)
+                            pattern_details += f"   • {pattern.pattern_type.value}: {pattern.confidence:.2f} confidence, {pattern.trading_direction} direction\n"
+                    
+                    logger.info(f"🎯 PATTERNS COMPLETS pour {opportunity.symbol}: {len(all_detected_patterns)} patterns détectés")
+                    if pattern_details:
+                        logger.info(f"📊 DÉTAILS PATTERNS:\n{pattern_details}")
+                        
+            except Exception as e:
+                logger.debug(f"Erreur récupération patterns supplémentaires pour {opportunity.symbol}: {e}")
             
             if not should_analyze:
                 logger.info(f"⚪ SKIP TECHNIQUE: {opportunity.symbol} - Pas de patterns techniques significatifs")
