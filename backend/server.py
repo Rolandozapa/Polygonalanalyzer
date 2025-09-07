@@ -4515,6 +4515,12 @@ class UltraProfessionalTradingOrchestrator:
         self.scout = UltraProfessionalCryptoScout()
         self.ia1 = UltraProfessionalIA1TechnicalAnalyst()  
         self.ia2 = UltraProfessionalIA2DecisionAgent()
+        self.advanced_strategy_manager = advanced_strategy_manager
+        
+        # Initialize Active Position Manager for live trading execution
+        self.active_position_manager = ActivePositionManager(
+            execution_mode=TradeExecutionMode.SIMULATION  # Start in simulation mode for safety
+        )
         self.is_running = False
         self.cycle_count = 0
         self._initialized = False
