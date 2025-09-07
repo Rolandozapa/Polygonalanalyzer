@@ -1590,6 +1590,392 @@ class DualAITradingBotTester:
         
         return multi_rr_system_working
 
+    def test_enhanced_multi_rr_formulas(self):
+        """Test the three enhanced RR calculation methods from the review request"""
+        print(f"\n🧮 Testing Enhanced Multi-RR Calculation Formulas...")
+        
+        # Start trading system to generate fresh analyses with Multi-RR
+        print(f"   🚀 Starting trading system to test enhanced formulas...")
+        start_success, _ = self.test_start_trading_system()
+        
+        if start_success:
+            print(f"   ⏱️  Waiting for enhanced Multi-RR calculations (60 seconds)...")
+            time.sleep(60)
+            
+            # Get fresh analyses
+            success, analyses_data = self.test_get_analyses()
+            if success:
+                analyses = analyses_data.get('analyses', [])
+                
+                # Test for enhanced formula evidence
+                hold_opportunity_evidence = 0
+                pattern_rr_evidence = 0
+                technical_signal_evidence = 0
+                actual_rr_calculations = 0
+                
+                for analysis in analyses[:15]:  # Test first 15 analyses
+                    symbol = analysis.get('symbol', 'Unknown')
+                    reasoning = analysis.get('ia1_reasoning', '').lower()
+                    rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+                    
+                    # Test 1: _calculate_hold_opportunity_rr (support/resistance based)
+                    if any(kw in reasoning for kw in ['support', 'resistance', 'breakout', 'hold opportunity', 'opportunity cost']):
+                        hold_opportunity_evidence += 1
+                    
+                    # Test 2: _calculate_pattern_rr (dynamic ATR based on pattern strength)
+                    if any(kw in reasoning for kw in ['atr', 'pattern strength', 'dynamic', 'volatility multiplier', 'extension']):
+                        pattern_rr_evidence += 1
+                    
+                    # Test 3: _calculate_technical_signal_rr (RSI/MACD/BB confluence)
+                    if any(kw in reasoning for kw in ['confluence', 'signal strength', 'rsi', 'macd', 'bollinger']):
+                        technical_signal_evidence += 1
+                    
+                    # Test 4: Actual RR calculations (not 0.0:0.0)
+                    if rr_ratio > 0.0:
+                        actual_rr_calculations += 1
+                        print(f"      {symbol}: RR {rr_ratio:.2f}:1 ✅")
+                    else:
+                        print(f"      {symbol}: RR {rr_ratio:.2f}:1 ❌")
+                
+                print(f"\n   📊 Enhanced Formula Evidence:")
+                print(f"      Hold Opportunity RR: {hold_opportunity_evidence}/15 analyses")
+                print(f"      Pattern RR (ATR-based): {pattern_rr_evidence}/15 analyses")
+                print(f"      Technical Signal RR: {technical_signal_evidence}/15 analyses")
+                print(f"      Actual RR Calculations: {actual_rr_calculations}/15 analyses")
+                
+                # Validation criteria
+                formulas_working = (
+                    hold_opportunity_evidence >= 3 and
+                    pattern_rr_evidence >= 3 and
+                    technical_signal_evidence >= 5 and
+                    actual_rr_calculations >= 8  # At least 50% should have real calculations
+                )
+                
+                print(f"\n   🎯 Enhanced Formulas: {'✅ WORKING' if formulas_working else '❌ NEEDS ATTENTION'}")
+                
+            else:
+                formulas_working = False
+            
+            # Stop the system
+            self.test_stop_trading_system()
+        else:
+            formulas_working = False
+        
+        return formulas_working
+
+    def test_contradiction_detection_biousdt_case(self):
+        """Test specific contradiction detection for BIOUSDT case (RSI oversold vs MACD bearish)"""
+        print(f"\n🔍 Testing Contradiction Detection - BIOUSDT Case...")
+        
+        # Get current analyses to check for contradiction patterns
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for contradiction testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for contradiction testing")
+            return False
+        
+        print(f"   📊 Scanning {len(analyses)} analyses for contradiction patterns...")
+        
+        # Look for contradiction patterns
+        biousdt_found = False
+        rsi_macd_contradictions = 0
+        rsi_bb_contradictions = 0
+        multi_rr_resolutions = 0
+        
+        contradiction_cases = []
+        
+        for analysis in analyses:
+            symbol = analysis.get('symbol', 'Unknown')
+            rsi = analysis.get('rsi', 50)
+            macd_signal = analysis.get('macd_signal', 0)
+            bb_position = analysis.get('bollinger_position', 0)
+            reasoning = analysis.get('ia1_reasoning', '').lower()
+            
+            # Check for BIOUSDT specifically
+            if 'biousdt' in symbol.lower():
+                biousdt_found = True
+                print(f"   🎯 BIOUSDT found: RSI {rsi:.1f}, MACD {macd_signal:.6f}, BB {bb_position:.2f}")
+            
+            # Test RSI oversold vs MACD bearish (BIOUSDT case)
+            if rsi < 30 and macd_signal < -0.001:
+                rsi_macd_contradictions += 1
+                contradiction_cases.append({
+                    'symbol': symbol,
+                    'type': 'RSI_oversold_MACD_bearish',
+                    'rsi': rsi,
+                    'macd': macd_signal,
+                    'bb': bb_position,
+                    'has_multi_rr': 'multi-rr' in reasoning or 'contradiction' in reasoning
+                })
+            
+            # Test RSI vs BB contradictions
+            elif (rsi < 30 and bb_position > 0.5) or (rsi > 70 and bb_position < -0.5):
+                rsi_bb_contradictions += 1
+                contradiction_cases.append({
+                    'symbol': symbol,
+                    'type': 'RSI_BB_contradiction',
+                    'rsi': rsi,
+                    'macd': macd_signal,
+                    'bb': bb_position,
+                    'has_multi_rr': 'multi-rr' in reasoning or 'contradiction' in reasoning
+                })
+            
+            # Check for Multi-RR resolution
+            if 'multi-rr' in reasoning or 'contradiction' in reasoning:
+                multi_rr_resolutions += 1
+        
+        print(f"\n   📊 Contradiction Detection Results:")
+        print(f"      BIOUSDT specifically found: {'✅' if biousdt_found else '❌'}")
+        print(f"      RSI oversold + MACD bearish: {rsi_macd_contradictions} cases")
+        print(f"      RSI vs BB contradictions: {rsi_bb_contradictions} cases")
+        print(f"      Multi-RR resolutions: {multi_rr_resolutions} cases")
+        
+        # Show contradiction examples
+        if contradiction_cases:
+            print(f"\n   🔍 Contradiction Examples:")
+            for i, case in enumerate(contradiction_cases[:3]):  # Show first 3
+                print(f"      {i+1}. {case['symbol']} ({case['type']}):")
+                print(f"         RSI: {case['rsi']:.1f}, MACD: {case['macd']:.6f}, BB: {case['bb']:.2f}")
+                print(f"         Multi-RR Resolution: {'✅' if case['has_multi_rr'] else '❌'}")
+        
+        # Validation
+        contradiction_detection_working = (
+            len(contradiction_cases) > 0 and
+            multi_rr_resolutions > 0
+        )
+        
+        print(f"\n   🎯 Contradiction Detection: {'✅ WORKING' if contradiction_detection_working else '❌ NEEDS IMPLEMENTATION'}")
+        
+        return contradiction_detection_working
+
+    def test_technical_signal_recognition(self):
+        """Test technical signal recognition patterns (RSI < 30 + BB < -0.5 = LONG, RSI > 70 + BB > 0.5 = SHORT)"""
+        print(f"\n📊 Testing Technical Signal Recognition Patterns...")
+        
+        # Get current analyses
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for signal recognition testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for signal recognition testing")
+            return False
+        
+        print(f"   📊 Testing signal recognition in {len(analyses)} analyses...")
+        
+        # Test signal recognition patterns
+        long_signal_cases = 0
+        short_signal_cases = 0
+        correct_long_recognition = 0
+        correct_short_recognition = 0
+        
+        signal_examples = []
+        
+        for analysis in analyses:
+            symbol = analysis.get('symbol', 'Unknown')
+            rsi = analysis.get('rsi', 50)
+            bb_position = analysis.get('bollinger_position', 0)
+            ia1_signal = analysis.get('ia1_signal', 'hold').lower()
+            reasoning = analysis.get('ia1_reasoning', '').lower()
+            
+            # Test LONG signal recognition: RSI < 30 + BB < -0.5
+            if rsi < 30 and bb_position < -0.5:
+                long_signal_cases += 1
+                # Check if system recognized this as LONG opportunity
+                if 'long' in ia1_signal or 'long' in reasoning or 'buy' in reasoning or 'oversold' in reasoning:
+                    correct_long_recognition += 1
+                    signal_examples.append({
+                        'symbol': symbol,
+                        'type': 'LONG_recognition',
+                        'rsi': rsi,
+                        'bb': bb_position,
+                        'signal': ia1_signal,
+                        'recognized': True
+                    })
+                else:
+                    signal_examples.append({
+                        'symbol': symbol,
+                        'type': 'LONG_missed',
+                        'rsi': rsi,
+                        'bb': bb_position,
+                        'signal': ia1_signal,
+                        'recognized': False
+                    })
+            
+            # Test SHORT signal recognition: RSI > 70 + BB > 0.5
+            elif rsi > 70 and bb_position > 0.5:
+                short_signal_cases += 1
+                # Check if system recognized this as SHORT opportunity
+                if 'short' in ia1_signal or 'short' in reasoning or 'sell' in reasoning or 'overbought' in reasoning:
+                    correct_short_recognition += 1
+                    signal_examples.append({
+                        'symbol': symbol,
+                        'type': 'SHORT_recognition',
+                        'rsi': rsi,
+                        'bb': bb_position,
+                        'signal': ia1_signal,
+                        'recognized': True
+                    })
+                else:
+                    signal_examples.append({
+                        'symbol': symbol,
+                        'type': 'SHORT_missed',
+                        'rsi': rsi,
+                        'bb': bb_position,
+                        'signal': ia1_signal,
+                        'recognized': False
+                    })
+        
+        print(f"\n   📊 Signal Recognition Results:")
+        print(f"      LONG signal opportunities (RSI<30 + BB<-0.5): {long_signal_cases}")
+        print(f"      Correct LONG recognition: {correct_long_recognition}/{long_signal_cases}")
+        print(f"      SHORT signal opportunities (RSI>70 + BB>0.5): {short_signal_cases}")
+        print(f"      Correct SHORT recognition: {correct_short_recognition}/{short_signal_cases}")
+        
+        # Show signal examples
+        if signal_examples:
+            print(f"\n   🔍 Signal Recognition Examples:")
+            for i, example in enumerate(signal_examples[:5]):  # Show first 5
+                status = "✅ Recognized" if example['recognized'] else "❌ Missed"
+                print(f"      {i+1}. {example['symbol']} ({example['type']}):")
+                print(f"         RSI: {example['rsi']:.1f}, BB: {example['bb']:.2f}")
+                print(f"         Signal: {example['signal']}, Status: {status}")
+        
+        # Calculate recognition rates
+        long_recognition_rate = correct_long_recognition / long_signal_cases if long_signal_cases > 0 else 0
+        short_recognition_rate = correct_short_recognition / short_signal_cases if short_signal_cases > 0 else 0
+        
+        print(f"\n   📊 Recognition Rates:")
+        print(f"      LONG Recognition Rate: {long_recognition_rate*100:.1f}%")
+        print(f"      SHORT Recognition Rate: {short_recognition_rate*100:.1f}%")
+        
+        # Validation
+        signal_recognition_working = (
+            (long_signal_cases == 0 or long_recognition_rate >= 0.6) and
+            (short_signal_cases == 0 or short_recognition_rate >= 0.6) and
+            (long_signal_cases > 0 or short_signal_cases > 0)  # At least some signals should be found
+        )
+        
+        print(f"\n   🎯 Technical Signal Recognition: {'✅ WORKING' if signal_recognition_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        return signal_recognition_working
+
+    def test_multi_rr_vignette_display(self):
+        """Test that Multi-RR results are displayed in IA1 analysis vignettes with actual ratios"""
+        print(f"\n🖼️ Testing Multi-RR Vignette Display in IA1 Analyses...")
+        
+        # Get current analyses to check vignette display
+        success, analyses_data = self.test_get_analyses()
+        if not success:
+            print(f"   ❌ Cannot retrieve analyses for vignette testing")
+            return False
+        
+        analyses = analyses_data.get('analyses', [])
+        if len(analyses) == 0:
+            print(f"   ❌ No analyses available for vignette testing")
+            return False
+        
+        print(f"   📊 Testing Multi-RR vignette display in {len(analyses)} analyses...")
+        
+        # Test vignette display patterns
+        vignettes_with_rr = 0
+        actual_rr_ratios = 0
+        hold_rr_mentions = 0
+        long_rr_mentions = 0
+        short_rr_mentions = 0
+        zero_rr_ratios = 0
+        
+        vignette_examples = []
+        
+        for analysis in analyses[:10]:  # Test first 10 analyses
+            symbol = analysis.get('symbol', 'Unknown')
+            reasoning = analysis.get('ia1_reasoning', '')
+            rr_ratio = analysis.get('risk_reward_ratio', 0.0)
+            
+            # Check for Multi-RR vignette patterns in reasoning
+            has_rr_vignette = any(pattern in reasoning.lower() for pattern in [
+                'hold:', 'long:', 'short:', 'rr analysis', 'multi-rr', 'risk-reward'
+            ])
+            
+            # Check for actual RR ratio mentions (like "HOLD: 1.8:1", "LONG: 2.3:1")
+            has_actual_ratios = any(pattern in reasoning for pattern in [
+                ':1', 'rr ', 'ratio', '1.', '2.', '3.'
+            ])
+            
+            # Check for specific RR mentions
+            if 'hold:' in reasoning.lower() and any(r in reasoning for r in ['1.', '2.', '3.']):
+                hold_rr_mentions += 1
+            
+            if 'long:' in reasoning.lower() and any(r in reasoning for r in ['1.', '2.', '3.']):
+                long_rr_mentions += 1
+            
+            if 'short:' in reasoning.lower() and any(r in reasoning for r in ['1.', '2.', '3.']):
+                short_rr_mentions += 1
+            
+            # Count vignettes and ratios
+            if has_rr_vignette:
+                vignettes_with_rr += 1
+            
+            if rr_ratio > 0.0:
+                actual_rr_ratios += 1
+            else:
+                zero_rr_ratios += 1
+            
+            if has_actual_ratios:
+                vignette_examples.append({
+                    'symbol': symbol,
+                    'rr_ratio': rr_ratio,
+                    'has_vignette': has_rr_vignette,
+                    'has_ratios': has_actual_ratios,
+                    'reasoning_snippet': reasoning[:200] + '...' if len(reasoning) > 200 else reasoning
+                })
+            
+            print(f"      {symbol}: RR {rr_ratio:.2f}, Vignette: {'✅' if has_rr_vignette else '❌'}, Ratios: {'✅' if has_actual_ratios else '❌'}")
+        
+        print(f"\n   📊 Multi-RR Vignette Analysis:")
+        print(f"      Analyses with RR vignettes: {vignettes_with_rr}/10")
+        print(f"      Actual RR ratios (not 0.0): {actual_rr_ratios}/10")
+        print(f"      Zero RR ratios (0.0): {zero_rr_ratios}/10")
+        print(f"      HOLD RR mentions: {hold_rr_mentions}")
+        print(f"      LONG RR mentions: {long_rr_mentions}")
+        print(f"      SHORT RR mentions: {short_rr_mentions}")
+        
+        # Show vignette examples
+        if vignette_examples:
+            print(f"\n   🔍 Multi-RR Vignette Examples:")
+            for i, example in enumerate(vignette_examples[:3]):  # Show first 3
+                print(f"      {i+1}. {example['symbol']} (RR: {example['rr_ratio']:.2f}):")
+                print(f"         Vignette: {'✅' if example['has_vignette'] else '❌'}")
+                print(f"         Ratios: {'✅' if example['has_ratios'] else '❌'}")
+                print(f"         Snippet: {example['reasoning_snippet']}")
+        
+        # Validation criteria
+        vignette_display_working = (
+            vignettes_with_rr >= 3 and  # At least 30% should have RR vignettes
+            actual_rr_ratios >= 5 and   # At least 50% should have actual ratios (not 0.0)
+            zero_rr_ratios <= 5 and     # No more than 50% should be 0.0
+            (hold_rr_mentions + long_rr_mentions + short_rr_mentions) >= 2  # Some specific RR mentions
+        )
+        
+        print(f"\n   🎯 Multi-RR Vignette Display: {'✅ WORKING' if vignette_display_working else '❌ NEEDS IMPROVEMENT'}")
+        
+        if not vignette_display_working:
+            print(f"   💡 ISSUES DETECTED:")
+            if actual_rr_ratios < 5:
+                print(f"      - Too many 0.0:0.0 ratios ({zero_rr_ratios}/10) - should show actual calculations")
+            if vignettes_with_rr < 3:
+                print(f"      - Not enough RR vignettes in reasoning ({vignettes_with_rr}/10)")
+            if (hold_rr_mentions + long_rr_mentions + short_rr_mentions) < 2:
+                print(f"      - Missing specific RR ratio mentions (HOLD: X:1, LONG: Y:1, etc.)")
+        
+        return vignette_display_working
+
     def test_ia1_pattern_prioritization_system(self):
         """🎯 TEST IA1 PATTERN PRIORITIZATION - Master Pattern Selection"""
         print(f"\n🎯 Testing IA1 Pattern Prioritization System...")
