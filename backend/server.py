@@ -2410,7 +2410,10 @@ IA1 TECHNICAL ANALYSIS:
 - Analysis Confidence: {analysis.analysis_confidence:.2%}
 
 IA1 REASONING:
-{analysis.ia1_reasoning[:500]}
+{analysis.ia1_reasoning[:800]}
+
+IA1 FINAL CONCLUSION (CRITIQUE):
+{analysis.ia1_reasoning[-200:] if len(analysis.ia1_reasoning) > 500 else "Conclusion incluse ci-dessus"}
 
 CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
 - Total Market Cap: ${market_sentiment['total_market_cap_usd']:,.0f}
