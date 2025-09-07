@@ -1472,7 +1472,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # NOUVEAU: MULTI-RR DECISION ENGINE pour résoudre contradictions IA1
             # Créer un objet temporaire pour tester les contradictions
             temp_analysis = type('TempAnalysis', (), {
-                'ia1_signal': validated_data["ia1_signal"],
+                'ia1_signal': ia1_signal,  # Utiliser la variable directement
                 'symbol': opportunity.symbol,
                 'analysis_confidence': validated_data["analysis_confidence"]
             })()
