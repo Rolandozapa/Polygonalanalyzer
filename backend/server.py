@@ -264,11 +264,11 @@ DECISION OUTPUT FORMAT (JSON):
     "risk_level": "LOW|MEDIUM|HIGH",
     "strategy_type": "STANDARD|ADVANCED_TP|SCALPING|SWING",
     "take_profit_strategy": {
-        "tp1_percentage": 1.5,  // % gain for first TP
-        "tp2_percentage": 3.0,  // % gain for second TP  
-        "tp3_percentage": 5.0,  // % gain for third TP
-        "tp4_percentage": 8.0,  // % gain for final TP
-        "tp_distribution": [25, 30, 25, 20]  // % of position for each TP
+        "tp1_percentage": 0.5,  // % gain for first TP - RÉALISTE et sécurisé
+        "tp2_percentage": 1.0,  // % gain for second TP - Conservative  
+        "tp3_percentage": 1.8,  // % gain for third TP - Modéré
+        "tp4_percentage": 3.0,  // % gain for final TP - Ambitieux mais atteignable
+        "tp_distribution": [40, 30, 20, 10]  // % of position for each TP - Plus conservative
     },
     "position_management": {
         "entry_strategy": "MARKET|LIMIT|DCA",
