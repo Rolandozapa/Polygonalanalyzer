@@ -1367,6 +1367,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         master_pattern = parsed_response['master_pattern']
                         logger.info(f"🎯 IA1 master pattern: {master_pattern} for {opportunity.symbol}")
                     
+                    # 🆕 EXTRACTION ANALYSIS ET REASONING pour affichage hybride
+                    ia1_analysis = parsed_response.get('analysis', '')
+                    ia1_reasoning = parsed_response.get('reasoning', '')
+                    
+                    if ia1_analysis:
+                        logger.info(f"✅ IA1 analysis extracted for {opportunity.symbol}: {len(ia1_analysis)} chars")
+                    if ia1_reasoning:
+                        logger.info(f"✅ IA1 reasoning extracted for {opportunity.symbol}: {len(ia1_reasoning)} chars")
+                    
                     # Extract Multi-RR info if present
                     if 'multi_rr_analysis' in parsed_response:
                         rr_data = parsed_response['multi_rr_analysis']
