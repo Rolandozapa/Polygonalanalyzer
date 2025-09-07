@@ -1435,7 +1435,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 ),
                 "ia1_reasoning": reasoning,
-                "ia1_signal": "hold",  # NOUVEAU: Signal IA1 pour filtrage IA2
+                "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
                 "market_sentiment": self._determine_market_sentiment(opportunity),
                 "data_sources": opportunity.data_sources
             }
