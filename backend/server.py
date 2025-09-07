@@ -2004,12 +2004,25 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 logger.debug(f"MACD: Insufficient clean data ({len(clean_prices)} < {min_required} days)")
                 return 0.0, 0.0, 0.0
             
-            # Calculate exponential moving averages
-            exp_fast = clean_prices.ewm(span=fast, adjust=False).mean()
-            exp_slow = clean_prices.ewm(span=slow, adjust=False).mean()
-            
-            # MACD line = Fast EMA - Slow EMA
-            macd_line = exp_fast - exp_slow
+            # NOUVEAU: Gestion micro-prix pour MACD
+            if clean_prices.iloc[-1] < 0.001:  # Micro-prix détecté
+                # Utiliser les prix normalisés (multiply by large factor for stability)
+                scale_factor = 1e9  # Amplifier pour stabilité calcul
+                scaled_prices = clean_prices * scale_factor
+                
+                # Calculate exponential moving averages on scaled prices
+                exp_fast = scaled_prices.ewm(span=fast, adjust=False).mean()
+                exp_slow = scaled_prices.ewm(span=slow, adjust=False).mean()
+                
+                # MACD line = Fast EMA - Slow EMA (puis re-scale)
+                macd_line = (exp_fast - exp_slow) / scale_factor
+            else:
+                # Calculate exponential moving averages normally
+                exp_fast = clean_prices.ewm(span=fast, adjust=False).mean()
+                exp_slow = clean_prices.ewm(span=slow, adjust=False).mean()
+                
+                # MACD line = Fast EMA - Slow EMA
+                macd_line = exp_fast - exp_slow
             
             # Signal line = EMA of MACD line
             macd_signal = macd_line.ewm(span=signal, adjust=False).mean()
