@@ -1490,8 +1490,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     }
                 }
             
-            # Enrichir le raisonnement avec les informations extraites (TEXTE COMPLET)
-            reasoning = response if response else "Ultra professional analysis with multi-source validation"
+            # Enrichir le raisonnement avec les informations extraites (UTILISER JSON REASONING)
+            reasoning = ia1_complete_json.get('reasoning', '') or ia1_complete_json.get('analysis', '') or response[:2000]
+            
+            # Si le reasoning JSON est trop court, utiliser la réponse complète
+            if len(reasoning) < 500:
+                logger.warning(f"⚠️ IA1 JSON reasoning trop court ({len(reasoning)} chars), utilisation réponse complète")
+                reasoning = response if response else "Ultra professional analysis with multi-source validation"
             
             # Ajouter les informations avancées et Master Pattern
             if master_pattern:
