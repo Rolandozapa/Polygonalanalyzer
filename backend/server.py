@@ -1922,6 +1922,27 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "reason": f"Erreur analyse: {str(e)}"
             }
     
+    def calculate_bullish_rr(self, current_price: float, target_resistance: float, support_level: float) -> float:
+        """Calculate Risk-Reward ratio for bullish scenario using technical levels"""
+        reward = target_resistance - current_price
+        risk = current_price - support_level
+        return reward / risk if risk > 0 else 0.0
+    
+    def calculate_bearish_rr(self, current_price: float, target_support: float, resistance_level: float) -> float:
+        """Calculate Risk-Reward ratio for bearish scenario using technical levels"""
+        reward = current_price - target_support
+        risk = resistance_level - current_price
+        return reward / risk if risk > 0 else 0.0
+    
+    def calculate_composite_rr(self, current_price: float, volatility: float, support: float, resistance: float) -> float:
+        """Calculate composite RR considering both bullish and bearish scenarios"""
+        bullish_rr = self.calculate_bullish_rr(current_price, resistance, support)
+        bearish_rr = self.calculate_bearish_rr(current_price, support, resistance)
+        
+        # Moyenne pondérée par la probabilité implicite de chaque scénario
+        composite_rr = (bullish_rr + bearish_rr) / 2
+        return composite_rr
+
     def _validate_ohlcv_quality(self, historical_data: pd.DataFrame, symbol: str) -> bool:
         """Valide la qualité des données OHLCV pour justifier l'appel IA1"""
         try:
