@@ -2398,6 +2398,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), 50.0)  # Add Stochastic %D
             cleaned_data["bollinger_position"] = self._ensure_json_safe(analysis_data.get("bollinger_position"), 0.0)
             cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
+            cleaned_data["fibonacci_nearest_level"] = str(analysis_data.get("fibonacci_nearest_level", "61.8"))
+            cleaned_data["fibonacci_trend_direction"] = str(analysis_data.get("fibonacci_trend_direction", "neutral"))
             cleaned_data["analysis_confidence"] = self._ensure_json_safe(analysis_data.get("analysis_confidence"), 0.5)
             
             # Validation des listes avec integration des patterns détectés
