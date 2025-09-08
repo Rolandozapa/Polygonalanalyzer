@@ -5530,12 +5530,25 @@ class UltraProfessionalTradingOrchestrator:
                 logger.info(f"🔍 DEBUG: Analysis {i}: Type={type(analysis)}, Is TechnicalAnalysis? {isinstance(analysis, TechnicalAnalysis)}")
                 
                 if isinstance(analysis, TechnicalAnalysis):
-                    valid_analyses.append((analyzed_opportunities[i], analysis))
-                    logger.info(f"🔍 DEBUG: Added {analysis.symbol} to valid_analyses")
+                    # 🛡️ SÉCURITÉ: Vérification que analyzed_opportunities[i] existe
+                    if i < len(analyzed_opportunities) and analyzed_opportunities[i] is not None:
+                        opportunity = analyzed_opportunities[i]
+                        # Double vérification que l'opportunity est valide
+                        if hasattr(opportunity, 'symbol') and hasattr(opportunity, 'current_price'):
+                            valid_analyses.append((opportunity, analysis))
+                            logger.info(f"✅ DEBUG: Added {analysis.symbol} to valid_analyses with opportunity {opportunity.symbol}")
+                        else:
+                            logger.error(f"❌ DEBUG: Invalid opportunity object for analysis {analysis.symbol}: {opportunity}")
+                    else:
+                        logger.error(f"❌ DEBUG: No corresponding opportunity for analysis {i}: {analysis.symbol if hasattr(analysis, 'symbol') else 'UNKNOWN'}")
+                        continue
                     
                     # Store analysis directement (pas de re-vérification)
-                    await db.technical_analyses.insert_one(analysis.dict())
-                    logger.info(f"📁 IA1 ANALYSIS STORED: {analysis.symbol} (fresh analysis)")
+                    try:
+                        await db.technical_analyses.insert_one(analysis.dict())
+                        logger.info(f"📁 IA1 ANALYSIS STORED: {analysis.symbol} (fresh analysis)")
+                    except Exception as store_error:
+                        logger.error(f"❌ Failed to store analysis for {analysis.symbol}: {store_error}")
                     
                     # Broadcast analysis
                     await manager.broadcast({
