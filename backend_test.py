@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Multi-RR Decision Engine Analysis - BUSDT Focus
-Focus: Multi-RR calculations, Risk/Reward formulas, BUSDT analysis, and RR optimization
+Backend Testing Suite for Adaptive Contextual Logic - IA2 Focus
+Focus: Testing the new adaptive contextual logic implementation in IA2 decision engine
 """
 
 import asyncio
