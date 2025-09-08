@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Updated Chartist Library (25+ Patterns)
-Focus: Testing the updated chartist library that should now return 25+ patterns instead of 12
-French Review Request: Test complete chartist figures library with all main categories
+Backend Testing Suite for Multi-RR Display and IA2 RR Consistency Fixes
+Focus: Testing critical fixes for IA1 Risk-Reward display and IA2 RR consistency
+Review Request: Verify Multi-RR analysis appears early in IA1 reasoning and IA2 uses same RR values
 """
 
 import asyncio
