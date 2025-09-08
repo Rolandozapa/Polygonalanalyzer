@@ -3099,6 +3099,10 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         # Assign claude_decision from llm_decision for compatibility
         claude_decision = llm_decision
         
+        # Initialize variables that will be used later
+        claude_absolute_override = False
+        claude_conf = 0.0
+        
         signal = SignalType.HOLD
         
         # Robust confidence calculation with guaranteed 50% minimum and REAL variation
