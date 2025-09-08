@@ -426,7 +426,8 @@ class EnhancedIAPromptsTestSuite:
             try:
                 response = requests.get(f"{self.api_url}/opportunities", timeout=30)
                 if response.status_code == 200:
-                    opportunities = response.json()
+                    opportunities_data = response.json()
+                    opportunities = opportunities_data.get('opportunities', [])
                     flow_results['scout'] = len(opportunities)
                     logger.info(f"   📊 Scout opportunities: {len(opportunities)}")
                 else:
