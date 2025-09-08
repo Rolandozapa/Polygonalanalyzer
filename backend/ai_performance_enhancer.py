@@ -3,12 +3,14 @@ AI PERFORMANCE ENHANCER - Apply Training Insights to Improve Real-Time Trading
 Integrates AI training results into IA1 and IA2 decision-making processes
 """
 
-import logging
-import numpy as np
+from enum import Enum
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional, Any
-from dataclasses import dataclass
+from typing import Dict, List, Any, Optional, DefaultDict
 from collections import defaultdict, deque
+import numpy as np
+from dataclasses import dataclass
+import asyncio
+import logging
 import json
 import os
 from ai_training_system import ai_training_system
