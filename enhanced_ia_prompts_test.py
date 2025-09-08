@@ -220,7 +220,8 @@ class EnhancedIAPromptsTestSuite:
                     self.log_test_result("IA2 Enhanced Decision Making", False, f"HTTP {response.status_code}: {response.text}")
                     return
                 
-                self.ia2_decisions = response.json()
+                decisions_data = response.json()
+                self.ia2_decisions = decisions_data.get('decisions', [])
             
             if not self.ia2_decisions or len(self.ia2_decisions) == 0:
                 self.log_test_result("IA2 Enhanced Decision Making", False, "No IA2 decisions found")
