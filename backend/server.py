@@ -1338,7 +1338,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     "individual_pattern_analysis": "Analyze each pattern individually by name"
                 }},
                 "confidence": 0.75,
-                "recommendation": "hold/long/short"
+                "recommendation": "hold/long/short",
+                "risk_reward_analysis": {{
+                    "entry_price": {opportunity.current_price:.6f},
+                    "stop_loss": 0.0,
+                    "take_profit_1": 0.0,
+                    "take_profit_2": 0.0,
+                    "risk_reward_ratio": 0.0,
+                    "rr_reasoning": "Detailed explanation of how you calculated this realistic Risk-Reward ratio"
+                }}
             }}
             
             🚨 MANDATORY: Your 'patterns' array MUST contain ALL detected pattern names. Analyze each pattern individually and show their confluence.
