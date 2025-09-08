@@ -161,15 +161,24 @@ class MultiRRDisplayAndIA2ConsistencyTestSuite:
             
             data = response.json()
             
-            if not isinstance(data, list) or len(data) == 0:
+            # Handle the API response structure
+            if isinstance(data, dict) and 'decisions' in data:
+                decisions = data['decisions']
+            elif isinstance(data, list):
+                decisions = data
+            else:
+                self.log_test_result("IA2 RR Consistency", False, "Invalid API response structure")
+                return
+            
+            if not decisions or len(decisions) == 0:
                 self.log_test_result("IA2 RR Consistency", False, "No IA2 decisions found")
                 return
             
             # Store decisions for cross-validation
-            self.ia2_decisions = data
+            self.ia2_decisions = decisions
             
             # Focus on first 2-3 decisions as requested
-            decisions_to_check = data[:3]
+            decisions_to_check = decisions[:3]
             
             consistent_rr_count = 0
             inconsistent_rr_count = 0
