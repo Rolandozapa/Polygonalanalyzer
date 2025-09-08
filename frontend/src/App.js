@@ -16,6 +16,9 @@ const TradingDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activePositions, setActivePositions] = useState([]);
   const [executionMode, setExecutionMode] = useState('SIMULATION');
+  const [backtestResults, setBacktestResults] = useState(null);
+  const [backtestLoading, setBacktestLoading] = useState(false);
+  const [backtestStatus, setBacktestStatus] = useState(null);
 
   // WebSocket connection
   useEffect(() => {
