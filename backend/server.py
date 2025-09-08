@@ -29,6 +29,7 @@ def utc_to_paris(utc_dt):
     return utc_dt.astimezone(PARIS_TZ)
 import pandas as pd
 import numpy as np
+import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 # Email functionality simplified to avoid import issues
 # import smtplib
