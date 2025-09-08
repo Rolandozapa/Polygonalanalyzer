@@ -109,6 +109,61 @@ const TradingDashboard = () => {
     }
   };
 
+  const runAITraining = async () => {
+    try {
+      setBacktestLoading(true);
+      const response = await axios.post(`${API}/ai-training/run`);
+      setBacktestResults(prev => ({
+        ...prev,
+        training_completed: true,
+        ...response.data.data
+      }));
+    } catch (error) {
+      console.error('Error running AI training:', error);
+    } finally {
+      setBacktestLoading(false);
+    }
+  };
+
+  const runStrategyBacktest = async () => {
+    try {
+      setBacktestLoading(true);
+      
+      // Get form values
+      const startDate = document.getElementById('backtest-start-date')?.value || '2020-01-01';
+      const endDate = document.getElementById('backtest-end-date')?.value || '2021-07-01';
+      const symbolSelect = document.getElementById('backtest-symbols');
+      const selectedSymbols = Array.from(symbolSelect?.selectedOptions || []).map(option => option.value);
+      
+      const params = {
+        start_date: startDate,
+        end_date: endDate,
+        symbols: selectedSymbols.length > 0 ? selectedSymbols : backtestStatus?.available_symbols?.slice(0, 5)
+      };
+      
+      const response = await axios.post(`${API}/backtest/run`, params);
+      setBacktestResults(prev => ({
+        ...prev,
+        backtest_completed: true,
+        results: response.data.data
+      }));
+    } catch (error) {
+      console.error('Error running strategy backtest:', error);
+    } finally {
+      setBacktestLoading(false);
+    }
+  };
+
+  const loadAdaptiveContext = async () => {
+    try {
+      const response = await axios.post(`${API}/adaptive-context/load-training`);
+      console.log('Adaptive context loaded:', response.data);
+      // Could show a success message or update UI
+    } catch (error) {
+      console.error('Error loading adaptive context:', error);
+    }
+  };
+
   const closePosition = async (positionId) => {
     try {
       await axios.post(`${API}/active-positions/close/${positionId}`);
