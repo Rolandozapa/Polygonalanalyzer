@@ -1236,14 +1236,23 @@ class TechnicalPatternDetector:
             prices = df['Close'].iloc[-30:]
             
             # Cup : U-shape sur 20-25 jours, Handle : petite consolidation sur 5-10 jours
+            # ROBUST FIX: Check for valid data before calculations
+            if len(prices) < 30:
+                return patterns
+                
             cup_start = prices.iloc[0]
             cup_low = prices.iloc[5:25].min()
-            cup_end = prices.iloc[25]
-            handle_low = prices.iloc[25:].min()
+            cup_end = prices.iloc[25] if len(prices) > 25 else prices.iloc[-1]
+            handle_low = prices.iloc[25:].min() if len(prices) > 25 else cup_low
             
-            # Conditions Cup and Handle - FIXED: Prevent division by zero
-            cup_depth = (cup_start - cup_low) / max(cup_start, 1e-10) if cup_start > 0 else 0
-            handle_depth = (cup_end - handle_low) / max(cup_end, 1e-10) if cup_end > 0 else 0
+            # Validate all values are finite and positive
+            if not all(pd.notna([cup_start, cup_low, cup_end, handle_low])) or \
+               not all(val > 0 for val in [cup_start, cup_low, cup_end, handle_low]):
+                return patterns
+            
+            # Conditions Cup and Handle - ROBUST: Prevent all mathematical errors
+            cup_depth = (cup_start - cup_low) / cup_start if cup_start > 0 else 0
+            handle_depth = (cup_end - handle_low) / cup_end if cup_end > 0 else 0
             
             if (0.1 < cup_depth < 0.3 and  # Cup depth 10-30%
                 handle_depth < cup_depth * 0.3 and  # Handle shallow vs cup
