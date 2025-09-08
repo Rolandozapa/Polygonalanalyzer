@@ -101,11 +101,11 @@ class StochasticIntegrationTestSuite:
                 has_stochastic = False
                 
                 # Look for Stochastic values in different possible locations
-                analysis_data = analysis.get('analysis', '')
-                reasoning = analysis.get('reasoning', '')
+                ia1_reasoning = analysis.get('ia1_reasoning', '')
+                analysis_text = str(analysis.get('analysis', ''))
                 
                 # Check if analysis contains Stochastic mentions
-                if 'stochastic' in analysis_data.lower() or 'stochastic' in reasoning.lower():
+                if 'stochastic' in ia1_reasoning.lower() or 'stochastic' in analysis_text.lower():
                     has_stochastic = True
                     stochastic_found_count += 1
                     
@@ -113,8 +113,8 @@ class StochasticIntegrationTestSuite:
                     import re
                     
                     # Look for Stochastic %K and %D values
-                    stoch_k_match = re.search(r'stochastic.*?%?k.*?(\d+\.?\d*)', analysis_data.lower() + ' ' + reasoning.lower())
-                    stoch_d_match = re.search(r'stochastic.*?%?d.*?(\d+\.?\d*)', analysis_data.lower() + ' ' + reasoning.lower())
+                    stoch_k_match = re.search(r'stochastic.*?%?k.*?(\d+\.?\d*)', ia1_reasoning.lower() + ' ' + analysis_text.lower())
+                    stoch_d_match = re.search(r'stochastic.*?%?d.*?(\d+\.?\d*)', ia1_reasoning.lower() + ' ' + analysis_text.lower())
                     
                     if stoch_k_match:
                         try:
@@ -129,17 +129,16 @@ class StochasticIntegrationTestSuite:
                             pass
                 
                 # Check for structured Stochastic data
-                if isinstance(analysis, dict):
-                    for key, value in analysis.items():
-                        if 'stochastic' in key.lower():
-                            has_stochastic = True
-                            stochastic_found_count += 1
-                            
-                            if isinstance(value, (int, float)):
-                                if 'k' in key.lower():
-                                    stochastic_k = float(value)
-                                elif 'd' in key.lower():
-                                    stochastic_d = float(value)
+                for key, value in analysis.items():
+                    if 'stochastic' in key.lower():
+                        has_stochastic = True
+                        stochastic_found_count += 1
+                        
+                        if isinstance(value, (int, float)):
+                            if 'k' in key.lower():
+                                stochastic_k = float(value)
+                            elif 'd' in key.lower():
+                                stochastic_d = float(value)
                 
                 # Check if values are realistic (0-100 range and not default 50.0)
                 realistic_k = False
