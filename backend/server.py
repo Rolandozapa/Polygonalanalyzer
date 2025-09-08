@@ -1300,6 +1300,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
+            📊 FIBONACCI RETRACEMENT LEVELS:
+            Current Position: {fib_data['current_position']:.1%} | Nearest Level: {fib_data['nearest_level']}% | Trend: {fib_data['trend_direction'].upper()}
+            Key Levels: 23.6%=${fib_data['levels']['23.6']:.4f} | 38.2%=${fib_data['levels']['38.2']:.4f} | 50%=${fib_data['levels']['50.0']:.4f} | 61.8%=${fib_data['levels']['61.8']:.4f} | 78.6%=${fib_data['levels']['78.6']:.4f}
+            
             🎯 DETECTED CHARTIST PATTERNS ({len(all_detected_patterns)} patterns detected):
             {pattern_details if pattern_details else "No significant chartist patterns detected"}
             
