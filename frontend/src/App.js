@@ -75,13 +75,14 @@ const TradingDashboard = () => {
 
   const fetchData = async () => {
     try {
-      const [oppRes, analysesRes, decisionsRes, perfRes, positionsRes, modeRes] = await Promise.all([
+      const [oppRes, analysesRes, decisionsRes, perfRes, positionsRes, modeRes, backtestStatusRes] = await Promise.all([
         axios.get(`${API}/opportunities`),
         axios.get(`${API}/analyses`),
         axios.get(`${API}/decisions`),
         axios.get(`${API}/performance`),
         axios.get(`${API}/active-positions`),
-        axios.get(`${API}/trading/execution-mode`)
+        axios.get(`${API}/trading/execution-mode`),
+        axios.get(`${API}/backtest/status`).catch(() => ({ data: { data: { available_symbols: [], engine_status: 'unavailable' } } }))
       ]);
 
       setOpportunities(oppRes.data.opportunities || []);
@@ -90,8 +91,21 @@ const TradingDashboard = () => {
       setPerformance(perfRes.data.performance || {});
       setActivePositions(positionsRes.data.data?.active_positions || []);
       setExecutionMode(modeRes.data.execution_mode || 'SIMULATION');
+      setBacktestStatus(backtestStatusRes.data.data || null);
     } catch (error) {
       console.error('Error fetching data:', error);
+    }
+  };
+
+  const runBacktest = async (params) => {
+    try {
+      setBacktestLoading(true);
+      const response = await axios.post(`${API}/backtest/run`, params);
+      setBacktestResults(response.data);
+    } catch (error) {
+      console.error('Error running backtest:', error);
+    } finally {
+      setBacktestLoading(false);
     }
   };
 
