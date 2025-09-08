@@ -27,6 +27,12 @@ def utc_to_paris(utc_dt):
     if utc_dt.tzinfo is None:
         utc_dt = utc_dt.replace(tzinfo=timezone.utc)
     return utc_dt.astimezone(PARIS_TZ)
+
+# Import common data models
+from data_models import (
+    MarketOpportunity, TechnicalAnalysis, TradingDecision, SignalType, TradingStatus,
+    get_paris_time
+)
 import pandas as pd
 import numpy as np
 import numpy as np
