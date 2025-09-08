@@ -191,6 +191,29 @@ const TradingDashboard = () => {
     }
   };
 
+  const getChartistLibrary = async () => {
+    try {
+      const response = await axios.get(`${API}/chartist/library`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error getting chartist library:', error);
+      return null;
+    }
+  };
+
+  const analyzeChartistPatterns = async (patterns, marketContext = 'SIDEWAYS') => {
+    try {
+      const response = await axios.post(`${API}/chartist/analyze`, {
+        patterns: patterns,
+        market_context: marketContext
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error('Error analyzing chartist patterns:', error);
+      return null;
+    }
+  };
+
   const closePosition = async (positionId) => {
     try {
       await axios.post(`${API}/active-positions/close/${positionId}`);
