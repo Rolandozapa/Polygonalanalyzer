@@ -447,12 +447,12 @@ class EnhancedIAPromptsTestSuite:
             try:
                 response = requests.get(f"{self.api_url}/active-positions", timeout=30)
                 if response.status_code == 200:
-                    positions = response.json()
-                    if isinstance(positions, dict):
-                        active_positions = positions.get('active_positions', [])
+                    positions_data = response.json()
+                    if isinstance(positions_data, dict):
+                        active_positions = positions_data.get('active_positions', [])
                         flow_results['execution'] = len(active_positions)
                     else:
-                        flow_results['execution'] = len(positions) if isinstance(positions, list) else 0
+                        flow_results['execution'] = len(positions_data) if isinstance(positions_data, list) else 0
                     logger.info(f"   📊 Active positions: {flow_results['execution']}")
                 else:
                     flow_results['execution'] = 0
