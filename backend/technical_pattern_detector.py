@@ -1235,9 +1235,9 @@ class TechnicalPatternDetector:
             cup_end = prices.iloc[25]
             handle_low = prices.iloc[25:].min()
             
-            # Conditions Cup and Handle
-            cup_depth = (cup_start - cup_low) / cup_start
-            handle_depth = (cup_end - handle_low) / cup_end
+            # Conditions Cup and Handle - FIXED: Prevent division by zero
+            cup_depth = (cup_start - cup_low) / max(cup_start, 1e-10) if cup_start > 0 else 0
+            handle_depth = (cup_end - handle_low) / max(cup_end, 1e-10) if cup_end > 0 else 0
             
             if (0.1 < cup_depth < 0.3 and  # Cup depth 10-30%
                 handle_depth < cup_depth * 0.3 and  # Handle shallow vs cup
