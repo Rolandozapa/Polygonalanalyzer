@@ -164,6 +164,31 @@ const TradingDashboard = () => {
     }
   };
 
+  const loadAIInsights = async () => {
+    try {
+      const response = await axios.post(`${API}/ai-training/load-insights`);
+      console.log('AI insights loaded:', response.data);
+      // Update UI with enhancement status
+      setBacktestResults(prev => ({
+        ...prev,
+        enhancement_loaded: true,
+        enhancement_summary: response.data.data
+      }));
+    } catch (error) {
+      console.error('Error loading AI insights:', error);
+    }
+  };
+
+  const getEnhancementStatus = async () => {
+    try {
+      const response = await axios.get(`${API}/ai-training/enhancement-status`);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error getting enhancement status:', error);
+      return null;
+    }
+  };
+
   const closePosition = async (positionId) => {
     try {
       await axios.post(`${API}/active-positions/close/${positionId}`);
