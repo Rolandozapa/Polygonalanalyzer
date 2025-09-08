@@ -1329,6 +1329,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             - Recent swing lows: {sorted(historical_data['Low'].tail(20).nsmallest(3).tolist())}
             - Volume-weighted avg price (7d): ${(historical_data['Close'].tail(7) * historical_data['Volume'].tail(7)).sum() / historical_data['Volume'].tail(7).sum():.4f}
             
+            📊 MARKET BEHAVIOR ANALYSIS:
+            - Price volatility (30d): {historical_data['Close'].tail(30).pct_change().std() * 100:.2f}% daily avg
+            - Trend direction (14d): {'BULLISH' if historical_data['Close'].tail(14).iloc[-1] > historical_data['Close'].tail(14).iloc[0] else 'BEARISH'} ({((historical_data['Close'].tail(14).iloc[-1] / historical_data['Close'].tail(14).iloc[0] - 1) * 100):+.1f}%)
+            - Support test count: {len([x for x in historical_data['Low'].tail(30) if abs(x - historical_data['Low'].tail(30).min()) / historical_data['Low'].tail(30).min() < 0.02])} times near 30d low
+            - Resistance test count: {len([x for x in historical_data['High'].tail(30) if abs(x - historical_data['High'].tail(30).max()) / historical_data['High'].tail(30).max() < 0.02])} times near 30d high
+
             INSTRUCTIONS: 
             - Analyze the technical situation with PRIMARY FOCUS on ALL detected chartist patterns
             - Start your analysis by naming ALL patterns: "The detected patterns include [LIST ALL PATTERN NAMES]"
