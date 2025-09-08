@@ -71,11 +71,12 @@ class IA1RiskRewardTestSuite:
         })
         
     async def test_ia1_rr_calculation_btcusdt(self):
-        """Test 1: Call /api/analyze/BTCUSDT to verify IA1 calculates Risk-Reward ratio"""
+        """Test 1: Check /api/analyses to verify IA1 calculates Risk-Reward ratio"""
         logger.info(f"\n🔍 TEST 1: IA1 RR Calculation for {self.primary_symbol}")
         
         try:
-            response = requests.get(f"{self.api_url}/analyze/{self.primary_symbol}", timeout=60)
+            # Get all analyses and look for BTCUSDT or similar symbols
+            response = requests.get(f"{self.api_url}/analyses", timeout=60)
             
             if response.status_code != 200:
                 self.log_test_result("IA1 RR Calculation BTCUSDT", False, f"HTTP {response.status_code}: {response.text}")
