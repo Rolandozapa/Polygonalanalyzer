@@ -81,6 +81,139 @@ class AIPerformanceEnhancer:
         
         logger.info("AI Performance Enhancer initialized")
     
+    def _detect_current_market_phase(self, opportunity, analysis) -> tuple[MarketPhase, float]:
+        """Détecte la phase de marché actuelle avec niveau de confiance"""
+        
+        # Collecter les indicateurs clés
+        price_change_24h = getattr(opportunity, 'price_change_24h', 0)
+        price_change_7d = getattr(opportunity, 'price_change_7d', 0) 
+        volume_24h = getattr(opportunity, 'volume_24h', 0)
+        volatility = getattr(opportunity, 'volatility', 0.02)
+        rsi = getattr(analysis, 'rsi', 50)
+        macd_signal = getattr(analysis, 'macd_signal', 0)
+        
+        # Scores pour chaque phase (0-1)
+        phase_scores = {}
+        
+        # ACCUMULATION: Prix stable, volume faible, RSI neutre
+        accumulation_score = 0.0
+        if abs(price_change_24h) < 2 and rsi > 35 and rsi < 65:
+            accumulation_score += 0.4
+        if volatility < 0.03:  # Faible volatilité
+            accumulation_score += 0.3
+        if volume_24h < opportunity.volume_avg_30d * 0.8:  # Volume en dessous moyenne
+            accumulation_score += 0.3
+        phase_scores[MarketPhase.ACCUMULATION] = accumulation_score
+        
+        # EARLY_BULL: Cassure de résistance, volume en hausse, momentum positif
+        early_bull_score = 0.0
+        if price_change_24h > 3 and price_change_7d > 5:
+            early_bull_score += 0.4
+        if macd_signal > 0 and rsi > 50 and rsi < 80:
+            early_bull_score += 0.4
+        if volume_24h > opportunity.volume_avg_30d * 1.2:  # Volume élevé
+            early_bull_score += 0.2
+        phase_scores[MarketPhase.EARLY_BULL] = early_bull_score
+        
+        # BULL_RUN: Tendance haussière confirmée, momentum fort
+        bull_run_score = 0.0
+        if price_change_24h > 1 and price_change_7d > 10:
+            bull_run_score += 0.5
+        if rsi > 60 and macd_signal > 0:
+            bull_run_score += 0.3
+        if volatility > 0.04:  # Volatilité modérée-élevée
+            bull_run_score += 0.2
+        phase_scores[MarketPhase.BULL_RUN] = bull_run_score
+        
+        # EUPHORIA: RSI très élevé, gains excessifs, volume explosif
+        euphoria_score = 0.0
+        if price_change_24h > 10 or rsi > 80:
+            euphoria_score += 0.4
+        if volume_24h > opportunity.volume_avg_30d * 2:  # Volume 2x moyenne
+            euphoria_score += 0.3
+        if volatility > 0.08:  # Très haute volatilité
+            euphoria_score += 0.3
+        phase_scores[MarketPhase.EUPHORIA] = euphoria_score
+        
+        # DISTRIBUTION: Hauts similaires, volume décroissant, divergences
+        distribution_score = 0.0
+        if abs(price_change_24h) < 3 and rsi > 70:  # Prix stable mais RSI élevé
+            distribution_score += 0.3
+        if volume_24h < opportunity.volume_avg_30d * 0.7:  # Volume faible
+            distribution_score += 0.4
+        if macd_signal < 0 and rsi > 60:  # Divergence baissière
+            distribution_score += 0.3
+        phase_scores[MarketPhase.DISTRIBUTION] = distribution_score
+        
+        # EARLY_BEAR: Cassure de support, volume panique
+        early_bear_score = 0.0
+        if price_change_24h < -5 and price_change_7d < -10:
+            early_bear_score += 0.5
+        if rsi < 40 and macd_signal < 0:
+            early_bear_score += 0.3
+        if volume_24h > opportunity.volume_avg_30d * 1.5:  # Volume de panique
+            early_bear_score += 0.2
+        phase_scores[MarketPhase.EARLY_BEAR] = early_bear_score
+        
+        # BEAR_MARKET: Tendance baissière confirmée
+        bear_market_score = 0.0
+        if price_change_24h < -2 and price_change_7d < -15:
+            bear_market_score += 0.5
+        if rsi < 50 and macd_signal < 0:
+            bear_market_score += 0.4
+        if volatility > 0.06:  # Volatilité élevée
+            bear_market_score += 0.1
+        phase_scores[MarketPhase.BEAR_MARKET] = bear_market_score
+        
+        # CAPITULATION: Ventes extrêmes, RSI très bas
+        capitulation_score = 0.0
+        if price_change_24h < -15 or rsi < 20:
+            capitulation_score += 0.5
+        if volume_24h > opportunity.volume_avg_30d * 3:  # Volume extrême
+            capitulation_score += 0.3
+        if volatility > 0.12:  # Volatilité extrême
+            capitulation_score += 0.2
+        phase_scores[MarketPhase.CAPITULATION] = capitulation_score
+        
+        # Trouver la phase avec le score le plus élevé
+        best_phase = max(phase_scores.keys(), key=lambda p: phase_scores[p])
+        confidence = min(phase_scores[best_phase], 1.0)
+        
+        return best_phase, confidence
+
+    def _should_apply_enhancement_rule(self, rule: EnhancementRule, current_phase: MarketPhase, 
+                                     phase_confidence: float, analysis: Dict, opportunity) -> bool:
+        """Détermine si une règle d'amélioration doit être appliquée selon la phase de marché"""
+        
+        # Si c'est une règle contextuelle de phase
+        if isinstance(rule, PhaseContextualRule):
+            # Vérifier la confiance minimum de détection de phase
+            if phase_confidence < rule.minimum_phase_confidence:
+                logger.debug(f"🚫 Phase confidence {phase_confidence:.1%} < minimum {rule.minimum_phase_confidence:.1%} pour {rule.rule_id}")
+                return False
+                
+            # Vérifier si la phase actuelle est favorable
+            if current_phase not in rule.favorable_phases:
+                logger.debug(f"🚫 Phase {current_phase.value} non favorable pour {rule.rule_id} (favorables: {[p.value for p in rule.favorable_phases]})")
+                return False
+                
+            # Éviter si phase défavorable
+            if current_phase in rule.unfavorable_phases:
+                logger.debug(f"🚫 Phase {current_phase.value} défavorable pour {rule.rule_id}")
+                return False
+                
+            # Vérifier le taux de succès historique dans cette phase
+            phase_success_rate = rule.phase_success_rates.get(current_phase, 0.5)
+            if phase_success_rate < 0.6:  # Seuil minimum 60% de succès
+                logger.debug(f"🚫 Taux succès {phase_success_rate:.1%} < 60% en phase {current_phase.value} pour {rule.rule_id}")
+                return False
+                
+            logger.info(f"✅ Règle {rule.rule_id} APPROUVÉE pour phase {current_phase.value} (succès historique: {phase_success_rate:.1%})")
+            return True
+        
+        # Pour les règles classiques, appliquer la logique standard
+        return self._meets_trigger_conditions(rule, analysis, opportunity)
+
     def load_training_insights(self, ai_training_system):
         """Load insights from AI training system"""
         try:
