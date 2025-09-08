@@ -46,10 +46,19 @@ class EnhancementRule:
 @dataclass
 class PhaseContextualRule(EnhancementRule):
     """Règle d'amélioration conditionnelle selon la phase de marché"""
-    favorable_phases: List[MarketPhase]  # Phases où cette règle est efficace
-    unfavorable_phases: List[MarketPhase]  # Phases où éviter cette règle
-    phase_success_rates: Dict[MarketPhase, float]  # Taux de succès par phase
     minimum_phase_confidence: float = 0.7  # Confidence minimum pour phase detection
+    favorable_phases: List[MarketPhase] = None  # Phases où cette règle est efficace
+    unfavorable_phases: List[MarketPhase] = None  # Phases où éviter cette règle
+    phase_success_rates: Dict[MarketPhase, float] = None  # Taux de succès par phase
+    
+    def __post_init__(self):
+        super().__post_init__() if hasattr(super(), '__post_init__') else None
+        if self.favorable_phases is None:
+            self.favorable_phases = []
+        if self.unfavorable_phases is None:
+            self.unfavorable_phases = []
+        if self.phase_success_rates is None:
+            self.phase_success_rates = {}
 
 @dataclass
 class TradingEnhancement:
