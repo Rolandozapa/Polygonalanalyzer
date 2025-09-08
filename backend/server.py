@@ -1366,11 +1366,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "recommendation": "long/short/hold - Base your decision on pattern confluence: LONG if predominantly bullish patterns, SHORT if predominantly bearish patterns, HOLD only if patterns are truly conflicting or neutral",
                 "risk_reward_analysis": {{
                     "entry_price": {opportunity.current_price:.6f},
-                    "stop_loss": 0.0,
-                    "take_profit_1": 0.0,
-                    "take_profit_2": 0.0,
-                    "risk_reward_ratio": 0.0,
-                    "rr_reasoning": "Detailed explanation of how you calculated this realistic Risk-Reward ratio"
+                    "primary_support": 0.0,
+                    "primary_resistance": 0.0,
+                    "support_reasoning": "Explanation of why this support level is significant",
+                    "resistance_reasoning": "Explanation of why this resistance level is significant",
+                    "calculated_rr_bullish": 0.0,
+                    "calculated_rr_bearish": 0.0
                 }}
             }}
             
