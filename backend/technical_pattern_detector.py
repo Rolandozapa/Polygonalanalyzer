@@ -351,22 +351,35 @@ class TechnicalPatternDetector:
             all_patterns.extend(self._detect_diamond_patterns(symbol, df))
             all_patterns.extend(self._detect_expanding_wedge_patterns(symbol, df))
             
-            # Filtrer par force minimale et éviter les doublons
+            # 🚨 CORRECTION: Filtrer intelligemment sans être trop restrictif
             filtered_patterns = []
-            seen_types = set()
             
-            for pattern in sorted(all_patterns, key=lambda x: x.strength, reverse=True):
-                # Garder seulement les patterns uniques par type avec la plus haute force
-                if pattern.pattern_type not in seen_types and pattern.strength >= self.min_pattern_strength:
-                    filtered_patterns.append(pattern)
-                    seen_types.add(pattern.pattern_type)
+            # Trier par force décroissante
+            all_patterns_sorted = sorted(all_patterns, key=lambda x: x.strength, reverse=True)
+            
+            # Garde les patterns forts sans déduplication excessive
+            for pattern in all_patterns_sorted:
+                if pattern.strength >= self.min_pattern_strength:
+                    # Permettre plusieurs patterns similaires s'ils sont suffisamment différents
+                    should_add = True
+                    
+                    # Éviter seulement les doublons EXACTS
+                    for existing in filtered_patterns:
+                        if (existing.pattern_type == pattern.pattern_type and 
+                            abs(existing.confidence - pattern.confidence) < 0.05 and
+                            abs(existing.strength - pattern.strength) < 0.05):
+                            should_add = False
+                            break
+                    
+                    if should_add:
+                        filtered_patterns.append(pattern)
             
             logger.info(f"Detected {len(filtered_patterns)} strong patterns for {symbol}: {[p.pattern_type.value for p in filtered_patterns]}")
             
         except Exception as e:
             logger.error(f"Error in pattern detection for {symbol}: {e}")
             
-        return filtered_patterns[:5]  # Retourner max 5 patterns les plus forts
+        return filtered_patterns[:10]  # Augmenté de 5 à 10 patterns max
     
     def _detect_moving_average_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
         """Détecte les patterns de moyennes mobiles"""
