@@ -1490,13 +1490,24 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     }
                 }
             
-            # Enrichir le raisonnement avec les informations extraites (UTILISER JSON REASONING)
-            reasoning = ia1_complete_json.get('reasoning', '') or ia1_complete_json.get('analysis', '') or response[:2000]
+            # Enrichir le raisonnement avec les informations extraites (COMBINAISON ANALYSIS + REASONING)
+            json_analysis = ia1_complete_json.get('analysis', '')
+            json_reasoning = ia1_complete_json.get('reasoning', '')
             
-            # Si le reasoning JSON est trop court, utiliser la réponse complète
-            if len(reasoning) < 500:
-                logger.warning(f"⚠️ IA1 JSON reasoning trop court ({len(reasoning)} chars), utilisation réponse complète")
-                reasoning = response if response else "Ultra professional analysis with multi-source validation"
+            # Combiner analysis + reasoning pour un contenu complet
+            if json_analysis and json_reasoning:
+                reasoning = f"{json_analysis}\n\n**Detailed Reasoning:**\n{json_reasoning}"
+                logger.info(f"✅ Combined IA1 analysis + reasoning: {len(reasoning)} chars")
+            elif json_reasoning:
+                reasoning = json_reasoning
+                logger.info(f"✅ Using IA1 JSON reasoning: {len(reasoning)} chars")
+            elif json_analysis:
+                reasoning = json_analysis
+                logger.info(f"✅ Using IA1 JSON analysis: {len(reasoning)} chars")
+            else:
+                # Fallback à la réponse complète si JSON vide
+                reasoning = response[:3000] if response else "Ultra professional analysis with multi-source validation"
+                logger.warning(f"⚠️ Fallback to raw response: {len(reasoning)} chars")
             
             # Ajouter les informations avancées et Master Pattern
             if master_pattern:
