@@ -1045,6 +1045,125 @@ const TradingDashboard = () => {
                         🔄 Load Training Data to Context System
                       </button>
                     </div>
+                {/* Chartist Library Section */}
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">📈 Bibliothèque de Figures Chartistes</h3>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      
+                      {/* Figures de Retournement */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-red-600 text-xl">🔄</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Retournement</h4>
+                        <p className="text-sm text-slate-600 mb-2">Tête-épaules, Double sommet</p>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span>Long:</span>
+                            <span className="font-medium text-green-600">65% succès</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Short:</span>
+                            <span className="font-medium text-red-600">72% succès</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Figures de Continuation */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-green-600 text-xl">📈</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Continuation</h4>
+                        <p className="text-sm text-slate-600 mb-2">Drapeaux, Triangles</p>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span>Long:</span>
+                            <span className="font-medium text-green-600">76% succès</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Short:</span>
+                            <span className="font-medium text-red-600">74% succès</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Patterns Harmoniques */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-purple-600 text-xl">🎵</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Harmoniques</h4>
+                        <p className="text-sm text-slate-600 mb-2">Gartley, Butterfly</p>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span>Long:</span>
+                            <span className="font-medium text-green-600">73% succès</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>R:R:</span>
+                            <span className="font-medium text-blue-600">3.5:1</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Optimisation IA */}
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-emerald-600 text-xl">🧠</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">IA Optimisée</h4>
+                        <p className="text-sm text-slate-600 mb-2">Stratégies adaptatives</p>
+                        <div className="text-xs space-y-1">
+                          <div className="flex justify-between">
+                            <span>Position:</span>
+                            <span className="font-medium text-emerald-600">Auto-ajustée</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Context:</span>
+                            <span className="font-medium text-emerald-600">Adaptatif</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={async () => {
+                          const library = await getChartistLibrary();
+                          console.log('Bibliothèque chartiste:', library);
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                      >
+                        📚 Voir Bibliothèque Complète
+                      </button>
+                    </div>
+                    
+                    {/* Statistiques détaillées */}
+                    <div className="mt-6 pt-4 border-t border-indigo-200">
+                      <h5 className="font-semibold text-slate-900 mb-3 text-center">🎯 Meilleures Figures par Stratégie</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="bg-white/50 rounded-lg p-3">
+                          <h6 className="font-medium text-green-700 mb-2">📈 Stratégies Long</h6>
+                          <ul className="space-y-1 text-xs">
+                            <li>• Tasse avec Anse: <span className="font-medium">81% succès, +12.4%</span></li>
+                            <li>• Drapeau Haussier: <span className="font-medium">78% succès, +5.4%</span></li>
+                            <li>• Triangle Ascendant: <span className="font-medium">75% succès, +6.8%</span></li>
+                            <li>• T&E Inversée: <span className="font-medium">74% succès, +9.2%</span></li>
+                          </ul>
+                        </div>
+                        <div className="bg-white/50 rounded-lg p-3">
+                          <h6 className="font-medium text-red-700 mb-2">📉 Stratégies Short</h6>
+                          <ul className="space-y-1 text-xs">
+                            <li>• Drapeau Baissier: <span className="font-medium">76% succès, +5.8%</span></li>
+                            <li>• Double Creux: <span className="font-medium">75% succès, +7.8%</span></li>
+                            <li>• Triangle Descendant: <span className="font-medium">73% succès, +6.2%</span></li>
+                            <li>• Tête et Épaules: <span className="font-medium">72% succès, +8.4%</span></li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
