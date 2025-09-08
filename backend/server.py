@@ -1355,7 +1355,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     "individual_pattern_analysis": "Analyze each pattern individually by name"
                 }},
                 "confidence": 0.75,
-                "recommendation": "hold/long/short",
+                "recommendation": "long/short/hold - Base your decision on pattern confluence: LONG if predominantly bullish patterns, SHORT if predominantly bearish patterns, HOLD only if patterns are truly conflicting or neutral",
                 "risk_reward_analysis": {{
                     "entry_price": {opportunity.current_price:.6f},
                     "stop_loss": 0.0,
