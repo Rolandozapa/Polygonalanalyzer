@@ -2383,6 +2383,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Validation des champs numériques
             cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), 50.0)
             cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), 0.0)
+            cleaned_data["stochastic"] = self._ensure_json_safe(analysis_data.get("stochastic"), 50.0)  # Add Stochastic %K
+            cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), 50.0)  # Add Stochastic %D
             cleaned_data["bollinger_position"] = self._ensure_json_safe(analysis_data.get("bollinger_position"), 0.0)
             cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
             cleaned_data["analysis_confidence"] = self._ensure_json_safe(analysis_data.get("analysis_confidence"), 0.5)
