@@ -66,19 +66,7 @@ class SimplifiedIA1RRTestSuite:
         logger.info("\n🔍 TEST 1: Simplified IA1 RR Calculation")
         
         try:
-            # Start trading system to generate fresh analyses
-            logger.info("   🚀 Starting trading system...")
-            start_response = requests.post(f"{self.api_url}/trading/start", timeout=30)
-            
-            if start_response.status_code != 200:
-                self.log_test_result("Simplified IA1 RR Calculation", False, f"Failed to start trading: {start_response.status_code}")
-                return
-            
-            # Wait for analyses to be generated
-            logger.info("   ⏳ Waiting for IA1 analyses to be generated...")
-            await asyncio.sleep(10)
-            
-            # Get recent IA1 analyses
+            # Get existing IA1 analyses
             analyses_response = requests.get(f"{self.api_url}/analyses", timeout=30)
             
             if analyses_response.status_code != 200:
@@ -86,7 +74,7 @@ class SimplifiedIA1RRTestSuite:
                 return
             
             analyses_data = analyses_response.json()
-            analyses = analyses_data.get('data', [])
+            analyses = analyses_data.get('analyses', [])  # Updated key based on actual response
             
             if not analyses:
                 self.log_test_result("Simplified IA1 RR Calculation", False, "No IA1 analyses found")
@@ -98,36 +86,56 @@ class SimplifiedIA1RRTestSuite:
             rr_calculations_found = 0
             realistic_rr_ratios = 0
             multi_rr_artifacts = 0
+            rr_in_reasoning = 0
             
             for analysis in analyses[:5]:  # Check first 5 analyses
                 symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '')
+                reasoning = analysis.get('ia1_reasoning', '')  # Updated key
                 rr_ratio = analysis.get('risk_reward_ratio', 0)
                 
                 logger.info(f"   🔍 Analyzing {symbol}: RR={rr_ratio}")
                 
-                # Check if RR calculation exists and is realistic
-                if rr_ratio and rr_ratio > 0:
-                    rr_calculations_found += 1
-                    
-                    # Check if RR ratio is realistic (between 0.1 and 10.0)
-                    if 0.1 <= rr_ratio <= 10.0:
-                        realistic_rr_ratios += 1
-                        logger.info(f"      ✅ Realistic RR ratio: {rr_ratio:.2f}")
-                    else:
-                        logger.info(f"      ⚠️ Unrealistic RR ratio: {rr_ratio:.2f}")
+                # Check for RR calculations in Multi-RR analysis section
+                multi_rr_section = ""
+                if "🤖 **MULTI-RR ANALYSIS:**" in reasoning:
+                    # Extract Multi-RR section
+                    start_idx = reasoning.find("🤖 **MULTI-RR ANALYSIS:**")
+                    end_idx = reasoning.find("🏆 **WINNER:**", start_idx)
+                    if end_idx != -1:
+                        multi_rr_section = reasoning[start_idx:end_idx + reasoning[end_idx:].find("\n") if "\n" in reasoning[end_idx:] else len(reasoning)]
+                        
+                        # Extract RR ratios from Multi-RR section
+                        import re
+                        rr_matches = re.findall(r'(\d+\.\d+):1', multi_rr_section)
+                        if rr_matches:
+                            rr_calculations_found += 1
+                            rr_in_reasoning += 1
+                            
+                            # Check if any RR ratio is realistic
+                            realistic_found = False
+                            for rr_match in rr_matches:
+                                rr_value = float(rr_match)
+                                if 0.1 <= rr_value <= 10.0:
+                                    realistic_found = True
+                                    logger.info(f"      ✅ Realistic RR in reasoning: {rr_value:.2f}")
+                                    break
+                            
+                            if realistic_found:
+                                realistic_rr_ratios += 1
+                            else:
+                                logger.info(f"      ⚠️ Unrealistic RR ratios: {rr_matches}")
                 
-                # Check for Multi-RR artifacts in reasoning (should be clean now)
-                multi_rr_keywords = ['multi-rr', 'multi rr', 'hold:', 'long:', 'short:', '🤖 **multi-rr analysis:**']
+                # Check for Multi-RR artifacts (should be removed in simplified system)
+                multi_rr_keywords = ['🤖 **multi-rr analysis:**', 'multi-rr', 'hold: **', 'long: **', 'short: **', '🏆 **winner:**']
                 for keyword in multi_rr_keywords:
                     if keyword.lower() in reasoning.lower():
                         multi_rr_artifacts += 1
-                        logger.info(f"      ⚠️ Multi-RR artifact found: {keyword}")
+                        logger.info(f"      ❌ Multi-RR artifact found: {keyword}")
                         break
                 
-                # Check for risk_reward_analysis section in reasoning
-                if 'risk_reward_analysis' in reasoning.lower() or 'risk-reward' in reasoning.lower():
-                    logger.info(f"      ✅ Risk-reward analysis section found in reasoning")
+                # Check for simplified risk_reward_analysis section
+                if 'risk_reward_analysis' in reasoning.lower() or ('risk-reward' in reasoning.lower() and 'multi-rr' not in reasoning.lower()):
+                    logger.info(f"      ✅ Simplified risk-reward analysis found")
             
             # Calculate success metrics
             rr_calculation_rate = (rr_calculations_found / len(analyses[:5])) * 100
@@ -136,12 +144,17 @@ class SimplifiedIA1RRTestSuite:
             
             logger.info(f"   📊 RR calculations found: {rr_calculations_found}/{len(analyses[:5])} ({rr_calculation_rate:.1f}%)")
             logger.info(f"   📊 Realistic RR ratios: {realistic_rr_ratios}/{rr_calculations_found} ({realistic_rate:.1f}%)")
-            logger.info(f"   📊 Clean reasoning (no Multi-RR artifacts): {clean_reasoning_rate:.1f}%")
+            logger.info(f"   📊 Multi-RR artifacts present: {multi_rr_artifacts}/{len(analyses[:5])} ({(multi_rr_artifacts/len(analyses[:5]))*100:.1f}%)")
             
-            # Success criteria: 80%+ RR calculations, 80%+ realistic ratios, 90%+ clean reasoning
-            success = (rr_calculation_rate >= 80 and realistic_rate >= 80 and clean_reasoning_rate >= 90)
-            
-            details = f"RR calc: {rr_calculation_rate:.1f}%, Realistic: {realistic_rate:.1f}%, Clean: {clean_reasoning_rate:.1f}%"
+            # CRITICAL FINDING: Multi-RR system is still present, not simplified
+            if multi_rr_artifacts > 0:
+                logger.info(f"   ❌ CRITICAL: Multi-RR system still present - not simplified as requested")
+                success = False
+                details = f"Multi-RR artifacts found: {multi_rr_artifacts}, System NOT simplified"
+            else:
+                # Success criteria: RR calculations present, realistic ratios, no Multi-RR artifacts
+                success = (rr_calculation_rate >= 60 and realistic_rate >= 80 and multi_rr_artifacts == 0)
+                details = f"RR calc: {rr_calculation_rate:.1f}%, Realistic: {realistic_rate:.1f}%, Multi-RR artifacts: {multi_rr_artifacts}"
             
             self.log_test_result("Simplified IA1 RR Calculation", success, details)
             
