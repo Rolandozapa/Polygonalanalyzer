@@ -2763,6 +2763,15 @@ IA1 COMPLETE REASONING & STRATEGIC CHOICE:
 Look for "MASTER PATTERN (IA1 STRATEGIC CHOICE)" in the reasoning above - this pattern is IA1's PRIMARY basis for direction.
 Other patterns are supplementary. If you disagree with the MASTER PATTERN conclusion, you MUST explicitly justify why.
 
+📊 HISTORICAL MARKET CONTEXT (from IA1 analysis):
+The reasoning above contains detailed historical analysis including:
+- Recent swing highs/lows as tested support/resistance levels
+- 30-day price range and current position within it
+- Volume behavior compared to 30-day average
+- Historical volatility patterns and trend direction
+- Support/resistance test counts and validation strength
+⚠️ LEVERAGE THIS HISTORICAL CONTEXT in your decision - IA1 has provided tested levels, not theoretical ones.
+
 CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
 - Total Market Cap: ${market_sentiment['total_market_cap_usd']:,.0f}
 - 24h Volume: ${market_sentiment['total_volume_24h']:,.0f}
