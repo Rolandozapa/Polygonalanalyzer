@@ -5746,7 +5746,13 @@ class UltraProfessionalTradingOrchestrator:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
                 return False
             
-            # FILTRE 3: LOGIQUE INTELLIGENTE (remplace RR simpliste)
+            # FILTRE 3: NOUVEAU - Risk-Reward minimum 2.0 (CRITÈRE FONDAMENTAL)
+            risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 1.0)
+            if risk_reward_ratio < 2.0:
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: RR insuffisant ({risk_reward_ratio:.2f}:1 < 2.0:1 minimum requis)")
+                return False
+            
+            # FILTRE 4: LOGIQUE INTELLIGENTE (remplace RR simpliste)
             # Critères: High confidence OU Multi-RR resolved OU Strong pattern OU Significant movement
             
             high_confidence = analysis.analysis_confidence >= 0.80  # IA1 très confiant
@@ -5755,13 +5761,15 @@ class UltraProfessionalTradingOrchestrator:
             significant_move = abs(opportunity.price_change_24h) >= 5.0  # Mouvement >5%
             good_volume = opportunity.volume_24h >= 500_000  # Volume décent
             
-            # NOUVEAU: Espérance mathématique approximative
+            # NOUVEAU: Espérance mathématique approximative avec RR IA1
             confidence_as_prob = min(analysis.analysis_confidence, 0.95)  # Max 95% prob
-            risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 1.0)
             expected_value = (confidence_as_prob * risk_reward_ratio) - ((1 - confidence_as_prob) * 1.0)
             
-            # CRITÈRES MULTIPLES (au moins 2 sur 5)
-            criteria_met = sum([high_confidence, has_multi_rr, has_master_pattern, significant_move and good_volume, expected_value > 0.2])
+            # Critère supplémentaire: RR excellent (>= 3.0)
+            excellent_rr = risk_reward_ratio >= 3.0
+            
+            # CRITÈRES MULTIPLES (au moins 2 sur 6, mais RR >= 2.0 déjà validé)
+            criteria_met = sum([high_confidence, has_multi_rr, has_master_pattern, significant_move and good_volume, expected_value > 0.2, excellent_rr])
             
             if criteria_met < 2:
                 reasons = []
@@ -5770,12 +5778,13 @@ class UltraProfessionalTradingOrchestrator:
                 if not has_master_pattern: reasons.append("No master pattern")
                 if not (significant_move and good_volume): reasons.append(f"Movement {opportunity.price_change_24h:+.1f}% or volume ${opportunity.volume_24h:,.0f} insufficient")
                 if expected_value <= 0.2: reasons.append(f"Expected value {expected_value:.2f}≤0.2")
+                if not excellent_rr: reasons.append(f"RR {risk_reward_ratio:.2f}<3.0 (good but not excellent)")
                 
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Critères insuffisants ({criteria_met}/5): {'; '.join(reasons[:2])}")
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Critères insuffisants ({criteria_met}/6): {'; '.join(reasons[:2])} | RR={risk_reward_ratio:.2f}:1 ✓")
                 return False
             
-            # SUCCÈS: Analyse intelligente multicritères réussie
-            logger.info(f"✅ IA2 ACCEPTED - {analysis.symbol}: {criteria_met}/5 critères ✓ (Confidence: {analysis.analysis_confidence:.1%}, Multi-RR: {has_multi_rr}, Pattern: {has_master_pattern}, Movement: {opportunity.price_change_24h:+.1f}%, Expected Value: {expected_value:.2f})")
+            # SUCCÈS: Analyse intelligente multicritères réussie avec RR >= 2.0
+            logger.info(f"✅ IA2 ACCEPTED - {analysis.symbol}: {criteria_met}/6 critères ✓ | RR={risk_reward_ratio:.2f}:1 | Confidence: {analysis.analysis_confidence:.1%} | Expected Value: {expected_value:.2f}")
             return True
             
         except Exception as e:
