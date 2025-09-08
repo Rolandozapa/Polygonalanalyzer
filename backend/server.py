@@ -1327,18 +1327,20 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             Required JSON format:
             {{
-                "analysis": "Technical analysis incorporating detected patterns: [mention patterns by name and their implications]",
-                "reasoning": "Detailed reasoning explaining how patterns [specific pattern names] influence the assessment and recommendation",
-                "patterns": ["{', '.join([p.pattern_type.value for p in all_detected_patterns])}"],
+                "analysis": "Technical analysis incorporating ALL detected patterns: [mention each pattern by name and its implications]",
+                "reasoning": "Detailed reasoning explaining how EACH pattern influences the assessment. Mention ALL patterns: {', '.join([p.pattern_type.value for p in all_detected_patterns]) if all_detected_patterns else 'No patterns'}",
+                "patterns": ["list", "all", "detected", "pattern", "names"],
                 "pattern_analysis": {{
-                    "primary_pattern": "{all_detected_patterns[0].pattern_type.value if all_detected_patterns else 'none'}",
-                    "all_patterns_analyzed": ["{', '.join([p.pattern_type.value for p in all_detected_patterns])}"],
-                    "pattern_confluence": "Describe how multiple patterns work together",
-                    "pattern_priorities": "Rank patterns by importance for trading decision"
+                    "primary_pattern": "most_important_pattern_name",
+                    "all_patterns_analyzed": ["list", "all", "patterns", "you", "analyzed"],
+                    "pattern_confluence": "How do multiple patterns work together",
+                    "pattern_count": {len(all_detected_patterns)}
                 }},
                 "confidence": 0.75,
                 "recommendation": "hold/long/short"
             }}
+            
+            CRITICAL: In your 'patterns' array, list ALL {len(all_detected_patterns)} patterns you analyzed: {', '.join([p.pattern_type.value for p in all_detected_patterns]) if all_detected_patterns else 'None'}
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
