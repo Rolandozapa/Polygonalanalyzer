@@ -288,18 +288,20 @@ class AdaptiveContextSystem:
         logger.info(f"Generated {len(rules)} adaptive rules from AI training data")
     
     async def analyze_current_context(self, market_data: Dict[str, Any]) -> MarketContext:
-        """Analyze current market context with enhanced AI-driven insights"""
+        """Analyze current market context with enhanced AI-driven insights and advanced technical indicators"""
         try:
             # Extract market metrics
             symbols_data = market_data.get('symbols', {})
             if not symbols_data:
                 return self._get_default_context()
             
-            # Calculate market-wide metrics
+            # Calculate market-wide metrics including advanced technical indicators
             price_changes = []
             volumes = []
             rsi_values = []
             macd_values = []
+            stochastic_values = []
+            bollinger_positions = []
             volatilities = []
             
             for symbol, data in symbols_data.items():
@@ -308,36 +310,62 @@ class AdaptiveContextSystem:
                     volumes.append(data.get('volume_ratio', 1.0))
                     rsi_values.append(data.get('rsi', 50))
                     macd_values.append(data.get('macd_signal', 0))
+                    stochastic_values.append(data.get('stochastic', 50))
+                    bollinger_positions.append(data.get('bollinger_position', 0))  # -1 to 1 scale
                     volatilities.append(data.get('volatility', 5))
             
             if not price_changes:
                 return self._get_default_context()
             
-            # Calculate aggregate metrics
+            # Calculate aggregate metrics including enhanced technical indicators
             avg_price_change = np.mean(price_changes)
             avg_volatility = np.mean(volatilities)
             avg_volume_ratio = np.mean(volumes)
             avg_rsi = np.mean(rsi_values)
             avg_macd = np.mean(macd_values)
+            avg_stochastic = np.mean(stochastic_values)
+            avg_bollinger_position = np.mean(bollinger_positions)
             
-            # Determine market regime using AI-enhanced logic
+            # Determine market regime using AI-enhanced logic with all technical indicators
             regime = self._determine_regime_ai_enhanced(
-                avg_price_change, avg_volatility, avg_rsi, avg_macd
+                avg_price_change, avg_volatility, avg_rsi, avg_macd, avg_stochastic, avg_bollinger_position
             )
             
-            # Calculate regime confidence using trained patterns
+            # Calculate regime confidence using trained patterns with enhanced indicators
             regime_confidence = self._calculate_regime_confidence(regime, {
                 'price_change': avg_price_change,
                 'volatility': avg_volatility,
                 'rsi': avg_rsi,
-                'macd': avg_macd
+                'macd': avg_macd,
+                'stochastic': avg_stochastic,
+                'bollinger_position': avg_bollinger_position
             })
             
-            # Analyze pattern environment
-            pattern_environment = self._analyze_pattern_environment(regime, avg_volatility)
+            # Calculate technical confluence score (0-1) based on indicators alignment
+            technical_confluence = self._calculate_technical_confluence(
+                avg_rsi, avg_macd, avg_stochastic, avg_bollinger_position
+            )
             
-            # Determine market stress level
-            stress_level = self._calculate_market_stress(avg_volatility, price_changes)
+            # Check for indicators divergence
+            indicators_divergence = self._detect_indicators_divergence(
+                rsi_values, macd_values, stochastic_values, bollinger_positions
+            )
+            
+            # Analyze enhanced environments for each indicator
+            rsi_environment = self._analyze_rsi_environment(avg_rsi, rsi_values)
+            macd_environment = self._analyze_macd_environment(avg_macd, macd_values)  
+            stochastic_environment = self._analyze_stochastic_environment(avg_stochastic, stochastic_values)
+            bollinger_environment = self._analyze_bollinger_environment(avg_bollinger_position, bollinger_positions)
+            
+            # Determine momentum and volatility regimes
+            momentum_regime = self._determine_momentum_regime(avg_macd, avg_stochastic)
+            volatility_regime = self._determine_volatility_regime(avg_volatility, bollinger_positions)
+            
+            # Analyze pattern environment with enhanced context
+            pattern_environment = self._analyze_pattern_environment(regime, avg_volatility, technical_confluence)
+            
+            # Determine market stress level with technical indicators consideration
+            stress_level = self._calculate_market_stress(avg_volatility, price_changes, indicators_divergence)
             
             # Create context
             context = MarketContext(
