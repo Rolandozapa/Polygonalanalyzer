@@ -409,6 +409,44 @@ class AdaptiveContextSystem:
             logger.error(f"Error analyzing market context: {e}")
             return self._get_default_context()
     
+    def _analyze_rsi_environment(self, avg_rsi: float, rsi_values: List[float]) -> str:
+        """Analyze RSI environment for context"""
+        if avg_rsi < 30:
+            return "oversold_environment"
+        elif avg_rsi > 70:
+            return "overbought_environment"
+        elif 40 <= avg_rsi <= 60:
+            return "neutral_environment"
+        else:
+            return "trending_environment"
+    
+    def _analyze_macd_environment(self, avg_macd: float, macd_values: List[float]) -> str:
+        """Analyze MACD environment for context"""
+        if avg_macd > 0.001:
+            return "bullish_momentum"
+        elif avg_macd < -0.001:
+            return "bearish_momentum"
+        else:
+            return "neutral_momentum"
+    
+    def _analyze_stochastic_environment(self, avg_stochastic: float, stochastic_values: List[float]) -> str:
+        """Analyze Stochastic environment for context"""
+        if avg_stochastic < 20:
+            return "oversold_stochastic"
+        elif avg_stochastic > 80:
+            return "overbought_stochastic"
+        else:
+            return "neutral_stochastic"
+    
+    def _analyze_bollinger_environment(self, avg_bollinger_position: float, bollinger_positions: List[float]) -> str:
+        """Analyze Bollinger Bands environment for context"""
+        if avg_bollinger_position > 0.8:
+            return "upper_band_environment"
+        elif avg_bollinger_position < 0.2:
+            return "lower_band_environment"
+        else:
+            return "middle_band_environment"
+
     def _determine_regime_ai_enhanced(self, price_change: float, volatility: float, 
                                     rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketRegime:
         """Determine market regime using AI-enhanced logic"""
