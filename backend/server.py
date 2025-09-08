@@ -1471,11 +1471,48 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 logger.warning(f"⚠️ Multi-RR calculation failed for {opportunity.symbol}: {e}")
             
             # Créer l'analyse finale avec les données Multi-RR intégrées
-            return TechnicalAnalysis(
+            analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
                 timestamp=get_paris_time(),
                 **validated_data
             )
+            
+            # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT
+            # Apply AI training insights to improve IA1 analysis accuracy
+            try:
+                # Get current market context for enhancement
+                current_context = await adaptive_context_system.analyze_current_context({
+                    'symbols': {opportunity.symbol: {
+                        'price_change_24h': opportunity.price_change_24h,
+                        'volatility': opportunity.volatility,
+                        'volume_ratio': getattr(opportunity, 'volume_ratio', 1.0)
+                    }}
+                })
+                
+                # Apply AI enhancements to IA1 analysis
+                enhanced_analysis_dict = ai_performance_enhancer.enhance_ia1_analysis(
+                    analysis.dict(), 
+                    current_context.current_regime.value
+                )
+                
+                # Update analysis with enhancements
+                if 'ai_enhancements' in enhanced_analysis_dict:
+                    # Create new enhanced analysis
+                    analysis = TechnicalAnalysis(
+                        symbol=opportunity.symbol,
+                        timestamp=get_paris_time(),
+                        **{k: v for k, v in enhanced_analysis_dict.items() if k != 'ai_enhancements'}
+                    )
+                    
+                    # Log AI enhancements applied
+                    ai_enhancements = enhanced_analysis_dict['ai_enhancements']
+                    enhancement_summary = ", ".join([e['type'] for e in ai_enhancements])
+                    logger.info(f"🧠 AI ENHANCED IA1 for {opportunity.symbol}: {enhancement_summary}")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ AI enhancement failed for IA1 analysis of {opportunity.symbol}: {e}")
+            
+            return analysis
             
         except Exception as e:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
