@@ -1329,12 +1329,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             {{
                 "analysis": "Technical analysis incorporating detected patterns: [mention patterns by name and their implications]",
                 "reasoning": "Detailed reasoning explaining how patterns [specific pattern names] influence the assessment and recommendation",
-                "patterns": {[f'"{p.pattern_type.value}"' for p in all_detected_patterns]},
+                "patterns": ["{', '.join([p.pattern_type.value for p in all_detected_patterns])}"],
                 "pattern_analysis": {{
                     "primary_pattern": "{all_detected_patterns[0].pattern_type.value if all_detected_patterns else 'none'}",
-                    "pattern_strength": {all_detected_patterns[0].strength if all_detected_patterns else 0},
-                    "pattern_direction": "{all_detected_patterns[0].trading_direction if all_detected_patterns else 'neutral'}",
-                    "pattern_confidence": {all_detected_patterns[0].confidence if all_detected_patterns else 0}
+                    "all_patterns_analyzed": ["{', '.join([p.pattern_type.value for p in all_detected_patterns])}"],
+                    "pattern_confluence": "Describe how multiple patterns work together",
+                    "pattern_priorities": "Rank patterns by importance for trading decision"
                 }},
                 "confidence": 0.75,
                 "recommendation": "hold/long/short"
