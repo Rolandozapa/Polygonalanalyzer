@@ -841,8 +841,8 @@ const TradingDashboard = () => {
                         <div className="bg-white rounded p-3 border">
                           <p className="text-sm font-medium text-slate-800 mb-2">IA2 Strategic Reasoning:</p>
                           <p className="text-sm text-slate-700 leading-relaxed">
-                            {decision.reasoning?.slice(0, 400) || 'No reasoning available'}
-                            {decision.reasoning?.length > 400 && '...'}
+                            {decision.ia2_reasoning?.slice(0, 400) || 'No reasoning available'}
+                            {decision.ia2_reasoning?.length > 400 && '...'}
                           </p>
                         </div>
                       </div>
