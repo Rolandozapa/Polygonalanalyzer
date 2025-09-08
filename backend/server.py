@@ -1316,7 +1316,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
             6. Your confidence should reflect the strength of pattern confluence
             7. In your JSON response, list ALL patterns in the 'patterns' array
             
-            Recent Price Action: {historical_data['Close'].tail().tolist()}
+            📈 HISTORICAL CONTEXT & PRICE ACTION:
+            Recent 10 days: {historical_data['Close'].tail(10).tolist()}
+            Weekly highs (4 weeks): {[historical_data['High'].iloc[i:i+7].max() for i in range(max(0, len(historical_data)-28), len(historical_data), 7)]}
+            Weekly lows (4 weeks): {[historical_data['Low'].iloc[i:i+7].min() for i in range(max(0, len(historical_data)-28), len(historical_data), 7)]}
+            30-day price range: ${historical_data['Low'].tail(30).min():.4f} - ${historical_data['High'].tail(30).max():.4f}
+            Current position in 30-day range: {((opportunity.current_price - historical_data['Low'].tail(30).min()) / (historical_data['High'].tail(30).max() - historical_data['Low'].tail(30).min()) * 100):.1f}%
+            Average volume (30d): ${historical_data['Volume'].tail(30).mean():,.0f} vs Current: ${opportunity.volume_24h:,.0f}
+            
+            🏗️ KEY HISTORICAL LEVELS:
+            - Recent swing highs: {sorted(historical_data['High'].tail(20).nlargest(3).tolist(), reverse=True)}
+            - Recent swing lows: {sorted(historical_data['Low'].tail(20).nsmallest(3).tolist())}
+            - Volume-weighted avg price (7d): ${(historical_data['Close'].tail(7) * historical_data['Volume'].tail(7)).sum() / historical_data['Volume'].tail(7).sum():.4f}
             
             INSTRUCTIONS: 
             - Analyze the technical situation with PRIMARY FOCUS on ALL detected chartist patterns
