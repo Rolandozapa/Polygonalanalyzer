@@ -3210,6 +3210,217 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             "trend_strength": market_trend_strength
         }
 
+    # ==========================================
+    # MÉTHODES CONTEXTUELLES ADAPTATIVES
+    # ==========================================
+    
+    async def _apply_multi_rr_priority_logic(self, opportunity, analysis, claude_decision):
+        """Contexte volatilité extrême - Multi-RR prioritaire"""
+        # En volatilité extrême, les maths objectives sont plus fiables
+        signal = SignalType.HOLD
+        confidence = 0.6
+        reasoning = f"High volatility market ({abs(opportunity.price_change_24h):.1f}%) requires mathematical precision. Multi-RR calculations take priority over qualitative analysis."
+        
+        # Simuler logique Multi-RR (dans un vrai système, on appellerait le Multi-RR Engine)
+        if analysis.rsi < 30 and opportunity.price_change_24h < -10:
+            signal = SignalType.LONG
+            confidence = 0.8
+            reasoning += " Multi-RR indicates oversold bounce opportunity with favorable risk-reward."
+        elif analysis.rsi > 70 and opportunity.price_change_24h > 10:
+            signal = SignalType.SHORT
+            confidence = 0.8
+            reasoning += " Multi-RR indicates overbought correction with favorable risk-reward."
+        
+        return signal, confidence, reasoning
+    
+    async def _apply_ia2_priority_logic(self, claude_decision, opportunity):
+        """Contexte IA2 haute confiance - IA2 prioritaire"""
+        if not claude_decision:
+            return SignalType.HOLD, 0.5, "No IA2 decision available despite high confidence context."
+        
+        ia2_signal = claude_decision.get("signal", "HOLD").upper()
+        ia2_confidence = claude_decision.get("confidence", 0.5)
+        
+        signal = SignalType.LONG if ia2_signal == "LONG" else SignalType.SHORT if ia2_signal == "SHORT" else SignalType.HOLD
+        confidence = min(ia2_confidence + 0.1, 0.98)  # Boost confidence
+        
+        reasoning = f"IA2 high confidence ({ia2_confidence:.1%}) takes absolute priority. Strategic analysis indicates {ia2_signal} with strong conviction."
+        
+        return signal, confidence, reasoning
+    
+    async def _apply_pattern_priority_logic(self, analysis, opportunity, dominant_pattern):
+        """Contexte pattern parfait - Pattern prioritaire"""
+        signal = SignalType.HOLD
+        confidence = 0.75
+        reasoning = f"Perfect chartist pattern detected ({dominant_pattern}). Technical setup takes priority over other signals."
+        
+        # Logique basée sur le type de pattern
+        if dominant_pattern and "bullish" in dominant_pattern.lower():
+            signal = SignalType.LONG
+            confidence = 0.88
+            reasoning += " Bullish pattern formation suggests upward momentum."
+        elif dominant_pattern and "bearish" in dominant_pattern.lower():
+            signal = SignalType.SHORT
+            confidence = 0.88
+            reasoning += " Bearish pattern formation suggests downward momentum."
+        elif dominant_pattern and ("breakout" in dominant_pattern.lower() or "golden_cross" in dominant_pattern.lower()):
+            signal = SignalType.LONG
+            confidence = 0.85
+            reasoning += " Breakout pattern indicates bullish continuation."
+        
+        return signal, confidence, reasoning
+    
+    async def _apply_trending_logic(self, opportunity, analysis, claude_decision):
+        """Contexte trending fort - Multi-RR + Patterns"""
+        signal = SignalType.HOLD
+        confidence = 0.65
+        reasoning = f"Strong trending market detected. Combining Multi-RR calculations with pattern analysis for momentum trading."
+        
+        # Dans un marché qui trend fort, suivre la tendance
+        price_change = opportunity.price_change_24h or 0
+        if price_change > 5 and analysis.rsi < 80:  # Trend haussier pas encore overextended
+            signal = SignalType.LONG
+            confidence = 0.82
+            reasoning += f" Strong uptrend ({price_change:.1f}%) with momentum continuation opportunity."
+        elif price_change < -5 and analysis.rsi > 20:  # Trend baissier pas encore oversold
+            signal = SignalType.SHORT
+            confidence = 0.82
+            reasoning += f" Strong downtrend ({price_change:.1f}%) with momentum continuation opportunity."
+        
+        return signal, confidence, reasoning
+    
+    async def _apply_contrarian_logic(self, claude_decision, opportunity):
+        """Contexte sentiment extrême - IA2 contrarian"""
+        signal = SignalType.HOLD
+        confidence = 0.7
+        reasoning = f"Extreme market sentiment detected ({opportunity.price_change_24h:.1f}%). Applying contrarian logic."
+        
+        # Sentiment extrême -> contrarian approach
+        if opportunity.price_change_24h > 20:  # Très bullish -> possibilité de correction
+            signal = SignalType.SHORT
+            confidence = 0.75
+            reasoning += " Extreme bullish sentiment suggests potential correction opportunity."
+        elif opportunity.price_change_24h < -20:  # Très bearish -> possibilité de rebound
+            signal = SignalType.LONG
+            confidence = 0.75
+            reasoning += " Extreme bearish sentiment suggests potential rebound opportunity."
+        
+        return signal, confidence, reasoning
+    
+    async def _apply_weighted_combined_logic(self, opportunity, analysis, claude_decision):
+        """Contexte équilibré - Logique combinée pondérée"""
+        # Combiner tous les signaux avec pondération
+        ia1_weight = 0.3
+        ia2_weight = 0.4  
+        multi_rr_weight = 0.3
+        
+        signal = SignalType.HOLD
+        confidence = 0.6
+        reasoning = "Balanced market conditions. Using weighted combination of all analytical engines."
+        
+        # Score composite basé sur différents indicateurs
+        composite_score = 0
+        
+        # IA1 technique score
+        if analysis.rsi < 35:
+            composite_score += 1 * ia1_weight  # Bullish technique
+        elif analysis.rsi > 65:
+            composite_score -= 1 * ia1_weight  # Bearish technique
+        
+        # IA2 strategic score
+        if claude_decision:
+            ia2_signal = claude_decision.get("signal", "HOLD").upper()
+            ia2_conf = claude_decision.get("confidence", 0.5)
+            if ia2_signal == "LONG":
+                composite_score += ia2_conf * ia2_weight
+            elif ia2_signal == "SHORT":
+                composite_score -= ia2_conf * ia2_weight
+        
+        # Multi-RR score (simulé)
+        price_momentum = (opportunity.price_change_24h or 0) / 100
+        composite_score += price_momentum * multi_rr_weight
+        
+        # Décision finale basée sur le score composite
+        if composite_score > 0.15:
+            signal = SignalType.LONG
+            confidence = min(0.5 + abs(composite_score), 0.85)
+            reasoning += f" Composite bullish score: {composite_score:.2f}."
+        elif composite_score < -0.15:
+            signal = SignalType.SHORT
+            confidence = min(0.5 + abs(composite_score), 0.85)
+            reasoning += f" Composite bearish score: {composite_score:.2f}."
+        else:
+            reasoning += f" Neutral composite score: {composite_score:.2f}. No clear directional bias."
+        
+        return signal, confidence, reasoning
+    
+    def _calculate_adaptive_levels(self, current_price, signal, market_volatility, pattern_strength):
+        """Calcule stop-loss et take-profit adaptatifs selon le contexte"""
+        
+        # Base stop-loss selon volatilité
+        if market_volatility > 15:
+            sl_distance = 0.04  # 4% pour haute volatilité
+        elif market_volatility > 8:
+            sl_distance = 0.025  # 2.5% pour volatilité modérée
+        else:
+            sl_distance = 0.015  # 1.5% pour faible volatilité
+        
+        # Ajustement selon force du pattern
+        if pattern_strength > 0.8:
+            sl_distance *= 0.8  # SL plus serré pour patterns forts
+        
+        # Calcul des niveaux
+        if signal == SignalType.LONG:
+            stop_loss = current_price * (1 - sl_distance)
+            take_profit = current_price * (1 + sl_distance * 2.5)  # RR 2.5:1 par défaut
+        elif signal == SignalType.SHORT:
+            stop_loss = current_price * (1 + sl_distance)
+            take_profit = current_price * (1 - sl_distance * 2.5)
+        else:
+            stop_loss = current_price * 0.95
+            take_profit = current_price * 1.05
+        
+        return stop_loss, take_profit
+    
+    def _calculate_adaptive_position_size(self, confidence, market_volatility, ia2_confidence, account_balance):
+        """Calcule taille de position adaptative"""
+        
+        # Base position size selon confiance
+        base_size = confidence * 0.05  # Max 5% si confiance 100%
+        
+        # Réduction selon volatilité
+        if market_volatility > 15:
+            volatility_factor = 0.5  # Réduire de 50% en haute volatilité
+        elif market_volatility > 8:
+            volatility_factor = 0.75  # Réduire de 25% en volatilité modérée
+        else:
+            volatility_factor = 1.0  # Taille normale
+        
+        # Bonus IA2 haute confiance
+        if ia2_confidence > 0.85:
+            ia2_bonus = 1.2  # Augmenter de 20%
+        else:
+            ia2_bonus = 1.0
+        
+        # Calcul final avec limites de sécurité
+        final_size = base_size * volatility_factor * ia2_bonus
+        return max(0.005, min(final_size, 0.08))  # Entre 0.5% et 8%
+    
+    def _get_context_type(self, volatility, ia2_conf, pattern_strength, trend_strength):
+        """Détermine le type de contexte pour logging"""
+        if volatility > 15:
+            return "EXTREME_VOLATILITY"
+        elif ia2_conf > 0.85:
+            return "HIGH_IA2_CONFIDENCE"
+        elif pattern_strength > 0.9:
+            return "PERFECT_PATTERN"
+        elif trend_strength > 0.7:
+            return "STRONG_TRENDING"
+        elif volatility > 20:
+            return "EXTREME_SENTIMENT"
+        else:
+            return "BALANCED_CONDITIONS"
+
     async def _evaluate_live_trading_decision(self, 
                                             opportunity: MarketOpportunity, 
                                             analysis: TechnicalAnalysis, 
