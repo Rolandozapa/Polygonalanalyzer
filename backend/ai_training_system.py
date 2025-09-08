@@ -21,6 +21,7 @@ warnings.filterwarnings('ignore')
 # Import our trading system components
 from technical_pattern_detector import TechnicalPatternDetector, TechnicalPattern
 from data_models import TechnicalAnalysis, MarketOpportunity, TradingDecision, SignalType
+from advanced_technical_indicators import advanced_technical_indicators, TechnicalIndicators, IndicatorSignal
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 logger = logging.getLogger(__name__)
