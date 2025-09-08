@@ -2508,27 +2508,118 @@ class UltraProfessionalIA1TechnicalAnalyst:
 # Global instances
 
     def _calculate_fibonacci_retracement(self, historical_data: pd.DataFrame) -> float:
-        """Calcule le niveau de retracement Fibonacci actuel"""
+        """Calcule le niveau de retracement Fibonacci actuel (pour compatibilité)"""
+        try:
+            fib_levels = self._calculate_fibonacci_levels(historical_data)
+            return fib_levels.get('current_position', 0.618)
+        except:
+            return 0.618
+    
+    def _calculate_fibonacci_levels(self, historical_data: pd.DataFrame) -> dict:
+        """Calcule tous les niveaux de retracement Fibonacci"""
         try:
             if len(historical_data) < 20:
-                return 0.618  # Niveau par défaut
+                return {
+                    'high': 0.0,
+                    'low': 0.0,
+                    'current_position': 0.618,
+                    'levels': {
+                        '0.0': 0.0,
+                        '23.6': 0.0,
+                        '38.2': 0.0,
+                        '50.0': 0.0,
+                        '61.8': 0.0,
+                        '78.6': 0.0,
+                        '100.0': 0.0
+                    },
+                    'nearest_level': '61.8',
+                    'trend_direction': 'neutral'
+                }
             
-            high = historical_data['High'].max()
-            low = historical_data['Low'].min()
+            # Calcul sur les 30 derniers jours pour plus de précision
+            recent_data = historical_data.tail(30)
+            high = recent_data['High'].max()
+            low = recent_data['Low'].min()
             current = historical_data['Close'].iloc[-1]
             
             if high == low:  # Évite division par zéro
-                return 0.618
+                return {
+                    'high': float(high),
+                    'low': float(low),
+                    'current_position': 0.618,
+                    'levels': {
+                        '0.0': float(low),
+                        '23.6': float(low),
+                        '38.2': float(low),
+                        '50.0': float(low),
+                        '61.8': float(low),
+                        '78.6': float(low),
+                        '100.0': float(high)
+                    },
+                    'nearest_level': '61.8',
+                    'trend_direction': 'neutral'
+                }
             
-            fib_level = (current - low) / (high - low)
+            # Calcul des niveaux de retracement Fibonacci
+            range_price = high - low
+            levels = {
+                '0.0': float(low),                                    # 0% - Support fort
+                '23.6': float(low + range_price * 0.236),            # 23.6% - Premier retracement
+                '38.2': float(low + range_price * 0.382),            # 38.2% - Retracement faible
+                '50.0': float(low + range_price * 0.500),            # 50.0% - Retracement moyen
+                '61.8': float(low + range_price * 0.618),            # 61.8% - Golden ratio (plus important)
+                '78.6': float(low + range_price * 0.786),            # 78.6% - Retracement profond
+                '100.0': float(high)                                 # 100% - Résistance forte
+            }
             
-            # S'assure que la valeur est valide pour JSON
-            if not (0 <= fib_level <= 2):  # Valeur raisonnable
-                return 0.618
+            # Position actuelle par rapport aux niveaux
+            current_position = (current - low) / range_price if range_price > 0 else 0.618
             
-            return round(fib_level, 3)
-        except:
-            return 0.618
+            # Trouve le niveau Fibonacci le plus proche
+            nearest_level = '61.8'  # Default
+            min_distance = float('inf')
+            
+            for level_name, level_price in levels.items():
+                distance = abs(current - level_price)
+                if distance < min_distance:
+                    min_distance = distance
+                    nearest_level = level_name
+            
+            # Détermine la direction de la tendance
+            if current_position > 0.618:
+                trend_direction = 'bullish'
+            elif current_position < 0.382:
+                trend_direction = 'bearish'
+            else:
+                trend_direction = 'neutral'
+            
+            return {
+                'high': float(high),
+                'low': float(low),
+                'current_position': round(current_position, 3),
+                'levels': levels,
+                'nearest_level': nearest_level,
+                'trend_direction': trend_direction
+            }
+            
+        except Exception as e:
+            logger.debug(f"Fibonacci calculation error: {e}")
+            return {
+                'high': 0.0,
+                'low': 0.0,
+                'current_position': 0.618,
+                'levels': {
+                    '0.0': 0.0,
+                    '23.6': 0.0,
+                    '38.2': 0.0,
+                    '50.0': 0.0,
+                    '61.8': 0.0,
+                    '78.6': 0.0,
+                    '100.0': 0.0
+                },
+                'nearest_level': '61.8',
+                'trend_direction': 'neutral'
+            }
     
     def _find_support_levels(self, df: pd.DataFrame, current_price: float) -> List[float]:
         """Trouve les niveaux de support clés"""
