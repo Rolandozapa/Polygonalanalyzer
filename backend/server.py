@@ -1264,10 +1264,19 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # ÉTAPE 6: Toutes les validations passées - APPEL IA1 justifié
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
-            # Calculate advanced technical indicators avec données multi-sources validées
-            rsi = self._calculate_rsi(historical_data['Close'])
-            macd_line, macd_signal, macd_histogram = self._calculate_macd(historical_data['Close'])
-            bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands(historical_data['Close'])
+            # Calculate comprehensive technical indicators with advanced system
+            indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
+            
+            # Extract key values for prompt and analysis
+            rsi = indicators.rsi_14
+            macd_signal = indicators.macd_signal
+            macd_histogram = indicators.macd_histogram
+            stochastic_k = indicators.stoch_k
+            stochastic_d = indicators.stoch_d
+            bb_upper = indicators.bb_upper
+            bb_middle = indicators.bb_middle
+            bb_lower = indicators.bb_lower
+            bb_position = indicators.bb_position
             
             # Debug logging pour vérifier les vraies valeurs calculées
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}")
