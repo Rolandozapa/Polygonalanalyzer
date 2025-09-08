@@ -5410,6 +5410,10 @@ class UltraProfessionalTradingOrchestrator:
                     
                     # Process decision results
                     for i, decision in enumerate(decisions):
+                        # 🚀 NOUVELLE LOGIQUE ADAPTATIVE: Appliquer contexte après IA2
+                        if self.adaptive_mode_enabled:
+                            decision = await self._apply_adaptive_context_to_decision(decision, opportunity, analysis)
+                        
                         if isinstance(decision, TradingDecision) and decision.signal != "HOLD":
                             # NOUVEAU: Vérification de déduplication IA2 avant stockage (cohérence 4h)
                             symbol = decision.symbol
