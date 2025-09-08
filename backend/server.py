@@ -3278,7 +3278,76 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             logger.error(f"Failed to get account balance: {e}")
             return 250.0  # Enhanced fallback balance
     
-    def _calculate_final_realistic_rr(self, entry_price: float, stop_loss: float, tp1: float, signal: str, symbol: str) -> float:
+    def _determine_optimal_tp_for_rr(self, entry_price: float, tp1: float, tp2: float, tp3: float, 
+                                   confidence: float, signal: str, symbol: str, opportunity) -> float:
+        """
+        Détermine le TP optimal à utiliser pour le calcul RR selon une logique dynamique
+        
+        Logique:
+        - Haute confiance (>85%) + Faible volatilité → TP2 (équilibré-agressif)
+        - Confiance moyenne (70-85%) → TP2 (équilibré) 
+        - Faible confiance (<70%) → TP1 (conservateur)
+        - Haute volatilité → TP1 (prudent)
+        """
+        try:
+            # Validation des inputs
+            if not all(x > 0 for x in [entry_price, tp1, tp2, tp3]):
+                logger.warning(f"Invalid TP levels for {symbol}")
+                return tp1
+            
+            # Calcul de volatilité (approximation basée sur les écarts TP)
+            tp1_pct = abs(tp1 - entry_price) / entry_price * 100
+            tp3_pct = abs(tp3 - entry_price) / entry_price * 100
+            volatility_estimate = tp3_pct - tp1_pct  # Écart entre TP extrêmes
+            
+            # Classification volatilité
+            if volatility_estimate > 5.0:
+                volatility_level = "HIGH"
+            elif volatility_estimate > 2.0:
+                volatility_level = "MEDIUM"  
+            else:
+                volatility_level = "LOW"
+            
+            # Classification confiance
+            if confidence >= 0.85:
+                confidence_level = "HIGH"
+            elif confidence >= 0.70:
+                confidence_level = "MEDIUM"
+            else:
+                confidence_level = "LOW"
+            
+            # LOGIQUE DE SÉLECTION TP OPTIMAL
+            optimal_tp = tp1  # Default conservateur
+            reasoning = ""
+            
+            if confidence_level == "HIGH" and volatility_level in ["LOW", "MEDIUM"]:
+                optimal_tp = tp2  # Équilibré-agressif pour haute confiance + volatilité contrôlée
+                reasoning = f"TP2 selected: High confidence ({confidence:.1%}) + {volatility_level.lower()} volatility"
+                
+            elif confidence_level == "HIGH" and volatility_level == "HIGH":
+                optimal_tp = tp1  # Prudent même avec haute confiance si volatilité élevée
+                reasoning = f"TP1 selected: High confidence but HIGH volatility ({volatility_estimate:.1f}%) = prudent"
+                
+            elif confidence_level == "MEDIUM":
+                optimal_tp = tp2 if volatility_level != "HIGH" else tp1
+                reasoning = f"TP{'2' if volatility_level != 'HIGH' else '1'} selected: Medium confidence + {volatility_level.lower()} volatility"
+                
+            elif confidence_level == "LOW":
+                optimal_tp = tp1  # Toujours conservateur pour faible confiance
+                reasoning = f"TP1 selected: Low confidence ({confidence:.1%}) = conservative approach"
+            
+            # Log de la décision
+            optimal_pct = abs(optimal_tp - entry_price) / entry_price * 100
+            logger.info(f"🎯 OPTIMAL TP for {symbol}: {optimal_tp:.4f} (+{optimal_pct:.2f}%) | {reasoning}")
+            
+            return optimal_tp
+            
+        except Exception as e:
+            logger.error(f"Error determining optimal TP for {symbol}: {e}")
+            return tp1  # Fallback conservateur
+
+    def _calculate_final_realistic_rr(self, entry_price: float, stop_loss: float, tp1: float, tp2: float, tp3: float, 
+                                    confidence: float, signal: str, symbol: str, opportunity=None) -> float:
         """
         Calcule le Risk-Reward FINAL et RÉALISTE basé sur les niveaux optimisés par IA2
         Cette fonction remplace le RR d'IA1 par le RR réel de la stratégie finale
