@@ -2941,6 +2941,13 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     current_context.current_regime.value
                 )
                 
+                # 🎯 NOUVEAU: Optimisation avec les figures chartistes
+                enhanced_decision_dict = ai_performance_enhancer.enhance_ia2_decision_with_chartist(
+                    enhanced_decision_dict,
+                    analysis.dict(),
+                    current_context.current_regime.value
+                )
+                
                 # Update decision with enhancements
                 if 'ai_enhancements' in enhanced_decision_dict:
                     # Create new enhanced decision
