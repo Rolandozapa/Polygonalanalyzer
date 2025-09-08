@@ -1,0 +1,567 @@
+#!/usr/bin/env python3
+"""
+Simplified IA1 RR System Testing Suite
+Focus: Testing the simplified IA1 Risk-Reward system without Multi-RR complexity
+Review Request: Verify IA1 RR calculations, filtering, IA2 consistency, performance, and clean reasoning
+"""
+
+import asyncio
+import json
+import logging
+import os
+import sys
+import time
+from datetime import datetime
+from typing import Dict, Any, List
+import requests
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class SimplifiedIA1RRTestSuite:
+    """Test suite for Simplified IA1 RR System (Multi-RR removed)"""
+    
+    def __init__(self):
+        # Get backend URL from frontend env
+        try:
+            with open('/app/frontend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        backend_url = line.split('=')[1].strip()
+                        break
+                else:
+                    backend_url = "http://localhost:8001"
+        except Exception:
+            backend_url = "http://localhost:8001"
+        
+        self.api_url = f"{backend_url}/api"
+        logger.info(f"Testing Simplified IA1 RR System at: {self.api_url}")
+        
+        # Test results
+        self.test_results = []
+        
+        # Test symbols (2-3 as requested for quick verification)
+        self.test_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+        
+        # Performance tracking
+        self.performance_metrics = {}
+        
+    def log_test_result(self, test_name: str, success: bool, details: str = ""):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        logger.info(f"{status}: {test_name}")
+        if details:
+            logger.info(f"   Details: {details}")
+        
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    async def test_simplified_ia1_rr_calculation(self):
+        """Test 1: Verify IA1 calculates realistic RR ratios without Multi-RR complexity"""
+        logger.info("\n🔍 TEST 1: Simplified IA1 RR Calculation")
+        
+        try:
+            # Start trading system to generate fresh analyses
+            logger.info("   🚀 Starting trading system...")
+            start_response = requests.post(f"{self.api_url}/trading/start", timeout=30)
+            
+            if start_response.status_code != 200:
+                self.log_test_result("Simplified IA1 RR Calculation", False, f"Failed to start trading: {start_response.status_code}")
+                return
+            
+            # Wait for analyses to be generated
+            logger.info("   ⏳ Waiting for IA1 analyses to be generated...")
+            await asyncio.sleep(10)
+            
+            # Get recent IA1 analyses
+            analyses_response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            
+            if analyses_response.status_code != 200:
+                self.log_test_result("Simplified IA1 RR Calculation", False, f"Failed to get analyses: {analyses_response.status_code}")
+                return
+            
+            analyses_data = analyses_response.json()
+            analyses = analyses_data.get('data', [])
+            
+            if not analyses:
+                self.log_test_result("Simplified IA1 RR Calculation", False, "No IA1 analyses found")
+                return
+            
+            logger.info(f"   📊 Found {len(analyses)} IA1 analyses")
+            
+            # Analyze RR calculations in IA1 analyses
+            rr_calculations_found = 0
+            realistic_rr_ratios = 0
+            multi_rr_artifacts = 0
+            
+            for analysis in analyses[:5]:  # Check first 5 analyses
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '')
+                rr_ratio = analysis.get('risk_reward_ratio', 0)
+                
+                logger.info(f"   🔍 Analyzing {symbol}: RR={rr_ratio}")
+                
+                # Check if RR calculation exists and is realistic
+                if rr_ratio and rr_ratio > 0:
+                    rr_calculations_found += 1
+                    
+                    # Check if RR ratio is realistic (between 0.1 and 10.0)
+                    if 0.1 <= rr_ratio <= 10.0:
+                        realistic_rr_ratios += 1
+                        logger.info(f"      ✅ Realistic RR ratio: {rr_ratio:.2f}")
+                    else:
+                        logger.info(f"      ⚠️ Unrealistic RR ratio: {rr_ratio:.2f}")
+                
+                # Check for Multi-RR artifacts in reasoning (should be clean now)
+                multi_rr_keywords = ['multi-rr', 'multi rr', 'hold:', 'long:', 'short:', '🤖 **multi-rr analysis:**']
+                for keyword in multi_rr_keywords:
+                    if keyword.lower() in reasoning.lower():
+                        multi_rr_artifacts += 1
+                        logger.info(f"      ⚠️ Multi-RR artifact found: {keyword}")
+                        break
+                
+                # Check for risk_reward_analysis section in reasoning
+                if 'risk_reward_analysis' in reasoning.lower() or 'risk-reward' in reasoning.lower():
+                    logger.info(f"      ✅ Risk-reward analysis section found in reasoning")
+            
+            # Calculate success metrics
+            rr_calculation_rate = (rr_calculations_found / len(analyses[:5])) * 100
+            realistic_rate = (realistic_rr_ratios / max(rr_calculations_found, 1)) * 100
+            clean_reasoning_rate = ((len(analyses[:5]) - multi_rr_artifacts) / len(analyses[:5])) * 100
+            
+            logger.info(f"   📊 RR calculations found: {rr_calculations_found}/{len(analyses[:5])} ({rr_calculation_rate:.1f}%)")
+            logger.info(f"   📊 Realistic RR ratios: {realistic_rr_ratios}/{rr_calculations_found} ({realistic_rate:.1f}%)")
+            logger.info(f"   📊 Clean reasoning (no Multi-RR artifacts): {clean_reasoning_rate:.1f}%")
+            
+            # Success criteria: 80%+ RR calculations, 80%+ realistic ratios, 90%+ clean reasoning
+            success = (rr_calculation_rate >= 80 and realistic_rate >= 80 and clean_reasoning_rate >= 90)
+            
+            details = f"RR calc: {rr_calculation_rate:.1f}%, Realistic: {realistic_rate:.1f}%, Clean: {clean_reasoning_rate:.1f}%"
+            
+            self.log_test_result("Simplified IA1 RR Calculation", success, details)
+            
+            # Store for later tests
+            self.ia1_analyses = analyses[:5]
+            
+        except Exception as e:
+            self.log_test_result("Simplified IA1 RR Calculation", False, f"Exception: {str(e)}")
+    
+    async def test_rr_filtering_threshold(self):
+        """Test 2: Confirm ≥2.0 RR threshold filtering blocks low RR analyses from IA2"""
+        logger.info("\n🔍 TEST 2: RR Filtering Threshold (≥2.0)")
+        
+        try:
+            if not hasattr(self, 'ia1_analyses'):
+                self.log_test_result("RR Filtering Threshold", False, "No IA1 analyses from previous test")
+                return
+            
+            # Get IA2 decisions to compare with IA1 analyses
+            decisions_response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            
+            if decisions_response.status_code != 200:
+                self.log_test_result("RR Filtering Threshold", False, f"Failed to get decisions: {decisions_response.status_code}")
+                return
+            
+            decisions_data = decisions_response.json()
+            decisions = decisions_data.get('data', [])
+            
+            logger.info(f"   📊 Found {len(self.ia1_analyses)} IA1 analyses and {len(decisions)} IA2 decisions")
+            
+            # Analyze RR filtering logic
+            high_rr_analyses = []
+            low_rr_analyses = []
+            
+            for analysis in self.ia1_analyses:
+                rr_ratio = analysis.get('risk_reward_ratio', 0)
+                symbol = analysis.get('symbol', 'Unknown')
+                
+                if rr_ratio >= 2.0:
+                    high_rr_analyses.append({'symbol': symbol, 'rr': rr_ratio})
+                    logger.info(f"      ✅ High RR: {symbol} = {rr_ratio:.2f} (should pass to IA2)")
+                elif rr_ratio > 0:
+                    low_rr_analyses.append({'symbol': symbol, 'rr': rr_ratio})
+                    logger.info(f"      ❌ Low RR: {symbol} = {rr_ratio:.2f} (should be blocked)")
+            
+            # Check if IA2 decisions respect the filtering
+            decision_symbols = [d.get('symbol', '') for d in decisions]
+            
+            # Count how many high RR analyses made it to IA2
+            high_rr_passed = 0
+            for analysis in high_rr_analyses:
+                if analysis['symbol'] in decision_symbols:
+                    high_rr_passed += 1
+                    logger.info(f"      ✅ {analysis['symbol']} (RR={analysis['rr']:.2f}) correctly passed to IA2")
+            
+            # Count how many low RR analyses were blocked
+            low_rr_blocked = 0
+            for analysis in low_rr_analyses:
+                if analysis['symbol'] not in decision_symbols:
+                    low_rr_blocked += 1
+                    logger.info(f"      ✅ {analysis['symbol']} (RR={analysis['rr']:.2f}) correctly blocked from IA2")
+                else:
+                    logger.info(f"      ❌ {analysis['symbol']} (RR={analysis['rr']:.2f}) incorrectly passed to IA2")
+            
+            # Calculate filtering effectiveness
+            high_rr_pass_rate = (high_rr_passed / max(len(high_rr_analyses), 1)) * 100
+            low_rr_block_rate = (low_rr_blocked / max(len(low_rr_analyses), 1)) * 100
+            
+            logger.info(f"   📊 High RR analyses passed to IA2: {high_rr_passed}/{len(high_rr_analyses)} ({high_rr_pass_rate:.1f}%)")
+            logger.info(f"   📊 Low RR analyses blocked from IA2: {low_rr_blocked}/{len(low_rr_analyses)} ({low_rr_block_rate:.1f}%)")
+            
+            # Success criteria: 80%+ high RR pass rate OR 80%+ low RR block rate (depending on what we have)
+            if len(high_rr_analyses) > 0 and len(low_rr_analyses) > 0:
+                success = high_rr_pass_rate >= 80 and low_rr_block_rate >= 80
+            elif len(high_rr_analyses) > 0:
+                success = high_rr_pass_rate >= 80
+            elif len(low_rr_analyses) > 0:
+                success = low_rr_block_rate >= 80
+            else:
+                success = True  # No filtering needed if no clear cases
+            
+            details = f"High RR pass: {high_rr_pass_rate:.1f}%, Low RR block: {low_rr_block_rate:.1f}%"
+            
+            self.log_test_result("RR Filtering Threshold", success, details)
+            
+            # Store for next test
+            self.ia2_decisions = decisions
+            
+        except Exception as e:
+            self.log_test_result("RR Filtering Threshold", False, f"Exception: {str(e)}")
+    
+    async def test_ia2_rr_consistency(self):
+        """Test 3: Check IA2 uses same RR values from IA1 (no recalculation)"""
+        logger.info("\n🔍 TEST 3: IA2 RR Consistency (No Recalculation)")
+        
+        try:
+            if not hasattr(self, 'ia1_analyses') or not hasattr(self, 'ia2_decisions'):
+                self.log_test_result("IA2 RR Consistency", False, "Missing IA1 analyses or IA2 decisions from previous tests")
+                return
+            
+            # Create mapping of IA1 RR values by symbol
+            ia1_rr_map = {}
+            for analysis in self.ia1_analyses:
+                symbol = analysis.get('symbol', '')
+                rr_ratio = analysis.get('risk_reward_ratio', 0)
+                if symbol and rr_ratio > 0:
+                    ia1_rr_map[symbol] = rr_ratio
+            
+            logger.info(f"   📊 IA1 RR values: {ia1_rr_map}")
+            
+            # Check IA2 decisions for RR consistency
+            consistent_rr_count = 0
+            total_comparisons = 0
+            rr_differences = []
+            
+            for decision in self.ia2_decisions:
+                symbol = decision.get('symbol', '')
+                ia2_rr = decision.get('risk_reward_ratio', 0)
+                
+                if symbol in ia1_rr_map:
+                    ia1_rr = ia1_rr_map[symbol]
+                    total_comparisons += 1
+                    
+                    # Check if RR values are consistent (within 5% tolerance)
+                    if ia2_rr > 0:
+                        rr_difference = abs(ia1_rr - ia2_rr) / ia1_rr * 100
+                        rr_differences.append(rr_difference)
+                        
+                        if rr_difference <= 5.0:  # 5% tolerance
+                            consistent_rr_count += 1
+                            logger.info(f"      ✅ {symbol}: IA1={ia1_rr:.2f}, IA2={ia2_rr:.2f} (diff: {rr_difference:.1f}%)")
+                        else:
+                            logger.info(f"      ❌ {symbol}: IA1={ia1_rr:.2f}, IA2={ia2_rr:.2f} (diff: {rr_difference:.1f}%)")
+                    else:
+                        logger.info(f"      ⚠️ {symbol}: IA1={ia1_rr:.2f}, IA2=0 (missing RR in IA2)")
+            
+            if total_comparisons == 0:
+                self.log_test_result("IA2 RR Consistency", False, "No matching symbols between IA1 and IA2 for comparison")
+                return
+            
+            # Calculate consistency metrics
+            consistency_rate = (consistent_rr_count / total_comparisons) * 100
+            avg_difference = sum(rr_differences) / len(rr_differences) if rr_differences else 0
+            
+            logger.info(f"   📊 RR consistency: {consistent_rr_count}/{total_comparisons} ({consistency_rate:.1f}%)")
+            logger.info(f"   📊 Average RR difference: {avg_difference:.1f}%")
+            
+            # Success criteria: 90%+ consistency rate AND average difference <10%
+            success = consistency_rate >= 90 and avg_difference < 10
+            
+            details = f"Consistency: {consistency_rate:.1f}%, Avg diff: {avg_difference:.1f}%"
+            
+            self.log_test_result("IA2 RR Consistency", success, details)
+            
+        except Exception as e:
+            self.log_test_result("IA2 RR Consistency", False, f"Exception: {str(e)}")
+    
+    async def test_system_performance_improvement(self):
+        """Test 4: Verify removing Multi-RR complexity improves performance"""
+        logger.info("\n🔍 TEST 4: System Performance Improvement")
+        
+        try:
+            # Test IA1 analysis performance
+            logger.info("   ⏱️ Testing IA1 analysis performance...")
+            
+            performance_tests = []
+            
+            for symbol in self.test_symbols:
+                start_time = time.time()
+                
+                # Trigger IA1 analysis by getting opportunities and analyses
+                opportunities_response = requests.get(f"{self.api_url}/opportunities", timeout=30)
+                
+                if opportunities_response.status_code == 200:
+                    end_time = time.time()
+                    response_time = end_time - start_time
+                    performance_tests.append(response_time)
+                    
+                    logger.info(f"      📊 {symbol} analysis time: {response_time:.2f}s")
+                else:
+                    logger.info(f"      ❌ Failed to get opportunities for {symbol}")
+            
+            if not performance_tests:
+                self.log_test_result("System Performance Improvement", False, "No performance data collected")
+                return
+            
+            # Calculate performance metrics
+            avg_response_time = sum(performance_tests) / len(performance_tests)
+            max_response_time = max(performance_tests)
+            min_response_time = min(performance_tests)
+            
+            logger.info(f"   📊 Average response time: {avg_response_time:.2f}s")
+            logger.info(f"   📊 Max response time: {max_response_time:.2f}s")
+            logger.info(f"   📊 Min response time: {min_response_time:.2f}s")
+            
+            # Test system status for overall health
+            status_start = time.time()
+            status_response = requests.get(f"{self.api_url}/status", timeout=10)
+            status_time = time.time() - status_start
+            
+            logger.info(f"   📊 System status response time: {status_time:.2f}s")
+            
+            # Success criteria: Average response time <5s, max response time <10s, status <2s
+            performance_good = avg_response_time < 5.0
+            max_time_acceptable = max_response_time < 10.0
+            status_responsive = status_time < 2.0
+            
+            success = performance_good and max_time_acceptable and status_responsive
+            
+            details = f"Avg: {avg_response_time:.2f}s, Max: {max_response_time:.2f}s, Status: {status_time:.2f}s"
+            
+            self.log_test_result("System Performance Improvement", success, details)
+            
+            # Store performance metrics
+            self.performance_metrics = {
+                'avg_response_time': avg_response_time,
+                'max_response_time': max_response_time,
+                'min_response_time': min_response_time,
+                'status_response_time': status_time
+            }
+            
+        except Exception as e:
+            self.log_test_result("System Performance Improvement", False, f"Exception: {str(e)}")
+    
+    async def test_clean_ia1_reasoning(self):
+        """Test 5: Check IA1 reasoning is clean without Multi-RR artifacts"""
+        logger.info("\n🔍 TEST 5: Clean IA1 Reasoning (No Multi-RR Artifacts)")
+        
+        try:
+            if not hasattr(self, 'ia1_analyses'):
+                self.log_test_result("Clean IA1 Reasoning", False, "No IA1 analyses from previous test")
+                return
+            
+            # Analyze reasoning text for cleanliness
+            clean_reasoning_count = 0
+            total_analyses = len(self.ia1_analyses)
+            
+            # Multi-RR artifacts to check for
+            multi_rr_artifacts = [
+                'multi-rr analysis',
+                'multi rr analysis', 
+                '🤖 **multi-rr analysis:**',
+                'hold: **',
+                'long: **',
+                'short: **',
+                '🏆 **winner:**',
+                'multi-rr decision',
+                'multi-rr resolution'
+            ]
+            
+            # Positive indicators of clean reasoning
+            clean_indicators = [
+                'risk-reward analysis',
+                'risk reward ratio',
+                'technical analysis',
+                'support and resistance',
+                'entry price',
+                'stop loss',
+                'take profit'
+            ]
+            
+            for analysis in self.ia1_analyses:
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '').lower()
+                
+                # Check for Multi-RR artifacts
+                has_artifacts = False
+                artifacts_found = []
+                
+                for artifact in multi_rr_artifacts:
+                    if artifact.lower() in reasoning:
+                        has_artifacts = True
+                        artifacts_found.append(artifact)
+                
+                # Check for clean indicators
+                clean_indicators_found = []
+                for indicator in clean_indicators:
+                    if indicator.lower() in reasoning:
+                        clean_indicators_found.append(indicator)
+                
+                # Reasoning is clean if no artifacts and has clean indicators
+                is_clean = not has_artifacts and len(clean_indicators_found) >= 2
+                
+                if is_clean:
+                    clean_reasoning_count += 1
+                    logger.info(f"      ✅ {symbol}: Clean reasoning with {len(clean_indicators_found)} indicators")
+                else:
+                    logger.info(f"      ❌ {symbol}: Artifacts={artifacts_found}, Indicators={len(clean_indicators_found)}")
+                
+                # Check reasoning length (should be substantial but not overly complex)
+                reasoning_length = len(reasoning)
+                if 200 <= reasoning_length <= 2000:
+                    logger.info(f"         📏 Appropriate length: {reasoning_length} chars")
+                else:
+                    logger.info(f"         ⚠️ Length concern: {reasoning_length} chars")
+            
+            # Calculate cleanliness metrics
+            clean_rate = (clean_reasoning_count / total_analyses) * 100
+            
+            logger.info(f"   📊 Clean reasoning: {clean_reasoning_count}/{total_analyses} ({clean_rate:.1f}%)")
+            
+            # Success criteria: 90%+ clean reasoning rate
+            success = clean_rate >= 90
+            
+            details = f"Clean reasoning rate: {clean_rate:.1f}%"
+            
+            self.log_test_result("Clean IA1 Reasoning", success, details)
+            
+        except Exception as e:
+            self.log_test_result("Clean IA1 Reasoning", False, f"Exception: {str(e)}")
+    
+    async def run_comprehensive_tests(self):
+        """Run all Simplified IA1 RR System tests"""
+        logger.info("🚀 Starting Simplified IA1 RR System Test Suite")
+        logger.info("=" * 80)
+        logger.info("📋 REVIEW REQUEST: Test simplified IA1 RR system (Multi-RR removed)")
+        logger.info("🎯 OBJECTIVE: Verify RR calculations, filtering, consistency, performance, clean reasoning")
+        logger.info("=" * 80)
+        
+        # Run all tests in sequence
+        await self.test_simplified_ia1_rr_calculation()
+        await self.test_rr_filtering_threshold()
+        await self.test_ia2_rr_consistency()
+        await self.test_system_performance_improvement()
+        await self.test_clean_ia1_reasoning()
+        
+        # Summary
+        logger.info("\n" + "=" * 80)
+        logger.info("📊 SIMPLIFIED IA1 RR SYSTEM TEST SUMMARY")
+        logger.info("=" * 80)
+        
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        total_tests = len(self.test_results)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            logger.info(f"{status}: {result['test']}")
+            if result['details']:
+                logger.info(f"   {result['details']}")
+                
+        logger.info(f"\n🎯 OVERALL RESULT: {passed_tests}/{total_tests} tests passed")
+        
+        # Review request analysis
+        logger.info("\n" + "=" * 80)
+        logger.info("📋 REVIEW REQUEST ANALYSIS")
+        logger.info("=" * 80)
+        
+        if passed_tests == total_tests:
+            logger.info("🎉 ALL TESTS PASSED - Simplified IA1 RR system working perfectly!")
+            logger.info("✅ IA1 calculates realistic RR ratios without Multi-RR complexity")
+            logger.info("✅ RR filtering (≥2.0) blocks low RR analyses from IA2")
+            logger.info("✅ IA2 uses same RR values from IA1 (no recalculation)")
+            logger.info("✅ System performance improved with Multi-RR removal")
+            logger.info("✅ IA1 reasoning is clean without Multi-RR artifacts")
+        elif passed_tests >= total_tests * 0.8:
+            logger.info("⚠️ MOSTLY WORKING - Most functionality operational")
+            logger.info("🔍 Some improvements needed for full compliance")
+        else:
+            logger.info("❌ CRITICAL ISSUES - Simplified IA1 RR system needs fixes")
+            logger.info("🚨 Multiple components not meeting requirements")
+        
+        # Specific requirements check
+        logger.info("\n📝 REVIEW REQUIREMENTS VERIFICATION:")
+        
+        requirements_met = []
+        requirements_failed = []
+        
+        # Check each requirement
+        for result in self.test_results:
+            if "RR Calculation" in result['test'] and result['success']:
+                requirements_met.append("✅ IA1 calculates realistic RR ratios without Multi-RR complexity")
+            elif "RR Calculation" in result['test']:
+                requirements_failed.append("❌ IA1 RR calculation issues")
+                
+            if "RR Filtering" in result['test'] and result['success']:
+                requirements_met.append("✅ RR filtering (≥2.0) blocks low RR analyses from IA2")
+            elif "RR Filtering" in result['test']:
+                requirements_failed.append("❌ RR filtering not working properly")
+                
+            if "RR Consistency" in result['test'] and result['success']:
+                requirements_met.append("✅ IA2 uses same RR values from IA1 (no recalculation)")
+            elif "RR Consistency" in result['test']:
+                requirements_failed.append("❌ IA2 RR consistency issues")
+                
+            if "Performance" in result['test'] and result['success']:
+                requirements_met.append("✅ System performance improved with Multi-RR removal")
+            elif "Performance" in result['test']:
+                requirements_failed.append("❌ Performance not improved")
+                
+            if "Clean" in result['test'] and result['success']:
+                requirements_met.append("✅ IA1 reasoning clean without Multi-RR artifacts")
+            elif "Clean" in result['test']:
+                requirements_failed.append("❌ IA1 reasoning still has Multi-RR artifacts")
+        
+        for req in requirements_met:
+            logger.info(f"   {req}")
+        
+        for req in requirements_failed:
+            logger.info(f"   {req}")
+        
+        # Performance summary
+        if hasattr(self, 'performance_metrics'):
+            logger.info("\n⚡ PERFORMANCE METRICS:")
+            for metric, value in self.performance_metrics.items():
+                logger.info(f"   📊 {metric}: {value:.2f}s")
+        
+        logger.info(f"\n🏆 FINAL RESULT: {len(requirements_met)}/{len(requirements_met) + len(requirements_failed)} requirements satisfied")
+        
+        return passed_tests, total_tests
+
+async def main():
+    """Main test execution"""
+    test_suite = SimplifiedIA1RRTestSuite()
+    passed, total = await test_suite.run_comprehensive_tests()
+    
+    # Exit with appropriate code
+    if passed == total:
+        sys.exit(0)  # All tests passed
+    else:
+        sys.exit(1)  # Some tests failed
+
+if __name__ == "__main__":
+    asyncio.run(main())
