@@ -1856,10 +1856,38 @@ class TechnicalPatternDetector:
         return self._check_volume_increase_on_breakout(df)  # Même logique
     
     def _calculate_r_squared(self, actual, predicted):
-        """Calcule le R² pour évaluer la qualité d'un fit"""
-        ss_res = np.sum((actual - predicted) ** 2)
-        ss_tot = np.sum((actual - np.mean(actual)) ** 2)
-        return 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+        """Calcule le R² pour évaluer la qualité d'un fit avec protection d'erreurs"""
+        try:
+            if len(actual) != len(predicted) or len(actual) == 0:
+                return 0.0
+                
+            # Nettoyer les données
+            actual = np.array(actual)
+            predicted = np.array(predicted)
+            
+            # Vérifier NaN et inf
+            if np.any(np.isnan(actual)) or np.any(np.isnan(predicted)) or \
+               np.any(np.isinf(actual)) or np.any(np.isinf(predicted)):
+                return 0.0
+            
+            ss_res = np.sum((actual - predicted) ** 2)
+            ss_tot = np.sum((actual - np.mean(actual)) ** 2)
+            
+            # Protection contre division par zéro
+            if ss_tot == 0 or np.isnan(ss_tot) or np.isinf(ss_tot):
+                return 0.0
+                
+            r_squared = 1 - (ss_res / ss_tot)
+            
+            # Vérifier résultat valide
+            if np.isnan(r_squared) or np.isinf(r_squared):
+                return 0.0
+                
+            return max(0.0, min(1.0, float(r_squared)))  # Limiter entre 0 et 1
+            
+        except Exception as e:
+            logger.debug(f"Error calculating R²: {e}")
+            return 0.0
     
     def _detect_harmonic_patterns(self, symbol: str, df: pd.DataFrame) -> List[TechnicalPattern]:
         """Détecte les patterns harmoniques (Gartley, Bat, Butterfly, Crab)"""
