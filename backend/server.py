@@ -1592,7 +1592,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "analysis_confidence": self._calculate_analysis_confidence(
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 ),
-                "risk_reward_ratio": ia1_risk_reward_ratio,  # 🎯 NOUVEAU: Utiliser le RR calculé par IA1
+                "risk_reward_ratio": ia1_risk_reward_ratio,  # 🎯 NOUVEAU: RR basé sur niveaux techniques
                 "ia1_reasoning": reasoning,  # 🎯 SYSTÈME SIMPLIFIÉ: Reasoning IA1 direct sans Multi-RR
                 "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
                 "market_sentiment": self._determine_market_sentiment(opportunity),
