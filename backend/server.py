@@ -6661,6 +6661,76 @@ async def get_ia2_enhancements():
         logger.error(f"IA2 enhancements error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get IA2 enhancements: {str(e)}")
 
+# Adaptive Context System Endpoints
+@app.get("/api/adaptive-context/status")
+async def get_adaptive_context_status():
+    """Obtient le statut du système de contexte adaptatif"""
+    try:
+        status = adaptive_context_system.get_system_status()
+        
+        return {
+            'success': True,
+            'data': status,
+            'message': 'Adaptive context system status retrieved successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"Adaptive context status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get adaptive context status: {str(e)}")
+
+@app.post("/api/adaptive-context/analyze")
+async def analyze_market_context(request: Dict[str, Any]):
+    """Analyse le contexte actuel du marché"""
+    try:
+        market_data = request.get('market_data', {})
+        
+        # Analyze current context
+        context = await adaptive_context_system.analyze_current_context(market_data)
+        
+        return {
+            'success': True,
+            'data': {
+                'current_regime': context.current_regime.value,
+                'regime_confidence': context.regime_confidence,
+                'volatility_level': context.volatility_level,
+                'trend_strength': context.trend_strength,
+                'volume_trend': context.volume_trend,
+                'pattern_environment': context.pattern_environment,
+                'rsi_environment': context.rsi_environment,
+                'macd_environment': context.macd_environment,
+                'market_stress_level': context.market_stress_level,
+                'liquidity_condition': context.liquidity_condition,
+                'correlation_breakdown': context.correlation_breakdown,
+                'news_sentiment': context.news_sentiment,
+                'context_duration': context.context_duration,
+                'timestamp': context.timestamp.isoformat()
+            },
+            'message': f'Market context analyzed: {context.current_regime.value} regime with {context.regime_confidence:.1%} confidence'
+        }
+        
+    except Exception as e:
+        logger.error(f"Market context analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze market context: {str(e)}")
+
+@app.post("/api/adaptive-context/load-training")
+async def load_training_data_to_context():
+    """Charge les données d'entraînement dans le système de contexte adaptatif"""
+    try:
+        # Load AI training data into adaptive context system
+        adaptive_context_system.load_ai_training_data(ai_training_system)
+        
+        status = adaptive_context_system.get_system_status()
+        
+        return {
+            'success': True,
+            'data': status,
+            'message': f'Training data loaded successfully: {status["active_rules"]} adaptive rules generated'
+        }
+        
+    except Exception as e:
+        logger.error(f"Load training data error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load training data: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
