@@ -383,15 +383,16 @@ class SimplifiedIA1RRTestSuite:
                 self.log_test_result("Clean IA1 Reasoning", False, "No IA1 analyses from previous test")
                 return
             
-            # Analyze reasoning text for cleanliness
-            clean_reasoning_count = 0
+            # Analyze reasoning text for Multi-RR artifacts vs simplified RR analysis
+            multi_rr_present = 0
+            simplified_rr_present = 0
             total_analyses = len(self.ia1_analyses)
             
-            # Multi-RR artifacts to check for
+            # Multi-RR artifacts to check for (should be removed in simplified system)
             multi_rr_artifacts = [
+                '🤖 **multi-rr analysis:**',
                 'multi-rr analysis',
                 'multi rr analysis', 
-                '🤖 **multi-rr analysis:**',
                 'hold: **',
                 'long: **',
                 'short: **',
@@ -400,12 +401,11 @@ class SimplifiedIA1RRTestSuite:
                 'multi-rr resolution'
             ]
             
-            # Positive indicators of clean reasoning
-            clean_indicators = [
-                'risk-reward analysis',
-                'risk reward ratio',
-                'technical analysis',
-                'support and resistance',
+            # Simplified RR indicators (what should be present instead)
+            simplified_indicators = [
+                'risk_reward_analysis',
+                'risk-reward ratio',
+                'risk reward calculation',
                 'entry price',
                 'stop loss',
                 'take profit'
@@ -413,48 +413,51 @@ class SimplifiedIA1RRTestSuite:
             
             for analysis in self.ia1_analyses:
                 symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '').lower()
+                reasoning = analysis.get('ia1_reasoning', '').lower()
                 
-                # Check for Multi-RR artifacts
-                has_artifacts = False
+                # Check for Multi-RR artifacts (should NOT be present)
+                has_multi_rr = False
                 artifacts_found = []
                 
                 for artifact in multi_rr_artifacts:
                     if artifact.lower() in reasoning:
-                        has_artifacts = True
+                        has_multi_rr = True
                         artifacts_found.append(artifact)
                 
-                # Check for clean indicators
-                clean_indicators_found = []
-                for indicator in clean_indicators:
+                if has_multi_rr:
+                    multi_rr_present += 1
+                    logger.info(f"      ❌ {symbol}: Multi-RR artifacts found: {artifacts_found}")
+                else:
+                    logger.info(f"      ✅ {symbol}: No Multi-RR artifacts")
+                
+                # Check for simplified RR indicators (should be present)
+                simplified_indicators_found = []
+                for indicator in simplified_indicators:
                     if indicator.lower() in reasoning:
-                        clean_indicators_found.append(indicator)
+                        simplified_indicators_found.append(indicator)
                 
-                # Reasoning is clean if no artifacts and has clean indicators
-                is_clean = not has_artifacts and len(clean_indicators_found) >= 2
-                
-                if is_clean:
-                    clean_reasoning_count += 1
-                    logger.info(f"      ✅ {symbol}: Clean reasoning with {len(clean_indicators_found)} indicators")
+                if len(simplified_indicators_found) >= 2:
+                    simplified_rr_present += 1
+                    logger.info(f"      ✅ {symbol}: Simplified RR indicators: {simplified_indicators_found}")
                 else:
-                    logger.info(f"      ❌ {symbol}: Artifacts={artifacts_found}, Indicators={len(clean_indicators_found)}")
-                
-                # Check reasoning length (should be substantial but not overly complex)
-                reasoning_length = len(reasoning)
-                if 200 <= reasoning_length <= 2000:
-                    logger.info(f"         📏 Appropriate length: {reasoning_length} chars")
-                else:
-                    logger.info(f"         ⚠️ Length concern: {reasoning_length} chars")
+                    logger.info(f"      ⚠️ {symbol}: Few simplified indicators: {simplified_indicators_found}")
             
             # Calculate cleanliness metrics
-            clean_rate = (clean_reasoning_count / total_analyses) * 100
+            multi_rr_rate = (multi_rr_present / total_analyses) * 100
+            simplified_rate = (simplified_rr_present / total_analyses) * 100
             
-            logger.info(f"   📊 Clean reasoning: {clean_reasoning_count}/{total_analyses} ({clean_rate:.1f}%)")
+            logger.info(f"   📊 Multi-RR artifacts present: {multi_rr_present}/{total_analyses} ({multi_rr_rate:.1f}%)")
+            logger.info(f"   📊 Simplified RR analysis: {simplified_rr_present}/{total_analyses} ({simplified_rate:.1f}%)")
             
-            # Success criteria: 90%+ clean reasoning rate
-            success = clean_rate >= 90
-            
-            details = f"Clean reasoning rate: {clean_rate:.1f}%"
+            # CRITICAL ASSESSMENT: If Multi-RR artifacts are present, system is NOT simplified
+            if multi_rr_present > 0:
+                logger.info(f"   ❌ CRITICAL FINDING: Multi-RR system still active - NOT simplified as requested")
+                success = False
+                details = f"Multi-RR artifacts: {multi_rr_rate:.1f}%, System NOT simplified"
+            else:
+                # Success criteria: No Multi-RR artifacts AND simplified RR analysis present
+                success = (multi_rr_rate == 0 and simplified_rate >= 50)
+                details = f"Multi-RR artifacts: {multi_rr_rate:.1f}%, Simplified RR: {simplified_rate:.1f}%"
             
             self.log_test_result("Clean IA1 Reasoning", success, details)
             
