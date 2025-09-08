@@ -1458,12 +1458,11 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     # Store patterns for later use
                     self._ia1_analyzed_patterns = ia1_patterns
                     
-                    # Extract Multi-RR info if present
+                    # Extract new IA1 RR info if present
                     if 'multi_rr_analysis' in parsed_response:
-                        rr_data = parsed_response['multi_rr_analysis']
+                        rr_data = parsed_response['multi_rr_analysis'] 
                         if rr_data.get('contradiction_detected', False):
-                            multi_rr_info = f"\n🤖 MULTI-RR: {rr_data.get('rr_reasoning', 'Contradiction resolved')}"
-                            logger.info(f"🎯 Multi-RR resolution for {opportunity.symbol}: {rr_data.get('chosen_option', 'unknown')}")
+                            logger.info(f"🎯 IA1 advanced RR analysis for {opportunity.symbol}: {rr_data.get('chosen_option', 'unknown')}")
                 
             except (json.JSONDecodeError, ValueError, KeyError) as e:
                 logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using defaults")
