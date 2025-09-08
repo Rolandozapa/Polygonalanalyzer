@@ -18,6 +18,17 @@ from chartist_learning_system import chartist_learning_system, TradingDirection
 
 logger = logging.getLogger(__name__)
 
+class MarketPhase(Enum):
+    """Phases de marché granulaires pour contextualisation des bonus"""
+    ACCUMULATION = "accumulation"      # Phase d'accumulation discrète
+    EARLY_BULL = "early_bull"         # Début de marché haussier
+    BULL_RUN = "bull_run"             # Marché haussier confirmé
+    EUPHORIA = "euphoria"             # Phase d'euphorie/bulle
+    DISTRIBUTION = "distribution"      # Phase de distribution
+    EARLY_BEAR = "early_bear"         # Début de marché baissier
+    BEAR_MARKET = "bear_market"       # Marché baissier confirmé
+    CAPITULATION = "capitulation"     # Phase de capitulation
+
 @dataclass
 class EnhancementRule:
     """Rule for enhancing trading decisions based on training insights"""
@@ -31,6 +42,14 @@ class EnhancementRule:
     last_applied: Optional[datetime] = None
     application_count: int = 0
     effectiveness_score: float = 0.0
+
+@dataclass
+class PhaseContextualRule(EnhancementRule):
+    """Règle d'amélioration conditionnelle selon la phase de marché"""
+    favorable_phases: List[MarketPhase]  # Phases où cette règle est efficace
+    unfavorable_phases: List[MarketPhase]  # Phases où éviter cette règle
+    phase_success_rates: Dict[MarketPhase, float]  # Taux de succès par phase
+    minimum_phase_confidence: float = 0.7  # Confidence minimum pour phase detection
 
 @dataclass
 class TradingEnhancement:
