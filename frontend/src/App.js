@@ -112,7 +112,9 @@ const TradingDashboard = () => {
   const runAITraining = async () => {
     try {
       setBacktestLoading(true);
-      const response = await axios.post(`${API}/ai-training/run`);
+      
+      // Use quick training for better performance
+      const response = await axios.post(`${API}/ai-training/run-quick`);
       setBacktestResults(prev => ({
         ...prev,
         training_completed: true,
