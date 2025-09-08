@@ -851,6 +851,34 @@ const TradingDashboard = () => {
                             <p className="font-medium text-green-900">{backtestResults.ia2_enhancements_generated || 0}</p>
                           </div>
                         </div>
+                        
+                        {/* AI Enhancement Integration */}
+                        <div className="mt-4 pt-4 border-t border-green-200">
+                          <h5 className="font-semibold text-green-900 mb-2">🧠 Apply AI Insights to Live Trading</h5>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => loadAIInsights()}
+                              disabled={backtestLoading}
+                              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+                            >
+                              {backtestLoading ? 'Loading...' : '⚡ Load AI Insights into Trading Bot'}
+                            </button>
+                          </div>
+                          
+                          {backtestResults?.enhancement_loaded && (
+                            <div className="mt-3 p-3 bg-green-100 rounded-lg">
+                              <p className="text-sm text-green-800">
+                                🎯 <strong>AI Enhancement Active!</strong> Your trading bot is now using AI insights:
+                              </p>
+                              <ul className="text-xs text-green-700 mt-2 space-y-1">
+                                <li>• {backtestResults.enhancement_summary?.total_rules || 0} enhancement rules loaded</li>
+                                <li>• {backtestResults.enhancement_summary?.pattern_insights || 0} pattern success insights</li>
+                                <li>• {backtestResults.enhancement_summary?.market_condition_insights || 0} market condition optimizations</li>
+                                <li>• IA1 and IA2 are now enhanced with historical learning</li>
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
