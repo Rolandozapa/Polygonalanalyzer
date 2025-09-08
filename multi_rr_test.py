@@ -75,12 +75,21 @@ class MultiRRDisplayAndIA2ConsistencyTestSuite:
             
             data = response.json()
             
-            if not isinstance(data, list) or len(data) == 0:
+            # Handle the API response structure
+            if isinstance(data, dict) and 'analyses' in data:
+                analyses = data['analyses']
+            elif isinstance(data, list):
+                analyses = data
+            else:
+                self.log_test_result("Multi-RR Display Early Positioning", False, "Invalid API response structure")
+                return
+            
+            if not analyses or len(analyses) == 0:
                 self.log_test_result("Multi-RR Display Early Positioning", False, "No IA1 analyses found")
                 return
             
             # Store analyses for later cross-validation
-            self.ia1_analyses = data
+            self.ia1_analyses = analyses
             
             multi_rr_early_count = 0
             multi_rr_late_count = 0
