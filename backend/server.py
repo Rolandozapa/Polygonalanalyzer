@@ -5552,6 +5552,11 @@ class UltraProfessionalTradingOrchestrator:
             for i, analysis in enumerate(analyses):
                 logger.info(f"🔍 DEBUG: Analysis {i}: Type={type(analysis)}, Is TechnicalAnalysis? {isinstance(analysis, TechnicalAnalysis)}")
                 
+                # 🛡️ SÉCURITÉ: Ignorer les analyses None ou invalides
+                if analysis is None:
+                    logger.warning(f"❌ DEBUG: Skipping None analysis at index {i}")
+                    continue
+                
                 if isinstance(analysis, TechnicalAnalysis):
                     # 🛡️ SÉCURITÉ: Vérification que analyzed_opportunities[i] existe
                     if i < len(analyzed_opportunities) and analyzed_opportunities[i] is not None:
