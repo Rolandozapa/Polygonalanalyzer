@@ -1297,15 +1297,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
-            🎯 DETECTED CHARTIST PATTERNS ({len(all_detected_patterns)} patterns):
+            🎯 DETECTED CHARTIST PATTERNS ({len(all_detected_patterns)} patterns detected):
             {pattern_details if pattern_details else "No significant chartist patterns detected"}
             
-            PATTERN ANALYSIS REQUIREMENTS:
-            1. You MUST explicitly mention and analyze each detected pattern by name
-            2. Explain how each pattern influences your technical assessment
-            3. Use pattern-specific terminology (e.g., "Triple Top suggests bearish reversal", "Gartley pattern indicates bullish continuation")
-            4. Integrate pattern targets and breakout levels into your analysis
-            5. Your confidence should reflect pattern strength and confluence
+            CRITICAL PATTERN ANALYSIS REQUIREMENTS:
+            1. You MUST analyze ALL {len(all_detected_patterns)} detected patterns individually by name
+            2. Explain how EACH pattern influences your technical assessment
+            3. Show pattern confluence - how do multiple patterns work together or conflict
+            4. Use pattern-specific terminology for each pattern
+            5. Integrate pattern targets and breakout levels from ALL patterns
+            6. Your confidence should reflect the strength of pattern confluence
+            7. In your JSON response, list ALL patterns in the 'patterns' array
             
             Recent Price Action: {historical_data['Close'].tail().tolist()}
             
