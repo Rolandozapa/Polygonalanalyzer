@@ -6844,12 +6844,24 @@ async def load_ai_insights_into_enhancer():
         # Also load into adaptive context system
         adaptive_context_system.load_ai_training_data(ai_training_system)
         
+        # 🎯 NOUVEAU: Génération automatique des stratégies chartistes
+        chartist_strategies = chartist_learning_system.generate_chartist_strategies()
+        logger.info(f"Generated {len(chartist_strategies)} chartist strategies")
+        
         enhancement_summary = ai_performance_enhancer.get_enhancement_summary()
+        
+        # Count chartist-specific rules
+        chartist_rules = len([r for r in ai_performance_enhancer.enhancement_rules if 'chartist' in r.rule_id])
         
         return {
             'success': True,
-            'data': enhancement_summary,
-            'message': f'AI insights loaded successfully: {enhancement_summary["total_rules"]} enhancement rules generated to improve IA1 and IA2 performance'
+            'data': {
+                **enhancement_summary,
+                'chartist_strategies_generated': len(chartist_strategies),
+                'chartist_enhancement_rules': chartist_rules,
+                'chartist_integration_active': chartist_rules > 0
+            },
+            'message': f'AI insights loaded successfully: {enhancement_summary["total_rules"]} enhancement rules generated (including {chartist_rules} chartist rules) to improve IA1 and IA2 performance'
         }
         
     except Exception as e:
