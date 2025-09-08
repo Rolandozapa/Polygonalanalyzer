@@ -3419,11 +3419,18 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             
             reasoning += f"Fallback IA2 R:R calculation: {risk_reward:.2f}:1 (IA1 R:R unavailable). "
             
-            # Seuil plus strict pour cohérence avec filtre IA1
-            if risk_reward < 2.0:
+            # 🚨 BUG FIX: Ne pas override si Multi-RR a déjà choisi une direction
+            has_multi_rr_override = "Multi-RR applied" in reasoning or "🎯 Multi-RR applied" in reasoning
+            
+            # Seuil plus strict pour cohérence avec filtre IA1 - SAUF si Multi-RR override
+            if risk_reward < 2.0 and not has_multi_rr_override:
                 signal = SignalType.HOLD
                 reasoning += "Risk-reward ratio below 2:1 threshold for consistency with IA1 filter. "
                 confidence = max(confidence * 0.9, 0.5)
+            elif has_multi_rr_override and risk_reward < 2.0:
+                # Multi-RR a priorité, mais signaler l'incohérence
+                reasoning += f"🎯 Multi-RR OVERRIDE: Keeping {signal} despite fallback RR {risk_reward:.2f}:1 < 2.0 (Multi-RR calculations prevail). "
+                logger.info(f"🎯 Multi-RR Override: {opportunity.symbol} keeping {signal} despite low fallback RR {risk_reward:.2f}:1")
         
         # Live trading position sizing (more conservative)
         if signal != SignalType.HOLD:
