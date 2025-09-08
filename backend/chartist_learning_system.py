@@ -657,7 +657,7 @@ class ChartistLearningSystem:
     
     def _simulate_trade(self, df: pd.DataFrame, pattern: TechnicalPattern, 
                        direction: TradingDirection) -> Dict[str, Any]:
-        """Simule un trade basé sur un pattern"""
+        """Simule un trade basé sur un pattern avec indicateurs techniques avancés"""
         
         entry_price = pattern.entry_price
         pattern_date = pattern.detected_at
@@ -668,57 +668,263 @@ class ChartistLearningSystem:
         except:
             return {'return': 0.0, 'success': False, 'exit_reason': 'no_data'}
         
-        # Définir stop loss et take profit basés sur la figure chartiste
-        chartist_info = self.chartist_patterns.get(pattern.pattern_type.value)
+        # Obtenir les indicateurs techniques au moment du pattern
+        if pattern_idx >= len(df):
+            return {'return': 0.0, 'success': False, 'exit_reason': 'insufficient_data'}
         
-        if direction == TradingDirection.LONG:
-            if chartist_info:
-                stop_loss = entry_price * (1 - chartist_info.risk_reward_profile.get('max_risk', 0.02))
-                take_profit = entry_price * (1 + chartist_info.risk_reward_profile.get('optimal_rr', 2.0) * 
-                                           chartist_info.risk_reward_profile.get('max_risk', 0.02))
-            else:
-                stop_loss = entry_price * 0.98
-                take_profit = entry_price * 1.04
-        else:  # SHORT
-            if chartist_info:
-                stop_loss = entry_price * (1 + chartist_info.risk_reward_profile.get('max_risk', 0.02))
-                take_profit = entry_price * (1 - chartist_info.risk_reward_profile.get('optimal_rr', 2.0) * 
-                                           chartist_info.risk_reward_profile.get('max_risk', 0.02))
-            else:
-                stop_loss = entry_price * 1.02
-                take_profit = entry_price * 0.96
+        current_row = df.iloc[pattern_idx]
         
-        # Simuler le trade sur les 10 jours suivants
-        for i in range(1, min(11, len(df) - pattern_idx)):
+        # Calculer les niveaux de stop loss et take profit avec indicateurs techniques
+        stop_loss, take_profit = self._calculate_enhanced_levels(
+            entry_price, direction, current_row, pattern
+        )
+        
+        # Obtenir le signal des indicateurs techniques
+        technical_signal = self._get_technical_signal_strength(current_row, direction)
+        
+        # Ajuster les niveaux selon la force du signal technique
+        if technical_signal['strength'] > 0.7:
+            # Signal fort : augmenter take profit, réduire stop loss
+            if direction == TradingDirection.LONG:
+                take_profit = entry_price + (take_profit - entry_price) * 1.2
+                stop_loss = entry_price - (entry_price - stop_loss) * 0.9
+            else:
+                take_profit = entry_price - (entry_price - take_profit) * 1.2
+                stop_loss = entry_price + (stop_loss - entry_price) * 0.9
+        elif technical_signal['strength'] < 0.4:
+            # Signal faible : réduire take profit, éloigner stop loss
+            if direction == TradingDirection.LONG:
+                take_profit = entry_price + (take_profit - entry_price) * 0.8
+                stop_loss = entry_price - (entry_price - stop_loss) * 1.1
+            else:
+                take_profit = entry_price - (entry_price - take_profit) * 0.8
+                stop_loss = entry_price + (stop_loss - entry_price) * 1.1
+        
+        # Simuler le trade sur les jours suivants
+        max_days = min(15, len(df) - pattern_idx - 1)  # Maximum 15 jours
+        
+        for i in range(1, max_days + 1):
             current_idx = pattern_idx + i
             if current_idx >= len(df):
                 break
                 
             current_price = df.iloc[current_idx]['Close']
+            current_row_day = df.iloc[current_idx]
             
-            if direction == TradingDirection.LONG:
-                if current_price <= stop_loss:
-                    return_pct = (stop_loss / entry_price - 1) * 100
-                    return {'return': return_pct, 'success': False, 'exit_reason': 'stop_loss', 'days': i}
-                elif current_price >= take_profit:
-                    return_pct = (take_profit / entry_price - 1) * 100
-                    return {'return': return_pct, 'success': True, 'exit_reason': 'take_profit', 'days': i}
-            else:  # SHORT
-                if current_price >= stop_loss:
-                    return_pct = (entry_price / stop_loss - 1) * 100
-                    return {'return': return_pct, 'success': False, 'exit_reason': 'stop_loss', 'days': i}
-                elif current_price <= take_profit:
-                    return_pct = (entry_price / take_profit - 1) * 100
-                    return {'return': return_pct, 'success': True, 'exit_reason': 'take_profit', 'days': i}
+            # Vérifier les conditions de sortie avec indicateurs techniques
+            exit_signal = self._check_enhanced_exit_conditions(
+                current_price, entry_price, stop_loss, take_profit, 
+                direction, current_row_day, i
+            )
+            
+            if exit_signal['should_exit']:
+                return_pct = self._calculate_return_pct(
+                    entry_price, exit_signal['exit_price'], direction
+                )
+                
+                return {
+                    'return': return_pct,
+                    'success': return_pct > 1.5,  # Seuil de succès ajusté
+                    'exit_reason': exit_signal['reason'],
+                    'days': i,
+                    'technical_strength': technical_signal['strength'],
+                    'exit_price': exit_signal['exit_price'],
+                    'max_favorable': exit_signal.get('max_favorable', 0.0),
+                    'max_adverse': exit_signal.get('max_adverse', 0.0)
+                }
         
         # Sortie par timeout
-        final_price = df.iloc[min(pattern_idx + 10, len(df) - 1)]['Close']
-        if direction == TradingDirection.LONG:
-            return_pct = (final_price / entry_price - 1) * 100
-        else:
-            return_pct = (entry_price / final_price - 1) * 100
+        final_price = df.iloc[min(pattern_idx + max_days, len(df) - 1)]['Close']
+        return_pct = self._calculate_return_pct(entry_price, final_price, direction)
         
-        return {'return': return_pct, 'success': return_pct > 2, 'exit_reason': 'timeout', 'days': 10}
+        return {
+            'return': return_pct,
+            'success': return_pct > 1.5,
+            'exit_reason': 'timeout',
+            'days': max_days,
+            'technical_strength': technical_signal['strength'],
+            'exit_price': final_price,
+            'max_favorable': 0.0,
+            'max_adverse': 0.0
+        }
+    
+    def _calculate_enhanced_levels(self, entry_price: float, direction: TradingDirection, 
+                                 indicators_row: pd.Series, pattern: TechnicalPattern) -> Tuple[float, float]:
+        """Calcule les niveaux stop loss et take profit avec indicateurs techniques"""
+        
+        # Base risk (2-4% selon la volatilité)
+        volatility = indicators_row.get('volatility_20d', 0.02)
+        base_risk = max(0.02, min(0.04, volatility * 2))
+        
+        # Ajuster selon RSI
+        rsi = indicators_row.get('rsi_14', 50)
+        if direction == TradingDirection.LONG:
+            if rsi < 30:  # RSI oversold, reduce risk
+                base_risk *= 0.8
+            elif rsi > 70:  # RSI overbought, increase risk
+                base_risk *= 1.2
+        else:  # SHORT
+            if rsi > 70:  # RSI overbought, reduce risk
+                base_risk *= 0.8
+            elif rsi < 30:  # RSI oversold, increase risk
+                base_risk *= 1.2
+        
+        # Ajuster selon Bollinger Bands
+        bb_position = indicators_row.get('bb_position', 0.5)
+        if direction == TradingDirection.LONG and bb_position < 0.2:
+            base_risk *= 0.9  # Près de la bande inférieure, moins de risque
+        elif direction == TradingDirection.SHORT and bb_position > 0.8:
+            base_risk *= 0.9  # Près de la bande supérieure, moins de risque
+        
+        # Ajuster selon la force du trend
+        trend_strength = indicators_row.get('trend_strength', 0.5)
+        if trend_strength > 0.7:
+            risk_reward_ratio = 2.5  # Trend fort, meilleur R:R
+        elif trend_strength < 0.3:
+            risk_reward_ratio = 2.0  # Trend faible, R:R conservateur
+        else:
+            risk_reward_ratio = 2.2  # Neutral
+        
+        # Calculer les niveaux
+        if direction == TradingDirection.LONG:
+            stop_loss = entry_price * (1 - base_risk)
+            take_profit = entry_price * (1 + base_risk * risk_reward_ratio)
+        else:
+            stop_loss = entry_price * (1 + base_risk)
+            take_profit = entry_price * (1 - base_risk * risk_reward_ratio)
+        
+        return stop_loss, take_profit
+    
+    def _get_technical_signal_strength(self, indicators_row: pd.Series, direction: TradingDirection) -> Dict[str, Any]:
+        """Évalue la force du signal technique"""
+        
+        strength_factors = []
+        supporting_indicators = []
+        
+        # RSI strength
+        rsi = indicators_row.get('rsi_14', 50)
+        if direction == TradingDirection.LONG:
+            if rsi < 35:
+                strength_factors.append(0.8)
+                supporting_indicators.append("RSI_oversold")
+            elif rsi > 45 and rsi < 65:
+                strength_factors.append(0.6)
+                supporting_indicators.append("RSI_neutral_bullish")
+        else:  # SHORT
+            if rsi > 65:
+                strength_factors.append(0.8)
+                supporting_indicators.append("RSI_overbought")
+            elif rsi < 55 and rsi > 35:
+                strength_factors.append(0.6)
+                supporting_indicators.append("RSI_neutral_bearish")
+        
+        # MACD strength
+        macd_histogram = indicators_row.get('macd_histogram', 0)
+        if direction == TradingDirection.LONG and macd_histogram > 0:
+            strength_factors.append(0.7)
+            supporting_indicators.append("MACD_bullish")
+        elif direction == TradingDirection.SHORT and macd_histogram < 0:
+            strength_factors.append(0.7)
+            supporting_indicators.append("MACD_bearish")
+        
+        # Stochastic strength
+        stoch_k = indicators_row.get('stoch_k', 50)
+        if direction == TradingDirection.LONG and stoch_k < 25:
+            strength_factors.append(0.7)
+            supporting_indicators.append("Stoch_oversold")
+        elif direction == TradingDirection.SHORT and stoch_k > 75:
+            strength_factors.append(0.7)
+            supporting_indicators.append("Stoch_overbought")
+        
+        # Bollinger Bands strength
+        bb_position = indicators_row.get('bb_position', 0.5)
+        if direction == TradingDirection.LONG and bb_position < 0.15:
+            strength_factors.append(0.8)
+            supporting_indicators.append("BB_oversold")
+        elif direction == TradingDirection.SHORT and bb_position > 0.85:
+            strength_factors.append(0.8)
+            supporting_indicators.append("BB_overbought")
+        
+        # Volume confirmation
+        volume_ratio = indicators_row.get('volume_ratio', 1.0)
+        if volume_ratio > 1.5:
+            strength_factors.append(0.6)
+            supporting_indicators.append("Volume_confirmation")
+        
+        # Calculate overall strength
+        if strength_factors:
+            overall_strength = np.mean(strength_factors)
+        else:
+            overall_strength = 0.4  # Neutral/weak if no supporting indicators
+        
+        return {
+            'strength': overall_strength,
+            'supporting_indicators': supporting_indicators,
+            'factor_count': len(strength_factors)
+        }
+    
+    def _check_enhanced_exit_conditions(self, current_price: float, entry_price: float, 
+                                      stop_loss: float, take_profit: float, 
+                                      direction: TradingDirection, indicators_row: pd.Series, 
+                                      days_held: int) -> Dict[str, Any]:
+        """Vérifie les conditions de sortie avec indicateurs techniques"""
+        
+        # Traditional stop loss / take profit check
+        if direction == TradingDirection.LONG:
+            if current_price <= stop_loss:
+                return {'should_exit': True, 'exit_price': stop_loss, 'reason': 'stop_loss'}
+            elif current_price >= take_profit:
+                return {'should_exit': True, 'exit_price': take_profit, 'reason': 'take_profit'}
+        else:  # SHORT
+            if current_price >= stop_loss:
+                return {'should_exit': True, 'exit_price': stop_loss, 'reason': 'stop_loss'}
+            elif current_price <= take_profit:
+                return {'should_exit': True, 'exit_price': take_profit, 'reason': 'take_profit'}
+        
+        # Enhanced exit conditions based on technical indicators
+        
+        # RSI divergence exit
+        rsi = indicators_row.get('rsi_14', 50)
+        if direction == TradingDirection.LONG and rsi > 80 and days_held >= 3:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'rsi_overbought_exit'}
+        elif direction == TradingDirection.SHORT and rsi < 20 and days_held >= 3:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'rsi_oversold_exit'}
+        
+        # MACD signal change exit
+        macd_histogram = indicators_row.get('macd_histogram', 0)
+        macd_bullish_crossover = indicators_row.get('macd_bullish_crossover', False)
+        macd_bearish_crossover = indicators_row.get('macd_bearish_crossover', False)
+        
+        if direction == TradingDirection.LONG and macd_bearish_crossover and days_held >= 2:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'macd_bearish_crossover'}
+        elif direction == TradingDirection.SHORT and macd_bullish_crossover and days_held >= 2:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'macd_bullish_crossover'}
+        
+        # Bollinger Bands extreme exit
+        bb_position = indicators_row.get('bb_position', 0.5)
+        if direction == TradingDirection.LONG and bb_position > 0.95 and days_held >= 2:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'bb_extreme_high'}
+        elif direction == TradingDirection.SHORT and bb_position < 0.05 and days_held >= 2:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'bb_extreme_low'}
+        
+        # Time-based exit with profit protection
+        if days_held >= 10:
+            return_pct = self._calculate_return_pct(entry_price, current_price, direction)
+            if return_pct > 3.0:  # Exit profitable trades after 10 days
+                return {'should_exit': True, 'exit_price': current_price, 'reason': 'profit_protection'}
+        
+        # Maximum holding period
+        if days_held >= 15:
+            return {'should_exit': True, 'exit_price': current_price, 'reason': 'max_holding_period'}
+        
+        return {'should_exit': False}
+    
+    def _calculate_return_pct(self, entry_price: float, exit_price: float, direction: TradingDirection) -> float:
+        """Calcule le pourcentage de retour"""
+        if direction == TradingDirection.LONG:
+            return (exit_price / entry_price - 1) * 100
+        else:  # SHORT
+            return (entry_price / exit_price - 1) * 100
     
     def _determine_market_context(self, df: pd.DataFrame, pattern_date: datetime) -> str:
         """Détermine le contexte de marché au moment du pattern"""
