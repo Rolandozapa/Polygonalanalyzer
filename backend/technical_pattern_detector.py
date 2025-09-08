@@ -1392,7 +1392,8 @@ class TechnicalPatternDetector:
                     trough3 = low_troughs.iloc[i + 2]
                     
                     avg_trough = (trough1 + trough2 + trough3) / 3
-                    if (abs(trough1 - avg_trough) / avg_trough < 0.02 and
+                    if (avg_trough > 0 and 
+                        abs(trough1 - avg_trough) / avg_trough < 0.02 and
                         abs(trough2 - avg_trough) / avg_trough < 0.02 and
                         abs(trough3 - avg_trough) / avg_trough < 0.02):
                         
