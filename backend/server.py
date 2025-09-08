@@ -5443,7 +5443,6 @@ class UltraProfessionalTradingOrchestrator:
                 logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Critères insuffisants ({criteria_met}/6): {'; '.join(reasons[:2])} | RR={risk_reward_ratio:.2f}:1 ✓")
                 return False
             
-            # SUCCÈS: Analyse intelligente multicritères réussie avec RR >= 2.0
             logger.info(f"✅ IA2 ACCEPTED - {analysis.symbol}: {criteria_met}/6 critères ✓ | RR={risk_reward_ratio:.2f}:1 | Confidence: {analysis.analysis_confidence:.1%} | Expected Value: {expected_value:.2f}")
             return True
             
