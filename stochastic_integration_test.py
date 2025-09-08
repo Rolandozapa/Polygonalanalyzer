@@ -224,11 +224,12 @@ class StochasticIntegrationTestSuite:
             
             for analysis in analyses:
                 symbol = analysis.get('symbol', 'Unknown')
-                analysis_text = str(analysis.get('analysis', '')) + ' ' + str(analysis.get('reasoning', ''))
+                ia1_reasoning = analysis.get('ia1_reasoning', '')
+                analysis_text = str(analysis.get('analysis', ''))
                 
                 # Look for debug-style patterns like "Stochastic: XX.X"
                 import re
-                debug_matches = re.findall(r'stochastic[:\s]*(\d+\.?\d*)', analysis_text.lower())
+                debug_matches = re.findall(r'stochastic[:\s]*(\d+\.?\d*)', (ia1_reasoning + ' ' + analysis_text).lower())
                 
                 if debug_matches:
                     debug_stochastic_found += 1
