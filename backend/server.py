@@ -1312,28 +1312,29 @@ class UltraProfessionalIA1TechnicalAnalyst:
             Recent Price Action: {historical_data['Close'].tail().tolist()}
             
             INSTRUCTIONS: 
-            - Analyze the technical situation with PRIMARY FOCUS on the detected chartist patterns
-            - Start your analysis by explicitly naming the patterns: "The detected [PATTERN NAME] formation..."
-            - Explain the implications of each pattern for price direction
-            - Use the patterns to support your recommendation
-            - Include pattern-specific price targets and stop-loss levels
+            - Analyze the technical situation with PRIMARY FOCUS on ALL detected chartist patterns
+            - Start your analysis by naming ALL patterns: "The detected patterns include [LIST ALL PATTERN NAMES]"
+            - Analyze each pattern's individual contribution to your recommendation
+            - Show how patterns confirm or contradict each other
+            - Include pattern-specific price targets and stop-loss levels from multiple patterns
             
             Required JSON format:
             {{
-                "analysis": "Technical analysis incorporating ALL detected patterns: [mention each pattern by name and its implications]",
-                "reasoning": "Detailed reasoning explaining how EACH pattern influences the assessment. Mention ALL patterns: {', '.join([p.pattern_type.value for p in all_detected_patterns]) if all_detected_patterns else 'No patterns'}",
-                "patterns": ["list", "all", "detected", "pattern", "names"],
+                "analysis": "Technical analysis incorporating ALL detected patterns. Start with: 'The detected patterns include: [list all pattern names]. [Then analyze each pattern individually and their confluence]'",
+                "reasoning": "Detailed reasoning explaining how EACH pattern influences the assessment. Mention ALL detected patterns by name.",
+                "patterns": ["list_all_detected_pattern_names_here"],
                 "pattern_analysis": {{
                     "primary_pattern": "most_important_pattern_name",
-                    "all_patterns_analyzed": ["list", "all", "patterns", "you", "analyzed"],
-                    "pattern_confluence": "How do multiple patterns work together",
-                    "pattern_count": {len(all_detected_patterns)}
+                    "all_patterns_analyzed": ["list_all_patterns_you_analyzed"],
+                    "pattern_confluence": "How do the patterns work together - describe conflicts and confirmations",
+                    "pattern_count": "number_of_patterns_detected",
+                    "individual_pattern_analysis": "Analyze each pattern individually by name"
                 }},
                 "confidence": 0.75,
                 "recommendation": "hold/long/short"
             }}
             
-            CRITICAL: In your 'patterns' array, list ALL {len(all_detected_patterns)} patterns you analyzed: {', '.join([p.pattern_type.value for p in all_detected_patterns]) if all_detected_patterns else 'None'}
+            🚨 MANDATORY: Your 'patterns' array MUST contain ALL detected pattern names. Analyze each pattern individually and show their confluence.
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
