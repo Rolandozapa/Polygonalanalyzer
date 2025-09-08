@@ -5388,63 +5388,60 @@ class UltraProfessionalTradingOrchestrator:
         return await self.start_trading_system()
     
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
-        """Filtrage intelligent IA1→IA2 avec CONFIDENCE-BASED HOLD filter + Risk-Reward 2:1 minimum"""
+        """Filtrage intelligent IA1→IA2 avec NOUVELLE LOGIQUE CONDITIONNELLE"""
         try:
-            # FILTRE 0: CONFIDENCE-BASED HOLD Filter (économie LLM majeure)
-            # Logique: Confiance <70% = HOLD implicite, ≥70% = Signal trading potentiel
-            if analysis.analysis_confidence < 0.70:
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Confiance IA1 faible ({analysis.analysis_confidence:.1%}) → HOLD implicite (économie crédits IA2)")
-                return False
-            
-            # FILTRE 1: Vérification de base analyse IA1
+            # FILTRE 0: Vérification de base analyse IA1
             if not analysis.ia1_reasoning or len(analysis.ia1_reasoning.strip()) < 50:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Analyse IA1 vide/corrompue")
                 return False
             
-            # FILTRE 2: Confiance IA1 extrêmement faible (analyse défaillante)
+            # FILTRE 1: Confiance IA1 extrêmement faible (analyse défaillante)
             if analysis.analysis_confidence < 0.3:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
                 return False
             
-            # FILTRE 3: NOUVEAU - Risk-Reward minimum 2.0 (CRITÈRE FONDAMENTAL)
+            # 🎯 NOUVELLE LOGIQUE CONDITIONNELLE: 2 voies vers IA2
+            
+            ia1_signal = getattr(analysis, 'ia1_signal', 'hold').lower()
             risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 1.0)
-            if risk_reward_ratio < 2.0:
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: RR insuffisant ({risk_reward_ratio:.2f}:1 < 2.0:1 minimum requis)")
-                return False
+            confidence = analysis.analysis_confidence
             
-            # FILTRE 4: LOGIQUE INTELLIGENTE (remplace RR simpliste)
-            # Critères: High confidence OU Multi-RR resolved OU Strong pattern OU Significant movement
+            # VOIE 1: Position LONG/SHORT avec confidence > 70%
+            strong_signal_with_confidence = (
+                ia1_signal in ['long', 'short'] and 
+                confidence >= 0.70
+            )
             
-            high_confidence = analysis.analysis_confidence >= 0.80  # IA1 très confiant
-            has_multi_rr = "advanced analysis" in analysis.ia1_reasoning.lower()  # Analyse avancée résolue
-            has_master_pattern = getattr(analysis, 'master_pattern', None) is not None  # Pattern fort
-            significant_move = abs(opportunity.price_change_24h) >= 5.0  # Mouvement >5%
-            good_volume = opportunity.volume_24h >= 500_000  # Volume décent
+            # VOIE 2: RR supérieur à 2.0 (peu importe le signal)
+            excellent_rr = risk_reward_ratio >= 2.0
             
-            # NOUVEAU: Espérance mathématique approximative avec RR IA1
-            confidence_as_prob = min(analysis.analysis_confidence, 0.95)  # Max 95% prob
-            expected_value = (confidence_as_prob * risk_reward_ratio) - ((1 - confidence_as_prob) * 1.0)
-            
-            # Critère supplémentaire: RR excellent (>= 3.0)
-            excellent_rr = risk_reward_ratio >= 3.0
-            
-            # CRITÈRES MULTIPLES (au moins 2 sur 6, mais RR >= 2.0 déjà validé)
-            criteria_met = sum([high_confidence, has_multi_rr, has_master_pattern, significant_move and good_volume, expected_value > 0.2, excellent_rr])
-            
-            if criteria_met < 2:
-                reasons = []
-                if not high_confidence: reasons.append(f"Confidence {analysis.analysis_confidence:.1%}<80%")
-                if not has_multi_rr: reasons.append("No advanced analysis")
-                if not has_master_pattern: reasons.append("No master pattern")
-                if not (significant_move and good_volume): reasons.append(f"Movement {opportunity.price_change_24h:+.1f}% or volume ${opportunity.volume_24h:,.0f} insufficient")
-                if expected_value <= 0.2: reasons.append(f"Expected value {expected_value:.2f}≤0.2")
-                if not excellent_rr: reasons.append(f"RR {risk_reward_ratio:.2f}<3.0 (good but not excellent)")
+            # 📊 DÉCISION: Au moins UNE des deux voies doit être satisfaite
+            if strong_signal_with_confidence:
+                logger.info(f"✅ IA2 ACCEPTED (VOIE 1) - {analysis.symbol}: Signal {ia1_signal.upper()} avec confiance {confidence:.1%} ≥ 70% | RR={risk_reward_ratio:.2f}:1")
+                return True
                 
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Critères insuffisants ({criteria_met}/6): {'; '.join(reasons[:2])} | RR={risk_reward_ratio:.2f}:1 ✓")
+            elif excellent_rr:
+                logger.info(f"✅ IA2 ACCEPTED (VOIE 2) - {analysis.symbol}: RR excellent {risk_reward_ratio:.2f}:1 ≥ 2.0 | Signal={ia1_signal.upper()}, Confiance={confidence:.1%}")
+                return True
+                
+            else:
+                # Aucune des deux voies satisfaite
+                reasons = []
+                if not strong_signal_with_confidence:
+                    if ia1_signal == 'hold':
+                        reasons.append(f"Signal HOLD (pas de position)")
+                    else:
+                        reasons.append(f"Signal {ia1_signal.upper()} mais confiance {confidence:.1%} < 70%")
+                        
+                if not excellent_rr:
+                    reasons.append(f"RR {risk_reward_ratio:.2f}:1 < 2.0")
+                
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Aucune voie satisfaite | {' ET '.join(reasons)}")
                 return False
             
-            logger.info(f"✅ IA2 ACCEPTED - {analysis.symbol}: {criteria_met}/6 critères ✓ | RR={risk_reward_ratio:.2f}:1 | Confidence: {analysis.analysis_confidence:.1%} | Expected Value: {expected_value:.2f}")
-            return True
+        except Exception as e:
+            logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
+            return True  # En cas d'erreur, envoyer à IA2 (principe de précaution)
             
         except Exception as e:
             logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
