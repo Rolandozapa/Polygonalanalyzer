@@ -31,15 +31,21 @@ class ContextAdjustmentType(str, Enum):
 
 @dataclass
 class MarketContext:
-    """Current market context with enhanced AI-driven analysis"""
+    """Current market context with enhanced AI-driven analysis and technical indicators integration"""
     current_regime: MarketRegime
     regime_confidence: float
     volatility_level: float  # 0-1 scale
     trend_strength: float   # 0-1 scale
     volume_trend: float     # Relative volume change
     pattern_environment: str  # Which patterns are more reliable now
-    rsi_environment: str    # Overbought, oversold, neutral zones
+    rsi_environment: str    # Overbought, oversold, neutral zones  
     macd_environment: str   # Bullish, bearish, choppy
+    stochastic_environment: str  # Oversold, overbought, neutral momentum
+    bollinger_environment: str   # Squeeze, expansion, trending, reverting
+    technical_confluence: float  # 0-1 score of technical indicators alignment
+    indicators_divergence: bool  # Are technical indicators showing divergence?
+    momentum_regime: str    # Accelerating, decelerating, stable
+    volatility_regime: str  # Contracting, expanding, stable (from Bollinger Bands)
     market_stress_level: float  # 0-1 scale of market stress
     liquidity_condition: str   # High, medium, low liquidity
     correlation_breakdown: bool  # Are usual correlations breaking down?
