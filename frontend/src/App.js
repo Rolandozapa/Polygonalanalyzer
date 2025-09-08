@@ -791,7 +791,7 @@ const TradingDashboard = () => {
                         </div>
                         
                         {/* Trading Levels */}
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
                           <div className="text-center">
                             <p className="text-sm text-slate-600">Entry</p>
                             <p className="font-semibold text-slate-900">
@@ -820,6 +820,20 @@ const TradingDashboard = () => {
                             <p className="text-sm text-slate-600">TP3</p>
                             <p className="font-semibold text-green-600">
                               ${decision.take_profit_3?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">IA2 R:R</p>
+                            <p className={`font-semibold ${
+                              (decision.risk_reward_ratio || 1.0) >= 2.0 ? 'text-green-600' :
+                              (decision.risk_reward_ratio || 1.0) >= 1.5 ? 'text-yellow-600' :
+                              'text-red-600'
+                            }`}>
+                              {(decision.risk_reward_ratio || 1.0).toFixed(1)}:1
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {(decision.risk_reward_ratio || 1.0) >= 2.0 ? 'Excellent' :
+                               (decision.risk_reward_ratio || 1.0) >= 1.5 ? 'Good' : 'Low'}
                             </p>
                           </div>
                         </div>
