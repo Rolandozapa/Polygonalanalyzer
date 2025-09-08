@@ -6391,6 +6391,101 @@ async def get_trading_execution_mode():
         logger.error(f"Error getting execution mode: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get execution mode: {str(e)}")
 
+@app.post("/api/backtest/run")
+async def run_backtest(request: Dict[str, Any]):
+    """Lance un backtest complet sur les données historiques"""
+    try:
+        from backtesting_engine import backtesting_engine
+        
+        # Paramètres du backtest
+        start_date = request.get('start_date', '2020-01-01')
+        end_date = request.get('end_date', '2021-07-01')
+        symbols = request.get('symbols', ['BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'LINKUSDT', 'BNBUSDT'])
+        
+        logger.info(f"🎯 Starting backtest: {start_date} to {end_date} for {len(symbols)} symbols")
+        
+        # Lancer le backtest
+        results = await backtesting_engine.run_comprehensive_backtest(
+            start_date=start_date,
+            end_date=end_date,
+            symbols=symbols
+        )
+        
+        # Formater les résultats pour l'API
+        formatted_results = {}
+        for symbol, result in results.items():
+            formatted_results[symbol] = {
+                'total_return': f"{result.total_return:.2%}",
+                'total_trades': result.total_trades,
+                'win_rate': f"{result.win_rate:.1%}",
+                'profit_factor': f"{result.profit_factor:.2f}",
+                'max_drawdown': f"{result.max_drawdown:.2%}",
+                'sharpe_ratio': f"{result.sharpe_ratio:.2f}",
+                'avg_trade_return': f"${result.avg_trade_return:.2f}",
+                'best_trade': f"${result.best_trade:.2f}",
+                'worst_trade': f"${result.worst_trade:.2f}",
+                'trades_detail': result.trades_detail[:10]  # Première 10 trades pour preview
+            }
+        
+        # Calculer métriques globales
+        total_trades = sum(r.total_trades for r in results.values())
+        total_winning = sum(r.winning_trades for r in results.values())
+        overall_win_rate = total_winning / total_trades if total_trades > 0 else 0
+        profitable_symbols = len([r for r in results.values() if r.total_return > 0])
+        
+        summary = {
+            'period': f"{start_date} to {end_date}",
+            'symbols_tested': len(results),
+            'profitable_symbols': f"{profitable_symbols}/{len(results)}",
+            'total_trades': total_trades,
+            'overall_win_rate': f"{overall_win_rate:.1%}",
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        
+        return {
+            'success': True,
+            'summary': summary,
+            'results': formatted_results,
+            'message': f'Backtest completed successfully for {len(results)} symbols'
+        }
+        
+    except Exception as e:
+        logger.error(f"Backtest error: {e}")
+        raise HTTPException(status_code=500, detail=f"Backtest failed: {str(e)}")
+
+@app.get("/api/backtest/status")
+async def get_backtest_status():
+    """Obtient le statut du système de backtesting"""
+    try:
+        from backtesting_engine import backtesting_engine
+        
+        available_symbols = list(backtesting_engine.historical_data.keys())
+        
+        # Informations sur les données
+        data_info = {}
+        for symbol in available_symbols[:10]:  # Première 10 pour éviter surcharge
+            df = backtesting_engine.historical_data[symbol]
+            data_info[symbol] = {
+                'days_available': len(df),
+                'date_range': f"{df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}",
+                'latest_price': f"${df['Close'].iloc[-1]:.4f}"
+            }
+        
+        return {
+            'success': True,
+            'data': {
+                'available_symbols': available_symbols,
+                'total_symbols': len(available_symbols),
+                'data_info': data_info,
+                'recommended_test_period': '2020-01-01 to 2021-07-01',
+                'engine_status': 'ready'
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Backtest status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get backtest status: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
