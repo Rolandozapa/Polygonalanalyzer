@@ -5562,8 +5562,20 @@ class UltraProfessionalTradingOrchestrator:
             opportunities_stored = 0
             opportunities_deduplicated = 0
             
-            for opportunity, analysis in valid_analyses:
+            for item in valid_analyses:
                 try:
+                    # 🛡️ SÉCURITÉ: Vérification structure tuple avant unpacking
+                    if not isinstance(item, (list, tuple)) or len(item) != 2:
+                        logger.error(f"❌ Invalid tuple structure in valid_analyses: {type(item)} - {item}")
+                        continue
+                        
+                    opportunity, analysis = item
+                    
+                    # Vérification que les objets sont du bon type
+                    if opportunity is None or analysis is None:
+                        logger.warning(f"❌ Null objects in valid_analyses: opportunity={opportunity}, analysis={analysis}")
+                        continue
+                    
                     # NOUVEAU: Vérification de déduplication avant stockage
                     symbol = opportunity.symbol
                     current_time = get_paris_time()
