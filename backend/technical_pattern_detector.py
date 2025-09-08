@@ -1094,8 +1094,9 @@ class TechnicalPatternDetector:
                     peak1 = high_peaks.iloc[i]
                     peak2 = high_peaks.iloc[i + 1]
                     
-                    # Double top : deux pics similaires
-                    if abs(peak1 - peak2) / max(peak1, peak2) < 0.02:  # Différence < 2%
+                    # Double top : deux pics similaires - FIXED: Prevent division by zero
+                    peak_max = max(peak1, peak2)
+                    if peak_max > 0 and abs(peak1 - peak2) / peak_max < 0.02:  # Différence < 2%
                         valley = df['Low'][df.index > high_peaks.index[i]].min()
                         strength = min((max(peak1, peak2) - valley) / valley * 3, 1.0)
                         
