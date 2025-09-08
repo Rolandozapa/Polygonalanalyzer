@@ -77,7 +77,7 @@ def test_trading_startup():
     """Test if trading system can start without errors"""
     print("\n🚀 Testing trading system startup...")
     
-    api_url = 'https://adaptive-trade-ai-2.preview.emergentagent.com/api'
+    api_url = 'https://trade-pattern-ai-1.preview.emergentagent.com/api'
     
     try:
         # Try to start trading
@@ -110,7 +110,7 @@ def test_pattern_functionality():
     """Test if pattern detection works without mathematical errors"""
     print("\n🎯 Testing pattern functionality...")
     
-    api_url = 'https://adaptive-trade-ai-2.preview.emergentagent.com/api'
+    api_url = 'https://trade-pattern-ai-1.preview.emergentagent.com/api'
     
     try:
         # Get analyses to see if patterns are working
