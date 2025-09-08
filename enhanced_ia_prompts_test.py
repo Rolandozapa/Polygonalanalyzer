@@ -175,7 +175,8 @@ class EnhancedIAPromptsTestSuite:
             try:
                 response = requests.get(f"{self.api_url}/decisions", timeout=30)
                 if response.status_code == 200:
-                    ia2_decisions = response.json()
+                    decisions_data = response.json()
+                    ia2_decisions = decisions_data.get('decisions', [])
                     self.ia2_decisions = ia2_decisions
                     actual_ia2_count = len(ia2_decisions)
                 else:
