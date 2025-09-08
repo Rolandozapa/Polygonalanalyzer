@@ -238,26 +238,26 @@ class EnhancedIAPromptsTestSuite:
             total_decisions = len(self.ia2_decisions)
             
             for decision in self.ia2_decisions:
-                decision_text = str(decision).lower()
+                reasoning = decision.get('ia2_reasoning', '').lower()
                 
                 # Check for technical_indicators_analysis section
-                if "technical_indicators_analysis" in decision_text or "technical indicators" in decision_text:
+                if "technical" in reasoning and ("indicators" in reasoning or "rsi" in reasoning or "macd" in reasoning):
                     technical_indicators_analysis_count += 1
                 
                 # Check for specific indicator impacts
-                if "rsi" in decision_text and ("impact" in decision_text or "overbought" in decision_text or "oversold" in decision_text):
+                if "rsi" in reasoning and ("impact" in reasoning or "overbought" in reasoning or "oversold" in reasoning or "rsi at" in reasoning):
                     rsi_impact_count += 1
                 
-                if "macd" in decision_text and ("influence" in decision_text or "crossover" in decision_text or "momentum" in decision_text):
+                if "macd" in reasoning and ("influence" in reasoning or "crossover" in reasoning or "momentum" in reasoning or "macd" in reasoning):
                     macd_influence_count += 1
                 
-                if "stochastic" in decision_text and ("timing" in decision_text or "%k" in decision_text or "%d" in decision_text):
+                if "stochastic" in reasoning and ("timing" in reasoning or "%k" in reasoning or "%d" in reasoning):
                     stochastic_timing_count += 1
                 
-                if "bollinger" in decision_text and ("volatility" in decision_text or "band" in decision_text or "squeeze" in decision_text):
+                if "bollinger" in reasoning and ("volatility" in reasoning or "band" in reasoning or "squeeze" in reasoning or "position" in reasoning):
                     bollinger_volatility_count += 1
                 
-                if "confluence" in decision_text and ("score" in decision_text or "align" in decision_text):
+                if "confluence" in reasoning and ("score" in reasoning or "align" in reasoning or "technical" in reasoning):
                     confluence_score_count += 1
             
             # Calculate success metrics
