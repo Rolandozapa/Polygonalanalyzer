@@ -1283,6 +1283,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Get market sentiment from aggregator
             performance_stats = self.market_aggregator.get_performance_stats()
             
+            # Calculate Fibonacci retracement levels
+            fib_data = self._calculate_fibonacci_levels(historical_data)
+            
             # Create ultra professional analysis prompt
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
