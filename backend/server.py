@@ -3928,6 +3928,8 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     claude_absolute_override = True
             
             elif claude_conf >= 0.65 and abs(net_signals) <= 3:  # Confiance élevée + signaux IA1 faibles/modérés
+                # IA2 confiance modérée - Multi-RR peut intervenir si nécessaire
+                claude_absolute_override = False
                 if claude_signal in ["LONG", "BUY"]:
                     signal = SignalType.LONG
                     confidence = min(claude_conf + 0.05, 0.90)
