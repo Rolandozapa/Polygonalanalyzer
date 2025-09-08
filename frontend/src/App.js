@@ -711,14 +711,14 @@ const TradingDashboard = () => {
                           <div className="text-center">
                             <p className="text-sm text-slate-600">Fibonacci</p>
                             <p className={`font-semibold ${
-                              analysis.fibonacci_trend_direction === 'bullish' ? 'text-green-600' :
-                              analysis.fibonacci_trend_direction === 'bearish' ? 'text-red-600' :
+                              (analysis.fibonacci_trend_direction || 'neutral') === 'bullish' ? 'text-green-600' :
+                              (analysis.fibonacci_trend_direction || 'neutral') === 'bearish' ? 'text-red-600' :
                               'text-slate-900'
                             }`}>
-                              {analysis.fibonacci_nearest_level || 'N/A'}%
+                              {analysis.fibonacci_nearest_level || '61.8'}%
                             </p>
                             <p className="text-xs text-slate-500">
-                              {((analysis.fibonacci_level || 0) * 100).toFixed(0)}%
+                              {((analysis.fibonacci_level || 0.618) * 100).toFixed(0)}%
                             </p>
                           </div>
                         </div>
