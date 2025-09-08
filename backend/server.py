@@ -3946,6 +3946,8 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             
             else:
                 # LOGIQUE COMBINÉE CLASSIQUE - Quand Claude pas assez confiant
+                # IA2 confiance < 65% - Multi-RR peut intervenir si nécessaire
+                claude_absolute_override = False
                 logger.info(f"🔄 {opportunity.symbol}: Using combined IA1+IA2 logic (Claude conf: {claude_conf:.1%})")
                 
                 # Ajouter boost Claude aux signaux IA1
