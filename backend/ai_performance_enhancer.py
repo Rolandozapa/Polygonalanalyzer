@@ -766,6 +766,90 @@ class AIPerformanceEnhancer:
         self.enhancement_rules = rules
         logger.info(f"Generated {len(rules)} enhancement rules")
     
+    def _phase_to_market_context(self, phase: MarketPhase) -> str:
+        """Convertit une phase de marché en contexte pour le système chartiste"""
+        phase_to_context = {
+            MarketPhase.ACCUMULATION: "sideways_low_volatility",
+            MarketPhase.EARLY_BULL: "trending_up",
+            MarketPhase.BULL_RUN: "trending_up_strong",
+            MarketPhase.EUPHORIA: "parabolic_up",
+            MarketPhase.DISTRIBUTION: "sideways_high_volatility",
+            MarketPhase.EARLY_BEAR: "trending_down",
+            MarketPhase.BEAR_MARKET: "trending_down_strong",
+            MarketPhase.CAPITULATION: "parabolic_down"
+        }
+        return phase_to_context.get(phase, "neutral")
+    
+    def _is_recommendation_compatible_with_phase(self, recommendation: Dict, phase: MarketPhase, confidence: float) -> bool:
+        """Vérifie si une recommandation chartiste est compatible avec la phase de marché"""
+        if confidence < 0.6:  # Phase pas assez claire
+            return True  # Autoriser par défaut
+            
+        rec_direction = recommendation.get('recommended_direction', 'hold')
+        
+        # Phases haussières favorisent les positions LONG
+        bullish_phases = [MarketPhase.EARLY_BULL, MarketPhase.BULL_RUN]
+        if phase in bullish_phases and rec_direction == 'short':
+            return False
+            
+        # Phases baissières favorisent les positions SHORT
+        bearish_phases = [MarketPhase.EARLY_BEAR, MarketPhase.BEAR_MARKET]
+        if phase in bearish_phases and rec_direction == 'long':
+            return False
+            
+        # Phase euphorie: éviter nouveaux LONG (risque de retournement)
+        if phase == MarketPhase.EUPHORIA and rec_direction == 'long':
+            return False
+            
+        # Phase capitulation: éviter nouveaux SHORT (risque de rebond)
+        if phase == MarketPhase.CAPITULATION and rec_direction == 'short':
+            return False
+            
+        return True
+    
+    def _get_phase_effectiveness_multiplier(self, phase: MarketPhase, pattern_name: str) -> float:
+        """Retourne un multiplicateur d'efficacité basé sur la phase et le pattern"""
+        
+        # Multiplicateurs par défaut selon phase (basés sur logique de marché)
+        phase_multipliers = {
+            MarketPhase.ACCUMULATION: 1.1,    # Patterns fiables en accumulation
+            MarketPhase.EARLY_BULL: 1.3,      # Très efficace en début haussier
+            MarketPhase.BULL_RUN: 1.2,        # Efficace en marché haussier
+            MarketPhase.EUPHORIA: 0.7,        # Patterns moins fiables en euphorie
+            MarketPhase.DISTRIBUTION: 0.8,    # Patterns ambigus en distribution
+            MarketPhase.EARLY_BEAR: 1.2,      # Efficace en début baissier
+            MarketPhase.BEAR_MARKET: 1.1,     # Patterns baissiers fiables
+            MarketPhase.CAPITULATION: 0.9     # Volatilité extrême
+        }
+        
+        base_multiplier = phase_multipliers.get(phase, 1.0)
+        
+        # Ajustements spécifiques par pattern (exemples)
+        pattern_adjustments = {
+            'bullish_channel': {
+                MarketPhase.EARLY_BULL: 1.4,  # Très efficace
+                MarketPhase.EUPHORIA: 0.5,    # Dangereux en euphorie
+            },
+            'bearish_channel': {
+                MarketPhase.EARLY_BEAR: 1.4,  # Très efficace  
+                MarketPhase.CAPITULATION: 0.6, # Risque de rebond
+            },
+            'double_bottom': {
+                MarketPhase.CAPITULATION: 1.5, # Excellent pour rebonds
+                MarketPhase.BULL_RUN: 0.8,     # Moins pertinent
+            },
+            'head_and_shoulders': {
+                MarketPhase.DISTRIBUTION: 1.4, # Pattern de retournement efficace
+                MarketPhase.ACCUMULATION: 0.7, # Moins pertinent
+            }
+        }
+        
+        # Appliquer ajustement spécifique si disponible
+        if pattern_name in pattern_adjustments and phase in pattern_adjustments[pattern_name]:
+            return pattern_adjustments[pattern_name][phase]
+            
+        return base_multiplier
+
     def enhance_ia1_analysis(self, analysis: Dict[str, Any], market_context: str) -> Dict[str, Any]:
         """Enhance IA1 analysis using training insights"""
         enhanced_analysis = analysis.copy()
