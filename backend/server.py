@@ -1490,8 +1490,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     }
                 }
             
-            # Enrichir le raisonnement avec les informations extraites
-            reasoning = response[:1100] if response else "Ultra professional analysis with multi-source validation"
+            # Enrichir le raisonnement avec les informations extraites (TEXTE COMPLET)
+            reasoning = response if response else "Ultra professional analysis with multi-source validation"
             
             # Ajouter les informations avancées et Master Pattern
             if master_pattern:
