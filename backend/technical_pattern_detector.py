@@ -1804,16 +1804,36 @@ class TechnicalPatternDetector:
             return 0.0
     
     def _detect_previous_trend(self, df):
-        """Détecte la tendance précédente"""
-        if len(df) < 10:
+        """Détecte la tendance précédente avec protection d'erreurs"""
+        try:
+            if len(df) < 10:
+                return "neutral"
+            
+            # Vérifier que les données sont valides
+            if df['Close'].empty or df['Close'].isna().all():
+                return "neutral"
+            
+            # Calculer le changement avec protection
+            start_price = df['Close'].iloc[-10]
+            end_price = df['Close'].iloc[-1]
+            
+            if start_price <= 0 or end_price <= 0 or np.isnan(start_price) or np.isnan(end_price):
+                return "neutral"
+            
+            recent_change = (end_price / start_price - 1) * 100
+            
+            if np.isnan(recent_change) or np.isinf(recent_change):
+                return "neutral"
+                
+            if recent_change > 3:
+                return "long"
+            elif recent_change < -3:
+                return "short"
             return "neutral"
-        
-        recent_change = (df['Close'].iloc[-1] / df['Close'].iloc[-10] - 1) * 100
-        if recent_change > 3:
-            return "long"
-        elif recent_change < -3:
-            return "short"
-        return "neutral"
+            
+        except Exception as e:
+            logger.debug(f"Error detecting previous trend: {e}")
+            return "neutral"
     
     def _check_volume_contraction(self, df):
         """Vérifie la contraction du volume (caractéristique des consolidations)"""
