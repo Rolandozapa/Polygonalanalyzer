@@ -1497,6 +1497,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     current_context.current_regime.value
                 )
                 
+                # 🎯 NOUVEAU: Amélioration avec les figures chartistes
+                enhanced_analysis_dict = ai_performance_enhancer.enhance_ia1_analysis_with_chartist(
+                    enhanced_analysis_dict,
+                    current_context.current_regime.value
+                )
+                
                 # Update analysis with enhancements
                 if 'ai_enhancements' in enhanced_analysis_dict:
                     # Create new enhanced analysis
