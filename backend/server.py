@@ -3349,46 +3349,57 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
     def _calculate_final_realistic_rr(self, entry_price: float, stop_loss: float, tp1: float, tp2: float, tp3: float, 
                                     confidence: float, signal: str, symbol: str, opportunity=None) -> float:
         """
-        Calcule le Risk-Reward FINAL et RÉALISTE basé sur les niveaux optimisés par IA2
-        Cette fonction remplace le RR d'IA1 par le RR réel de la stratégie finale
+        Calcule le Risk-Reward FINAL et RÉALISTE basé sur le TP OPTIMAL déterminé dynamiquement
         """
         try:
             if entry_price <= 0 or stop_loss <= 0 or tp1 <= 0:
                 logger.warning(f"⚠️ Invalid price levels for {symbol}: Entry={entry_price}, SL={stop_loss}, TP1={tp1}")
                 return 1.0
             
-            # Calcul précis basé sur la direction du signal
+            # 🎯 NOUVEAU: Déterminer le TP optimal selon la logique dynamique
+            optimal_tp = self._determine_optimal_tp_for_rr(
+                entry_price=entry_price,
+                tp1=tp1, 
+                tp2=tp2, 
+                tp3=tp3,
+                confidence=confidence,
+                signal=signal,
+                symbol=symbol,
+                opportunity=opportunity
+            )
+            
+            # Calcul précis basé sur la direction du signal avec TP OPTIMAL
             signal_upper = signal.upper()
             
             if signal_upper == "LONG":
-                # Pour LONG: Risk = Entry - SL, Reward = TP1 - Entry
+                # Pour LONG: Risk = Entry - SL, Reward = TP_optimal - Entry
                 if stop_loss >= entry_price:
                     logger.warning(f"⚠️ Invalid LONG setup for {symbol}: SL ({stop_loss:.4f}) >= Entry ({entry_price:.4f})")
                     return 1.0
-                if tp1 <= entry_price:
-                    logger.warning(f"⚠️ Invalid LONG setup for {symbol}: TP1 ({tp1:.4f}) <= Entry ({entry_price:.4f})")
+                if optimal_tp <= entry_price:
+                    logger.warning(f"⚠️ Invalid LONG setup for {symbol}: TP_optimal ({optimal_tp:.4f}) <= Entry ({entry_price:.4f})")
                     return 1.0
                     
                 risk = entry_price - stop_loss
-                reward = tp1 - entry_price
+                reward = optimal_tp - entry_price
                 
             elif signal_upper == "SHORT":
-                # Pour SHORT: Risk = SL - Entry, Reward = Entry - TP1
+                # Pour SHORT: Risk = SL - Entry, Reward = Entry - TP_optimal
                 if stop_loss <= entry_price:
                     logger.warning(f"⚠️ Invalid SHORT setup for {symbol}: SL ({stop_loss:.4f}) <= Entry ({entry_price:.4f})")
                     return 1.0
-                if tp1 >= entry_price:
-                    logger.warning(f"⚠️ Invalid SHORT setup for {symbol}: TP1 ({tp1:.4f}) >= Entry ({entry_price:.4f})")
+                if optimal_tp >= entry_price:
+                    logger.warning(f"⚠️ Invalid SHORT setup for {symbol}: TP_optimal ({optimal_tp:.4f}) >= Entry ({entry_price:.4f})")
                     return 1.0
                     
                 risk = stop_loss - entry_price
-                reward = entry_price - tp1
+                reward = entry_price - optimal_tp
                 
             else:
                 # HOLD ou signal invalide
                 return 1.0
             
-            # Calcul final du RR
+            # Calcul final du RR avec TP OPTIMAL
             if risk <= 0:
                 logger.warning(f"⚠️ Zero or negative risk for {symbol}: {risk:.6f}")
                 return 1.0
@@ -3403,7 +3414,8 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 logger.warning(f"⚠️ Unrealistic high RR for {symbol}: {final_rr:.3f}")
                 return min(final_rr, 10.0)  # Cap à 10:1
             
-            logger.info(f"✅ FINAL REALISTIC RR for {symbol} ({signal_upper}): {final_rr:.3f}:1 | Risk=${risk:.6f}, Reward=${reward:.6f}")
+            optimal_tp_name = "TP1" if optimal_tp == tp1 else ("TP2" if optimal_tp == tp2 else "TP3")
+            logger.info(f"✅ FINAL REALISTIC RR for {symbol} ({signal_upper}): {final_rr:.3f}:1 using {optimal_tp_name} | Risk=${risk:.6f}, Reward=${reward:.6f}")
             
             return round(final_rr, 3)
             
