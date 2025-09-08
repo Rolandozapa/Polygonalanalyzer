@@ -85,27 +85,38 @@ class EnhancedIAPromptsTestSuite:
             self.ia1_analyses = analyses
             
             # Analyze technical indicators integration
-            indicators_found = {indicator: 0 for indicator in self.expected_indicators}
+            indicators_found = {"RSI": 0, "MACD": 0, "Stochastic": 0, "Bollinger Bands": 0}
             confluence_analyses = 0
             enhanced_precision_count = 0
-            total_analyses = len(analyses)
+            total_analyses = len(analyses.get('analyses', []))
             
-            for analysis in analyses:
+            for analysis in analyses.get('analyses', []):
+                # Check for RSI values (should be present as numeric field)
+                if 'rsi' in analysis and analysis['rsi'] != 50.0:  # 50.0 is default fallback
+                    indicators_found["RSI"] += 1
+                
+                # Check for MACD values (should be present as numeric field)
+                if 'macd_signal' in analysis and analysis['macd_signal'] != 0.0:  # 0.0 is default fallback
+                    indicators_found["MACD"] += 1
+                
+                # Check for Bollinger Bands (bollinger_position field)
+                if 'bollinger_position' in analysis and analysis['bollinger_position'] != 0.0:
+                    indicators_found["Bollinger Bands"] += 1
+                
+                # Check for Stochastic in reasoning text (may not be separate field yet)
                 analysis_text = str(analysis).lower()
+                if 'stochastic' in analysis_text:
+                    indicators_found["Stochastic"] += 1
                 
-                # Check for technical indicators
-                for indicator in self.expected_indicators:
-                    if indicator.lower() in analysis_text:
-                        indicators_found[indicator] += 1
-                
-                # Check for confluence analysis
-                confluence_keywords = ["confluence", "align", "contradict", "mixed signals", "technical precision"]
-                if any(keyword in analysis_text for keyword in confluence_keywords):
+                # Check for confluence analysis in reasoning
+                reasoning = analysis.get('ia1_reasoning', '').lower()
+                confluence_keywords = ["confluence", "align", "contradict", "mixed signals", "multi-rr", "technical precision"]
+                if any(keyword in reasoning for keyword in confluence_keywords):
                     confluence_analyses += 1
                 
                 # Check for enhanced precision keywords
-                precision_keywords = ["enhanced", "advanced", "technical indicators", "oscillator", "momentum", "volatility"]
-                if any(keyword in analysis_text for keyword in precision_keywords):
+                precision_keywords = ["enhanced", "advanced", "technical indicators", "oscillator", "momentum", "volatility", "multi-rr"]
+                if any(keyword in reasoning for keyword in precision_keywords):
                     enhanced_precision_count += 1
             
             # Calculate success metrics
