@@ -4807,14 +4807,27 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             stop_loss = current_price
             tp1 = tp2 = tp3 = current_price
         
-        # NOUVEAU: Utiliser le Risk-Reward d'IA1 (source unique de vérité) - VERSION ADVANCED
-        ia1_risk_reward = getattr(analysis, 'risk_reward_ratio', 0.0)
-        ia1_entry_price = getattr(analysis, 'entry_price', current_price)
-        ia1_stop_loss = getattr(analysis, 'stop_loss_price', current_price)
-        ia1_take_profit = getattr(analysis, 'take_profit_price', current_price)
-        
-        if signal != SignalType.HOLD:
-            if ia1_risk_reward > 0 and ia1_entry_price > 0:
+        # 🚀 NOUVEAU: Utiliser le Risk-Reward calculé précisément par IA2 (Claude)
+        if claude_decision and signal != SignalType.HOLD:
+            # Calculate precise RR from Claude's response
+            ia2_rr_data = self._calculate_ia2_risk_reward(claude_decision, current_price)
+            risk_reward = ia2_rr_data["risk_reward"]
+            
+            # Use IA2's levels if they make sense, otherwise keep advanced levels
+            if ia2_rr_data["risk_reward"] >= 1.5:  # Reasonable RR from IA2
+                # Optionally override some levels with IA2's calculation for consistency
+                reasoning += f"Using IA2 precise R:R calculation: {risk_reward:.2f}:1 (Claude's optimized levels). "
+                logger.info(f"✅ IA2 RR adopted: {risk_reward:.2f}:1 for {opportunity.symbol}")
+            else:
+                reasoning += f"IA2 R:R {ia2_rr_data['risk_reward']:.2f}:1 deemed suboptimal, using advanced calculation. "
+        else:
+            # FALLBACK: Utiliser le Risk-Reward d'IA1 comme avant si Claude unavailable
+            ia1_risk_reward = getattr(analysis, 'risk_reward_ratio', 0.0)
+            ia1_entry_price = getattr(analysis, 'entry_price', current_price)
+            ia1_stop_loss = getattr(analysis, 'stop_loss_price', current_price)
+            ia1_take_profit = getattr(analysis, 'take_profit_price', current_price)
+            
+            if signal != SignalType.HOLD and ia1_risk_reward > 0 and ia1_entry_price > 0:
                 # CORRECTION CRITIQUE: Vérifier cohérence direction SHORT/LONG avec SL/TP IA1
                 if signal == SignalType.SHORT:
                     # Pour SHORT: SL doit être > entry et TP doit être < entry
@@ -4845,7 +4858,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 else:
                     stop_loss = ia1_stop_loss  # Utiliser IA1 SL si proche
                     
-                reasoning += f"Using IA1 precise R:R calculation: {risk_reward:.2f}:1 (Entry: ${ia1_entry_price:.4f}, SL: ${stop_loss:.4f}, TP: ${ia1_take_profit:.4f}). "
+                reasoning += f"Fallback to IA1 precise R:R calculation: {risk_reward:.2f}:1 (Entry: ${ia1_entry_price:.4f}, SL: ${stop_loss:.4f}, TP: ${ia1_take_profit:.4f}). "
                 
                 # Vérification cohérente avec le filtre IA1→IA2 (2:1 minimum)
                 if risk_reward < 2.0:
@@ -4865,7 +4878,9 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     signal = SignalType.HOLD
                     reasoning += "Advanced risk-reward ratio below 2:1 threshold for consistency with IA1 filter. "
                     confidence = max(confidence * 0.9, 0.55)
-        else:
+        
+        # Set default risk_reward if not set in any of the above conditions
+        if signal == SignalType.HOLD and 'risk_reward' not in locals():
             risk_reward = 1.0
         
         # Advanced position sizing with DYNAMIC LEVERAGE integration
