@@ -96,11 +96,11 @@ class MultiRRDisplayAndIA2ConsistencyTestSuite:
             total_analyses = len(data)
             
             # Focus on first 2-3 analyses as requested
-            analyses_to_check = data[:3]
+            analyses_to_check = analyses[:3]
             
             for analysis in analyses_to_check:
                 symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '')
+                reasoning = analysis.get('ia1_reasoning', '')  # Updated field name
                 
                 if not reasoning:
                     continue
