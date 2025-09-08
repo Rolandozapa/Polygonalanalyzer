@@ -1325,9 +1325,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             - Show how patterns confirm or contradict each other
             - Include pattern-specific price targets and stop-loss levels from multiple patterns
             
-            🎯 CRITICAL RISK-REWARD CALCULATION REQUIREMENTS:
-            1. Calculate REALISTIC Risk-Reward ratio for SHORT/MEDIUM-TERM trading (1 hour to 3 days timeframe)
-            2. Base your calculations on CURRENT market conditions and {opportunity.symbol} volatility patterns
+            🎯 CRITICAL TECHNICAL LEVELS CALCULATION:
+            1. Identify PRECISE support and resistance levels based on:
+               - Pattern-specific support/resistance (from detected patterns)
+               - Fibonacci retracement levels as technical barriers
+               - Recent swing highs/lows from price action
+               - Bollinger Band levels as dynamic support/resistance
+            2. For your recommendation, specify:
+               - PRIMARY SUPPORT level (closest technical support below current price)
+               - PRIMARY RESISTANCE level (closest technical resistance above current price)
+               - These will be used for realistic Risk-Reward calculations
+            3. Ensure levels are ATTAINABLE within 1h-3 days timeframe
             3. Set Stop-Loss based on technical levels (support/resistance, Bollinger Bands, pattern invalidation levels)
             4. Set Take-Profit levels that are ATTAINABLE considering:
                - Current market volatility ({abs(opportunity.price_change_24h):.1f}% 24h change)
