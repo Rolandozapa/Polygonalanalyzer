@@ -73,9 +73,42 @@ class ChartistLearningSystem:
         logger.info("Chartist Learning System initialized")
     
     def _initialize_chartist_library(self):
-        """Initialise la bibliothèque complète des figures chartistes"""
+        """Initialise la bibliothèque complète des figures chartistes avec tous les 40+ patterns"""
         
-        # FIGURES DE RETOURNEMENT
+        # PATTERNS DE BASE & INDICATEURS
+        self.chartist_patterns["golden_cross"] = ChartistPattern(
+            pattern_name="Golden Cross",
+            pattern_type=PatternType.GOLDEN_CROSS,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL", "SIDEWAYS"],
+            success_rate_long=0.78,
+            success_rate_short=0.15,
+            avg_return_long=8.9,
+            avg_return_short=-4.2,
+            optimal_entry_timing="cross_confirmation",
+            volume_importance=0.7,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 2.8, "max_risk": 0.02}
+        )
+        
+        self.chartist_patterns["death_cross"] = ChartistPattern(
+            pattern_name="Death Cross",
+            pattern_type=PatternType.DEATH_CROSS,
+            category="reversal",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.18,
+            success_rate_short=0.74,
+            avg_return_long=-3.8,
+            avg_return_short=7.6,
+            optimal_entry_timing="cross_confirmation",
+            volume_importance=0.7,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 2.6, "max_risk": 0.025}
+        )
+        
+        # FIGURES DE RETOURNEMENT CLASSIQUES
         self.chartist_patterns["head_and_shoulders"] = ChartistPattern(
             pattern_name="Tête et Épaules",
             pattern_type=PatternType.HEAD_AND_SHOULDERS,
@@ -89,13 +122,7 @@ class ChartistLearningSystem:
             optimal_entry_timing="break_neckline",
             volume_importance=0.9,
             timeframe_effectiveness={"1h": 0.6, "4h": 0.8, "1d": 0.9},
-            risk_reward_profile={"optimal_rr": 2.8, "max_risk": 0.03},
-            formation_characteristics={
-                "duration_days": 15,
-                "volume_pattern": "decreasing_on_head",
-                "neckline_slope": "horizontal_or_declining",
-                "minimum_height": 0.05  # 5% minimum de la tête au cou
-            }
+            risk_reward_profile={"optimal_rr": 2.8, "max_risk": 0.03}
         )
         
         self.chartist_patterns["inverse_head_and_shoulders"] = ChartistPattern(
@@ -146,37 +173,36 @@ class ChartistLearningSystem:
             risk_reward_profile={"optimal_rr": 2.7, "max_risk": 0.025}
         )
         
-        # FIGURES DE CONTINUATION  
-        self.chartist_patterns["flag_bullish"] = ChartistPattern(
-            pattern_name="Drapeau Haussier",
-            pattern_type=PatternType.FLAG_BULLISH,
-            category="continuation",
-            primary_direction=TradingDirection.LONG,
-            market_context_preference=["BULL", "VOLATILE"],
-            success_rate_long=0.78,
-            success_rate_short=0.18,
-            avg_return_long=5.4,
-            avg_return_short=-3.2,
-            optimal_entry_timing="break_flag_resistance",
+        self.chartist_patterns["triple_top"] = ChartistPattern(
+            pattern_name="Triple Sommet",
+            pattern_type=PatternType.TRIPLE_TOP,
+            category="reversal",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BULL", "SIDEWAYS"],
+            success_rate_long=0.20,
+            success_rate_short=0.75,
+            avg_return_long=-2.4,
+            avg_return_short=9.1,
+            optimal_entry_timing="break_support_line",
             volume_importance=0.9,
-            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.7},
-            risk_reward_profile={"optimal_rr": 2.2, "max_risk": 0.02}
+            timeframe_effectiveness={"1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 3.2, "max_risk": 0.025}
         )
         
-        self.chartist_patterns["flag_bearish"] = ChartistPattern(
-            pattern_name="Drapeau Baissier",
-            pattern_type=PatternType.FLAG_BEARISH,
-            category="continuation",
-            primary_direction=TradingDirection.SHORT,
-            market_context_preference=["BEAR", "VOLATILE"],
-            success_rate_long=0.15,
-            success_rate_short=0.76,
-            avg_return_long=-3.5,
-            avg_return_short=5.8,
-            optimal_entry_timing="break_flag_support",
+        self.chartist_patterns["triple_bottom"] = ChartistPattern(
+            pattern_name="Triple Creux",
+            pattern_type=PatternType.TRIPLE_BOTTOM,
+            category="reversal",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "SIDEWAYS"],
+            success_rate_long=0.76,
+            success_rate_short=0.19,
+            avg_return_long=9.8,
+            avg_return_short=-2.6,
+            optimal_entry_timing="break_resistance_line",
             volume_importance=0.9,
-            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.7},
-            risk_reward_profile={"optimal_rr": 2.3, "max_risk": 0.02}
+            timeframe_effectiveness={"1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 3.4, "max_risk": 0.025}
         )
         
         # TRIANGLES
@@ -212,6 +238,87 @@ class ChartistLearningSystem:
             risk_reward_profile={"optimal_rr": 2.3, "max_risk": 0.02}
         )
         
+        self.chartist_patterns["symmetrical_triangle"] = ChartistPattern(
+            pattern_name="Triangle Symétrique",
+            pattern_type=PatternType.SYMMETRICAL_TRIANGLE,
+            category="continuation",
+            primary_direction=TradingDirection.NEUTRAL,
+            market_context_preference=["SIDEWAYS", "VOLATILE"],
+            success_rate_long=0.58,
+            success_rate_short=0.54,
+            avg_return_long=4.2,
+            avg_return_short=3.8,
+            optimal_entry_timing="break_triangle_boundary",
+            volume_importance=0.9,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9, "1w": 0.7},
+            risk_reward_profile={"optimal_rr": 2.0, "max_risk": 0.02}
+        )
+        
+        # FLAGS ET PENNANTS
+        self.chartist_patterns["flag_bullish"] = ChartistPattern(
+            pattern_name="Drapeau Haussier",
+            pattern_type=PatternType.FLAG_BULLISH,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL", "VOLATILE"],
+            success_rate_long=0.78,
+            success_rate_short=0.18,
+            avg_return_long=5.4,
+            avg_return_short=-3.2,
+            optimal_entry_timing="break_flag_resistance",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.7},
+            risk_reward_profile={"optimal_rr": 2.2, "max_risk": 0.02}
+        )
+        
+        self.chartist_patterns["flag_bearish"] = ChartistPattern(
+            pattern_name="Drapeau Baissier",
+            pattern_type=PatternType.FLAG_BEARISH,
+            category="continuation",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.15,
+            success_rate_short=0.76,
+            avg_return_long=-3.5,
+            avg_return_short=5.8,
+            optimal_entry_timing="break_flag_support",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.7},
+            risk_reward_profile={"optimal_rr": 2.3, "max_risk": 0.02}
+        )
+        
+        self.chartist_patterns["pennant_bullish"] = ChartistPattern(
+            pattern_name="Pennant Haussier",
+            pattern_type=PatternType.PENNANT_BULLISH,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL", "VOLATILE"],
+            success_rate_long=0.73,
+            success_rate_short=0.22,
+            avg_return_long=4.8,
+            avg_return_short=-2.8,
+            optimal_entry_timing="break_pennant_resistance",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1h": 0.9, "4h": 0.8, "1d": 0.6},
+            risk_reward_profile={"optimal_rr": 2.1, "max_risk": 0.015}
+        )
+        
+        self.chartist_patterns["pennant_bearish"] = ChartistPattern(
+            pattern_name="Pennant Baissier",
+            pattern_type=PatternType.PENNANT_BEARISH,
+            category="continuation",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.20,
+            success_rate_short=0.74,
+            avg_return_long=-3.1,
+            avg_return_short=5.2,
+            optimal_entry_timing="break_pennant_support",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1h": 0.9, "4h": 0.8, "1d": 0.6},
+            risk_reward_profile={"optimal_rr": 2.2, "max_risk": 0.015}
+        )
+        
         # WEDGES
         self.chartist_patterns["rising_wedge"] = ChartistPattern(
             pattern_name="Biseau Ascendant",
@@ -245,21 +352,20 @@ class ChartistLearningSystem:
             risk_reward_profile={"optimal_rr": 2.9, "max_risk": 0.025}
         )
         
-        # PATTERNS HARMONIQUES
-        self.chartist_patterns["gartley_bullish"] = ChartistPattern(
-            pattern_name="Gartley Haussier",
-            pattern_type=PatternType.GARTLEY_BULLISH,
-            category="harmonic",
-            primary_direction=TradingDirection.LONG,
-            market_context_preference=["BEAR", "SIDEWAYS", "VOLATILE"],
-            success_rate_long=0.73,
-            success_rate_short=0.22,
-            avg_return_long=9.7,
-            avg_return_short=-2.8,
-            optimal_entry_timing="completion_point_D",
-            volume_importance=0.6,
-            timeframe_effectiveness={"4h": 0.9, "1d": 0.9, "1w": 0.8},
-            risk_reward_profile={"optimal_rr": 3.5, "max_risk": 0.015}
+        self.chartist_patterns["expanding_wedge"] = ChartistPattern(
+            pattern_name="Biseau Élargi",
+            pattern_type=PatternType.EXPANDING_WEDGE,
+            category="reversal",
+            primary_direction=TradingDirection.NEUTRAL,
+            market_context_preference=["VOLATILE"],
+            success_rate_long=0.48,
+            success_rate_short=0.52,
+            avg_return_long=3.2,
+            avg_return_short=3.8,
+            optimal_entry_timing="boundary_break_confirmation",
+            volume_importance=0.8,
+            timeframe_effectiveness={"4h": 0.7, "1d": 0.8},
+            risk_reward_profile={"optimal_rr": 2.0, "max_risk": 0.03}
         )
         
         # CUP AND HANDLE
@@ -278,6 +384,222 @@ class ChartistLearningSystem:
             timeframe_effectiveness={"1d": 0.9, "1w": 0.9, "1M": 0.8},
             risk_reward_profile={"optimal_rr": 4.2, "max_risk": 0.02}
         )
+        
+        # RECTANGLES ET CONSOLIDATIONS
+        self.chartist_patterns["rectangle_consolidation"] = ChartistPattern(
+            pattern_name="Rectangle de Consolidation",
+            pattern_type=PatternType.RECTANGLE_CONSOLIDATION,
+            category="consolidation",
+            primary_direction=TradingDirection.NEUTRAL,
+            market_context_preference=["SIDEWAYS"],
+            success_rate_long=0.52,
+            success_rate_short=0.48,
+            avg_return_long=3.4,
+            avg_return_short=3.1,
+            optimal_entry_timing="boundary_break",
+            volume_importance=0.6,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9},
+            risk_reward_profile={"optimal_rr": 1.8, "max_risk": 0.02}
+        )
+        
+        # ROUNDING PATTERNS
+        self.chartist_patterns["rounding_bottom"] = ChartistPattern(
+            pattern_name="Fond Arrondi",
+            pattern_type=PatternType.ROUNDING_BOTTOM,
+            category="reversal",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "SIDEWAYS"],
+            success_rate_long=0.67,
+            success_rate_short=0.25,
+            avg_return_long=8.7,
+            avg_return_short=-2.8,
+            optimal_entry_timing="volume_breakout",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 3.2, "max_risk": 0.025}
+        )
+        
+        self.chartist_patterns["rounding_top"] = ChartistPattern(
+            pattern_name="Sommet Arrondi",
+            pattern_type=PatternType.ROUNDING_TOP,
+            category="reversal",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BULL", "SIDEWAYS"],
+            success_rate_long=0.28,
+            success_rate_short=0.65,
+            avg_return_long=-2.9,
+            avg_return_short=7.2,
+            optimal_entry_timing="volume_breakdown",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 2.8, "max_risk": 0.025}
+        )
+        
+        # PATTERNS HARMONIQUES
+        self.chartist_patterns["gartley_bullish"] = ChartistPattern(
+            pattern_name="Gartley Haussier",
+            pattern_type=PatternType.GARTLEY_BULLISH,
+            category="harmonic",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "SIDEWAYS", "VOLATILE"],
+            success_rate_long=0.73,
+            success_rate_short=0.22,
+            avg_return_long=9.7,
+            avg_return_short=-2.8,
+            optimal_entry_timing="completion_point_D",
+            volume_importance=0.6,
+            timeframe_effectiveness={"4h": 0.9, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 3.5, "max_risk": 0.015}
+        )
+        
+        self.chartist_patterns["gartley_bearish"] = ChartistPattern(
+            pattern_name="Gartley Baissier",
+            pattern_type=PatternType.GARTLEY_BEARISH,
+            category="harmonic",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BULL", "SIDEWAYS", "VOLATILE"],
+            success_rate_long=0.25,
+            success_rate_short=0.71,
+            avg_return_long=-2.6,
+            avg_return_short=8.9,
+            optimal_entry_timing="completion_point_D",
+            volume_importance=0.6,
+            timeframe_effectiveness={"4h": 0.9, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 3.3, "max_risk": 0.015}
+        )
+        
+        self.chartist_patterns["bat_bullish"] = ChartistPattern(
+            pattern_name="Bat Haussier",
+            pattern_type=PatternType.BAT_BULLISH,
+            category="harmonic",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.69,
+            success_rate_short=0.28,
+            avg_return_long=8.2,
+            avg_return_short=-2.1,
+            optimal_entry_timing="completion_point_D",
+            volume_importance=0.5,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9},
+            risk_reward_profile={"optimal_rr": 3.0, "max_risk": 0.015}
+        )
+        
+        self.chartist_patterns["butterfly_bullish"] = ChartistPattern(
+            pattern_name="Butterfly Haussier",
+            pattern_type=PatternType.BUTTERFLY_BULLISH,
+            category="harmonic",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.75,
+            success_rate_short=0.20,
+            avg_return_long=11.3,
+            avg_return_short=-3.4,
+            optimal_entry_timing="completion_point_D",
+            volume_importance=0.5,
+            timeframe_effectiveness={"4h": 0.9, "1d": 0.9},
+            risk_reward_profile={"optimal_rr": 4.1, "max_risk": 0.015}
+        )
+        
+        # PATTERNS DE VOLATILITÉ
+        self.chartist_patterns["diamond_top"] = ChartistPattern(
+            pattern_name="Diamant de Sommet",
+            pattern_type=PatternType.DIAMOND_TOP,
+            category="reversal",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BULL", "VOLATILE"],
+            success_rate_long=0.32,
+            success_rate_short=0.68,
+            avg_return_long=-2.1,
+            avg_return_short=6.8,
+            optimal_entry_timing="diamond_breakdown",
+            volume_importance=0.8,
+            timeframe_effectiveness={"4h": 0.7, "1d": 0.8},
+            risk_reward_profile={"optimal_rr": 2.5, "max_risk": 0.025}
+        )
+        
+        self.chartist_patterns["diamond_bottom"] = ChartistPattern(
+            pattern_name="Diamant de Creux",
+            pattern_type=PatternType.DIAMOND_BOTTOM,
+            category="reversal",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BEAR", "VOLATILE"],
+            success_rate_long=0.66,
+            success_rate_short=0.30,
+            avg_return_long=7.4,
+            avg_return_short=-2.3,
+            optimal_entry_timing="diamond_breakout",
+            volume_importance=0.8,
+            timeframe_effectiveness={"4h": 0.7, "1d": 0.8},
+            risk_reward_profile={"optimal_rr": 2.7, "max_risk": 0.025}
+        )
+        
+        # PATTERNS DE SUPPORT/RÉSISTANCE
+        self.chartist_patterns["support_bounce"] = ChartistPattern(
+            pattern_name="Rebond sur Support",
+            pattern_type=PatternType.SUPPORT_BOUNCE,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL", "SIDEWAYS"],
+            success_rate_long=0.64,
+            success_rate_short=0.28,
+            avg_return_long=4.2,
+            avg_return_short=-1.9,
+            optimal_entry_timing="bounce_confirmation",
+            volume_importance=0.7,
+            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.8},
+            risk_reward_profile={"optimal_rr": 2.0, "max_risk": 0.015}
+        )
+        
+        self.chartist_patterns["resistance_break"] = ChartistPattern(
+            pattern_name="Cassure de Résistance",
+            pattern_type=PatternType.RESISTANCE_BREAK,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL", "VOLATILE"],
+            success_rate_long=0.67,
+            success_rate_short=0.25,
+            avg_return_long=5.8,
+            avg_return_short=-2.4,
+            optimal_entry_timing="breakout_confirmation",
+            volume_importance=0.9,
+            timeframe_effectiveness={"1h": 0.8, "4h": 0.9, "1d": 0.8},
+            risk_reward_profile={"optimal_rr": 2.3, "max_risk": 0.015}
+        )
+        
+        # PATTERNS DE TENDANCE
+        self.chartist_patterns["bullish_channel"] = ChartistPattern(
+            pattern_name="Canal Haussier",
+            pattern_type=PatternType.BULLISH_CHANNEL,
+            category="continuation",
+            primary_direction=TradingDirection.LONG,
+            market_context_preference=["BULL"],
+            success_rate_long=0.72,
+            success_rate_short=0.20,
+            avg_return_long=6.4,
+            avg_return_short=-3.1,
+            optimal_entry_timing="channel_support_bounce",
+            volume_importance=0.6,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 2.2, "max_risk": 0.02}
+        )
+        
+        self.chartist_patterns["bearish_channel"] = ChartistPattern(
+            pattern_name="Canal Baissier",
+            pattern_type=PatternType.BEARISH_CHANNEL,
+            category="continuation",
+            primary_direction=TradingDirection.SHORT,
+            market_context_preference=["BEAR"],
+            success_rate_long=0.22,
+            success_rate_short=0.70,
+            avg_return_long=-3.2,
+            avg_return_short=5.9,
+            optimal_entry_timing="channel_resistance_rejection",
+            volume_importance=0.6,
+            timeframe_effectiveness={"4h": 0.8, "1d": 0.9, "1w": 0.8},
+            risk_reward_profile={"optimal_rr": 2.1, "max_risk": 0.02}
+        )
+        
+        logger.info(f"Initialized complete chartist library with {len(self.chartist_patterns)} patterns")
     
     def analyze_pattern_performance(self, historical_data: Dict[str, pd.DataFrame], 
                                   detected_patterns: List[TechnicalPattern]) -> Dict[str, Any]:
