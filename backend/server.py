@@ -1595,7 +1595,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     else:
                         sentiment_comment += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
                     
-                    enhanced_reasoning = original_reasoning + sentiment_comment + multi_rr_display
+                    enhanced_reasoning = multi_rr_display + "\n\n" + original_reasoning + sentiment_comment
                     
                     # Mettre à jour validated_data avec Multi-RR
                     validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
