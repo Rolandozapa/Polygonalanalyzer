@@ -594,6 +594,93 @@ class AdaptiveContextSystem:
         
         return duration
     
+    def _calculate_technical_confluence(self, avg_rsi: float, avg_macd: float, avg_stochastic: float, avg_bollinger_position: float) -> float:
+        """Calculate technical indicators confluence score (0-1)"""
+        confluence_score = 0.0
+        indicator_count = 0
+        
+        # RSI confluence (extreme readings add to confluence)
+        if avg_rsi < 30 or avg_rsi > 70:
+            confluence_score += 0.25
+        indicator_count += 1
+        
+        # MACD confluence (strong signals add to confluence) 
+        if abs(avg_macd) > 0.001:
+            confluence_score += 0.25
+        indicator_count += 1
+        
+        # Stochastic confluence (extreme readings add to confluence)
+        if avg_stochastic < 20 or avg_stochastic > 80:
+            confluence_score += 0.25
+        indicator_count += 1
+        
+        # Bollinger position confluence (extreme positions add to confluence)
+        if avg_bollinger_position < 0.2 or avg_bollinger_position > 0.8:
+            confluence_score += 0.25
+        indicator_count += 1
+        
+        return confluence_score
+    
+    def _detect_indicators_divergence(self, rsi_values: list, macd_values: list, stochastic_values: list, bollinger_positions: list) -> bool:
+        """Detect if technical indicators are showing divergence"""
+        if len(rsi_values) < 3 or len(macd_values) < 3:
+            return False
+            
+        # Check if RSI and MACD are giving opposite signals
+        rsi_trend = "up" if rsi_values[-1] > rsi_values[-3] else "down"
+        macd_trend = "up" if macd_values[-1] > macd_values[-3] else "down"
+        
+        return rsi_trend != macd_trend
+    
+    def _analyze_stochastic_environment(self, avg_stochastic: float, stochastic_values: list) -> str:
+        """Analyze stochastic oscillator environment"""
+        if avg_stochastic < 20:
+            return "oversold"
+        elif avg_stochastic > 80:
+            return "overbought"
+        elif 30 <= avg_stochastic <= 70:
+            return "neutral"
+        else:
+            return "transitional"
+    
+    def _analyze_bollinger_environment(self, avg_bollinger_position: float, bollinger_positions: list) -> str:
+        """Analyze Bollinger Bands environment"""
+        if avg_bollinger_position < 0.1:
+            return "lower_band_rejection"
+        elif avg_bollinger_position > 0.9:
+            return "upper_band_rejection"
+        elif 0.4 <= avg_bollinger_position <= 0.6:
+            return "middle_band_consolidation"
+        elif len(bollinger_positions) > 2:
+            volatility = max(bollinger_positions) - min(bollinger_positions)
+            if volatility < 0.2:
+                return "squeeze"
+            elif volatility > 0.8:
+                return "expansion"
+        return "trending"
+    
+    def _determine_momentum_regime(self, avg_macd: float, avg_stochastic: float) -> str:
+        """Determine momentum regime based on MACD and Stochastic"""
+        macd_momentum = "positive" if avg_macd > 0 else "negative"
+        stoch_momentum = "positive" if avg_stochastic > 50 else "negative"
+        
+        if macd_momentum == "positive" and stoch_momentum == "positive":
+            return "accelerating"
+        elif macd_momentum == "negative" and stoch_momentum == "negative":
+            return "decelerating"
+        else:
+            return "mixed"
+    
+    def _determine_volatility_regime(self, avg_volatility: float, bollinger_positions: list) -> str:
+        """Determine volatility regime based on Bollinger Bands"""
+        if len(bollinger_positions) > 2:
+            bb_range = max(bollinger_positions) - min(bollinger_positions)
+            if bb_range < 0.3:
+                return "contracting"
+            elif bb_range > 0.7:
+                return "expanding"
+        return "stable"
+    
     def _get_default_context(self) -> MarketContext:
         """Get default context when analysis fails"""
         return MarketContext(
