@@ -1775,12 +1775,33 @@ class TechnicalPatternDetector:
 
     # Méthodes utilitaires pour les nouveaux patterns
     def _calculate_trend_line_slope(self, prices):
-        """Calcule la pente d'une ligne de tendance"""
-        if len(prices) < 2:
-            return 0
-        x = np.arange(len(prices))
-        slope, _ = np.polyfit(x, prices, 1)
-        return slope
+        """Calcule la pente d'une ligne de tendance avec protection contre les erreurs"""
+        try:
+            if len(prices) < 2:
+                return 0.0
+            
+            # Nettoyer les données NaN
+            clean_prices = [p for p in prices if not np.isnan(p) and p > 0]
+            if len(clean_prices) < 2:
+                return 0.0
+                
+            x = np.arange(len(clean_prices))
+            
+            # Protection contre les erreurs de calcul
+            if np.any(np.isnan(clean_prices)) or np.any(np.isinf(clean_prices)):
+                return 0.0
+                
+            slope, _ = np.polyfit(x, clean_prices, 1)
+            
+            # Vérifier que le résultat est valide
+            if np.isnan(slope) or np.isinf(slope):
+                return 0.0
+                
+            return float(slope)
+            
+        except Exception as e:
+            logger.debug(f"Error calculating trend line slope: {e}")
+            return 0.0
     
     def _detect_previous_trend(self, df):
         """Détecte la tendance précédente"""
