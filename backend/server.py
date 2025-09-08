@@ -3096,6 +3096,9 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                                             llm_decision: Dict[str, Any] = None) -> Dict[str, Any]:
         """Evaluate trading decision with live trading risk management"""
         
+        # Assign claude_decision from llm_decision for compatibility
+        claude_decision = llm_decision
+        
         signal = SignalType.HOLD
         
         # Robust confidence calculation with guaranteed 50% minimum and REAL variation
