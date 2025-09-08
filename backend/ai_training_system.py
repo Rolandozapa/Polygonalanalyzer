@@ -175,46 +175,63 @@ class AITrainingSystem:
         logger.info(f"Successfully loaded training data for {len(self.historical_data)} symbols")
     
     def _add_technical_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Add comprehensive technical indicators for training"""
-        # Price changes and volatility
-        df['price_change_24h'] = df['Close'].pct_change() * 100
-        df['price_change_7d'] = df['Close'].pct_change(7) * 100
-        df['volatility_7d'] = df['Close'].rolling(7).std() / df['Close'].rolling(7).mean() * 100
-        df['volume_24h'] = df['Volume']
+        """Add comprehensive technical indicators for enhanced training"""
+        # Use advanced technical indicators system
+        df_enhanced = advanced_technical_indicators.calculate_all_indicators(df)
         
-        # Moving averages
-        df['sma_20'] = df['Close'].rolling(20).mean()
-        df['ema_12'] = df['Close'].ewm(span=12).mean()
-        df['ema_26'] = df['Close'].ewm(span=26).mean()
+        # Add additional custom indicators for training
+        try:
+            # Price action indicators
+            df_enhanced['price_change_1d'] = df_enhanced['Close'].pct_change() * 100
+            df_enhanced['price_change_3d'] = df_enhanced['Close'].pct_change(3) * 100
+            df_enhanced['price_change_7d'] = df_enhanced['Close'].pct_change(7) * 100
+            df_enhanced['price_change_14d'] = df_enhanced['Close'].pct_change(14) * 100
+            
+            # Volatility indicators
+            df_enhanced['volatility_5d'] = df_enhanced['Close'].rolling(5).std() / df_enhanced['Close'].rolling(5).mean()
+            df_enhanced['volatility_10d'] = df_enhanced['Close'].rolling(10).std() / df_enhanced['Close'].rolling(10).mean()
+            df_enhanced['volatility_20d'] = df_enhanced['Close'].rolling(20).std() / df_enhanced['Close'].rolling(20).mean()
+            
+            # Support and resistance levels (enhanced)
+            df_enhanced['resistance_level_5d'] = df_enhanced['High'].rolling(5).max()
+            df_enhanced['resistance_level_20d'] = df_enhanced['High'].rolling(20).max()
+            df_enhanced['support_level_5d'] = df_enhanced['Low'].rolling(5).min()
+            df_enhanced['support_level_20d'] = df_enhanced['Low'].rolling(20).min()
+            
+            # Distance to key levels
+            df_enhanced['distance_to_resistance_5d'] = (df_enhanced['resistance_level_5d'] - df_enhanced['Close']) / df_enhanced['Close']
+            df_enhanced['distance_to_support_5d'] = (df_enhanced['Close'] - df_enhanced['support_level_5d']) / df_enhanced['Close']
+            
+            # Enhanced volume analysis
+            df_enhanced['volume_change_1d'] = df_enhanced['Volume'].pct_change() * 100
+            df_enhanced['volume_ma_ratio_5d'] = df_enhanced['Volume'] / df_enhanced['Volume'].rolling(5).mean()
+            df_enhanced['volume_ma_ratio_20d'] = df_enhanced['Volume'] / df_enhanced['Volume'].rolling(20).mean()
+            
+            # Gap analysis
+            df_enhanced['gap_up'] = (df_enhanced['Open'] > df_enhanced['Close'].shift(1) * 1.01).astype(int)
+            df_enhanced['gap_down'] = (df_enhanced['Open'] < df_enhanced['Close'].shift(1) * 0.99).astype(int)
+            
+            # Candle patterns (basic)
+            df_enhanced['doji'] = (abs(df_enhanced['Close'] - df_enhanced['Open']) / (df_enhanced['High'] - df_enhanced['Low']) < 0.1).astype(int)
+            df_enhanced['hammer'] = ((df_enhanced['Close'] > df_enhanced['Open']) & 
+                                   ((df_enhanced['Open'] - df_enhanced['Low']) > 2 * abs(df_enhanced['Close'] - df_enhanced['Open'])) &
+                                   ((df_enhanced['High'] - df_enhanced['Close']) < 0.3 * abs(df_enhanced['Close'] - df_enhanced['Open']))).astype(int)
+            
+            # Multi-timeframe signals
+            df_enhanced['signals_alignment'] = (
+                (df_enhanced['rsi_14'] > 50).astype(int) +
+                (df_enhanced['macd_histogram'] > 0).astype(int) +
+                (df_enhanced['stoch_k'] > 50).astype(int) +
+                (df_enhanced['bb_position'] > 0.5).astype(int) +
+                (df_enhanced['Close'] > df_enhanced['sma_20']).astype(int)
+            ) / 5.0  # Normalize to 0-1
+            
+            logger.info(f"Enhanced technical indicators added: {len(df_enhanced.columns)} total columns")
+            
+        except Exception as e:
+            logger.error(f"Error adding custom indicators: {e}")
         
-        # RSI
-        delta = df['Close'].diff()
-        gain = (delta.where(delta > 0, 0)).rolling(14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
-        rs = gain / loss
-        df['rsi'] = 100 - (100 / (1 + rs))
-        
-        # MACD
-        df['macd'] = df['ema_12'] - df['ema_26']
-        df['macd_signal'] = df['macd'].ewm(span=9).mean()
-        df['macd_histogram'] = df['macd'] - df['macd_signal']
-        
-        # Bollinger Bands
-        df['bb_middle'] = df['Close'].rolling(20).mean()
-        bb_std = df['Close'].rolling(20).std()
-        df['bb_upper'] = df['bb_middle'] + (2 * bb_std)
-        df['bb_lower'] = df['bb_middle'] - (2 * bb_std)
-        df['bb_position'] = (df['Close'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'])
-        
-        # Volume indicators
-        df['volume_sma'] = df['Volume'].rolling(20).mean()
-        df['volume_ratio'] = df['Volume'] / df['volume_sma']
-        
-        # Support and resistance levels (simplified)
-        df['resistance_level'] = df['High'].rolling(20).max()
-        df['support_level'] = df['Low'].rolling(20).min()
-        
-        return df
+        return df_enhanced
     
     async def run_comprehensive_training(self) -> Dict[str, Any]:
         """Run comprehensive training on all historical data"""
