@@ -697,6 +697,228 @@ const TradingDashboard = () => {
           </div>
         )}
 
+        {activeTab === 'backtest' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h2 className="text-xl font-bold text-slate-900">AI Training & Backtesting System</h2>
+                <p className="text-slate-600">Train our AI system with historical data and backtest trading strategies</p>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* AI Training Section */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-4">🧠 AI Training System</h3>
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
+                        <div className="space-y-4">
+                          {/* Training Status */}
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-700">Training Data</span>
+                            <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                              {backtestStatus?.available_symbols?.length || 0} symbols ready
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-700">Historical Period</span>
+                            <span className="text-sm text-slate-600">2013-2025 (Multi-year)</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-700">AI Components</span>
+                            <span className="text-sm text-slate-600">IA1 + IA2 + Patterns</span>
+                          </div>
+                          
+                          {/* Training Actions */}
+                          <div className="pt-4 border-t border-slate-200">
+                            <button
+                              onClick={() => runAITraining()}
+                              disabled={backtestLoading}
+                              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                            >
+                              {backtestLoading ? 'Training AI System...' : '🚀 Start AI Training'}
+                            </button>
+                            
+                            <p className="text-xs text-slate-500 mt-2 text-center">
+                              Analyzes market conditions, trains pattern recognition, and enhances IA1/IA2 accuracy
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* AI Training Results */}
+                    {backtestResults?.training_completed && (
+                      <div className="bg-green-50 rounded-lg p-6">
+                        <h4 className="font-semibold text-green-900 mb-3">✅ Training Completed</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-green-700">Market Conditions</span>
+                            <p className="font-medium text-green-900">{backtestResults.market_conditions_classified || 0}</p>
+                          </div>
+                          <div>
+                            <span className="text-green-700">Patterns Analyzed</span>
+                            <p className="font-medium text-green-900">{backtestResults.patterns_analyzed || 0}</p>
+                          </div>
+                          <div>
+                            <span className="text-green-700">IA1 Improvements</span>
+                            <p className="font-medium text-green-900">{backtestResults.ia1_improvements_identified || 0}</p>
+                          </div>
+                          <div>
+                            <span className="text-green-700">IA2 Enhancements</span>
+                            <p className="font-medium text-green-900">{backtestResults.ia2_enhancements_generated || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Backtesting Section */}
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-4">📈 Strategy Backtesting</h3>
+                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-6">
+                        <div className="space-y-4">
+                          {/* Backtest Parameters */}
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">Start Date</label>
+                              <input
+                                type="date"
+                                defaultValue="2020-01-01"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                id="backtest-start-date"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">End Date</label>
+                              <input
+                                type="date"
+                                defaultValue="2021-07-01"
+                                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                id="backtest-end-date"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Test Symbols</label>
+                            <select
+                              multiple
+                              className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                              id="backtest-symbols"
+                              size="3"
+                            >
+                              {backtestStatus?.available_symbols?.slice(0, 10).map(symbol => (
+                                <option key={symbol} value={symbol}>{symbol}</option>
+                              ))}
+                            </select>
+                            <p className="text-xs text-slate-500 mt-1">Hold Ctrl/Cmd to select multiple symbols</p>
+                          </div>
+                          
+                          {/* Backtest Actions */}
+                          <div className="pt-4 border-t border-slate-200">
+                            <button
+                              onClick={() => runStrategyBacktest()}
+                              disabled={backtestLoading}
+                              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+                            >
+                              {backtestLoading ? 'Running Backtest...' : '⚡ Run Strategy Backtest'}
+                            </button>
+                            
+                            <p className="text-xs text-slate-500 mt-2 text-center">
+                              Tests trading strategies against historical market data
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Backtest Results */}
+                    {backtestResults?.backtest_completed && backtestResults.results && (
+                      <div className="bg-slate-50 rounded-lg p-6">
+                        <h4 className="font-semibold text-slate-900 mb-4">📊 Backtest Results</h4>
+                        <div className="space-y-4">
+                          {Object.entries(backtestResults.results).map(([symbol, result]) => (
+                            <div key={symbol} className="bg-white rounded-lg p-4 border">
+                              <div className="flex justify-between items-center mb-3">
+                                <h5 className="font-medium text-slate-900">{symbol}</h5>
+                                <span className={`px-2 py-1 rounded text-sm font-medium ${
+                                  result.total_return > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {result.total_return > 0 ? '+' : ''}{(result.total_return * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                  <span className="text-slate-600">Win Rate</span>
+                                  <p className="font-medium text-slate-900">{(result.win_rate * 100).toFixed(1)}%</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-600">Total Trades</span>
+                                  <p className="font-medium text-slate-900">{result.total_trades}</p>
+                                </div>
+                                <div>
+                                  <span className="text-slate-600">Sharpe Ratio</span>
+                                  <p className="font-medium text-slate-900">{result.sharpe_ratio.toFixed(2)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Adaptive Context System Status */}
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-4">⚡ Adaptive Context System</h3>
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-emerald-600 text-xl">🎯</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Market Context</h4>
+                        <p className="text-sm text-slate-600">Real-time market regime detection</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-blue-600 text-xl">🧠</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Dynamic Adjustment</h4>
+                        <p className="text-sm text-slate-600">AI-driven strategy adaptation</p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                          <span className="text-purple-600 text-xl">⚡</span>
+                        </div>
+                        <h4 className="font-semibold text-slate-900">Performance Boost</h4>
+                        <p className="text-sm text-slate-600">Enhanced trading accuracy</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={() => loadAdaptiveContext()}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                      >
+                        🔄 Load Training Data to Context System
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'performance' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
