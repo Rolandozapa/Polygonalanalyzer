@@ -6754,6 +6754,54 @@ async def load_training_data_to_context():
         logger.error(f"Load training data error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to load training data: {str(e)}")
 
+@app.post("/api/ai-training/load-insights")
+async def load_ai_insights_into_enhancer():
+    """Charge les insights d'entraînement dans le système d'amélioration des performances"""
+    try:
+        # Load AI training insights into performance enhancer
+        ai_performance_enhancer.load_training_insights(ai_training_system)
+        
+        # Also load into adaptive context system
+        adaptive_context_system.load_ai_training_data(ai_training_system)
+        
+        enhancement_summary = ai_performance_enhancer.get_enhancement_summary()
+        
+        return {
+            'success': True,
+            'data': enhancement_summary,
+            'message': f'AI insights loaded successfully: {enhancement_summary["total_rules"]} enhancement rules generated to improve IA1 and IA2 performance'
+        }
+        
+    except Exception as e:
+        logger.error(f"Load AI insights error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load AI insights: {str(e)}")
+
+@app.get("/api/ai-training/enhancement-status")
+async def get_enhancement_system_status():
+    """Obtient le statut du système d'amélioration des performances"""
+    try:
+        enhancement_summary = ai_performance_enhancer.get_enhancement_summary()
+        adaptive_status = adaptive_context_system.get_system_status()
+        
+        return {
+            'success': True,
+            'data': {
+                'enhancement_system': enhancement_summary,
+                'adaptive_context': adaptive_status,
+                'integration_status': {
+                    'ia1_enhancement_active': len(ai_performance_enhancer.ia1_accuracy_by_context) > 0,
+                    'ia2_enhancement_active': len(ai_performance_enhancer.ia2_optimal_parameters) > 0,
+                    'pattern_insights_loaded': len(ai_performance_enhancer.pattern_success_rates) > 0,
+                    'market_condition_insights_loaded': len(ai_performance_enhancer.market_condition_performance) > 0
+                }
+            },
+            'message': 'Enhancement system status retrieved successfully'
+        }
+        
+    except Exception as e:
+        logger.error(f"Enhancement status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get enhancement status: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
