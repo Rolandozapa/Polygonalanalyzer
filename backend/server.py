@@ -1366,6 +1366,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 }}
             }}
             
+            🎯 DECISION LOGIC:
+            - LONG: If bullish patterns dominate (bullish_channel, bullish_momentum, golden_cross, etc.)
+            - SHORT: If bearish patterns dominate (bearish_channel, diamond_top, rising_wedge, etc.)  
+            - HOLD: Only if patterns truly conflict or no clear directional bias
+            - DON'T default to HOLD due to low RR - the filtering system will handle RR requirements
+            
             🚨 MANDATORY: Your 'patterns' array MUST contain ALL detected pattern names. Analyze each pattern individually and show their confluence.
             """
             
