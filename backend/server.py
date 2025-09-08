@@ -5285,6 +5285,85 @@ class UltraProfessionalTradingOrchestrator:
         except Exception as e:
             logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
             return True  # En cas d'erreur, envoyer à IA2 (principe de précaution)
+
+    async def _apply_adaptive_context_to_decision(self, decision: TradingDecision, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> TradingDecision:
+        """🧠 Applique la logique adaptative contextuelle à une décision IA2 existante"""
+        try:
+            if not isinstance(decision, TradingDecision):
+                return decision
+            
+            original_signal = decision.signal
+            original_confidence = decision.confidence
+            original_reasoning = decision.ia2_reasoning
+            
+            # Analyse du contexte marché
+            market_volatility = abs(opportunity.price_change_24h) if opportunity.price_change_24h else 2.0
+            ia2_confidence = decision.confidence
+            
+            # Détecter le contexte et appliquer les ajustements
+            context_applied = ""
+            adjustment_made = False
+            
+            # 🌪️ CONTEXTE VOLATILITÉ EXTRÊME (>15%) - Réduire confiance si pas assez prudent
+            if market_volatility > 15.0:
+                if decision.signal != SignalType.HOLD and decision.confidence > 0.8:
+                    decision.confidence = min(decision.confidence * 0.9, 0.85)  # Réduire confiance en haute volatilité
+                    context_applied = f"EXTREME VOLATILITY ({market_volatility:.1f}%): Confidence adjusted for risk management. "
+                    adjustment_made = True
+                    logger.info(f"🌪️ ADAPTIVE: {opportunity.symbol} confidence reduced due to extreme volatility")
+            
+            # 🧠 CONTEXTE IA2 HAUTE CONFIANCE (>85%) - Booster si contexte favorable
+            elif ia2_confidence > 0.85 and market_volatility < 10:
+                if decision.signal != SignalType.HOLD:
+                    decision.confidence = min(decision.confidence * 1.1, 0.98)  # Boost confiance
+                    context_applied = f"HIGH IA2 CONFIDENCE ({ia2_confidence:.1%}) + LOW VOLATILITY: Confidence boosted. "
+                    adjustment_made = True
+                    logger.info(f"🧠 ADAPTIVE: {opportunity.symbol} confidence boosted - high IA2 confidence + stable market")
+            
+            # 🚀 CONTEXTE TRENDING FORT - Favoriser momentum
+            elif abs(opportunity.price_change_24h or 0) > 8:
+                trend_direction = "bullish" if opportunity.price_change_24h > 0 else "bearish"
+                expected_signal = SignalType.LONG if opportunity.price_change_24h > 0 else SignalType.SHORT
+                
+                if decision.signal == expected_signal:
+                    decision.confidence = min(decision.confidence * 1.05, 0.95)  # Boost pour alignment
+                    context_applied = f"STRONG {trend_direction.upper()} TREND: Signal aligned with momentum, confidence boosted. "
+                    adjustment_made = True
+                elif decision.signal != SignalType.HOLD and decision.signal != expected_signal:
+                    decision.confidence = max(decision.confidence * 0.85, 0.4)  # Réduire pour contre-tendance
+                    context_applied = f"STRONG {trend_direction.upper()} TREND: Counter-trend signal, confidence reduced. "
+                    adjustment_made = True
+                    logger.info(f"🚀 ADAPTIVE: {opportunity.symbol} counter-trend signal confidence reduced")
+            
+            # ⚡ CONTEXTE SENTIMENT EXTRÊME - Logique contrarian
+            elif abs(opportunity.price_change_24h or 0) > 20:
+                # En sentiment extrême, favoriser la logique contrarian
+                expected_contrarian = SignalType.SHORT if opportunity.price_change_24h > 20 else SignalType.LONG
+                
+                if decision.signal == expected_contrarian:
+                    decision.confidence = min(decision.confidence * 1.15, 0.92)  # Boost contrarian
+                    context_applied = f"EXTREME SENTIMENT CONTRARIAN: Signal favors reversal, confidence boosted. "
+                    adjustment_made = True
+                    logger.info(f"⚡ ADAPTIVE: {opportunity.symbol} contrarian signal boosted")
+            
+            # ⚖️ CONTEXTE ÉQUILIBRÉ - Validation normale
+            else:
+                # En conditions normales, légère validation sur la cohérence
+                if decision.confidence > 0.9 and market_volatility > 5:
+                    decision.confidence = min(decision.confidence * 0.95, 0.9)  # Léger ajustement prudence
+                    context_applied = f"BALANCED CONDITIONS: Minor prudence adjustment. "
+                    adjustment_made = True
+            
+            # Mise à jour du raisonnement si ajustement fait
+            if adjustment_made:
+                decision.ia2_reasoning = f"🧠 ADAPTIVE CONTEXT: {context_applied}| ORIGINAL: {original_reasoning}"
+                logger.info(f"🎯 ADAPTIVE APPLIED: {opportunity.symbol} {original_signal} → {decision.signal} (conf: {original_confidence:.1%} → {decision.confidence:.1%})")
+            
+            return decision
+            
+        except Exception as e:
+            logger.error(f"❌ Adaptive context application failed for {opportunity.symbol}: {e}")
+            return decision  # Return original decision if adaptive fails
     
     async def run_trading_cycle(self):
         """Execute ultra professional trading cycle with auto-updated trends"""
