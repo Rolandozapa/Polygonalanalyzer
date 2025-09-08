@@ -147,7 +147,37 @@
         - agent: "testing"
         - comment: "TESTED: Probabilistic TP System is WORKING. Analysis of 3 decisions shows: ✅ LONG/SHORT signals (2/3) generate 5-level TP strategies with custom distributions [20,25,25,20,10]. ✅ HOLD signals (1/3) correctly exclude TP strategy. ✅ Dynamic TP percentages: TP1(1.2%), TP2(2.8%), TP3(4.8%), TP4(7.5%), TP5(12.0%). ✅ Custom distributions and leverage-adjusted calculations present. ✅ Claude override system working with pattern-based TP targeting. Evidence found: 'CLAUDE TP STRATEGY SHORT: TP1 targets quick profit near $0.645, TP2 targets midway to support, TP3 targets the neckline support at $0.61, TP4 targets full pattern completion at $0.51'. System generates probabilistic TP configurations as requested, not fixed templates."
 
-## user_problem_statement: "Test the new AI Training System that I just implemented"
+## user_problem_statement: "Optimize IA1 and IA2 prompts to fully integrate the newly added technical indicators (RSI, MACD, Stochastic, Bollinger Bands) for improved analysis and strategy selection with confidence/RR thresholds"
+
+## backend:
+  - task: "Optimize IA1 and IA2 Prompts with Enhanced Technical Indicators Integration"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Enhanced IA1 and IA2 prompts to fully integrate technical indicators (RSI, MACD, Stochastic, Bollinger Bands) with confidence/RR thresholds. IA1 ENHANCEMENTS: (1) Added RSI, MACD, Stochastic, Bollinger Bands analysis to technical precision, (2) Implemented 70% confidence threshold for IA2 escalation, (3) Added 2:1 Risk-Reward minimum requirement, (4) Enhanced JSON response format with advanced technical indicators fields (rsi_signal, macd_trend, stochastic_signal, bollinger_position, advanced_confluence), (5) Added precise entry/SL/TP calculation fields. IA2 ENHANCEMENTS: (1) Integrated enhanced technical indicators utilization in decision making, (2) Implemented 80% confidence threshold for trade execution, (3) Enhanced probabilistic TP methodology with technical indicators confluence, (4) Added technical_indicators_analysis section in JSON response, (5) Enhanced stop loss strategy with technical triggers. ADAPTIVE CONTEXT SYSTEM: Enhanced MarketContext with stochastic_environment, bollinger_environment, technical_confluence, indicators_divergence, momentum_regime, volatility_regime fields for better context understanding."
+
+## metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+## test_plan:
+  current_focus:
+    - "Optimize IA1 and IA2 Prompts with Enhanced Technical Indicators Integration"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+## agent_communication:
+    - agent: "main"
+    - message: "Enhanced IA1 and IA2 prompts with advanced technical indicators (RSI, MACD, Stochastic, Bollinger Bands) integration. IA1 now requires 70% confidence and 2:1 RR for IA2 escalation. IA2 requires 80% confidence for trade execution. Enhanced Adaptive Context System with technical confluence scoring. Ready for backend testing to validate enhanced prompts and decision thresholds."
 
 ## backend:
   - task: "Test Quick AI Training System Status Endpoint"
