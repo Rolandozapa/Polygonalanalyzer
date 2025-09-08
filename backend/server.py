@@ -1343,16 +1343,20 @@ class UltraProfessionalIA1TechnicalAnalyst:
             - Include pattern-specific price targets and stop-loss levels from multiple patterns
             
             🎯 CRITICAL TECHNICAL LEVELS CALCULATION:
-            1. Identify PRECISE support and resistance levels based on:
-               - Pattern-specific support/resistance (from detected patterns)
-               - Fibonacci retracement levels as technical barriers
-               - Recent swing highs/lows from price action
-               - Bollinger Band levels as dynamic support/resistance
+            1. Use HISTORICAL DATA provided above to identify TESTED support/resistance levels:
+               - Look at recent swing highs/lows as proven levels
+               - Consider 30-day range position for context
+               - Factor in volume-weighted average price as dynamic level
+               - Use support/resistance test counts to validate level strength
             2. For your recommendation, specify:
-               - PRIMARY SUPPORT level (closest technical support below current price)
-               - PRIMARY RESISTANCE level (closest technical resistance above current price)
-               - These will be used for realistic Risk-Reward calculations
-            3. Ensure levels are ATTAINABLE within 1h-3 days timeframe
+               - PRIMARY SUPPORT level (historically tested, not theoretical)
+               - PRIMARY RESISTANCE level (historically tested, not theoretical)  
+               - Reference specific historical tests of these levels
+            3. Ensure levels are REALISTIC based on:
+               - 30-day price range and current position
+               - Historical volatility patterns
+               - Volume behavior at key levels
+               - 1h-3 days timeframe achievability
             3. Set Support/Resistance levels based on technical analysis (not arbitrary percentages)
             4. Your support/resistance levels should consider:
                - Pattern breakout/breakdown levels
