@@ -1336,16 +1336,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
                - PRIMARY RESISTANCE level (closest technical resistance above current price)
                - These will be used for realistic Risk-Reward calculations
             3. Ensure levels are ATTAINABLE within 1h-3 days timeframe
-            3. Set Stop-Loss based on technical levels (support/resistance, Bollinger Bands, pattern invalidation levels)
-            4. Set Take-Profit levels that are ATTAINABLE considering:
-               - Current market volatility ({abs(opportunity.price_change_24h):.1f}% 24h change)
-               - Fibonacci retracement levels as realistic targets
-               - Pattern-specific price objectives
-               - {opportunity.symbol} historical price movements
-            5. For LONG signals: Stop-Loss MUST be below current price, Take-Profit above
-            6. For SHORT signals: Stop-Loss MUST be above current price, Take-Profit below
-            7. Risk-Reward ratio MUST be calculated as: (Take_Profit - Entry) / (Entry - Stop_Loss) for LONG
-            8. Risk-Reward ratio MUST be calculated as: (Entry - Take_Profit) / (Stop_Loss - Entry) for SHORT
+            3. Set Support/Resistance levels based on technical analysis (not arbitrary percentages)
+            4. Your support/resistance levels should consider:
+               - Pattern breakout/breakdown levels
+               - Fibonacci retracement key levels (23.6%, 38.2%, 50%, 61.8%)
+               - Recent swing highs and lows
+               - Volume-based support/resistance zones
+            5. For LONG signals: Support should be logical stop-loss, Resistance should be realistic target
+            6. For SHORT signals: Resistance should be logical stop-loss, Support should be realistic target  
+            7. Levels should be achievable within 1-3 days based on current volatility
+            8. The backend will calculate Risk-Reward using your technical levels
             9. Recommend LONG/SHORT based on the strongest pattern direction and confluence
             10. Your recommendation should reflect the overall pattern analysis, not just RR calculation
             11. Calculate RR to inform risk assessment, but don't let RR < 2.0 force a HOLD recommendation
