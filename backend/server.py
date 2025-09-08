@@ -5434,7 +5434,7 @@ class UltraProfessionalTradingOrchestrator:
             if criteria_met < 2:
                 reasons = []
                 if not high_confidence: reasons.append(f"Confidence {analysis.analysis_confidence:.1%}<80%")
-                if not has_multi_rr: reasons.append("No Multi-RR")
+                if not has_multi_rr: reasons.append("No advanced analysis")
                 if not has_master_pattern: reasons.append("No master pattern")
                 if not (significant_move and good_volume): reasons.append(f"Movement {opportunity.price_change_24h:+.1f}% or volume ${opportunity.volume_24h:,.0f} insufficient")
                 if expected_value <= 0.2: reasons.append(f"Expected value {expected_value:.2f}≤0.2")
