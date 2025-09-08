@@ -1542,21 +1542,40 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Enrichir avec calculs techniques précis
             fib_data = self._calculate_fibonacci_levels(historical_data)
             
-            # 🎯 NOUVEAU: Extraire et utiliser les données RR calculées par IA1
+            # 🎯 NOUVEAU: Extraire les niveaux techniques et calculer RR réaliste
             ia1_risk_reward_ratio = 1.0  # Default fallback
             ia1_calculated_levels = {}
             
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
-                ia1_risk_reward_ratio = float(rr_analysis.get('risk_reward_ratio', 1.0))
+                
+                # Extraire les niveaux techniques
+                current_price = float(rr_analysis.get('entry_price', opportunity.current_price))
+                primary_support = float(rr_analysis.get('primary_support', current_price * 0.97))
+                primary_resistance = float(rr_analysis.get('primary_resistance', current_price * 1.03))
+                
+                # Calculer RR basé sur la recommandation IA1
+                if ia1_signal == 'long':
+                    ia1_risk_reward_ratio = self.calculate_bullish_rr(current_price, primary_resistance, primary_support)
+                elif ia1_signal == 'short':
+                    ia1_risk_reward_ratio = self.calculate_bearish_rr(current_price, primary_support, primary_resistance)
+                else:  # hold
+                    ia1_risk_reward_ratio = self.calculate_composite_rr(current_price, opportunity.volatility, primary_support, primary_resistance)
+                
+                # Cap RR pour éviter valeurs aberrantes
+                ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
+                
                 ia1_calculated_levels = {
-                    'entry_price': float(rr_analysis.get('entry_price', opportunity.current_price)),
-                    'stop_loss': float(rr_analysis.get('stop_loss', 0.0)),
-                    'take_profit_1': float(rr_analysis.get('take_profit_1', 0.0)),
-                    'take_profit_2': float(rr_analysis.get('take_profit_2', 0.0)),
-                    'rr_reasoning': rr_analysis.get('rr_reasoning', 'IA1 calculated Risk-Reward analysis')
+                    'entry_price': current_price,
+                    'primary_support': primary_support,
+                    'primary_resistance': primary_resistance,
+                    'support_reasoning': rr_analysis.get('support_reasoning', 'Technical support level'),
+                    'resistance_reasoning': rr_analysis.get('resistance_reasoning', 'Technical resistance level'),
+                    'calculated_rr': ia1_risk_reward_ratio
                 }
-                logger.info(f"✅ IA1 calculated RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 with SL=${ia1_calculated_levels['stop_loss']:.4f}, TP1=${ia1_calculated_levels['take_profit_1']:.4f}")
+                logger.info(f"✅ IA1 technical RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
+            else:
+                logger.warning(f"⚠️ No IA1 RR analysis found for {opportunity.symbol}, using fallback calculation")
             
             analysis_data.update({
                 "rsi": rsi,
