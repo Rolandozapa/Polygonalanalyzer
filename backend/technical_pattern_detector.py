@@ -1097,10 +1097,18 @@ class TechnicalPatternDetector:
                     peak1 = high_peaks.iloc[i]
                     peak2 = high_peaks.iloc[i + 1]
                     
-                    # Double top : deux pics similaires - FIXED: Prevent division by zero
+                    # Double top : deux pics similaires - ROBUST: Prevent all mathematical errors
+                    if not pd.notna([peak1, peak2]).all() or peak1 <= 0 or peak2 <= 0:
+                        continue
+                        
                     peak_max = max(peak1, peak2)
                     if peak_max > 0 and abs(peak1 - peak2) / peak_max < 0.02:  # Différence < 2%
                         valley = df['Low'][df.index > high_peaks.index[i]].min()
+                        
+                        # Validate valley value
+                        if not pd.notna(valley) or valley <= 0:
+                            continue
+                            
                         strength = min((max(peak1, peak2) - valley) / valley * 3, 1.0)
                         
                         if strength > 0.5:
