@@ -410,7 +410,7 @@ class AdaptiveContextSystem:
             return self._get_default_context()
     
     def _determine_regime_ai_enhanced(self, price_change: float, volatility: float, 
-                                    rsi: float, macd: float) -> MarketRegime:
+                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketRegime:
         """Determine market regime using AI-enhanced logic"""
         # Base regime determination
         if volatility > 15:
