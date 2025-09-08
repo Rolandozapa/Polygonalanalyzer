@@ -3426,17 +3426,21 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             
             reasoning += f"Fallback IA2 R:R calculation: {risk_reward:.2f}:1 (IA1 R:R unavailable). "
             
-            # 🚨 BUG FIX: Ne pas override si Multi-RR a déjà choisi une direction
+            # 🚨 BUG FIX: Respecter la hiérarchie IA2 > Multi-RR > IA1
             has_multi_rr_override = "Multi-RR applied" in reasoning or "🎯 Multi-RR applied" in reasoning
             
-            # Seuil plus strict pour cohérence avec filtre IA1 - SAUF si Multi-RR override
-            if risk_reward < 2.0 and not has_multi_rr_override:
+            # Seuil plus strict pour cohérence avec filtre IA1 - SAUF si IA2 absolute override ou Multi-RR override
+            if risk_reward < 2.0 and not has_multi_rr_override and not claude_absolute_override:
                 signal = SignalType.HOLD
                 reasoning += "Risk-reward ratio below 2:1 threshold for consistency with IA1 filter. "
                 confidence = max(confidence * 0.9, 0.5)
-            elif has_multi_rr_override and risk_reward < 2.0:
-                # Multi-RR a priorité, mais signaler l'incohérence
-                reasoning += f"🎯 Multi-RR OVERRIDE: Keeping {signal} despite fallback RR {risk_reward:.2f}:1 < 2.0 (Multi-RR calculations prevail). "
+            elif claude_absolute_override and risk_reward < 2.0:
+                # IA2 confiance >80% a priorité absolue, même avec fallback RR bas
+                reasoning += f"🎯 IA2 ABSOLUTE PRIORITY MAINTAINED: Keeping {signal} despite fallback RR {risk_reward:.2f}:1 < 2.0 (IA2 high confidence {claude_conf:.1%} prevails over Multi-RR and fallback calculations). "
+                logger.info(f"🎯 IA2 Absolute Priority: {opportunity.symbol} keeping {signal} despite low fallback RR {risk_reward:.2f}:1 (IA2 confidence {claude_conf:.1%})")
+            elif has_multi_rr_override and risk_reward < 2.0 and not claude_absolute_override:
+                # Multi-RR a priorité quand IA2 confiance < 80%
+                reasoning += f"🎯 Multi-RR OVERRIDE: Keeping {signal} despite fallback RR {risk_reward:.2f}:1 < 2.0 (Multi-RR calculations prevail when IA2 confidence < 80%). "
                 logger.info(f"🎯 Multi-RR Override: {opportunity.symbol} keeping {signal} despite low fallback RR {risk_reward:.2f}:1")
         
         # Live trading position sizing (more conservative)
