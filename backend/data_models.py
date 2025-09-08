@@ -52,6 +52,8 @@ class TechnicalAnalysis(BaseModel):
     stochastic_d: float = 50.0  # Stochastic %D  
     bollinger_position: float
     fibonacci_level: float
+    fibonacci_nearest_level: str = "61.8"  # Niveau Fibonacci le plus proche
+    fibonacci_trend_direction: str = "neutral"  # bullish, bearish, neutral
     support_levels: List[float]
     resistance_levels: List[float]
     patterns_detected: List[str]
