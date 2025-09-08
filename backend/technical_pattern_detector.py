@@ -114,9 +114,10 @@ class TechnicalPatternDetector:
         logger.info("TechnicalPatternDetector initialized - Optimized for most generous APIs")
         logger.info("Priority: Binance (1200/min) > CoinGecko (10k/month) > CryptoCompare (100k/month)")
     
-    async def should_analyze_with_ia1(self, symbol: str) -> Tuple[bool, Optional[TechnicalPattern]]:
+    async def should_analyze_with_ia1(self, symbol: str) -> Tuple[bool, Optional[TechnicalPattern], List[TechnicalPattern]]:
         """
         Détermine si un crypto doit être analysé par IA1 basé sur des patterns techniques
+        Retourne: (should_analyze, primary_pattern, all_strong_patterns)
         """
         try:
             # Récupère les données OHLCV
@@ -124,7 +125,7 @@ class TechnicalPatternDetector:
             
             if ohlcv_data is None or len(ohlcv_data) < 20:
                 logger.debug(f"Insufficient OHLCV data for {symbol}")
-                return False, None
+                return False, None, []
             
             # Détecte les patterns techniques
             patterns = self._detect_all_patterns(symbol, ohlcv_data)
@@ -133,18 +134,19 @@ class TechnicalPatternDetector:
             strong_patterns = [p for p in patterns if p.strength >= self.min_pattern_strength]
             
             if strong_patterns:
-                # Retourne le pattern le plus fort
+                # Retourne le pattern le plus fort comme pattern principal + tous les patterns forts
                 best_pattern = max(strong_patterns, key=lambda x: x.strength)
+                logger.info(f"Detected {len(strong_patterns)} strong patterns for {symbol}: {[p.pattern_type.value for p in strong_patterns]}")
                 logger.info(f"🎯 TECHNICAL FILTER: {symbol} - {best_pattern.pattern_type.value} (strength: {best_pattern.strength:.2f}) -> SENDING TO IA1")
-                return True, best_pattern
+                return True, best_pattern, strong_patterns
             else:
                 logger.debug(f"⚪ TECHNICAL FILTER: {symbol} - No strong patterns detected -> SKIPPING IA1")
-                return False, None
+                return False, None, []
                 
         except Exception as e:
             logger.error(f"Error in technical pattern detection for {symbol}: {e}")
             # En cas d'erreur, on laisse passer pour éviter de bloquer
-            return True, None
+            return True, None, []
     
     async def _get_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
         """
