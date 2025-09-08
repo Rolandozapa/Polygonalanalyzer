@@ -53,6 +53,7 @@ from active_position_manager import ActivePositionManager, TradeExecutionMode
 from ai_training_system import ai_training_system
 from adaptive_context_system import adaptive_context_system
 from ai_performance_enhancer import ai_performance_enhancer
+from chartist_learning_system import chartist_learning_system
 from ai_training_optimizer import ai_training_optimizer
 
 ROOT_DIR = Path(__file__).parent
