@@ -35,7 +35,6 @@ from data_models import (
 )
 import pandas as pd
 import numpy as np
-import numpy as np
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 # Email functionality simplified to avoid import issues
 # import smtplib
