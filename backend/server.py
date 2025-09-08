@@ -5476,6 +5476,29 @@ class UltraProfessionalTradingOrchestrator:
                 logger.warning("No opportunities found in ultra professional trending scan")
                 return 0
             
+            # 🎯 NOUVEAU: Stocker les opportunités IMMÉDIATEMENT (avant analyse IA1)
+            opportunities_stored_immediate = 0
+            for opportunity in opportunities:
+                try:
+                    # Vérifier si cette opportunité existe déjà (déduplication)
+                    recent_cutoff = get_paris_time() - timedelta(hours=2)  # 2h pour plus de fraîcheur
+                    existing = await db.market_opportunities.find_one({
+                        "symbol": opportunity.symbol,
+                        "timestamp": {"$gte": recent_cutoff}
+                    })
+                    
+                    if not existing:
+                        await db.market_opportunities.insert_one(opportunity.dict())
+                        opportunities_stored_immediate += 1
+                        logger.info(f"📁 IMMEDIATE STORE: {opportunity.symbol} - ${opportunity.current_price:.4f} ({opportunity.price_change_24h:+.2f}%)")
+                    else:
+                        logger.debug(f"🔄 SKIP DUPLICATE: {opportunity.symbol} already stored recently")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Failed to store opportunity {opportunity.symbol}: {e}")
+            
+            logger.info(f"📊 STORED {opportunities_stored_immediate}/{len(opportunities)} opportunities immediately")
+
             # Broadcast to frontend
             await manager.broadcast({
                 "type": "opportunities_found", 
