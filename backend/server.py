@@ -5416,7 +5416,7 @@ class UltraProfessionalTradingOrchestrator:
             # Critères: High confidence OU Multi-RR resolved OU Strong pattern OU Significant movement
             
             high_confidence = analysis.analysis_confidence >= 0.80  # IA1 très confiant
-            has_multi_rr = "multi-rr analysis" in analysis.ia1_reasoning.lower()  # Contradiction résolue
+            has_multi_rr = "advanced analysis" in analysis.ia1_reasoning.lower()  # Analyse avancée résolue
             has_master_pattern = getattr(analysis, 'master_pattern', None) is not None  # Pattern fort
             significant_move = abs(opportunity.price_change_24h) >= 5.0  # Mouvement >5%
             good_volume = opportunity.volume_24h >= 500_000  # Volume décent
