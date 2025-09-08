@@ -3272,6 +3272,61 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             logger.error(f"Failed to get account balance: {e}")
             return 250.0  # Enhanced fallback balance
     
+    def _calculate_ia2_risk_reward(self, claude_decision: Dict[str, Any], current_price: float) -> Dict[str, float]:
+        """Calculate precise Risk-Reward ratio from Claude's (IA2) response with entry/SL/TP levels"""
+        try:
+            if not claude_decision:
+                return {"risk_reward": 1.0, "entry_price": current_price, "stop_loss": current_price, "tp1": current_price}
+            
+            # Extract IA2's precise trading levels
+            entry_price = current_price  # Default entry price
+            stop_loss = current_price
+            tp1 = current_price
+            
+            # Try to extract from position_management section
+            position_mgmt = claude_decision.get("position_management", {})
+            if position_mgmt:
+                stop_loss_pct = position_mgmt.get("stop_loss_percentage", 1.8)
+                # Calculate stop loss from percentage
+                signal = claude_decision.get("signal", "HOLD").upper()
+                if signal == "LONG":
+                    stop_loss = current_price * (1 - stop_loss_pct / 100)
+                elif signal == "SHORT":
+                    stop_loss = current_price * (1 + stop_loss_pct / 100)
+            
+            # Try to extract from take_profit_strategy section (most precise)
+            tp_strategy = claude_decision.get("take_profit_strategy", {})
+            if tp_strategy:
+                tp_levels = tp_strategy.get("levels", [])
+                if tp_levels and len(tp_levels) > 0:
+                    # Use first TP level for RR calculation
+                    first_tp = tp_levels[0]
+                    tp_percentage = first_tp.get("percentage_from_entry", 2.5)
+                    
+                    signal = claude_decision.get("signal", "HOLD").upper()
+                    if signal == "LONG":
+                        tp1 = current_price * (1 + tp_percentage / 100)
+                    elif signal == "SHORT":
+                        tp1 = current_price * (1 - tp_percentage / 100)
+            
+            # Calculate precise Risk-Reward based on IA2's levels
+            risk = abs(entry_price - stop_loss)
+            reward = abs(tp1 - entry_price)
+            risk_reward = reward / risk if risk > 0 else 1.0
+            
+            logger.info(f"🧮 IA2 RR CALCULATION: Entry=${entry_price:.4f}, SL=${stop_loss:.4f}, TP1=${tp1:.4f} -> RR={risk_reward:.2f}:1")
+            
+            return {
+                "risk_reward": round(risk_reward, 2),
+                "entry_price": round(entry_price, 4),
+                "stop_loss": round(stop_loss, 4),
+                "tp1": round(tp1, 4)
+            }
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error calculating IA2 Risk-Reward: {e}, using fallback")
+            return {"risk_reward": 1.0, "entry_price": current_price, "stop_loss": current_price, "tp1": current_price}
+    
     async def _parse_llm_response(self, response: str) -> Dict[str, Any]:
         """Parse IA2 LLM JSON response with fallback"""
         if not response:
