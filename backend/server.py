@@ -1565,7 +1565,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     temp_analysis, opportunity, detected_pattern
                 )
                 
-                if multi_rr_result.get('contradiction', False):
+                if multi_rr_result.get('contradiction', False) or True:  # 🎯 FORCER Multi-RR pour TOUTES les analyses
                     # Contradiction détectée - intégrer les calculs Multi-RR dans le reasoning
                     rr_details = multi_rr_result.get('multi_rr_results', {})
                     final_recommendation = multi_rr_result.get('final_recommendation', 'hold')
