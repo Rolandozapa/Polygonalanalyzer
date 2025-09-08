@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Chartist Learning System Integration
-Focus: Testing the new chartist learning system with pattern-based strategies and market context adaptation
+Backend Testing Suite for Updated Chartist Library (25+ Patterns)
+Focus: Testing the updated chartist library that should now return 25+ patterns instead of 12
+French Review Request: Test complete chartist figures library with all main categories
 """
 
 import asyncio
