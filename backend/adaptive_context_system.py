@@ -543,7 +543,7 @@ class AdaptiveContextSystem:
         
         return min(0.95, max(0.5, base_confidence))
     
-    def _analyze_pattern_environment(self, regime: MarketRegime, volatility: float) -> str:
+    def _analyze_pattern_environment(self, regime: MarketRegime, volatility: float, technical_confluence: float = 0.5) -> str:
         """Analyze which patterns are most reliable in current environment"""
         if regime == MarketRegime.BULL:
             return "bullish_breakouts_favorable"
