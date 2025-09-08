@@ -77,7 +77,8 @@ class StochasticIntegrationTestSuite:
                 self.log_test_result("Stochastic Values Presence", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
-            analyses = response.json()
+            data = response.json()
+            analyses = data.get('analyses', [])
             
             if not analyses or len(analyses) == 0:
                 self.log_test_result("Stochastic Values Presence", False, "No IA1 analyses found")
