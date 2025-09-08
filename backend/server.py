@@ -1605,6 +1605,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     validated_data['ia1_reasoning'] = enhanced_reasoning  # Pour assurance
                     validated_data['ia1_signal'] = final_recommendation
                     
+                    # 🎯 CRUCIAL: Mettre à jour le risk_reward_ratio avec le meilleur RR du Multi-RR
+                    if rr_details:
+                        max_rr = max(data.get('rr_ratio', 0) for data in rr_details.values())
+                        validated_data['risk_reward_ratio'] = max_rr
+                        logger.info(f"🎯 Multi-RR Max RR updated for {opportunity.symbol}: {max_rr:.2f}:1")
+                    
                     logger.info(f"🎯 Multi-RR applied for {opportunity.symbol}: {final_recommendation.upper()} chosen")
                 
             except Exception as e:
