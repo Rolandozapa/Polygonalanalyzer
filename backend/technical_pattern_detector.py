@@ -1387,7 +1387,11 @@ class TechnicalPatternDetector:
                     peak2 = high_peaks.iloc[i + 1] 
                     peak3 = high_peaks.iloc[i + 2]
                     
-                    # Les 3 pics doivent être à des niveaux similaires (±2%) - FIXED: Prevent division by zero
+                    # Les 3 pics doivent être à des niveaux similaires (±2%) - ROBUST: Prevent all mathematical errors
+                    if not pd.notna([peak1, peak2, peak3]).all() or \
+                       not all(val > 0 for val in [peak1, peak2, peak3]):
+                        continue
+                        
                     avg_peak = (peak1 + peak2 + peak3) / 3
                     if (avg_peak > 0 and 
                         abs(peak1 - avg_peak) / avg_peak < 0.02 and 
