@@ -77,12 +77,12 @@ class EnhancedIAPromptsTestSuite:
             
             analyses = response.json()
             
-            if not analyses or len(analyses) == 0:
+            if not analyses or 'analyses' not in analyses:
                 self.log_test_result("IA1 Enhanced Technical Analysis", False, "No IA1 analyses found")
                 return
             
             # Store for later tests
-            self.ia1_analyses = analyses
+            self.ia1_analyses = analyses.get('analyses', [])
             
             # Analyze technical indicators integration
             indicators_found = {"RSI": 0, "MACD": 0, "Stochastic": 0, "Bollinger Bands": 0}
