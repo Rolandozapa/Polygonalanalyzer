@@ -157,21 +157,19 @@ class EnhancedIAPromptsTestSuite:
             
             for analysis in self.ia1_analyses:
                 # Extract confidence
-                confidence = None
-                if isinstance(analysis, dict):
-                    confidence = analysis.get('analysis_confidence') or analysis.get('confidence')
-                    rr_ratio = analysis.get('risk_reward_ratio') or analysis.get('rr_ratio')
-                    
-                    if confidence is not None and confidence >= self.ia1_confidence_threshold:
-                        high_confidence_analyses.append(analysis)
-                    
-                    if rr_ratio is not None and rr_ratio >= self.ia1_rr_threshold:
-                        high_rr_analyses.append(analysis)
-                    
-                    # Check if both thresholds met (should escalate to IA2)
-                    if (confidence is not None and confidence >= self.ia1_confidence_threshold and
-                        rr_ratio is not None and rr_ratio >= self.ia1_rr_threshold):
-                        escalated_to_ia2.append(analysis)
+                confidence = analysis.get('analysis_confidence')
+                rr_ratio = analysis.get('risk_reward_ratio')
+                
+                if confidence is not None and confidence >= (self.ia1_confidence_threshold / 100.0):
+                    high_confidence_analyses.append(analysis)
+                
+                if rr_ratio is not None and rr_ratio >= self.ia1_rr_threshold:
+                    high_rr_analyses.append(analysis)
+                
+                # Check if both thresholds met (should escalate to IA2)
+                if (confidence is not None and confidence >= (self.ia1_confidence_threshold / 100.0) and
+                    rr_ratio is not None and rr_ratio >= self.ia1_rr_threshold):
+                    escalated_to_ia2.append(analysis)
             
             # Get IA2 decisions to verify escalation
             try:
