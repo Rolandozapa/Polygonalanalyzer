@@ -3897,6 +3897,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
         # Claude decision integration for advanced strategies
         net_signals = bullish_signals - bearish_signals
         claude_signal_boost = 0
+        claude_absolute_override = False  # Initialize override flag
         
         if claude_decision:
             # NOUVEAU: HIÉRARCHIE CLARA - Claude prioritaire pour figures chartistes
