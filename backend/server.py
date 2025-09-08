@@ -1414,6 +1414,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     if 'reasoning' in parsed_response:
                         logger.info(f"✅ IA1 reasoning captured: {len(parsed_response['reasoning'])} chars")
                     
+                    # Extract patterns from IA1 response
+                    ia1_patterns = []
+                    if 'patterns' in parsed_response and isinstance(parsed_response['patterns'], list):
+                        ia1_patterns = parsed_response['patterns']
+                        logger.info(f"✅ IA1 patterns extracted: {len(ia1_patterns)} patterns - {ia1_patterns}")
+                    
+                    # Store patterns for later use
+                    self._ia1_analyzed_patterns = ia1_patterns
+                    
                     # Extract Multi-RR info if present
                     if 'multi_rr_analysis' in parsed_response:
                         rr_data = parsed_response['multi_rr_analysis']
