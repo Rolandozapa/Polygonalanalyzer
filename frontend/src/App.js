@@ -713,8 +713,8 @@ const TradingDashboard = () => {
                         {/* Analysis Reasoning */}
                         <div className="bg-white rounded p-3 border">
                           <p className="text-sm text-slate-700 leading-relaxed">
-                            {analysis.ia1_reasoning?.slice(0, 300) || 'No reasoning available'}
-                            {analysis.ia1_reasoning?.length > 300 && '...'}
+                            {analysis.ia1_reasoning?.slice(0, 800) || 'No reasoning available'}
+                            {analysis.ia1_reasoning?.length > 800 && '...'}
                           </p>
                         </div>
                         
