@@ -5773,7 +5773,7 @@ class UltraProfessionalTradingOrchestrator:
                     
                     if should_process:
                         decisions_to_make.append((opportunity, analysis))
-                        logger.debug(f"✅ IA2 QUEUE: {analysis.symbol} (confidence: {analysis.analysis_confidence:.2%})")
+                        logger.info(f"✅ IA2 QUEUE: {analysis.symbol} (confidence: {analysis.analysis_confidence:.2%})")
                     else:
                         decisions_skipped += 1
                         logger.debug(f"⏭️ IA2 SKIP: {analysis.symbol} (low quality)")
