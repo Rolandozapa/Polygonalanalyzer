@@ -233,7 +233,8 @@ const TradingDashboard = () => {
             <TabButton id="analyses" icon="🤖">IA1 Analysis</TabButton>
             <TabButton id="decisions" icon="⚡">IA2 Decisions</TabButton>
             <TabButton id="positions" icon="🎯">Active Positions</TabButton>
-            <TabButton id="performance" icon="📈">Performance</TabButton>
+            <TabButton id="backtest" icon="📈">Backtesting</TabButton>
+            <TabButton id="performance" icon="📊">Performance</TabButton>
           </div>
         </div>
       </div>
