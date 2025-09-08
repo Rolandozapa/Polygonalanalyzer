@@ -209,7 +209,8 @@ class StochasticIntegrationTestSuite:
                 self.log_test_result("Debug Log Verification", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
-            analyses = response.json()
+            data = response.json()
+            analyses = data.get('analyses', [])
             
             if not analyses or len(analyses) == 0:
                 self.log_test_result("Debug Log Verification", False, "No analyses found for debug verification")
