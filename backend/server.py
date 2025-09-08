@@ -6598,9 +6598,9 @@ async def run_quick_ai_training():
         logger.error(f"Quick AI Training error: {e}")
         raise HTTPException(status_code=500, detail=f"Quick AI Training failed: {str(e)}")
 
-@app.get("/api/ai-training/status") 
-async def get_ai_training_status():
-    """Obtient le statut du système d'entraînement IA"""
+@app.get("/api/ai-training/status-full")
+async def get_ai_training_status_full():
+    """Obtient le statut complet du système d'entraînement IA (version complète)"""
     try:
         # Vérifier les données disponibles
         available_symbols = list(ai_training_system.historical_data.keys())
