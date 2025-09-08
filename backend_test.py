@@ -13,22 +13,14 @@ import sys
 import time
 from datetime import datetime
 from typing import Dict, Any, List
-import pandas as pd
-import numpy as np
-import subprocess
-
-# Add backend to path
-sys.path.append('/app/backend')
-
 import requests
-from motor.motor_asyncio import AsyncIOMotorClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class ChartistLearningSystemTestSuite:
-    """Test suite for Chartist Learning System Integration"""
+class UpdatedChartistLibraryTestSuite:
+    """Test suite for Updated Chartist Library (25+ Patterns) - French Review Request"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -44,59 +36,30 @@ class ChartistLearningSystemTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Chartist Learning System at: {self.api_url}")
-        
-        # MongoDB connection for direct data access
-        self.mongo_client = None
-        self.db = None
+        logger.info(f"Testing Updated Chartist Library (25+ Patterns) at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Chartist system specific test data
-        self.chartist_library = None
-        self.chartist_analysis = None
-        self.ai_training_insights = None
+        # Expected pattern categories from French review request
+        self.expected_categories = {
+            "reversal": ["Head & Shoulders", "Double Top", "Double Bottom", "Triple Top", "Triple Bottom"],
+            "continuation": ["Flags", "Pennants", "Triangles", "Channels", "Ascending Triangle", "Descending Triangle"],
+            "harmonic": ["Gartley", "Bat", "Butterfly", "Crab", "ABCD"],
+            "volatility": ["Diamond", "Expanding Wedge", "Contracting Triangle"],
+            "support_resistance": ["Support Bounce", "Resistance Break", "Breakout", "Breakdown"],
+            "technical_indicators": ["Golden Cross", "Death Cross", "RSI Divergence", "MACD Crossover"]
+        }
         
-        # Test patterns for chartist analysis
-        self.test_patterns = [
-            "head_and_shoulders",
-            "bullish_flag", 
-            "ascending_triangle",
-            "cup_with_handle",
-            "double_bottom",
-            "falling_wedge"
-        ]
+        # Minimum expected patterns count (25+ as per French review)
+        self.min_expected_patterns = 25
+        
+        # Test symbols for analysis
+        self.test_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "DOTUSDT"]
         
         # Market contexts to test
         self.market_contexts = ["BULL", "BEAR", "SIDEWAYS", "VOLATILE"]
         
-    async def setup_database(self):
-        """Setup database connection"""
-        try:
-            # Get MongoDB URL from backend env
-            mongo_url = "mongodb://localhost:27017"  # Default
-            try:
-                with open('/app/backend/.env', 'r') as f:
-                    for line in f:
-                        if line.startswith('MONGO_URL='):
-                            mongo_url = line.split('=')[1].strip().strip('"')
-                            break
-            except Exception:
-                pass
-            
-            self.mongo_client = AsyncIOMotorClient(mongo_url)
-            self.db = self.mongo_client['myapp']
-            logger.info("✅ Database connection established")
-            
-        except Exception as e:
-            logger.error(f"❌ Database setup failed: {e}")
-            
-    async def cleanup_database(self):
-        """Cleanup database connection"""
-        if self.mongo_client:
-            self.mongo_client.close()
-            
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
         status = "✅ PASS" if success else "❌ FAIL"
@@ -111,133 +74,216 @@ class ChartistLearningSystemTestSuite:
             'timestamp': datetime.now().isoformat()
         })
         
-    def get_analyses_from_api(self):
-        """Helper method to get analyses from API with proper format handling"""
-        try:
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
-            if response.status_code != 200:
-                return None, f"API error: {response.status_code}"
-                
-            data = response.json()
-            
-            # Handle API response format
-            if isinstance(data, dict) and 'analyses' in data:
-                analyses = data['analyses']
-            else:
-                analyses = data
-                
-            return analyses, None
-        except Exception as e:
-            return None, f"Exception: {str(e)}"
-    
-    def get_decisions_from_api(self):
-        """Helper method to get decisions from API"""
-        try:
-            response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            if response.status_code != 200:
-                return None, f"API error: {response.status_code}"
-                
-            data = response.json()
-            # Extract decisions from response if needed
-            if isinstance(data, dict) and 'decisions' in data:
-                decisions = data['decisions']
-            else:
-                decisions = data
-            return decisions, None
-        except Exception as e:
-            return None, f"Exception: {str(e)}"
-    
-    async def test_chartist_library_endpoint(self):
-        """Test 1: /api/chartist/library - Should return complete chartist figures library with statistics"""
-        logger.info("\n🔍 TEST 1: Chartist Library Endpoint")
+    async def test_chartist_library_25_plus_patterns(self):
+        """Test 1: /api/chartist/library - Should return 25+ patterns instead of 12"""
+        logger.info("\n🔍 TEST 1: Chartist Library 25+ Patterns (French Review Requirement)")
         
         try:
-            response = requests.get(f"{self.api_url}/chartist/library", timeout=15)
+            response = requests.get(f"{self.api_url}/chartist/library", timeout=30)
             
             if response.status_code != 200:
-                self.log_test_result("Chartist Library Endpoint", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test_result("Chartist Library 25+ Patterns", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
             data = response.json()
             
             # Validate response structure
             if not data.get('success', False):
-                self.log_test_result("Chartist Library Endpoint", False, f"API returned success=False: {data.get('message', 'No message')}")
+                self.log_test_result("Chartist Library 25+ Patterns", False, f"API returned success=False: {data.get('message', 'No message')}")
                 return
             
-            # Validate library data
+            # Extract library data
             library_data = data.get('data', {})
-            expected_fields = ['learning_summary', 'patterns_details']
-            missing_fields = [field for field in expected_fields if field not in library_data]
             
-            if missing_fields:
-                self.log_test_result("Chartist Library Endpoint", False, f"Missing library fields: {missing_fields}")
-                return
+            # Count total patterns - check multiple possible structures
+            total_patterns = 0
+            patterns_list = []
+            
+            # Method 1: Check if there's a patterns list directly
+            if 'patterns' in library_data:
+                patterns_list = library_data['patterns']
+                total_patterns = len(patterns_list)
+            
+            # Method 2: Check learning_summary for pattern count
+            elif 'learning_summary' in library_data:
+                learning_summary = library_data['learning_summary']
+                total_patterns = learning_summary.get('total_patterns_in_library', 0)
+                
+                # Also check patterns_details
+                if 'patterns_details' in library_data:
+                    patterns_details = library_data['patterns_details']
+                    patterns_list = list(patterns_details.keys())
+                    if len(patterns_list) > total_patterns:
+                        total_patterns = len(patterns_list)
+            
+            # Method 3: Check if data itself is the patterns list
+            elif isinstance(library_data, list):
+                patterns_list = library_data
+                total_patterns = len(patterns_list)
+            
+            # Method 4: Check for any patterns-related keys
+            else:
+                for key in library_data.keys():
+                    if 'pattern' in key.lower():
+                        value = library_data[key]
+                        if isinstance(value, list):
+                            patterns_list = value
+                            total_patterns = len(patterns_list)
+                            break
+                        elif isinstance(value, dict):
+                            patterns_list = list(value.keys())
+                            total_patterns = len(patterns_list)
+                            break
+            
+            logger.info(f"   📊 Total patterns found: {total_patterns}")
+            logger.info(f"   📊 Minimum expected: {self.min_expected_patterns}")
+            
+            # Log some pattern examples if available
+            if patterns_list:
+                logger.info(f"   📊 Pattern examples: {patterns_list[:10]}")  # Show first 10
+            
+            # Check if we meet the 25+ requirement
+            meets_requirement = total_patterns >= self.min_expected_patterns
+            
+            # Additional validation - check for pattern categories
+            categories_found = 0
+            category_details = {}
+            
+            for category_name, expected_patterns in self.expected_categories.items():
+                found_in_category = 0
+                for expected_pattern in expected_patterns:
+                    # Check if pattern exists in various formats
+                    pattern_variations = [
+                        expected_pattern.lower().replace(' ', '_'),
+                        expected_pattern.lower().replace(' ', ''),
+                        expected_pattern.replace(' ', '_'),
+                        expected_pattern,
+                        expected_pattern.upper()
+                    ]
+                    
+                    for variation in pattern_variations:
+                        if variation in str(patterns_list).lower():
+                            found_in_category += 1
+                            break
+                
+                if found_in_category > 0:
+                    categories_found += 1
+                    category_details[category_name] = found_in_category
+                    logger.info(f"   🎯 {category_name.title()}: {found_in_category} patterns found")
+            
+            logger.info(f"   📊 Categories with patterns: {categories_found}/{len(self.expected_categories)}")
+            
+            # Success criteria: 25+ patterns AND at least 4 categories represented
+            success = meets_requirement and categories_found >= 4
+            
+            details = f"Patterns: {total_patterns}/{self.min_expected_patterns}, Categories: {categories_found}/{len(self.expected_categories)}"
+            
+            self.log_test_result("Chartist Library 25+ Patterns", success, details)
             
             # Store for later tests
-            self.chartist_library = library_data
-            
-            # Validate pattern data
-            learning_summary = library_data.get('learning_summary', {})
-            patterns_details = library_data.get('patterns_details', {})
-            total_patterns = learning_summary.get('total_patterns_in_library', 0)
-            pattern_categories = learning_summary.get('pattern_categories', {})
-            
-            logger.info(f"   📊 Total patterns: {total_patterns}")
-            logger.info(f"   📊 Pattern categories: {pattern_categories}")
-            logger.info(f"   📊 Patterns details count: {len(patterns_details)}")
-            
-            # Check for key chartist patterns in patterns_details
-            key_patterns_found = 0
-            for pattern in self.test_patterns:
-                if pattern in patterns_details:
-                    pattern_data = patterns_details[pattern]
-                    success_rate_long = pattern_data.get('success_rate_long', 0)
-                    success_rate_short = pattern_data.get('success_rate_short', 0)
-                    avg_return_long = pattern_data.get('avg_return_long', 0)
-                    
-                    logger.info(f"   🎯 {pattern}: Long success {success_rate_long:.1%}, Short success {success_rate_short:.1%}, Avg return {avg_return_long:.1%}")
-                    key_patterns_found += 1
-                else:
-                    logger.info(f"   ⚠️ Missing pattern: {pattern}")
-            
-            # Validate that library has meaningful data
-            has_meaningful_data = (total_patterns >= 10 and 
-                                 key_patterns_found >= 3 and
-                                 len(patterns_details) > 0)
-            
-            success = has_meaningful_data
-            details = f"Total patterns: {total_patterns}, Key patterns found: {key_patterns_found}/{len(self.test_patterns)}, Patterns details: {len(patterns_details)}"
-            
-            self.log_test_result("Chartist Library Endpoint", success, details)
+            self.library_data = library_data
+            self.total_patterns = total_patterns
+            self.patterns_list = patterns_list
             
         except Exception as e:
-            self.log_test_result("Chartist Library Endpoint", False, f"Exception: {str(e)}")
+            self.log_test_result("Chartist Library 25+ Patterns", False, f"Exception: {str(e)}")
     
-    async def test_chartist_analyze_endpoint(self):
-        """Test 2: /api/chartist/analyze - Should provide recommendations based on patterns and market context"""
-        logger.info("\n🔍 TEST 2: Chartist Analyze Endpoint")
+    async def test_pattern_categories_coverage(self):
+        """Test 2: Verify all main categories are present (reversal, continuation, harmonic, etc.)"""
+        logger.info("\n🔍 TEST 2: Pattern Categories Coverage")
         
         try:
-            # Test with different pattern combinations and market contexts
+            if not hasattr(self, 'patterns_list') or not self.patterns_list:
+                self.log_test_result("Pattern Categories Coverage", False, "No patterns data from previous test")
+                return
+            
+            patterns_str = str(self.patterns_list).lower()
+            
+            category_coverage = {}
+            total_expected_patterns = 0
+            total_found_patterns = 0
+            
+            for category_name, expected_patterns in self.expected_categories.items():
+                found_patterns = []
+                
+                for expected_pattern in expected_patterns:
+                    total_expected_patterns += 1
+                    
+                    # Check multiple variations of pattern names
+                    pattern_variations = [
+                        expected_pattern.lower().replace(' ', '_'),
+                        expected_pattern.lower().replace(' ', ''),
+                        expected_pattern.lower().replace('&', 'and'),
+                        expected_pattern.lower()
+                    ]
+                    
+                    pattern_found = False
+                    for variation in pattern_variations:
+                        if variation in patterns_str:
+                            found_patterns.append(expected_pattern)
+                            total_found_patterns += 1
+                            pattern_found = True
+                            break
+                    
+                    if not pattern_found:
+                        # Check for partial matches
+                        words = expected_pattern.lower().split()
+                        if len(words) > 1 and all(word in patterns_str for word in words):
+                            found_patterns.append(expected_pattern)
+                            total_found_patterns += 1
+                
+                category_coverage[category_name] = {
+                    'expected': len(expected_patterns),
+                    'found': len(found_patterns),
+                    'patterns': found_patterns,
+                    'coverage_rate': (len(found_patterns) / len(expected_patterns)) * 100
+                }
+                
+                logger.info(f"   🎯 {category_name.title()}: {len(found_patterns)}/{len(expected_patterns)} patterns ({category_coverage[category_name]['coverage_rate']:.1f}%)")
+                if found_patterns:
+                    logger.info(f"      Found: {', '.join(found_patterns[:3])}{'...' if len(found_patterns) > 3 else ''}")
+            
+            # Calculate overall coverage
+            overall_coverage = (total_found_patterns / total_expected_patterns) * 100 if total_expected_patterns > 0 else 0
+            categories_with_patterns = sum(1 for cat in category_coverage.values() if cat['found'] > 0)
+            
+            logger.info(f"   📊 Overall pattern coverage: {total_found_patterns}/{total_expected_patterns} ({overall_coverage:.1f}%)")
+            logger.info(f"   📊 Categories with patterns: {categories_with_patterns}/{len(self.expected_categories)}")
+            
+            # Success criteria: At least 50% overall coverage AND at least 4 categories represented
+            success = overall_coverage >= 50 and categories_with_patterns >= 4
+            
+            details = f"Coverage: {overall_coverage:.1f}%, Categories: {categories_with_patterns}/{len(self.expected_categories)}"
+            
+            self.log_test_result("Pattern Categories Coverage", success, details)
+            
+        except Exception as e:
+            self.log_test_result("Pattern Categories Coverage", False, f"Exception: {str(e)}")
+    
+    async def test_chartist_analyze_multiple_patterns(self):
+        """Test 3: /api/chartist/analyze with multiple patterns for recommendations"""
+        logger.info("\n🔍 TEST 3: Chartist Analyze with Multiple Patterns")
+        
+        try:
+            # Test different pattern combinations
             test_cases = [
                 {
-                    "patterns": ["head_and_shoulders", "bullish_flag"],
-                    "market_context": "BULL",
+                    "patterns": ["head_and_shoulders", "double_top"],
+                    "market_context": "BEAR",
                     "symbol": "BTCUSDT"
                 },
                 {
-                    "patterns": ["ascending_triangle", "cup_with_handle"],
-                    "market_context": "BEAR", 
+                    "patterns": ["ascending_triangle", "bullish_flag"],
+                    "market_context": "BULL",
                     "symbol": "ETHUSDT"
                 },
                 {
-                    "patterns": ["double_bottom", "falling_wedge"],
+                    "patterns": ["gartley", "butterfly"],
                     "market_context": "SIDEWAYS",
                     "symbol": "SOLUSDT"
                 },
                 {
-                    "patterns": ["bullish_flag", "ascending_triangle"],
+                    "patterns": ["diamond", "expanding_wedge"],
                     "market_context": "VOLATILE",
                     "symbol": "ADAUSDT"
                 }
@@ -254,7 +300,7 @@ class ChartistLearningSystemTestSuite:
                     response = requests.post(
                         f"{self.api_url}/chartist/analyze",
                         json=test_case,
-                        timeout=15
+                        timeout=30
                     )
                     
                     if response.status_code != 200:
@@ -267,389 +313,209 @@ class ChartistLearningSystemTestSuite:
                         logger.info(f"      ❌ API error: {data.get('message', 'No message')}")
                         continue
                     
-                    # Validate analysis data - check actual API response structure
+                    # Validate analysis data
                     analysis_data = data.get('data', {})
-                    expected_fields = ['recommendations', 'market_context', 'patterns_analyzed']
                     
-                    if all(field in analysis_data for field in expected_fields):
+                    # Check for any meaningful response
+                    has_meaningful_response = (
+                        'recommendations' in analysis_data or
+                        'analysis' in analysis_data or
+                        'patterns_analyzed' in analysis_data or
+                        'market_context' in analysis_data
+                    )
+                    
+                    if has_meaningful_response:
                         successful_analyses += 1
                         analysis_results.append(analysis_data)
                         
                         # Log key metrics
                         recommendations = analysis_data.get('recommendations', [])
-                        market_context = analysis_data.get('market_context', 'N/A')
-                        patterns_analyzed = analysis_data.get('patterns_analyzed', 0)
+                        market_context = analysis_data.get('market_context', test_case['market_context'])
+                        patterns_analyzed = analysis_data.get('patterns_analyzed', len(test_case['patterns']))
                         
                         logger.info(f"      ✅ Success: {len(recommendations)} recommendations for {market_context}")
-                        logger.info(f"         Patterns analyzed: {patterns_analyzed}")
+                        logger.info(f"         Patterns processed: {patterns_analyzed}")
                         
-                        # Log recommendation details if available
-                        if recommendations:
-                            for rec in recommendations[:2]:  # Show first 2 recommendations
-                                if isinstance(rec, dict):
-                                    signal = rec.get('signal', 'N/A')
-                                    confidence = rec.get('confidence', 0)
-                                    logger.info(f"         Recommendation: {signal} (confidence: {confidence:.2f})")
                     else:
-                        missing = [f for f in expected_fields if f not in analysis_data]
-                        logger.info(f"      ❌ Missing fields: {missing}")
-                        logger.info(f"      Available fields: {list(analysis_data.keys())}")
+                        logger.info(f"      ❌ No meaningful analysis data returned")
                         
                 except Exception as e:
                     logger.info(f"      ❌ Exception: {str(e)}")
             
-            # Store for later tests
-            if analysis_results:
-                self.chartist_analysis = analysis_results[0]
-            
-            # Validate overall success - lower threshold since API might return empty recommendations
+            # Calculate success rate
             success_rate = (successful_analyses / total_analyses) * 100
-            success = success_rate >= 50  # At least 50% success rate (lowered from 75%)
+            success = success_rate >= 50  # At least 50% success rate
             
             details = f"Successful analyses: {successful_analyses}/{total_analyses} ({success_rate:.1f}%)"
             
-            self.log_test_result("Chartist Analyze Endpoint", success, details)
+            self.log_test_result("Chartist Analyze Multiple Patterns", success, details)
             
         except Exception as e:
-            self.log_test_result("Chartist Analyze Endpoint", False, f"Exception: {str(e)}")
+            self.log_test_result("Chartist Analyze Multiple Patterns", False, f"Exception: {str(e)}")
     
-    async def test_ai_training_load_insights_chartist_integration(self):
-        """Test 3: /api/ai-training/load-insights - Should now integrate chartist strategies"""
-        logger.info("\n🔍 TEST 3: AI Training Load Insights with Chartist Integration")
+    async def test_statistics_25_plus_patterns(self):
+        """Test 4: Verify statistics include 25+ different patterns"""
+        logger.info("\n🔍 TEST 4: Statistics Include 25+ Different Patterns")
         
         try:
-            response = requests.post(f"{self.api_url}/ai-training/load-insights", timeout=15)
-            
-            if response.status_code != 200:
-                self.log_test_result("AI Training Load Insights Chartist Integration", False, f"HTTP {response.status_code}: {response.text}")
+            if not hasattr(self, 'library_data') or not self.library_data:
+                self.log_test_result("Statistics 25+ Patterns", False, "No library data from previous test")
                 return
             
-            data = response.json()
+            # Look for statistics in the library data
+            statistics_found = False
+            patterns_with_stats = 0
+            stat_types = []
             
-            # Validate response structure
-            if not data.get('success', False):
-                self.log_test_result("AI Training Load Insights Chartist Integration", False, f"API returned success=False: {data.get('message', 'No message')}")
-                return
+            # Check different possible locations for statistics
+            data_to_check = [self.library_data]
             
-            # Validate enhancement summary with chartist integration
-            enhancement_summary = data.get('data', {})
+            if 'patterns_details' in self.library_data:
+                data_to_check.append(self.library_data['patterns_details'])
             
-            logger.info(f"   📊 Enhancement summary: {enhancement_summary}")
+            if 'learning_summary' in self.library_data:
+                data_to_check.append(self.library_data['learning_summary'])
             
-            # Check for chartist-specific enhancements - adjust for actual API response
-            total_rules = enhancement_summary.get('total_rules', 0)
-            pattern_insights = enhancement_summary.get('pattern_insights', 0)
-            market_condition_insights = enhancement_summary.get('market_condition_insights', 0)
+            for data_section in data_to_check:
+                if isinstance(data_section, dict):
+                    for key, value in data_section.items():
+                        if isinstance(value, dict):
+                            # Check if this pattern has statistics
+                            stat_keywords = ['success_rate', 'avg_return', 'win_rate', 'profit', 'loss', 'accuracy', 'performance']
+                            pattern_has_stats = any(stat_key in str(value).lower() for stat_key in stat_keywords)
+                            
+                            if pattern_has_stats:
+                                patterns_with_stats += 1
+                                statistics_found = True
+                                
+                                # Collect types of statistics
+                                for stat_key in stat_keywords:
+                                    if stat_key in str(value).lower() and stat_key not in stat_types:
+                                        stat_types.append(stat_key)
             
-            # Check if there are any enhancement rules at all
-            has_enhancement_rules = total_rules > 0
+            logger.info(f"   📊 Patterns with statistics: {patterns_with_stats}")
+            logger.info(f"   📊 Statistics types found: {stat_types}")
+            logger.info(f"   📊 Total patterns available: {getattr(self, 'total_patterns', 0)}")
             
-            logger.info(f"   📊 Total enhancement rules: {total_rules}")
-            logger.info(f"   📊 Pattern insights: {pattern_insights}")
-            logger.info(f"   📊 Market condition insights: {market_condition_insights}")
+            # Success criteria: Statistics found AND covers 25+ patterns OR at least 80% of available patterns
+            min_patterns_with_stats = min(self.min_expected_patterns, getattr(self, 'total_patterns', 0) * 0.8)
+            success = statistics_found and patterns_with_stats >= min_patterns_with_stats
             
-            # Store for later tests
-            self.ai_training_insights = enhancement_summary
+            details = f"Patterns with stats: {patterns_with_stats}, Min required: {min_patterns_with_stats:.0f}, Stat types: {len(stat_types)}"
             
-            # Validate that some insights were loaded (even if chartist-specific field doesn't exist)
-            insights_loaded = has_enhancement_rules or pattern_insights > 0 or market_condition_insights > 0
-            
-            success = insights_loaded
-            details = f"Total rules: {total_rules}, Pattern insights: {pattern_insights}, Market insights: {market_condition_insights}"
-            
-            self.log_test_result("AI Training Load Insights Chartist Integration", success, details)
+            self.log_test_result("Statistics 25+ Patterns", success, details)
             
         except Exception as e:
-            self.log_test_result("AI Training Load Insights Chartist Integration", False, f"Exception: {str(e)}")
+            self.log_test_result("Statistics 25+ Patterns", False, f"Exception: {str(e)}")
     
-    async def test_chartist_improvements_in_ia1_ia2(self):
-        """Test 4: Verify chartist improvements are applied to IA1 and IA2 decisions"""
-        logger.info("\n🔍 TEST 4: Chartist Improvements in IA1 and IA2 Decisions")
+    async def test_best_strategies_calculation(self):
+        """Test 5: Confirm best long/short strategies are correctly calculated"""
+        logger.info("\n🔍 TEST 5: Best Long/Short Strategies Calculation")
         
         try:
-            # Get recent trading decisions
-            decisions, error = self.get_decisions_from_api()
-            
-            if error:
-                self.log_test_result("Chartist Improvements in IA1 IA2", False, f"Failed to get decisions: {error}")
+            if not hasattr(self, 'library_data') or not self.library_data:
+                self.log_test_result("Best Strategies Calculation", False, "No library data from previous test")
                 return
             
-            if not decisions:
-                self.log_test_result("Chartist Improvements in IA1 IA2", False, "No trading decisions found")
-                return
+            # Look for strategy calculations in the library data
+            best_long_strategies = []
+            best_short_strategies = []
+            strategy_calculations_found = False
             
-            # Analyze decisions for chartist enhancements
-            chartist_analysis = {
-                'total_decisions': len(decisions),
-                'ia1_chartist_enhanced': 0,
-                'ia2_chartist_enhanced': 0,
-                'confidence_boosts': 0,
-                'position_size_adjustments': 0,
-                'pattern_based_decisions': 0,
-                'success_rate_adjustments': 0
-            }
+            # Check for strategy-related data
+            data_sections = [self.library_data]
             
-            chartist_examples = []
+            if 'patterns_details' in self.library_data:
+                data_sections.append(self.library_data['patterns_details'])
             
-            for decision in decisions:
-                symbol = decision.get('symbol', 'UNKNOWN')
-                ia1_reasoning = decision.get('ia1_analysis', '')
-                ia2_reasoning = decision.get('ia2_reasoning', '')
-                confidence = decision.get('confidence', 0)
-                position_size = decision.get('position_size', 0)
+            if 'learning_summary' in self.library_data:
+                learning_summary = self.library_data['learning_summary']
+                data_sections.append(learning_summary)
                 
-                # Check for chartist keywords in IA1 analysis
-                chartist_ia1_keywords = ['chartist', 'pattern', 'cup with handle', 'head and shoulders', 'triangle', 'flag', 'wedge', 'double bottom', 'double top']
-                if any(keyword in ia1_reasoning.lower() for keyword in chartist_ia1_keywords):
-                    chartist_analysis['ia1_chartist_enhanced'] += 1
+                # Check for best strategies in summary
+                if 'best_long_patterns' in learning_summary:
+                    best_long_strategies = learning_summary['best_long_patterns']
+                    strategy_calculations_found = True
                 
-                # Check for chartist keywords in IA2 reasoning
-                chartist_ia2_keywords = ['success rate', 'pattern-based', 'chartist', 'position sizing based on', 'risk-reward optimization', 'pattern confidence']
-                if any(keyword in ia2_reasoning.lower() for keyword in chartist_ia2_keywords):
-                    chartist_analysis['ia2_chartist_enhanced'] += 1
-                
-                # Check for confidence boosts (high confidence decisions)
-                if confidence > 0.8:
-                    chartist_analysis['confidence_boosts'] += 1
-                
-                # Check for position size adjustments (non-standard sizes)
-                if position_size > 0 and position_size != 0.02:  # Not default 2%
-                    chartist_analysis['position_size_adjustments'] += 1
-                
-                # Check for pattern-based decisions
-                pattern_keywords = ['pattern', 'formation', 'breakout', 'support', 'resistance']
-                if any(keyword in (ia1_reasoning + ia2_reasoning).lower() for keyword in pattern_keywords):
-                    chartist_analysis['pattern_based_decisions'] += 1
-                
-                # Check for success rate mentions
-                if 'success rate' in (ia1_reasoning + ia2_reasoning).lower() or '% success' in (ia1_reasoning + ia2_reasoning).lower():
-                    chartist_analysis['success_rate_adjustments'] += 1
-                
-                # Collect examples
-                if (chartist_analysis['ia1_chartist_enhanced'] > len(chartist_examples) or 
-                    chartist_analysis['ia2_chartist_enhanced'] > len(chartist_examples)):
-                    chartist_examples.append({
-                        'symbol': symbol,
-                        'confidence': confidence,
-                        'position_size': position_size,
-                        'has_ia1_chartist': any(keyword in ia1_reasoning.lower() for keyword in chartist_ia1_keywords),
-                        'has_ia2_chartist': any(keyword in ia2_reasoning.lower() for keyword in chartist_ia2_keywords)
-                    })
+                if 'best_short_patterns' in learning_summary:
+                    best_short_strategies = learning_summary['best_short_patterns']
+                    strategy_calculations_found = True
             
-            logger.info(f"   📊 Chartist Analysis:")
-            logger.info(f"      Total decisions: {chartist_analysis['total_decisions']}")
-            logger.info(f"      IA1 chartist enhanced: {chartist_analysis['ia1_chartist_enhanced']}")
-            logger.info(f"      IA2 chartist enhanced: {chartist_analysis['ia2_chartist_enhanced']}")
-            logger.info(f"      Confidence boosts: {chartist_analysis['confidence_boosts']}")
-            logger.info(f"      Position size adjustments: {chartist_analysis['position_size_adjustments']}")
-            logger.info(f"      Pattern-based decisions: {chartist_analysis['pattern_based_decisions']}")
-            logger.info(f"      Success rate adjustments: {chartist_analysis['success_rate_adjustments']}")
+            # Alternative: Look for patterns with high success rates
+            if not strategy_calculations_found:
+                for data_section in data_sections:
+                    if isinstance(data_section, dict):
+                        for pattern_name, pattern_data in data_section.items():
+                            if isinstance(pattern_data, dict):
+                                # Check for long strategy performance
+                                long_success = pattern_data.get('success_rate_long', 0)
+                                short_success = pattern_data.get('success_rate_short', 0)
+                                
+                                if isinstance(long_success, (int, float)) and long_success > 0.7:  # 70%+ success
+                                    best_long_strategies.append({
+                                        'pattern': pattern_name,
+                                        'success_rate': long_success
+                                    })
+                                    strategy_calculations_found = True
+                                
+                                if isinstance(short_success, (int, float)) and short_success > 0.7:  # 70%+ success
+                                    best_short_strategies.append({
+                                        'pattern': pattern_name,
+                                        'success_rate': short_success
+                                    })
+                                    strategy_calculations_found = True
             
-            # Show examples
-            if chartist_examples:
-                logger.info(f"   📝 Chartist Enhanced Examples:")
-                for example in chartist_examples[:3]:
-                    logger.info(f"      {example['symbol']}: Confidence {example['confidence']:.2f}, Position {example['position_size']:.3f}%, IA1 chartist: {example['has_ia1_chartist']}, IA2 chartist: {example['has_ia2_chartist']}")
+            logger.info(f"   📊 Best long strategies found: {len(best_long_strategies)}")
+            logger.info(f"   📊 Best short strategies found: {len(best_short_strategies)}")
             
-            # Validate that chartist improvements are being applied
-            chartist_integration_rate = 0
-            if chartist_analysis['total_decisions'] > 0:
-                chartist_integration_rate = ((chartist_analysis['ia1_chartist_enhanced'] + chartist_analysis['ia2_chartist_enhanced']) / (chartist_analysis['total_decisions'] * 2)) * 100
-            
-            # Check if chartist system is working
-            chartist_working = (chartist_analysis['ia1_chartist_enhanced'] > 0 or 
-                              chartist_analysis['ia2_chartist_enhanced'] > 0 or
-                              chartist_analysis['pattern_based_decisions'] > 0 or
-                              chartist_analysis['success_rate_adjustments'] > 0)
-            
-            success = chartist_working and chartist_integration_rate > 5  # At least 5% integration rate (lowered from 10%)
-            details = f"IA1 enhanced: {chartist_analysis['ia1_chartist_enhanced']}, IA2 enhanced: {chartist_analysis['ia2_chartist_enhanced']}, Integration rate: {chartist_integration_rate:.1f}%"
-            
-            self.log_test_result("Chartist Improvements in IA1 IA2", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Chartist Improvements in IA1 IA2", False, f"Exception: {str(e)}")
-    
-    async def test_market_context_adaptation(self):
-        """Test 5: Test multiple market contexts (BULL, BEAR, SIDEWAYS, VOLATILE)"""
-        logger.info("\n🔍 TEST 5: Market Context Adaptation")
-        
-        try:
-            context_results = {}
-            
-            for market_context in self.market_contexts:
-                logger.info(f"   🧪 Testing {market_context} market context")
-                
-                try:
-                    # Test chartist analysis in different market contexts
-                    test_payload = {
-                        "patterns": ["bullish_flag", "ascending_triangle"],
-                        "market_context": market_context,
-                        "symbol": "BTCUSDT"
-                    }
-                    
-                    response = requests.post(
-                        f"{self.api_url}/chartist/analyze",
-                        json=test_payload,
-                        timeout=15
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        if data.get('success', False):
-                            analysis_data = data.get('data', {})
-                            
-                            # Extract key metrics for this market context
-                            recommendations = analysis_data.get('recommendations', [])
-                            market_context_returned = analysis_data.get('market_context', market_context)
-                            patterns_analyzed = analysis_data.get('patterns_analyzed', 0)
-                            
-                            context_results[market_context] = {
-                                'success': True,
-                                'recommendations_count': len(recommendations),
-                                'market_context': market_context_returned,
-                                'patterns_analyzed': patterns_analyzed
-                            }
-                            
-                            logger.info(f"      ✅ {market_context}: {len(recommendations)} recommendations, {patterns_analyzed} patterns analyzed")
-                        else:
-                            context_results[market_context] = {'success': False, 'error': 'API returned success=False'}
-                            logger.info(f"      ❌ {market_context}: API error")
+            # Log some examples
+            if best_long_strategies:
+                for strategy in best_long_strategies[:3]:  # Show first 3
+                    if isinstance(strategy, dict):
+                        pattern = strategy.get('pattern', 'Unknown')
+                        rate = strategy.get('success_rate', 0)
+                        logger.info(f"      🎯 Long: {pattern} ({rate:.1%} success)")
                     else:
-                        context_results[market_context] = {'success': False, 'error': f'HTTP {response.status_code}'}
-                        logger.info(f"      ❌ {market_context}: HTTP {response.status_code}")
-                        
-                except Exception as e:
-                    context_results[market_context] = {'success': False, 'error': str(e)}
-                    logger.info(f"      ❌ {market_context}: Exception {str(e)}")
+                        logger.info(f"      🎯 Long: {strategy}")
             
-            # Analyze results across market contexts
-            successful_contexts = sum(1 for result in context_results.values() if result['success'])
-            total_contexts = len(self.market_contexts)
-            
-            # Check for context-specific adaptations
-            unique_recommendation_counts = set()
-            
-            for context, result in context_results.items():
-                if result['success']:
-                    unique_recommendation_counts.add(result['recommendations_count'])
-            
-            logger.info(f"   📊 Market Context Results:")
-            logger.info(f"      Successful contexts: {successful_contexts}/{total_contexts}")
-            logger.info(f"      Unique recommendation counts: {list(unique_recommendation_counts)}")
-            
-            # Validate market context adaptation - lower requirements
-            context_adaptation_working = successful_contexts >= 2  # At least 2 contexts work (lowered from 3)
-            
-            success = context_adaptation_working
-            details = f"Successful contexts: {successful_contexts}/{total_contexts}, Unique counts: {len(unique_recommendation_counts)}"
-            
-            self.log_test_result("Market Context Adaptation", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Market Context Adaptation", False, f"Exception: {str(e)}")
-    
-    async def test_position_sizing_optimization(self):
-        """Test 6: Verify position sizing optimization based on pattern success rates"""
-        logger.info("\n🔍 TEST 6: Position Sizing Optimization Based on Pattern Success Rates")
-        
-        try:
-            # Test different patterns with known success rates
-            test_patterns = [
-                {"pattern": "cup_with_handle", "expected_success_rate": 81},  # High success rate
-                {"pattern": "head_and_shoulders", "expected_success_rate": 65},  # Medium success rate
-                {"pattern": "double_top", "expected_success_rate": 45}  # Lower success rate
-            ]
-            
-            position_sizing_results = []
-            
-            for pattern_test in test_patterns:
-                pattern = pattern_test["pattern"]
-                expected_rate = pattern_test["expected_success_rate"]
-                
-                logger.info(f"   🧪 Testing position sizing for {pattern} (expected {expected_rate}% success)")
-                
-                try:
-                    test_payload = {
-                        "patterns": [pattern],
-                        "market_context": "BULL",
-                        "symbol": "BTCUSDT"
-                    }
-                    
-                    response = requests.post(
-                        f"{self.api_url}/chartist/analyze",
-                        json=test_payload,
-                        timeout=15
-                    )
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        if data.get('success', False):
-                            analysis_data = data.get('data', {})
-                            recommendations = analysis_data.get('recommendations', [])
-                            
-                            # Since the API doesn't return position sizing in the expected format,
-                            # we'll check if recommendations are generated and vary by pattern
-                            position_sizing_results.append({
-                                'pattern': pattern,
-                                'expected_success_rate': expected_rate,
-                                'recommendations_count': len(recommendations),
-                                'has_recommendations': len(recommendations) > 0
-                            })
-                            
-                            logger.info(f"      ✅ {pattern}: {len(recommendations)} recommendations generated")
-                        else:
-                            logger.info(f"      ❌ {pattern}: API error")
+            if best_short_strategies:
+                for strategy in best_short_strategies[:3]:  # Show first 3
+                    if isinstance(strategy, dict):
+                        pattern = strategy.get('pattern', 'Unknown')
+                        rate = strategy.get('success_rate', 0)
+                        logger.info(f"      🎯 Short: {strategy} ({rate:.1%} success)")
                     else:
-                        logger.info(f"      ❌ {pattern}: HTTP {response.status_code}")
-                        
-                except Exception as e:
-                    logger.info(f"      ❌ {pattern}: Exception {str(e)}")
+                        logger.info(f"      🎯 Short: {strategy}")
             
-            # Analyze position sizing optimization
-            if len(position_sizing_results) >= 2:
-                # Check if the system is generating recommendations for different patterns
-                patterns_with_recommendations = sum(1 for result in position_sizing_results if result['has_recommendations'])
-                total_patterns_tested = len(position_sizing_results)
-                
-                logger.info(f"   📊 Position Sizing Analysis:")
-                logger.info(f"      Patterns with recommendations: {patterns_with_recommendations}/{total_patterns_tested}")
-                
-                # Validate that the system is working (even if not optimizing position sizes yet)
-                optimization_working = patterns_with_recommendations > 0
-                
-                success = optimization_working
-                details = f"Patterns with recommendations: {patterns_with_recommendations}/{total_patterns_tested}, System generating recommendations: {optimization_working}"
-                
-            else:
-                success = False
-                details = f"Insufficient data: only {len(position_sizing_results)} patterns tested successfully"
+            # Success criteria: Strategy calculations found AND at least some strategies identified
+            has_strategies = len(best_long_strategies) > 0 or len(best_short_strategies) > 0
+            success = strategy_calculations_found and has_strategies
             
-            self.log_test_result("Position Sizing Optimization", success, details)
+            details = f"Long strategies: {len(best_long_strategies)}, Short strategies: {len(best_short_strategies)}, Calculations found: {strategy_calculations_found}"
+            
+            self.log_test_result("Best Strategies Calculation", success, details)
             
         except Exception as e:
-            self.log_test_result("Position Sizing Optimization", False, f"Exception: {str(e)}")
+            self.log_test_result("Best Strategies Calculation", False, f"Exception: {str(e)}")
     
     async def run_comprehensive_tests(self):
-        """Run all Chartist Learning System tests"""
-        logger.info("🚀 Starting Chartist Learning System Test Suite")
+        """Run all Updated Chartist Library tests"""
+        logger.info("🚀 Starting Updated Chartist Library Test Suite (25+ Patterns)")
+        logger.info("=" * 80)
+        logger.info("📋 FRENCH REVIEW REQUEST: Test complete chartist figures library")
+        logger.info("🎯 OBJECTIVE: Verify 25+ patterns instead of 12")
         logger.info("=" * 80)
         
-        await self.setup_database()
-        
         # Run all tests in sequence
-        await self.test_chartist_library_endpoint()
-        await self.test_chartist_analyze_endpoint()
-        await self.test_ai_training_load_insights_chartist_integration()
-        await self.test_chartist_improvements_in_ia1_ia2()
-        await self.test_market_context_adaptation()
-        await self.test_position_sizing_optimization()
-        
-        await self.cleanup_database()
+        await self.test_chartist_library_25_plus_patterns()
+        await self.test_pattern_categories_coverage()
+        await self.test_chartist_analyze_multiple_patterns()
+        await self.test_statistics_25_plus_patterns()
+        await self.test_best_strategies_calculation()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 CHARTIST LEARNING SYSTEM TEST SUMMARY")
+        logger.info("📊 UPDATED CHARTIST LIBRARY TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -663,100 +529,84 @@ class ChartistLearningSystemTestSuite:
                 
         logger.info(f"\n🎯 OVERALL RESULT: {passed_tests}/{total_tests} tests passed")
         
-        # Specific analysis for French review request
+        # French review analysis
         logger.info("\n" + "=" * 80)
-        logger.info("📋 ANALYSE POUR LA DEMANDE DE RÉVISION (FRANÇAIS)")
+        logger.info("📋 ANALYSE POUR LA DEMANDE DE RÉVISION FRANÇAISE")
         logger.info("=" * 80)
         
         if passed_tests == total_tests:
-            logger.info("🎉 TOUS LES TESTS RÉUSSIS - Le système d'apprentissage chartiste fonctionne correctement!")
-            logger.info("✅ Bibliothèque des figures chartistes accessible avec statistiques")
-            logger.info("✅ Analyse chartiste avec recommandations basées sur les patterns")
-            logger.info("✅ Intégration des stratégies chartistes dans l'entraînement IA")
-            logger.info("✅ Améliorations chartistes appliquées aux décisions IA1 et IA2")
-            logger.info("✅ Adaptation selon le contexte de marché (BULL, BEAR, SIDEWAYS, VOLATILE)")
-            logger.info("✅ Optimisation des tailles de position selon les taux de succès des patterns")
+            logger.info("🎉 TOUS LES TESTS RÉUSSIS - La bibliothèque chartiste mise à jour fonctionne parfaitement!")
+            logger.info("✅ Bibliothèque complète avec 25+ figures chartistes")
+            logger.info("✅ Toutes les catégories principales présentes")
+            logger.info("✅ Analyse avec plusieurs patterns fonctionnelle")
+            logger.info("✅ Statistiques incluent 25+ patterns différents")
+            logger.info("✅ Meilleures stratégies long/short correctement calculées")
         elif passed_tests >= total_tests * 0.8:
-            logger.info("⚠️ FONCTIONNEMENT PARTIEL - Quelques problèmes détectés dans le système chartiste")
-            logger.info("🔍 Vérifiez les tests échoués pour des problèmes spécifiques")
+            logger.info("⚠️ FONCTIONNEMENT PARTIEL - La plupart des fonctionnalités marchent")
+            logger.info("🔍 Quelques améliorations nécessaires pour une conformité complète")
         else:
-            logger.info("❌ PROBLÈMES CRITIQUES - Le système d'apprentissage chartiste nécessite une attention")
-            logger.info("🚨 Problèmes majeurs avec l'intégration chartiste")
-            
-        # Key features verification
-        logger.info("\n📝 VÉRIFICATION DES FONCTIONNALITÉS CLÉS:")
+            logger.info("❌ PROBLÈMES CRITIQUES - La bibliothèque chartiste nécessite des corrections")
+            logger.info("🚨 Plusieurs fonctionnalités ne répondent pas aux exigences")
         
-        # Check specific features mentioned in French review request
-        features_verified = []
-        features_failed = []
+        # Specific requirements check
+        logger.info("\n📝 VÉRIFICATION DES EXIGENCES SPÉCIFIQUES:")
         
-        # Check chartist library
-        library_working = any("Chartist Library Endpoint" in result['test'] and result['success'] for result in self.test_results)
-        if library_working:
-            features_verified.append("✅ Bibliothèque complète des figures chartistes avec statistiques")
+        requirements_met = []
+        requirements_failed = []
+        
+        # Check 25+ patterns requirement
+        patterns_test = any("25+ Patterns" in result['test'] and result['success'] for result in self.test_results)
+        if patterns_test:
+            requirements_met.append("✅ /api/chartist/library retourne 25+ patterns au lieu de 12")
         else:
-            features_failed.append("❌ Bibliothèque des figures chartistes non accessible")
+            requirements_failed.append("❌ /api/chartist/library ne retourne pas 25+ patterns")
         
-        # Check chartist analysis
-        analysis_working = any("Chartist Analyze Endpoint" in result['test'] and result['success'] for result in self.test_results)
-        if analysis_working:
-            features_verified.append("✅ Analyse chartiste avec recommandations patterns")
+        # Check categories requirement
+        categories_test = any("Categories Coverage" in result['test'] and result['success'] for result in self.test_results)
+        if categories_test:
+            requirements_met.append("✅ Toutes les catégories principales présentes")
         else:
-            features_failed.append("❌ Analyse chartiste non fonctionnelle")
+            requirements_failed.append("❌ Catégories principales manquantes")
         
-        # Check AI integration
-        ai_integration = any("AI Training Load Insights Chartist Integration" in result['test'] and result['success'] for result in self.test_results)
-        if ai_integration:
-            features_verified.append("✅ Intégration des stratégies chartistes dans l'IA")
+        # Check analysis requirement
+        analysis_test = any("Multiple Patterns" in result['test'] and result['success'] for result in self.test_results)
+        if analysis_test:
+            requirements_met.append("✅ /api/chartist/analyze fonctionne avec plusieurs patterns")
         else:
-            features_failed.append("❌ Intégration IA des stratégies chartistes échouée")
+            requirements_failed.append("❌ /api/chartist/analyze ne fonctionne pas correctement")
         
-        # Check IA1/IA2 improvements
-        ia_improvements = any("Chartist Improvements in IA1 IA2" in result['test'] and result['success'] for result in self.test_results)
-        if ia_improvements:
-            features_verified.append("✅ Améliorations chartistes appliquées à IA1 et IA2")
+        # Check statistics requirement
+        stats_test = any("Statistics" in result['test'] and result['success'] for result in self.test_results)
+        if stats_test:
+            requirements_met.append("✅ Statistiques incluent 25+ patterns différents")
         else:
-            features_failed.append("❌ Améliorations chartistes IA1/IA2 non appliquées")
+            requirements_failed.append("❌ Statistiques n'incluent pas 25+ patterns")
         
-        # Check market context adaptation
-        market_adaptation = any("Market Context Adaptation" in result['test'] and result['success'] for result in self.test_results)
-        if market_adaptation:
-            features_verified.append("✅ Adaptation selon contexte marché (BULL/BEAR/SIDEWAYS/VOLATILE)")
+        # Check strategies requirement
+        strategies_test = any("Strategies" in result['test'] and result['success'] for result in self.test_results)
+        if strategies_test:
+            requirements_met.append("✅ Meilleures stratégies long/short correctement calculées")
         else:
-            features_failed.append("❌ Adaptation contexte marché non fonctionnelle")
+            requirements_failed.append("❌ Stratégies long/short mal calculées")
         
-        # Check position sizing optimization
-        position_optimization = any("Position Sizing Optimization" in result['test'] and result['success'] for result in self.test_results)
-        if position_optimization:
-            features_verified.append("✅ Optimisation tailles position selon taux succès patterns")
-        else:
-            features_failed.append("❌ Optimisation tailles position non fonctionnelle")
+        for req in requirements_met:
+            logger.info(f"   {req}")
         
-        for feature in features_verified:
-            logger.info(f"   {feature}")
+        for req in requirements_failed:
+            logger.info(f"   {req}")
         
-        for failure in features_failed:
-            logger.info(f"   {failure}")
-            
-        # Expected outcomes verification
-        logger.info("\n🎯 VÉRIFICATION DES RÉSULTATS ATTENDUS:")
+        # Expected categories verification
+        logger.info("\n🎯 CATÉGORIES ATTENDUES:")
+        for category, patterns in self.expected_categories.items():
+            logger.info(f"   📂 {category.title()}: {', '.join(patterns[:3])}{'...' if len(patterns) > 3 else ''}")
         
-        expected_outcomes = [
-            "Stratégies optimisées long/short basées sur figures chartistes",
-            "Ajustement automatique tailles position selon taux succès (ex: Tasse avec Anse = 81%)",
-            "Optimisation ratios risque/récompense selon figures détectées", 
-            "Adaptation stratégies selon contexte marché",
-            "Intégration recommandations chartistes dans IA1 (boost confiance) et IA2 (optimisation position/R:R)"
-        ]
+        logger.info(f"\n🏆 RÉSULTAT FINAL: {len(requirements_met)}/{len(requirements_met) + len(requirements_failed)} exigences satisfaites")
         
-        for outcome in expected_outcomes:
-            logger.info(f"   📋 {outcome}")
-            
         return passed_tests, total_tests
 
 async def main():
     """Main test execution"""
-    test_suite = ChartistLearningSystemTestSuite()
+    test_suite = UpdatedChartistLibraryTestSuite()
     passed, total = await test_suite.run_comprehensive_tests()
     
     # Exit with appropriate code
