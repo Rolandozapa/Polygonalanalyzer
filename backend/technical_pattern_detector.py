@@ -1353,9 +1353,10 @@ class TechnicalPatternDetector:
                     peak2 = high_peaks.iloc[i + 1] 
                     peak3 = high_peaks.iloc[i + 2]
                     
-                    # Les 3 pics doivent être à des niveaux similaires (±2%)
+                    # Les 3 pics doivent être à des niveaux similaires (±2%) - FIXED: Prevent division by zero
                     avg_peak = (peak1 + peak2 + peak3) / 3
-                    if (abs(peak1 - avg_peak) / avg_peak < 0.02 and 
+                    if (avg_peak > 0 and 
+                        abs(peak1 - avg_peak) / avg_peak < 0.02 and 
                         abs(peak2 - avg_peak) / avg_peak < 0.02 and
                         abs(peak3 - avg_peak) / avg_peak < 0.02):
                         
