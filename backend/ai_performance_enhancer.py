@@ -951,6 +951,52 @@ class AIPerformanceEnhancer:
         
         return True
     
+    def _meets_trigger_conditions(self, rule: EnhancementRule, analysis: Dict, opportunity) -> bool:
+        """Vérifie si les conditions de déclenchement d'une règle sont remplies"""
+        try:
+            conditions = rule.trigger_conditions
+            
+            # Vérifier les patterns détectés
+            if 'patterns_detected' in conditions:
+                required_patterns = conditions['patterns_detected']
+                detected_patterns = analysis.get('patterns_detected', [])
+                if not any(pattern in detected_patterns for pattern in required_patterns):
+                    return False
+            
+            # Vérifier les conditions de marché
+            if 'market_condition' in conditions:
+                required_condition = conditions['market_condition']
+                current_condition = getattr(opportunity, 'market_condition', 'unknown')
+                if current_condition != required_condition:
+                    return False
+            
+            # Vérifier le contexte de marché
+            if 'market_context' in conditions:
+                required_context = conditions['market_context']
+                current_context = analysis.get('market_context', 'unknown')
+                if current_context != required_context:
+                    return False
+            
+            # Vérifier le type de signal
+            if 'signal_type' in conditions:
+                required_signal = conditions['signal_type']
+                current_signal = analysis.get('signal', 'hold')
+                if current_signal != required_signal:
+                    return False
+            
+            # Vérifier la direction de trading
+            if 'trading_direction' in conditions:
+                required_direction = conditions['trading_direction']
+                current_direction = analysis.get('trading_direction', 'unknown')
+                if current_direction != required_direction:
+                    return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de la vérification des conditions pour {rule.rule_id}: {e}")
+            return False
+    
     def _apply_enhancement_rule(self, rule: EnhancementRule, target: Dict[str, Any]) -> Optional[TradingEnhancement]:
         """Apply an enhancement rule to a target analysis or decision"""
         try:
