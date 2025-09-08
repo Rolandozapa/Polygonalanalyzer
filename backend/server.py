@@ -1462,13 +1462,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             analysis_data = ia1_complete_json.copy()  # Commencer avec IA1 JSON complet
             
             # Enrichir avec calculs techniques précis
+            fib_data = self._calculate_fibonacci_levels(historical_data)
+            
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": macd_signal,
                 "stochastic": stochastic_k,  # Add Stochastic %K
                 "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
-                "fibonacci_level": self._calculate_fibonacci_retracement(historical_data),
+                "fibonacci_level": fib_data['current_position'],
+                "fibonacci_nearest_level": fib_data['nearest_level'],
+                "fibonacci_trend_direction": fib_data['trend_direction'],
                 "support_levels": self._find_support_levels(historical_data, current_price),
                 "resistance_levels": self._find_resistance_levels(historical_data, current_price),
                 "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
