@@ -298,19 +298,19 @@ class StochasticIntegrationTestSuite:
                 # Check for each indicator
                 indicators_found = []
                 
-                if 'rsi' in analysis_text:
+                if 'rsi' in combined_text:
                     indicator_coverage['RSI'] += 1
                     indicators_found.append('RSI')
                 
-                if 'macd' in analysis_text:
+                if 'macd' in combined_text:
                     indicator_coverage['MACD'] += 1
                     indicators_found.append('MACD')
                 
-                if 'stochastic' in analysis_text:
+                if 'stochastic' in combined_text:
                     indicator_coverage['Stochastic'] += 1
                     indicators_found.append('Stochastic')
                 
-                if 'bollinger' in analysis_text or 'bb' in analysis_text:
+                if 'bollinger' in combined_text or 'bb' in combined_text:
                     indicator_coverage['Bollinger'] += 1
                     indicators_found.append('Bollinger')
                 
