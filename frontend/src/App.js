@@ -630,6 +630,342 @@ const TradingDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'analyses' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h2 className="text-xl font-bold text-slate-900">IA1 Technical Analysis</h2>
+                <p className="text-slate-600">Advanced technical analysis with RSI, MACD, Stochastic, and Bollinger Bands</p>
+              </div>
+              
+              <div className="p-6">
+                {analyses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500">No technical analyses available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {analyses.map((analysis, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-lg text-slate-900">{analysis.symbol}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              analysis.analysis_confidence >= 0.8 ? 'bg-green-100 text-green-700' :
+                              analysis.analysis_confidence >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {(analysis.analysis_confidence * 100).toFixed(1)}% confidence
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              analysis.ia1_signal === 'long' ? 'bg-emerald-100 text-emerald-700' :
+                              analysis.ia1_signal === 'short' ? 'bg-red-100 text-red-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {analysis.ia1_signal?.toUpperCase() || 'HOLD'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Technical Indicators */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">RSI</p>
+                            <p className={`font-semibold ${
+                              analysis.rsi >= 70 ? 'text-red-600' :
+                              analysis.rsi <= 30 ? 'text-green-600' :
+                              'text-slate-900'
+                            }`}>
+                              {analysis.rsi?.toFixed(1) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">MACD</p>
+                            <p className={`font-semibold ${
+                              analysis.macd_signal > 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              {analysis.macd_signal?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Stochastic</p>
+                            <p className={`font-semibold ${
+                              analysis.stochastic >= 80 ? 'text-red-600' :
+                              analysis.stochastic <= 20 ? 'text-green-600' :
+                              'text-slate-900'
+                            }`}>
+                              {analysis.stochastic?.toFixed(1) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Bollinger</p>
+                            <p className={`font-semibold ${
+                              analysis.bollinger_position >= 0.8 ? 'text-red-600' :
+                              analysis.bollinger_position <= 0.2 ? 'text-green-600' :
+                              'text-slate-900'
+                            }`}>
+                              {analysis.bollinger_position?.toFixed(2) || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Analysis Reasoning */}
+                        <div className="bg-white rounded p-3 border">
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {analysis.ia1_reasoning?.slice(0, 300) || 'No reasoning available'}
+                            {analysis.ia1_reasoning?.length > 300 && '...'}
+                          </p>
+                        </div>
+                        
+                        {/* Patterns */}
+                        {analysis.patterns_detected && analysis.patterns_detected.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-sm text-slate-600 mb-2">Detected Patterns:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {analysis.patterns_detected.slice(0, 5).map((pattern, i) => (
+                                <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                  {pattern}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'decisions' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h2 className="text-xl font-bold text-slate-900">IA2 Strategic Decisions</h2>
+                <p className="text-slate-600">Claude-powered strategic decisions with probabilistic TP optimization</p>
+              </div>
+              
+              <div className="p-6">
+                {decisions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500">No strategic decisions available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {decisions.map((decision, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-lg text-slate-900">{decision.symbol}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              decision.confidence >= 0.8 ? 'bg-green-100 text-green-700' :
+                              decision.confidence >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {(decision.confidence * 100).toFixed(1)}% confidence
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              decision.signal === 'LONG' ? 'bg-emerald-100 text-emerald-700' :
+                              decision.signal === 'SHORT' ? 'bg-red-100 text-red-700' :
+                              'bg-slate-100 text-slate-700'
+                            }`}>
+                              {decision.signal}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Trading Levels */}
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Entry</p>
+                            <p className="font-semibold text-slate-900">
+                              ${decision.entry_price?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Stop Loss</p>
+                            <p className="font-semibold text-red-600">
+                              ${decision.stop_loss?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">TP1</p>
+                            <p className="font-semibold text-green-600">
+                              ${decision.take_profit_1?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">TP2</p>
+                            <p className="font-semibold text-green-600">
+                              ${decision.take_profit_2?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">TP3</p>
+                            <p className="font-semibold text-green-600">
+                              ${decision.take_profit_3?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Position Size and Risk */}
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">Position Size</p>
+                            <p className="font-semibold text-blue-600">
+                              {(decision.position_size * 100)?.toFixed(2) || '0'}%
+                            </p>
+                          </div>
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">Risk Level</p>
+                            <p className={`font-semibold ${
+                              decision.risk_level === 'HIGH' ? 'text-red-600' :
+                              decision.risk_level === 'MEDIUM' ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}>
+                              {decision.risk_level || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">Strategy</p>
+                            <p className="font-semibold text-purple-600">
+                              {decision.strategy_type?.replace('_', ' ') || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Decision Reasoning */}
+                        <div className="bg-white rounded p-3 border">
+                          <p className="text-sm font-medium text-slate-800 mb-2">IA2 Strategic Reasoning:</p>
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {decision.reasoning?.slice(0, 400) || 'No reasoning available'}
+                            {decision.reasoning?.length > 400 && '...'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'positions' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h2 className="text-xl font-bold text-slate-900">Active Trading Positions</h2>
+                <p className="text-slate-600">Real-time monitoring of open positions with trailing stops</p>
+              </div>
+              
+              <div className="p-6">
+                {activePositions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📊</div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No Active Positions</h3>
+                    <p className="text-slate-500 mb-4">Currently running in {executionMode} mode</p>
+                    <p className="text-sm text-slate-400">Positions will appear here when trades are executed</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activePositions.map((position, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="font-semibold text-lg text-slate-900">{position.symbol}</h3>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              position.direction === 'LONG' ? 'bg-emerald-100 text-emerald-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {position.direction}
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              position.unrealized_pnl >= 0 ? 'bg-green-100 text-green-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {position.unrealized_pnl >= 0 ? '+' : ''}
+                              ${position.unrealized_pnl?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Position Details */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Entry Price</p>
+                            <p className="font-semibold text-slate-900">
+                              ${position.entry_price?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Current Price</p>
+                            <p className="font-semibold text-blue-600">
+                              ${position.current_price?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Position Size</p>
+                            <p className="font-semibold text-slate-900">
+                              {position.quantity?.toFixed(6) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Value</p>
+                            <p className="font-semibold text-purple-600">
+                              ${position.position_value?.toFixed(2) || 'N/A'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Stop Loss and Take Profits */}
+                        <div className="grid grid-cols-4 gap-4 mb-4">
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">Stop Loss</p>
+                            <p className="font-semibold text-red-600">
+                              ${position.stop_loss?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">TP1</p>
+                            <p className="font-semibold text-green-600">
+                              ${position.take_profit_1?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">TP2</p>
+                            <p className="font-semibold text-green-600">
+                              ${position.take_profit_2?.toFixed(4) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center bg-white rounded p-2">
+                            <p className="text-sm text-slate-600">TP3</p>
+                            <p className="font-semibold text-green-600">
+                              ${position.take_profit_3?.toFixed(4) || 'N/A'}  
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {/* Position Actions */}
+                        <div className="flex justify-end space-x-2">
+                          <button
+                            onClick={() => closePosition(position.id)}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                          >
+                            Close Position
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
