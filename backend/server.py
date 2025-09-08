@@ -1279,7 +1279,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             bb_position = indicators.bb_position
             
             # Debug logging pour vérifier les vraies valeurs calculées
-            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Sources: {multi_source_quality['sources_count']}")
+            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}, Sources: {multi_source_quality['sources_count']}")
             
             # Calculate Bollinger Band position
             current_price = opportunity.current_price
