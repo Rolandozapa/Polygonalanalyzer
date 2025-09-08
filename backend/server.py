@@ -3904,22 +3904,28 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             claude_signal = claude_decision.get("signal", "").upper()
             claude_conf = claude_decision.get("confidence", 0.0)
             
-            # CLAUDE OVERRIDE LOGIC - Priorité absolue quand confiance élevée
+            # CLAUDE OVERRIDE LOGIC - Priorité ABSOLUE quand confiance élevée (>80%)
             if claude_conf >= 0.80:  # Confiance très élevée (≥80%)
                 if claude_signal in ["LONG", "BUY"]:
                     signal = SignalType.LONG
                     confidence = min(claude_conf + 0.10, 0.98)  # Boost confiance finale
-                    reasoning += f"🎯 CLAUDE OVERRIDE: LONG with {claude_conf:.1%} confidence - Pattern chartiste prioritaire sur IA1. "
-                    logger.info(f"📈 {opportunity.symbol}: CLAUDE OVERRIDE LONG ({claude_conf:.1%}) overrides IA1 signals")
+                    reasoning += f"🎯 IA2 ABSOLUTE PRIORITY: LONG with {claude_conf:.1%} confidence - IA2 haute confiance prend le dessus sur Multi-RR et IA1. "
+                    logger.info(f"📈 {opportunity.symbol}: IA2 ABSOLUTE OVERRIDE LONG ({claude_conf:.1%}) - Priority over Multi-RR and IA1")
+                    # 🚨 NOUVEAU: Marquer pour éviter override par Multi-RR
+                    claude_absolute_override = True
                 elif claude_signal in ["SHORT", "SELL"]:
                     signal = SignalType.SHORT  
                     confidence = min(claude_conf + 0.10, 0.98)
-                    reasoning += f"🎯 CLAUDE OVERRIDE: SHORT with {claude_conf:.1%} confidence - Pattern chartiste prioritaire sur IA1. "
-                    logger.info(f"📉 {opportunity.symbol}: CLAUDE OVERRIDE SHORT ({claude_conf:.1%}) overrides IA1 signals")
+                    reasoning += f"🎯 IA2 ABSOLUTE PRIORITY: SHORT with {claude_conf:.1%} confidence - IA2 haute confiance prend le dessus sur Multi-RR et IA1. "
+                    logger.info(f"📉 {opportunity.symbol}: IA2 ABSOLUTE OVERRIDE SHORT ({claude_conf:.1%}) - Priority over Multi-RR and IA1")
+                    # 🚨 NOUVEAU: Marquer pour éviter override par Multi-RR
+                    claude_absolute_override = True
                 else:  # HOLD
                     signal = SignalType.HOLD
-                    reasoning += f"🎯 CLAUDE OVERRIDE: HOLD with {claude_conf:.1%} confidence - Pas de figure chartiste claire. "
-                    logger.info(f"⏸️ {opportunity.symbol}: CLAUDE OVERRIDE HOLD ({claude_conf:.1%})")
+                    reasoning += f"🎯 IA2 ABSOLUTE PRIORITY: HOLD with {claude_conf:.1%} confidence - IA2 haute confiance prend le dessus sur Multi-RR et IA1. "
+                    logger.info(f"⏸️ {opportunity.symbol}: IA2 ABSOLUTE OVERRIDE HOLD ({claude_conf:.1%}) - Priority over Multi-RR and IA1")
+                    # 🚨 NOUVEAU: Marquer pour éviter override par Multi-RR
+                    claude_absolute_override = True
             
             elif claude_conf >= 0.65 and abs(net_signals) <= 3:  # Confiance élevée + signaux IA1 faibles/modérés
                 if claude_signal in ["LONG", "BUY"]:
