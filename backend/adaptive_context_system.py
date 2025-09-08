@@ -605,6 +605,12 @@ class AdaptiveContextSystem:
             pattern_environment="neutral",
             rsi_environment="neutral_zone",
             macd_environment="neutral",
+            stochastic_environment="neutral",  # New field
+            bollinger_environment="stable",    # New field
+            technical_confluence=0.5,         # New field
+            indicators_divergence=False,      # New field
+            momentum_regime="stable",         # New field
+            volatility_regime="stable",       # New field
             market_stress_level=0.3,
             liquidity_condition="medium",
             correlation_breakdown=False,
