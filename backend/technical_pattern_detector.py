@@ -1836,40 +1836,93 @@ class TechnicalPatternDetector:
             return "neutral"
     
     def _check_volume_contraction(self, df):
-        """Vérifie la contraction du volume (caractéristique des consolidations)"""
-        if len(df) < 10:
+        """Vérifie la contraction du volume avec protection d'erreurs"""
+        try:
+            if len(df) < 10 or 'Volume' not in df.columns:
+                return False
+            
+            # Vérifier que les colonnes Volume existent et ont des données
+            if df['Volume'].empty or df['Volume'].isna().all():
+                return False
+            
+            recent_volume = df['Volume'].iloc[-5:].mean()
+            previous_volume = df['Volume'].iloc[-10:-5].mean()
+            
+            # Protection contre NaN et valeurs nulles
+            if (np.isnan(recent_volume) or np.isnan(previous_volume) or 
+                recent_volume <= 0 or previous_volume <= 0):
+                return False
+            
+            return recent_volume < previous_volume * 0.8
+            
+        except Exception as e:
+            logger.debug(f"Error checking volume contraction: {e}")
             return False
-        
-        recent_volume = df['Volume'].iloc[-5:].mean()
-        previous_volume = df['Volume'].iloc[-10:-5].mean()
-        return recent_volume < previous_volume * 0.8
     
     def _check_volume_expansion(self, df):
-        """Vérifie l'expansion du volume"""
-        if len(df) < 10:
+        """Vérifie l'expansion du volume avec protection d'erreurs"""
+        try:
+            if len(df) < 10 or 'Volume' not in df.columns:
+                return False
+            
+            if df['Volume'].empty or df['Volume'].isna().all():
+                return False
+            
+            recent_volume = df['Volume'].iloc[-5:].mean()
+            previous_volume = df['Volume'].iloc[-10:-5].mean()
+            
+            if (np.isnan(recent_volume) or np.isnan(previous_volume) or 
+                recent_volume <= 0 or previous_volume <= 0):
+                return False
+            
+            return recent_volume > previous_volume * 1.2
+            
+        except Exception as e:
+            logger.debug(f"Error checking volume expansion: {e}")
             return False
-        
-        recent_volume = df['Volume'].iloc[-5:].mean()
-        previous_volume = df['Volume'].iloc[-10:-5].mean()
-        return recent_volume > previous_volume * 1.2
     
     def _check_volume_decrease_on_peaks(self, df):
-        """Vérifie la diminution du volume sur les pics (bearish)"""
-        if len(df) < 8:
+        """Vérifie la diminution du volume sur les pics avec protection d'erreurs"""
+        try:
+            if len(df) < 8 or 'Volume' not in df.columns:
+                return False
+            
+            if df['Volume'].empty or df['Volume'].isna().all():
+                return False
+            
+            recent_high_volume = df.nlargest(3, 'High')['Volume'].mean()
+            avg_volume = df['Volume'].mean()
+            
+            if np.isnan(recent_high_volume) or np.isnan(avg_volume) or avg_volume <= 0:
+                return False
+            
+            return recent_high_volume < avg_volume * 0.9
+            
+        except Exception as e:
+            logger.debug(f"Error checking volume decrease on peaks: {e}")
             return False
-        
-        recent_high_volume = df.nlargest(3, 'High')['Volume'].mean()
-        avg_volume = df['Volume'].mean()
-        return recent_high_volume < avg_volume * 0.9
     
     def _check_volume_increase_on_breakout(self, df):
-        """Vérifie l'augmentation du volume sur breakout (bullish)"""
-        if len(df) < 5:
+        """Vérifie l'augmentation du volume sur breakout avec protection d'erreurs"""
+        try:
+            if len(df) < 5 or 'Volume' not in df.columns:
+                return False
+            
+            if df['Volume'].empty or df['Volume'].isna().all():
+                return False
+            
+            recent_volume = df['Volume'].iloc[-3:].mean()
+            avg_volume = df['Volume'].iloc[-10:-3].mean()
+            
+            if (np.isnan(recent_volume) or np.isnan(avg_volume) or 
+                recent_volume <= 0 or avg_volume <= 0):
+                return False
+            
+            return recent_volume > avg_volume * 1.3
+            
+        except Exception as e:
+            logger.debug(f"Error checking volume increase on breakout: {e}")
             return False
-        
-        recent_volume = df['Volume'].iloc[-3:].mean()
-        avg_volume = df['Volume'].iloc[-10:-3].mean()
-        return recent_volume > avg_volume * 1.3
     
     def _check_volume_increase_on_breakdown(self, df):
         """Vérifie l'augmentation du volume sur breakdown (bearish)"""
