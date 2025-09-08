@@ -2828,7 +2828,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 position_size=decision_logic["position_size"],
                 risk_reward_ratio=analysis.risk_reward_ratio,  # 🎯 NOUVEAU: Utiliser le RR calculé par IA1 au lieu de le recalculer
                 ia1_analysis_id=analysis.id,
-                ia2_reasoning=decision_logic["reasoning"][:1500] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
+                ia2_reasoning=decision_logic["reasoning"] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
                 status=TradingStatus.PENDING
             )
             
