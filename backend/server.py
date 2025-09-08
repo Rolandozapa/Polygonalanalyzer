@@ -1465,19 +1465,29 @@ class UltraProfessionalIA1TechnicalAnalyst:
                             logger.info(f"🎯 IA1 advanced RR analysis for {opportunity.symbol}: {rr_data.get('chosen_option', 'unknown')}")
                 
             except (json.JSONDecodeError, ValueError, KeyError) as e:
-                logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}, using defaults")
-                # Créer JSON fallback complet
+                logger.warning(f"⚠️ Failed to parse IA1 JSON response for {opportunity.symbol}: {e}")
+                logger.info(f"🔍 IA1 raw response preview for debugging: {response[:200]}...")
+                
+                # 🛡️ SÉCURITÉ: Créer JSON fallback complet et valide
                 ia1_complete_json = {
-                    "analysis": f"{opportunity.symbol} shows technical patterns requiring careful analysis based on current market indicators.",
-                    "reasoning": "Technical analysis suggests monitoring key support and resistance levels for directional signals.",
+                    "analysis": f"{opportunity.symbol} technical analysis fallback due to JSON parsing error.",
+                    "reasoning": "Fallback analysis due to malformed JSON response from IA1.",
                     "rsi_signal": "neutral",
                     "macd_trend": "neutral", 
                     "patterns": [],
                     "support": [],
                     "resistance": [],
-                    "confidence": 0.7,
-                    "recommendation": "hold",
-                    "master_pattern": None
+                    "confidence": 0.5,  # Réduit car fallback
+                    "recommendation": "hold",  # Sécuritaire
+                    "master_pattern": None,
+                    "risk_reward_analysis": {
+                        "entry_price": opportunity.current_price,
+                        "stop_loss": opportunity.current_price * 0.98,
+                        "take_profit_1": opportunity.current_price * 1.02,
+                        "take_profit_2": opportunity.current_price * 1.04,
+                        "risk_reward_ratio": 1.0,  # Fallback RR
+                        "rr_reasoning": "Fallback RR due to JSON parsing error"
+                    }
                 }
             
             # Enrichir le raisonnement avec les informations extraites
