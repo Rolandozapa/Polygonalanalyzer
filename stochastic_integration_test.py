@@ -348,7 +348,8 @@ class StochasticIntegrationTestSuite:
                 self.log_test_result("IA1 Analysis Enhancement", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
-            analyses = response.json()
+            data = response.json()
+            analyses = data.get('analyses', [])
             
             if not analyses or len(analyses) == 0:
                 self.log_test_result("IA1 Analysis Enhancement", False, "No analyses found")
