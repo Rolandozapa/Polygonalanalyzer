@@ -5468,10 +5468,6 @@ class UltraProfessionalTradingOrchestrator:
         except Exception as e:
             logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
             return True  # En cas d'erreur, envoyer à IA2 (principe de précaution)
-            
-        except Exception as e:
-            logger.error(f"Erreur filtrage IA2 pour {analysis.symbol}: {e}")
-            return True  # En cas d'erreur, envoyer à IA2 (principe de précaution)
 
 
     async def run_trading_cycle(self):
