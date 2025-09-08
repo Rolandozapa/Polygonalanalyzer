@@ -5783,7 +5783,7 @@ async def get_analyses_simple():
                 "symbol": analysis.get('symbol', 'UNKNOWN'),
                 "rsi": float(analysis.get('rsi', 50.0)) if analysis.get('rsi') is not None else 50.0,
                 "confidence": float(analysis.get('analysis_confidence', 0.5)) if analysis.get('analysis_confidence') is not None else 0.5,
-                "patterns": analysis.get('patterns_detected', [])[:3],  # Max 3 patterns
+                "patterns": analysis.get('patterns_detected', []),  # Remove limit - show all patterns
                 "timestamp": analysis.get('timestamp').isoformat() if isinstance(analysis.get('timestamp'), datetime) else str(analysis.get('timestamp', ''))
             })
         
