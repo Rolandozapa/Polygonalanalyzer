@@ -1595,7 +1595,19 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     else:
                         sentiment_comment += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
                     
-                    enhanced_reasoning = multi_rr_display + "\n\n" + original_reasoning + sentiment_comment
+                    # 🎯 NOUVEAU: Placer Multi-RR en PREMIER pour visibilité frontend (800 chars)
+                    enhanced_reasoning = multi_rr_display + "\n\n💭 **REFLEXION POST-CALCUL:**"
+                    
+                    if final_recommendation.upper() != ia1_recommendation:
+                        enhanced_reasoning += f"\nMon instinct initial penchait vers {ia1_recommendation}, mais les calculs Multi-RR révèlent que {final_recommendation.upper()} offre un meilleur ratio risque-récompense."
+                        enhanced_reasoning += f"\nJe défère aux mathématiques tout en gardant mon analyse technique comme contexte."
+                    else:
+                        enhanced_reasoning += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
+                    
+                    # Ajouter le reasoning original à la fin (tronqué pour s'adapter dans 800 chars)
+                    remaining_space = 800 - len(enhanced_reasoning) - 50  # Garde 50 chars de marge
+                    if remaining_space > 100:  # Seulement si assez d'espace
+                        enhanced_reasoning += f"\n\n📊 **ANALYSE TECHNIQUE:**\n{original_reasoning[:remaining_space]}"
                     
                     # Mettre à jour validated_data avec Multi-RR
                     validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
