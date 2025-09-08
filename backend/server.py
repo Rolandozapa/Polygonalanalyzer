@@ -3272,6 +3272,70 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             logger.error(f"Failed to get account balance: {e}")
             return 250.0  # Enhanced fallback balance
     
+    def _calculate_final_realistic_rr(self, entry_price: float, stop_loss: float, tp1: float, signal: str, symbol: str) -> float:
+        """
+        Calcule le Risk-Reward FINAL et RÉALISTE basé sur les niveaux optimisés par IA2
+        Cette fonction remplace le RR d'IA1 par le RR réel de la stratégie finale
+        """
+        try:
+            if entry_price <= 0 or stop_loss <= 0 or tp1 <= 0:
+                logger.warning(f"⚠️ Invalid price levels for {symbol}: Entry={entry_price}, SL={stop_loss}, TP1={tp1}")
+                return 1.0
+            
+            # Calcul précis basé sur la direction du signal
+            signal_upper = signal.upper()
+            
+            if signal_upper == "LONG":
+                # Pour LONG: Risk = Entry - SL, Reward = TP1 - Entry
+                if stop_loss >= entry_price:
+                    logger.warning(f"⚠️ Invalid LONG setup for {symbol}: SL ({stop_loss:.4f}) >= Entry ({entry_price:.4f})")
+                    return 1.0
+                if tp1 <= entry_price:
+                    logger.warning(f"⚠️ Invalid LONG setup for {symbol}: TP1 ({tp1:.4f}) <= Entry ({entry_price:.4f})")
+                    return 1.0
+                    
+                risk = entry_price - stop_loss
+                reward = tp1 - entry_price
+                
+            elif signal_upper == "SHORT":
+                # Pour SHORT: Risk = SL - Entry, Reward = Entry - TP1
+                if stop_loss <= entry_price:
+                    logger.warning(f"⚠️ Invalid SHORT setup for {symbol}: SL ({stop_loss:.4f}) <= Entry ({entry_price:.4f})")
+                    return 1.0
+                if tp1 >= entry_price:
+                    logger.warning(f"⚠️ Invalid SHORT setup for {symbol}: TP1 ({tp1:.4f}) >= Entry ({entry_price:.4f})")
+                    return 1.0
+                    
+                risk = stop_loss - entry_price
+                reward = entry_price - tp1
+                
+            else:
+                # HOLD ou signal invalide
+                return 1.0
+            
+            # Calcul final du RR
+            if risk <= 0:
+                logger.warning(f"⚠️ Zero or negative risk for {symbol}: {risk:.6f}")
+                return 1.0
+                
+            final_rr = reward / risk
+            
+            # Validation du RR (doit être positif et raisonnable)
+            if final_rr <= 0:
+                logger.warning(f"⚠️ Negative RR for {symbol}: {final_rr:.3f}")
+                return 1.0
+            elif final_rr > 50:  # RR trop élevé = probablement une erreur
+                logger.warning(f"⚠️ Unrealistic high RR for {symbol}: {final_rr:.3f}")
+                return min(final_rr, 10.0)  # Cap à 10:1
+            
+            logger.info(f"✅ FINAL REALISTIC RR for {symbol} ({signal_upper}): {final_rr:.3f}:1 | Risk=${risk:.6f}, Reward=${reward:.6f}")
+            
+            return round(final_rr, 3)
+            
+        except Exception as e:
+            logger.error(f"❌ Error calculating final RR for {symbol}: {e}")
+            return 1.0
+
     def _calculate_ia2_risk_reward(self, claude_decision: Dict[str, Any], current_price: float) -> Dict[str, float]:
         """Calculate precise Risk-Reward ratio from Claude's (IA2) response with entry/SL/TP levels"""
         try:
