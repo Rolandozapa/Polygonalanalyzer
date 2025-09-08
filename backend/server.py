@@ -1486,8 +1486,6 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Ajouter les informations avancées et Master Pattern
             if master_pattern:
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 CHOICE): {master_pattern}"
-            if multi_rr_info:
-                reasoning += multi_rr_info
             if detected_pattern:
                 direction_emoji = "📈" if detected_pattern.trading_direction == "long" else "📉" if detected_pattern.trading_direction == "short" else "⚖️"
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 STRATEGIC CHOICE): {detected_pattern.pattern_type.value}"
