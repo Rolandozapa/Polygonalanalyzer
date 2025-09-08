@@ -46,6 +46,7 @@ from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 from advanced_trading_strategies import advanced_strategy_manager, PositionDirection
 from active_position_manager import ActivePositionManager, TradeExecutionMode
 from ai_training_system import ai_training_system
+from adaptive_context_system import adaptive_context_system
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
