@@ -1265,7 +1265,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
             # Calculate comprehensive technical indicators with advanced system
-            indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
+            df_with_indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
+            indicators = self.advanced_indicators.get_current_indicators(df_with_indicators)
             
             # Extract key values for prompt and analysis
             rsi = indicators.rsi_14
