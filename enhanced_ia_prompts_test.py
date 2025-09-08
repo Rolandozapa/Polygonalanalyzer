@@ -464,12 +464,12 @@ class EnhancedIAPromptsTestSuite:
             
             # Extract symbols from IA1 analyses
             for analysis in self.ia1_analyses:
-                if isinstance(analysis, dict) and 'symbol' in analysis:
+                if 'symbol' in analysis:
                     symbols_tested.add(analysis['symbol'])
             
             # Extract symbols from IA2 decisions
             for decision in self.ia2_decisions:
-                if isinstance(decision, dict) and 'symbol' in decision:
+                if 'symbol' in decision:
                     symbols_tested.add(decision['symbol'])
             
             symbols_count = len(symbols_tested)
