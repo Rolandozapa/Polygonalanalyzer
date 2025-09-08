@@ -1125,7 +1125,9 @@ class TechnicalPatternDetector:
                     trough1 = low_troughs.iloc[i]
                     trough2 = low_troughs.iloc[i + 1]
                     
-                    if abs(trough1 - trough2) / min(trough1, trough2) < 0.02:
+                    # FIXED: Prevent division by zero for double bottom
+                    trough_min = min(trough1, trough2)
+                    if trough_min > 0 and abs(trough1 - trough2) / trough_min < 0.02:
                         peak = df['High'][df.index > low_troughs.index[i]].max()
                         strength = min((peak - min(trough1, trough2)) / min(trough1, trough2) * 3, 1.0)
                         
