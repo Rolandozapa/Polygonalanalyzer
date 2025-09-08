@@ -1136,10 +1136,18 @@ class TechnicalPatternDetector:
                     trough1 = low_troughs.iloc[i]
                     trough2 = low_troughs.iloc[i + 1]
                     
-                    # FIXED: Prevent division by zero for double bottom
+                    # ROBUST: Prevent all mathematical errors for double bottom
+                    if not pd.notna([trough1, trough2]).all() or trough1 <= 0 or trough2 <= 0:
+                        continue
+                        
                     trough_min = min(trough1, trough2)
                     if trough_min > 0 and abs(trough1 - trough2) / trough_min < 0.02:
                         peak = df['High'][df.index > low_troughs.index[i]].max()
+                        
+                        # Validate peak value
+                        if not pd.notna(peak) or peak <= 0:
+                            continue
+                            
                         strength = min((peak - min(trough1, trough2)) / min(trough1, trough2) * 3, 1.0)
                         
                         if strength > 0.5:
