@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from collections import defaultdict, deque
 import json
 import os
+from ai_training_system import ai_training_system
+from chartist_learning_system import chartist_learning_system, TradingDirection
 
 logger = logging.getLogger(__name__)
 
