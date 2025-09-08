@@ -48,6 +48,8 @@ class TechnicalAnalysis(BaseModel):
     symbol: str
     rsi: float
     macd_signal: float
+    stochastic: float = 50.0  # Stochastic %K
+    stochastic_d: float = 50.0  # Stochastic %D  
     bollinger_position: float
     fibonacci_level: float
     support_levels: List[float]
