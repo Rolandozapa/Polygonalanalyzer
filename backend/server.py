@@ -1447,6 +1447,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         ia1_patterns = parsed_response['patterns']
                         logger.info(f"✅ IA1 patterns extracted: {len(ia1_patterns)} patterns - {ia1_patterns}")
                     
+                    # 🎯 NOUVEAU: Extract Risk-Reward analysis from IA1
+                    ia1_rr_data = {}
+                    if 'risk_reward_analysis' in parsed_response and isinstance(parsed_response['risk_reward_analysis'], dict):
+                        ia1_rr_data = parsed_response['risk_reward_analysis']
+                        logger.info(f"✅ IA1 Risk-Reward extracted for {opportunity.symbol}: RR={ia1_rr_data.get('risk_reward_ratio', 0):.2f}")
+                        # Store in complete JSON for later use
+                        ia1_complete_json['risk_reward_analysis'] = ia1_rr_data
+                    
                     # Store patterns for later use
                     self._ia1_analyzed_patterns = ia1_patterns
                     
