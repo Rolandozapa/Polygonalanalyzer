@@ -1586,15 +1586,6 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     original_analysis = validated_data.get('analysis', '')
                     ia1_recommendation = validated_data.get('recommendation', 'hold').upper()
                     
-                    # Créer commentaire sentiment post-calcul (subtil)
-                    sentiment_comment = f"\n\n💭 **REFLEXION POST-CALCUL:**"
-                    
-                    if final_recommendation.upper() != ia1_recommendation:
-                        sentiment_comment += f"\nMon instinct initial penchait vers {ia1_recommendation}, mais les calculs Multi-RR révèlent que {final_recommendation.upper()} offre un meilleur ratio risque-récompense."
-                        sentiment_comment += f"\nJe défère aux mathématiques tout en gardant mon analyse technique comme contexte."
-                    else:
-                        sentiment_comment += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
-                    
                     # 🎯 NOUVEAU: Placer Multi-RR en PREMIER pour visibilité frontend (800 chars)
                     enhanced_reasoning = multi_rr_display + "\n\n💭 **REFLEXION POST-CALCUL:**"
                     
