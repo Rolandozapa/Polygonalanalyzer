@@ -30,4 +30,6 @@ yfinance>=0.2.65
 requests-cache>=1.2.1
 ccxt>=4.5.3
 python-binance>=1.0.29
-aiohttp>=3.12.15pytz
+aiohttp>=3.12.15
+pytz>=2024.2
+scikit-learn>=1.5.0
