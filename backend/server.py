@@ -1325,6 +1325,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
             - Show how patterns confirm or contradict each other
             - Include pattern-specific price targets and stop-loss levels from multiple patterns
             
+            🎯 CRITICAL RISK-REWARD CALCULATION REQUIREMENTS:
+            1. Calculate REALISTIC Risk-Reward ratio for SHORT/MEDIUM-TERM trading (1 hour to 3 days timeframe)
+            2. Base your calculations on CURRENT market conditions and {opportunity.symbol} volatility patterns
+            3. Set Stop-Loss based on technical levels (support/resistance, Bollinger Bands, pattern invalidation levels)
+            4. Set Take-Profit levels that are ATTAINABLE considering:
+               - Current market volatility ({abs(opportunity.price_change_24h):.1f}% 24h change)
+               - Fibonacci retracement levels as realistic targets
+               - Pattern-specific price objectives
+               - {opportunity.symbol} historical price movements
+            5. For LONG signals: Stop-Loss MUST be below current price, Take-Profit above
+            6. For SHORT signals: Stop-Loss MUST be above current price, Take-Profit below
+            7. Risk-Reward ratio MUST be calculated as: (Take_Profit - Entry) / (Entry - Stop_Loss) for LONG
+            8. Risk-Reward ratio MUST be calculated as: (Entry - Take_Profit) / (Stop_Loss - Entry) for SHORT
+            9. ONLY recommend trades with RR >= 2.0 (minimum requirement for profitable trading)
+            10. If your calculation gives RR < 2.0, either adjust levels or recommend "hold"
+            
             Required JSON format:
             {{
                 "analysis": "Technical analysis incorporating ALL detected patterns. Start with: 'The detected patterns include: [list all pattern names]. [Then analyze each pattern individually and their confluence]'",
