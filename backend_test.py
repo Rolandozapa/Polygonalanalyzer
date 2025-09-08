@@ -134,7 +134,12 @@ class MultiRRDecisionEngineTestSuite:
                 return None, f"API error: {response.status_code}"
                 
             data = response.json()
-            return data, None
+            # Extract opportunities from response
+            if isinstance(data, dict) and 'opportunities' in data:
+                opportunities = data['opportunities']
+            else:
+                opportunities = data
+            return opportunities, None
         except Exception as e:
             return None, f"Exception: {str(e)}"
         
