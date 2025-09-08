@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Multi-RR Display and IA2 RR Consistency Fixes
-Focus: Testing critical fixes for IA1 Risk-Reward display and IA2 RR consistency
-Review Request: Verify Multi-RR analysis appears early in IA1 reasoning and IA2 uses same RR values
+Backend Testing Suite for IA1→IA2 Conditional Filtering Logic
+Focus: Testing NEW CONDITIONAL LOGIC with VOIE 1 and VOIE 2 filtering
+Review Request: Test conditional filtering logic for IA1→IA2 with specific cases:
+- VOIE 1: Position LONG/SHORT + Confidence ≥ 70% → Should pass to IA2
+- VOIE 2: RR ≥ 2.0 (any signal) → Should pass to IA2
+- AI16ZUSDT case: Signal=LONG, Confidence=77%, RR=0.56 → Should NOW pass via VOIE 1
 """
 
 import asyncio
