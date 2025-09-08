@@ -80,10 +80,271 @@ class AIPerformanceEnhancer:
             # 5. Generate enhancement rules
             self._generate_enhancement_rules()
             
+            # 6. NOUVEAU: Intégrer les insights des figures chartistes
+            self._integrate_chartist_insights()
+            
             logger.info(f"Loaded training insights: {len(self.enhancement_rules)} enhancement rules generated")
             
         except Exception as e:
             logger.error(f"Error loading training insights: {e}")
+    
+    def _integrate_chartist_insights(self):
+        """Intègre les insights du système d'apprentissage des figures chartistes"""
+        try:
+            # Générer les stratégies chartistes optimisées
+            chartist_strategies = chartist_learning_system.generate_chartist_strategies()
+            
+            # Convertir les stratégies chartistes en règles d'amélioration
+            for strategy_name, strategy in chartist_strategies.items():
+                
+                # Règle de position sizing basée sur les figures chartistes
+                position_rule = EnhancementRule(
+                    rule_id=f"chartist_{strategy.pattern_type.value}_{strategy.direction.value}",
+                    rule_type="chartist_pattern",
+                    trigger_conditions={
+                        'patterns_detected': [strategy.pattern_type.value],
+                        'trading_direction': strategy.direction.value,
+                        'market_context': strategy.market_context_filter
+                    },
+                    enhancement_action={
+                        'type': 'chartist_position_sizing',
+                        'factor': strategy.position_sizing_factor,
+                        'max_risk': strategy.max_risk_per_trade,
+                        'expected_rr': strategy.take_profit_targets[-1] if strategy.take_profit_targets else 2.0,
+                        'reasoning': f"Figure chartiste {strategy.pattern_type.value} : {strategy.success_probability:.1%} de succès en {strategy.direction.value}"
+                    },
+                    success_rate=strategy.success_probability,
+                    confidence=min(strategy.success_probability * 1.2, 0.95),
+                    sample_size=50,  # Basé sur l'expertise chartiste
+                    effectiveness_score=strategy.success_probability * strategy.position_sizing_factor
+                )
+                
+                self.enhancement_rules.append(position_rule)
+                
+                # Règle de confirmation pour IA1
+                if strategy.success_probability > 0.6:
+                    ia1_rule = EnhancementRule(
+                        rule_id=f"chartist_ia1_{strategy.pattern_type.value}",
+                        rule_type="chartist_ia1_boost",
+                        trigger_conditions={
+                            'patterns_detected': [strategy.pattern_type.value],
+                            'market_context': strategy.market_context_filter
+                        },
+                        enhancement_action={
+                            'type': 'confidence_adjustment',
+                            'factor': 1.0 + (strategy.success_probability - 0.5) * 0.4,  # Boost jusqu'à 20%
+                            'reasoning': f"Figure chartiste {strategy.pattern_type.value} validée par l'analyse historique"
+                        },
+                        success_rate=strategy.success_probability,
+                        confidence=0.8,
+                        sample_size=30,
+                        effectiveness_score=strategy.success_probability * 0.8
+                    )
+                    
+                    self.enhancement_rules.append(ia1_rule)
+            
+            logger.info(f"Intégré {len(chartist_strategies)} stratégies chartistes dans {len([r for r in self.enhancement_rules if 'chartist' in r.rule_id])} règles d'amélioration")
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de l'intégration des insights chartistes: {e}")
+
+    def enhance_ia1_analysis_with_chartist(self, analysis: Dict[str, Any], market_context: str) -> Dict[str, Any]:
+        """Améliore l'analyse IA1 avec les recommandations des figures chartistes"""
+        enhanced_analysis = analysis.copy()
+        applied_enhancements = []
+        
+        try:
+            patterns_detected = analysis.get('patterns_detected', [])
+            
+            if patterns_detected:
+                # Obtenir les recommandations chartistes
+                from technical_pattern_detector import PatternType, TechnicalPattern
+                
+                # Créer des objets TechnicalPattern pour l'analyse
+                mock_patterns = []
+                for pattern_name in patterns_detected:
+                    try:
+                        pattern_type = PatternType(pattern_name)
+                        mock_pattern = TechnicalPattern(
+                            symbol=analysis.get('symbol', ''),
+                            pattern_type=pattern_type,
+                            confidence=0.8,
+                            strength=0.7,
+                            entry_price=0.0,
+                            target_price=0.0,
+                            stop_loss=0.0,
+                            volume_confirmation=True
+                        )
+                        mock_patterns.append(mock_pattern)
+                    except:
+                        continue
+                
+                # Obtenir les recommandations chartistes
+                recommendations = chartist_learning_system.get_pattern_recommendations(
+                    mock_patterns, market_context
+                )
+                
+                # Appliquer les améliorations basées sur les recommandations
+                for rec in recommendations:
+                    if rec['success_probability'] > 0.6:
+                        # Boost de confiance pour les patterns fiables
+                        confidence_boost = (rec['success_probability'] - 0.5) * 0.3
+                        current_confidence = enhanced_analysis.get('analysis_confidence', 0.7)
+                        enhanced_analysis['analysis_confidence'] = min(0.95, current_confidence + confidence_boost)
+                        
+                        # Ajouter les informations chartistes
+                        enhanced_analysis['chartist_recommendation'] = {
+                            'pattern_name': rec['pattern_name'],
+                            'recommended_direction': rec['recommended_direction'],
+                            'success_probability': rec['success_probability'],
+                            'risk_reward_ratio': rec['risk_reward_ratio']
+                        }
+                        
+                        enhancement = TradingEnhancement(
+                            enhancement_type='chartist_confidence_boost',
+                            original_value=current_confidence,
+                            enhanced_value=enhanced_analysis['analysis_confidence'],
+                            enhancement_factor=1 + confidence_boost,
+                            reasoning=f"Figure chartiste {rec['pattern_name']} : {rec['success_probability']:.1%} de succès",
+                            confidence=0.8,
+                            rule_id=f"chartist_{rec['pattern_type']}"
+                        )
+                        
+                        applied_enhancements.append(enhancement)
+                        
+                        logger.info(f"🎯 Amélioration chartiste IA1: {rec['pattern_name']} (+{confidence_boost:.1%} confiance)")
+            
+            if applied_enhancements:
+                enhanced_analysis['chartist_enhancements'] = [
+                    {
+                        'type': e.enhancement_type,
+                        'reasoning': e.reasoning,
+                        'confidence': e.confidence
+                    } for e in applied_enhancements
+                ]
+            
+        except Exception as e:
+            logger.error(f"Erreur dans l'amélioration chartiste IA1: {e}")
+        
+        return enhanced_analysis
+
+    def enhance_ia2_decision_with_chartist(self, decision: Dict[str, Any], analysis: Dict[str, Any], 
+                                         market_context: str) -> Dict[str, Any]:
+        """Améliore la décision IA2 avec les insights des figures chartistes"""
+        enhanced_decision = decision.copy()
+        applied_enhancements = []
+        
+        try:
+            patterns_detected = analysis.get('patterns_detected', [])
+            signal_type = decision.get('signal', 'hold')
+            
+            if patterns_detected and signal_type != 'hold':
+                # Convertir la direction de trading
+                trading_direction = TradingDirection.LONG if signal_type == 'long' else TradingDirection.SHORT
+                
+                # Créer des patterns mock pour l'analyse
+                from technical_pattern_detector import PatternType, TechnicalPattern
+                mock_patterns = []
+                
+                for pattern_name in patterns_detected:
+                    try:
+                        pattern_type = PatternType(pattern_name)
+                        mock_pattern = TechnicalPattern(
+                            symbol=decision.get('symbol', ''),
+                            pattern_type=pattern_type,
+                            confidence=0.8,
+                            strength=0.7,
+                            entry_price=decision.get('entry_price', 0.0),
+                            target_price=0.0,
+                            stop_loss=0.0,
+                            volume_confirmation=True
+                        )
+                        mock_patterns.append(mock_pattern)
+                    except:
+                        continue
+                
+                # Obtenir les recommandations chartistes
+                recommendations = chartist_learning_system.get_pattern_recommendations(
+                    mock_patterns, market_context
+                )
+                
+                # Appliquer les améliorations
+                for rec in recommendations:
+                    if rec['recommended_direction'] == trading_direction.value:
+                        # Ajuster la taille de position
+                        current_size = enhanced_decision.get('position_size', 0.02)
+                        chartist_factor = rec['position_sizing_factor']
+                        enhanced_size = current_size * chartist_factor
+                        enhanced_size = max(0.005, min(0.05, enhanced_size))  # Limites sécuritaires
+                        
+                        enhanced_decision['position_size'] = enhanced_size
+                        
+                        # Ajuster le risk-reward
+                        optimal_rr = rec['risk_reward_ratio']
+                        enhanced_decision['risk_reward_ratio'] = optimal_rr
+                        
+                        # Recalculer les take profits
+                        entry_price = enhanced_decision.get('entry_price', 0)
+                        stop_loss = enhanced_decision.get('stop_loss', 0)
+                        
+                        if entry_price > 0 and stop_loss > 0:
+                            if signal_type == 'long':
+                                risk_distance = entry_price - stop_loss
+                                tp_targets = rec['take_profit_targets']
+                                enhanced_decision['take_profit_1'] = entry_price + (risk_distance * tp_targets[0])
+                                if len(tp_targets) > 1:
+                                    enhanced_decision['take_profit_2'] = entry_price + (risk_distance * tp_targets[1])
+                                if len(tp_targets) > 2:
+                                    enhanced_decision['take_profit_3'] = entry_price + (risk_distance * tp_targets[2])
+                                    
+                            else:  # short
+                                risk_distance = stop_loss - entry_price
+                                tp_targets = rec['take_profit_targets']
+                                enhanced_decision['take_profit_1'] = entry_price - (risk_distance * tp_targets[0])
+                                if len(tp_targets) > 1:
+                                    enhanced_decision['take_profit_2'] = entry_price - (risk_distance * tp_targets[1])
+                                if len(tp_targets) > 2:
+                                    enhanced_decision['take_profit_3'] = entry_price - (risk_distance * tp_targets[2])
+                        
+                        # Ajouter les informations chartistes
+                        enhanced_decision['chartist_optimization'] = {
+                            'pattern_name': rec['pattern_name'],
+                            'success_probability': rec['success_probability'],
+                            'position_sizing_factor': chartist_factor,
+                            'risk_reward_optimized': optimal_rr,
+                            'estimated_duration': rec['estimated_duration_days']
+                        }
+                        
+                        enhancement = TradingEnhancement(
+                            enhancement_type='chartist_position_optimization',
+                            original_value=current_size,
+                            enhanced_value=enhanced_size,
+                            enhancement_factor=chartist_factor,
+                            reasoning=f"Optimisation chartiste {rec['pattern_name']}: {rec['success_probability']:.1%} succès, RR {optimal_rr:.1f}:1",
+                            confidence=rec['success_probability'],
+                            rule_id=f"chartist_{rec['pattern_type']}"
+                        )
+                        
+                        applied_enhancements.append(enhancement)
+                        
+                        logger.info(f"🎯 Optimisation chartiste IA2: {rec['pattern_name']} - Position {current_size:.1%} → {enhanced_size:.1%}")
+                        
+                        break  # Utiliser seulement la meilleure recommandation
+            
+            if applied_enhancements:
+                enhanced_decision['chartist_enhancements'] = [
+                    {
+                        'type': e.enhancement_type,
+                        'reasoning': e.reasoning,
+                        'confidence': e.confidence,
+                        'factor': e.enhancement_factor
+                    } for e in applied_enhancements
+                ]
+            
+        except Exception as e:
+            logger.error(f"Erreur dans l'optimisation chartiste IA2: {e}")
+        
+        return enhanced_decision
     
     def _extract_pattern_insights(self, pattern_training: List):
         """Extract pattern success rate insights"""
