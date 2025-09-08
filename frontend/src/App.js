@@ -669,7 +669,7 @@ const TradingDashboard = () => {
                         </div>
                         
                         {/* Technical Indicators */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                           <div className="text-center">
                             <p className="text-sm text-slate-600">RSI</p>
                             <p className={`font-semibold ${
@@ -706,6 +706,19 @@ const TradingDashboard = () => {
                               'text-slate-900'
                             }`}>
                               {analysis.bollinger_position?.toFixed(2) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-slate-600">Fibonacci</p>
+                            <p className={`font-semibold ${
+                              analysis.fibonacci_trend_direction === 'bullish' ? 'text-green-600' :
+                              analysis.fibonacci_trend_direction === 'bearish' ? 'text-red-600' :
+                              'text-slate-900'
+                            }`}>
+                              {analysis.fibonacci_nearest_level || 'N/A'}%
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {((analysis.fibonacci_level || 0) * 100).toFixed(0)}%
                             </p>
                           </div>
                         </div>
