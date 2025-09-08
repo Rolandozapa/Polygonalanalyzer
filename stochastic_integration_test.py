@@ -290,8 +290,10 @@ class StochasticIntegrationTestSuite:
             
             for analysis in analyses:
                 symbol = analysis.get('symbol', 'Unknown')
-                analysis_text = (str(analysis.get('analysis', '')) + ' ' + 
-                               str(analysis.get('reasoning', ''))).lower()
+                ia1_reasoning = analysis.get('ia1_reasoning', '')
+                analysis_text = str(analysis.get('analysis', ''))
+                
+                combined_text = (ia1_reasoning + ' ' + analysis_text).lower()
                 
                 # Check for each indicator
                 indicators_found = []
