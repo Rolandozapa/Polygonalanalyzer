@@ -55,6 +55,7 @@ from adaptive_context_system import adaptive_context_system
 from ai_performance_enhancer import ai_performance_enhancer
 from chartist_learning_system import chartist_learning_system
 from ai_training_optimizer import ai_training_optimizer
+from advanced_technical_indicators import AdvancedTechnicalIndicators
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
