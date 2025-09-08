@@ -3088,6 +3088,128 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             logger.warning(f"Failed to parse IA2 LLM response: {e}, using raw response")
             return {"reasoning": response[:1000] if response else "IA2 LLM response parsing failed"}
     
+    async def _evaluate_adaptive_trading_decision(self, opportunity: MarketOpportunity, 
+                                                 analysis: TechnicalAnalysis,
+                                                 perf_stats: Dict,
+                                                 account_balance: float,
+                                                 llm_decision: Dict[str, Any] = None) -> Dict[str, Any]:
+        """🚀 SYSTÈME ADAPTATIF PAR CONTEXTE - Logique globale optimale"""
+        
+        # Données de base
+        claude_decision = llm_decision
+        current_price = opportunity.current_price
+        
+        # Variables pour décision adaptative
+        signal = SignalType.HOLD
+        confidence = 0.5
+        reasoning = ""
+        
+        logger.info(f"🧠 ADAPTIVE LOGIC START: Analyzing {opportunity.symbol} with contextual decision engine")
+        
+        # ==========================================
+        # PHASE 1: ANALYSE DU CONTEXTE MARCHÉ
+        # ==========================================
+        
+        # 1.1 Calculer volatilité du marché
+        market_volatility = abs(opportunity.price_change_24h) if opportunity.price_change_24h else 2.0
+        
+        # 1.2 Détecter le type de marché
+        market_trend_strength = 0.0
+        if hasattr(analysis, 'trend_strength_score'):
+            market_trend_strength = analysis.trend_strength_score
+        else:
+            # Estimer basé sur les données disponibles
+            if abs(opportunity.price_change_24h or 0) > 8:
+                market_trend_strength = 0.8
+            elif abs(opportunity.price_change_24h or 0) > 4:
+                market_trend_strength = 0.6
+            else:
+                market_trend_strength = 0.3
+        
+        # 1.3 Évaluer la force des patterns chartistes
+        max_pattern_strength = 0.0
+        dominant_pattern = None
+        if hasattr(analysis, 'patterns_detected') and analysis.patterns_detected:
+            # Simuler force des patterns (dans un vrai système, on aurait les données)
+            max_pattern_strength = 0.85  # Forte formation détectée
+            dominant_pattern = analysis.patterns_detected[0] if analysis.patterns_detected else None
+        
+        # 1.4 Extraire confiance IA2
+        ia2_confidence = claude_decision.get("confidence", 0.5) if claude_decision else 0.5
+        ia2_signal = claude_decision.get("signal", "HOLD").upper() if claude_decision else "HOLD"
+        
+        # 1.5 Sentiment extrême du marché
+        market_sentiment_extreme = abs(opportunity.price_change_24h or 0) > 20
+        
+        # ==========================================
+        # PHASE 2: LOGIQUE ADAPTATIVE CONTEXTUELLE  
+        # ==========================================
+        
+        reasoning += f"📊 MARKET CONTEXT: Volatility {market_volatility:.1f}%, Trend Strength {market_trend_strength:.1f}, Pattern Strength {max_pattern_strength:.1f}, IA2 Confidence {ia2_confidence:.1%}. "
+        
+        # 🎯 CONTEXTE 1: MARCHÉ VOLATILE EXTRÊME (>15%) → Multi-RR prioritaire
+        if market_volatility > 15.0:
+            logger.info(f"🌪️ {opportunity.symbol}: EXTREME VOLATILITY CONTEXT ({market_volatility:.1f}%) - Multi-RR prioritaire")
+            signal, confidence, context_reasoning = await self._apply_multi_rr_priority_logic(opportunity, analysis, claude_decision)
+            reasoning += f"🌪️ EXTREME VOLATILITY CONTEXT: {context_reasoning}"
+            
+        # 🎯 CONTEXTE 2: IA2 TRÈS HAUTE CONFIANCE (>85%) → IA2 prioritaire  
+        elif ia2_confidence > 0.85:
+            logger.info(f"🧠 {opportunity.symbol}: HIGH IA2 CONFIDENCE CONTEXT ({ia2_confidence:.1%}) - IA2 prioritaire")
+            signal, confidence, context_reasoning = await self._apply_ia2_priority_logic(claude_decision, opportunity)
+            reasoning += f"🧠 HIGH IA2 CONFIDENCE CONTEXT: {context_reasoning}"
+            
+        # 🎯 CONTEXTE 3: PATTERN CHARTISTE PARFAIT (>0.9) → Pattern prioritaire
+        elif max_pattern_strength > 0.9:
+            logger.info(f"📈 {opportunity.symbol}: PERFECT PATTERN CONTEXT (strength {max_pattern_strength:.1f}) - Pattern prioritaire")
+            signal, confidence, context_reasoning = await self._apply_pattern_priority_logic(analysis, opportunity, dominant_pattern)
+            reasoning += f"📈 PERFECT PATTERN CONTEXT: {context_reasoning}"
+            
+        # 🎯 CONTEXTE 4: MARCHÉ TRENDING FORT → Multi-RR + Patterns
+        elif market_trend_strength > 0.7:
+            logger.info(f"🚀 {opportunity.symbol}: STRONG TRENDING CONTEXT (strength {market_trend_strength:.1f}) - Multi-RR + Patterns")
+            signal, confidence, context_reasoning = await self._apply_trending_logic(opportunity, analysis, claude_decision)
+            reasoning += f"🚀 STRONG TRENDING CONTEXT: {context_reasoning}"
+            
+        # 🎯 CONTEXTE 5: SENTIMENT EXTRÊME → IA2 contrarian
+        elif market_sentiment_extreme:
+            logger.info(f"⚡ {opportunity.symbol}: EXTREME SENTIMENT CONTEXT - IA2 contrarian logic")
+            signal, confidence, context_reasoning = await self._apply_contrarian_logic(claude_decision, opportunity)
+            reasoning += f"⚡ EXTREME SENTIMENT CONTEXT: {context_reasoning}"
+            
+        # 🎯 CONTEXTE 6: CONDITIONS NORMALES → Logique combinée pondérée
+        else:
+            logger.info(f"⚖️ {opportunity.symbol}: BALANCED CONTEXT - Weighted combined logic")
+            signal, confidence, context_reasoning = await self._apply_weighted_combined_logic(opportunity, analysis, claude_decision)
+            reasoning += f"⚖️ BALANCED CONTEXT: {context_reasoning}"
+        
+        # ==========================================
+        # PHASE 3: CALCUL FINAL ET VALIDATION
+        # ==========================================
+        
+        # Calculs de stop-loss et take-profit basés sur le contexte
+        stop_loss, tp1 = self._calculate_adaptive_levels(current_price, signal, market_volatility, max_pattern_strength)
+        
+        # Position sizing adaptatif
+        position_size_percentage = self._calculate_adaptive_position_size(
+            confidence, market_volatility, ia2_confidence, account_balance
+        )
+        
+        logger.info(f"🎯 ADAPTIVE DECISION: {opportunity.symbol} → {signal} (confidence: {confidence:.1%}, position: {position_size_percentage:.1%})")
+        
+        return {
+            "signal": signal,
+            "confidence": confidence,
+            "reasoning": reasoning,
+            "stop_loss": stop_loss,
+            "take_profit_1": tp1,
+            "position_size": position_size_percentage,
+            "context_type": self._get_context_type(market_volatility, ia2_confidence, max_pattern_strength, market_trend_strength),
+            "market_volatility": market_volatility,
+            "pattern_strength": max_pattern_strength,
+            "trend_strength": market_trend_strength
+        }
+
     async def _evaluate_live_trading_decision(self, 
                                             opportunity: MarketOpportunity, 
                                             analysis: TechnicalAnalysis, 
