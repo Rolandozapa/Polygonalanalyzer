@@ -3097,9 +3097,13 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     entry_price=opportunity.current_price,
                     stop_loss=decision_logic["stop_loss"], 
                     tp1=decision_logic["tp1"],
+                    tp2=decision_logic["tp2"],
+                    tp3=decision_logic["tp3"],
+                    confidence=decision_logic["confidence"],
                     signal=decision_logic["signal"].value if hasattr(decision_logic["signal"], 'value') else str(decision_logic["signal"]),
-                    symbol=opportunity.symbol
-                ),  # 🚀 NOUVEAU: RR Final Réaliste basé sur les niveaux IA2 optimisés
+                    symbol=opportunity.symbol,
+                    opportunity=opportunity
+                ),  # 🚀 NOUVEAU: RR Final Réaliste avec TP OPTIMAL DYNAMIQUE
                 ia1_analysis_id=analysis.id,
                 ia2_reasoning=decision_logic["reasoning"][:1500] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
                 status=TradingStatus.PENDING
