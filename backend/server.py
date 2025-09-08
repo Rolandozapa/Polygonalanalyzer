@@ -6882,6 +6882,97 @@ async def get_enhancement_system_status():
         logger.error(f"Enhancement status error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get enhancement status: {str(e)}")
 
+@app.get("/api/chartist/library")
+async def get_chartist_library():
+    """Obtient la bibliothèque complète des figures chartistes"""
+    try:
+        learning_summary = chartist_learning_system.get_learning_summary()
+        
+        # Ajouter les détails des patterns
+        patterns_details = {}
+        for pattern_name, pattern_info in chartist_learning_system.chartist_patterns.items():
+            patterns_details[pattern_name] = {
+                'name': pattern_info.pattern_name,
+                'category': pattern_info.category,
+                'primary_direction': pattern_info.primary_direction.value,
+                'success_rate_long': pattern_info.success_rate_long,
+                'success_rate_short': pattern_info.success_rate_short,
+                'avg_return_long': pattern_info.avg_return_long,
+                'avg_return_short': pattern_info.avg_return_short,
+                'market_context_preference': pattern_info.market_context_preference,
+                'volume_importance': pattern_info.volume_importance,
+                'optimal_entry_timing': pattern_info.optimal_entry_timing
+            }
+        
+        return {
+            'success': True,
+            'data': {
+                'learning_summary': learning_summary,
+                'patterns_details': patterns_details,
+                'total_strategies': len(chartist_learning_system.chartist_strategies)
+            },
+            'message': f'Bibliothèque chartiste: {len(patterns_details)} figures avec {learning_summary["strategies_generated"]} stratégies optimisées'
+        }
+        
+    except Exception as e:
+        logger.error(f"Chartist library error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get chartist library: {str(e)}")
+
+@app.post("/api/chartist/analyze")
+async def analyze_patterns_with_chartist(request: Dict[str, Any]):
+    """Analyse des patterns avec recommandations chartistes"""
+    try:
+        patterns = request.get('patterns', [])
+        market_context = request.get('market_context', 'SIDEWAYS')
+        
+        if not patterns:
+            return {
+                'success': False,
+                'data': [],
+                'message': 'Aucun pattern fourni pour analyse'
+            }
+        
+        # Créer des patterns mock pour l'analyse
+        from technical_pattern_detector import PatternType, TechnicalPattern
+        mock_patterns = []
+        
+        for pattern_name in patterns:
+            try:
+                pattern_type = PatternType(pattern_name)
+                mock_pattern = TechnicalPattern(
+                    symbol="ANALYSIS",
+                    pattern_type=pattern_type,
+                    confidence=0.8,
+                    strength=0.7,
+                    entry_price=100.0,
+                    target_price=105.0,
+                    stop_loss=98.0,
+                    volume_confirmation=True
+                )
+                mock_patterns.append(mock_pattern)
+            except Exception as e:
+                logger.warning(f"Pattern {pattern_name} non reconnu: {e}")
+                continue
+        
+        # Obtenir les recommandations
+        recommendations = chartist_learning_system.get_pattern_recommendations(
+            mock_patterns, market_context
+        )
+        
+        return {
+            'success': True,
+            'data': {
+                'recommendations': recommendations,
+                'market_context': market_context,
+                'patterns_analyzed': len(mock_patterns)
+            },
+            'message': f'{len(recommendations)} recommandations chartistes générées pour {market_context}'
+        }
+        
+    except Exception as e:
+        logger.error(f"Chartist analysis error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze patterns: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
