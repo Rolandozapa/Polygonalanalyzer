@@ -2914,6 +2914,60 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 status=TradingStatus.PENDING
             )
             
+            # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT FOR IA2
+            # Apply AI training insights to improve IA2 decision-making
+            try:
+                # Get current market context for enhancement
+                current_context = await adaptive_context_system.analyze_current_context({
+                    'symbols': {opportunity.symbol: {
+                        'price_change_24h': opportunity.price_change_24h,
+                        'volatility': opportunity.volatility,
+                        'volume_ratio': getattr(opportunity, 'volume_ratio', 1.0)
+                    }}
+                })
+                
+                # Apply AI enhancements to IA2 decision
+                enhanced_decision_dict = ai_performance_enhancer.enhance_ia2_decision(
+                    decision.dict(), 
+                    analysis.dict(),
+                    current_context.current_regime.value
+                )
+                
+                # Update decision with enhancements
+                if 'ai_enhancements' in enhanced_decision_dict:
+                    # Create new enhanced decision
+                    enhanced_decision = TradingDecision(
+                        symbol=opportunity.symbol,
+                        signal=SignalType(enhanced_decision_dict.get('signal', decision.signal.value)),
+                        confidence=enhanced_decision_dict.get('confidence', decision.confidence),
+                        entry_price=enhanced_decision_dict.get('entry_price', decision.entry_price),
+                        stop_loss=enhanced_decision_dict.get('stop_loss', decision.stop_loss),
+                        take_profit_1=enhanced_decision_dict.get('take_profit_1', decision.take_profit_1),
+                        take_profit_2=enhanced_decision_dict.get('take_profit_2', decision.take_profit_2),
+                        take_profit_3=enhanced_decision_dict.get('take_profit_3', decision.take_profit_3),
+                        position_size=enhanced_decision_dict.get('position_size', decision.position_size),
+                        risk_reward_ratio=enhanced_decision_dict.get('risk_reward_ratio', decision.risk_reward_ratio),
+                        ia1_analysis_id=analysis.id,
+                        ia2_reasoning=enhanced_decision_dict.get('ia2_reasoning', decision.ia2_reasoning),
+                        status=TradingStatus.PENDING
+                    )
+                    
+                    decision = enhanced_decision
+                    
+                    # Log AI enhancements applied
+                    ai_enhancements = enhanced_decision_dict['ai_enhancements']
+                    enhancement_summary = ", ".join([e['type'] for e in ai_enhancements])
+                    logger.info(f"🧠 AI ENHANCED IA2 for {opportunity.symbol}: {enhancement_summary}")
+                    
+                    # Show specific position size enhancement if applied
+                    for enhancement in ai_enhancements:
+                        if enhancement['type'] == 'position_sizing':
+                            logger.info(f"📊 Position size enhanced: {enhancement['original_value']:.1%} → {enhancement['enhanced_value']:.1%} ({enhancement['reasoning']})")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ AI enhancement failed for IA2 decision of {opportunity.symbol}: {e}")
+            
+            
             # If we have a trading signal, create and execute advanced strategy with trailing stop
             if decision.signal != SignalType.HOLD and claude_decision:
                 await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
