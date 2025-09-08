@@ -83,7 +83,8 @@ class EnhancedTechnicalIndicatorsTestSuite:
                 self.log_test_result("Stochastic Integration Verification", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
-            analyses = response.json()
+            data = response.json()
+            analyses = data.get('analyses', []) if isinstance(data, dict) else data
             
             if not analyses or len(analyses) == 0:
                 self.log_test_result("Stochastic Integration Verification", False, "No IA1 analyses found")
@@ -91,23 +92,34 @@ class EnhancedTechnicalIndicatorsTestSuite:
             
             logger.info(f"   📊 Analyzing {len(analyses)} IA1 analyses for Stochastic indicators")
             
-            stochastic_found_count = 0
-            stochastic_values_found = 0
+            stochastic_fields_found = 0
+            stochastic_reasoning_found = 0
             debug_logs_found = 0
             
             stochastic_keywords = ["stochastic", "stoch_k", "stoch_d", "%k", "%d", "stochastic_signal"]
             
             for i, analysis in enumerate(analyses):
-                analysis_text = str(analysis).lower()
+                # Check for Stochastic fields in the JSON structure
+                has_stoch_fields = any(key in analysis for key in ['stochastic', 'stoch_k', 'stoch_d', 'stochastic_k', 'stochastic_d'])
                 
-                # Check for Stochastic keywords
-                stochastic_present = any(keyword in analysis_text for keyword in stochastic_keywords)
-                
-                if stochastic_present:
-                    stochastic_found_count += 1
-                    logger.info(f"      ✅ Analysis {i+1}: Stochastic keywords found")
+                if has_stoch_fields:
+                    stochastic_fields_found += 1
+                    logger.info(f"      ✅ Analysis {i+1}: Stochastic fields found in JSON structure")
                     
-                    # Check for actual Stochastic values (numeric patterns)
+                    # Log the actual values
+                    for key in ['stochastic', 'stoch_k', 'stoch_d', 'stochastic_k', 'stochastic_d']:
+                        if key in analysis:
+                            logger.info(f"         📊 {key}: {analysis[key]}")
+                
+                # Check for Stochastic mentions in reasoning text
+                reasoning_text = str(analysis.get('ia1_reasoning', '')).lower()
+                stochastic_in_reasoning = any(keyword in reasoning_text for keyword in stochastic_keywords)
+                
+                if stochastic_in_reasoning:
+                    stochastic_reasoning_found += 1
+                    logger.info(f"      ✅ Analysis {i+1}: Stochastic mentioned in reasoning")
+                    
+                    # Check for actual Stochastic values in reasoning
                     import re
                     stoch_value_patterns = [
                         r'stochastic[:\s]*(\d+\.?\d*)',
@@ -117,45 +129,42 @@ class EnhancedTechnicalIndicatorsTestSuite:
                         r'stoch_d[:\s]*(\d+\.?\d*)'
                     ]
                     
-                    values_found = False
                     for pattern in stoch_value_patterns:
-                        matches = re.findall(pattern, analysis_text)
+                        matches = re.findall(pattern, reasoning_text)
                         if matches:
-                            values_found = True
-                            logger.info(f"         📊 Stochastic values: {matches[:3]}")  # Show first 3 values
+                            logger.info(f"         📊 Stochastic values in reasoning: {matches[:3]}")
                             break
-                    
-                    if values_found:
-                        stochastic_values_found += 1
                     
                     # Check for debug logs pattern "Stochastic: XX.X"
                     debug_pattern = r'stochastic:\s*(\d+\.?\d*)'
-                    debug_matches = re.findall(debug_pattern, analysis_text)
+                    debug_matches = re.findall(debug_pattern, reasoning_text)
                     if debug_matches:
                         debug_logs_found += 1
                         logger.info(f"         🔍 Debug log values: {debug_matches[:2]}")
-                else:
-                    logger.info(f"      ❌ Analysis {i+1}: No Stochastic indicators found")
+                
+                if not has_stoch_fields and not stochastic_in_reasoning:
+                    logger.info(f"      ❌ Analysis {i+1} ({analysis.get('symbol', 'Unknown')}): No Stochastic indicators found")
             
             # Calculate coverage percentages
-            stochastic_coverage = (stochastic_found_count / len(analyses)) * 100
-            values_coverage = (stochastic_values_found / len(analyses)) * 100
+            fields_coverage = (stochastic_fields_found / len(analyses)) * 100
+            reasoning_coverage = (stochastic_reasoning_found / len(analyses)) * 100
             debug_coverage = (debug_logs_found / len(analyses)) * 100
             
-            logger.info(f"   📊 Stochastic keyword coverage: {stochastic_found_count}/{len(analyses)} ({stochastic_coverage:.1f}%)")
-            logger.info(f"   📊 Stochastic values coverage: {stochastic_values_found}/{len(analyses)} ({values_coverage:.1f}%)")
+            logger.info(f"   📊 Stochastic fields coverage: {stochastic_fields_found}/{len(analyses)} ({fields_coverage:.1f}%)")
+            logger.info(f"   📊 Stochastic reasoning coverage: {stochastic_reasoning_found}/{len(analyses)} ({reasoning_coverage:.1f}%)")
             logger.info(f"   📊 Debug logs coverage: {debug_logs_found}/{len(analyses)} ({debug_coverage:.1f}%)")
             
-            # Success criteria: At least 50% of analyses should contain Stochastic indicators
-            success = stochastic_coverage >= 50.0
+            # Success criteria: At least 50% of analyses should contain Stochastic indicators (either in fields or reasoning)
+            overall_coverage = max(fields_coverage, reasoning_coverage)
+            success = overall_coverage >= 50.0
             
-            details = f"Stochastic coverage: {stochastic_coverage:.1f}%, Values: {values_coverage:.1f}%, Debug logs: {debug_coverage:.1f}%"
+            details = f"Fields: {fields_coverage:.1f}%, Reasoning: {reasoning_coverage:.1f}%, Debug: {debug_coverage:.1f}%"
             
             self.log_test_result("Stochastic Integration Verification", success, details)
             
             # Store for later tests
             self.ia1_analyses = analyses
-            self.stochastic_coverage = stochastic_coverage
+            self.stochastic_coverage = overall_coverage
             
         except Exception as e:
             self.log_test_result("Stochastic Integration Verification", False, f"Exception: {str(e)}")
