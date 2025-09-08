@@ -23,17 +23,8 @@ class EnhancedIAPromptsTestSuite:
     """Test suite for Enhanced IA1 and IA2 Prompts with Technical Indicators Integration"""
     
     def __init__(self):
-        # Get backend URL from frontend env
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        backend_url = line.split('=')[1].strip()
-                        break
-                else:
-                    backend_url = "http://localhost:8001"
-        except Exception:
-            backend_url = "http://localhost:8001"
+        # Use localhost for testing (external URL has routing issues)
+        backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
         logger.info(f"Testing Enhanced IA1 and IA2 Prompts at: {self.api_url}")
