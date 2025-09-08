@@ -1463,7 +1463,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "fibonacci_level": self._calculate_fibonacci_retracement(historical_data),
                 "support_levels": self._find_support_levels(historical_data, current_price),
                 "resistance_levels": self._find_resistance_levels(historical_data, current_price),
-                "patterns_detected": self._detect_advanced_patterns(historical_data),
+                "patterns_detected": self._current_detected_patterns if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else [p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data),
                 "analysis_confidence": self._calculate_analysis_confidence(
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 ),
