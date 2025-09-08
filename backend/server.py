@@ -4996,6 +4996,9 @@ class UltraProfessionalTradingOrchestrator:
     def __init__(self):
         self.scout = UltraProfessionalCryptoScout()
         self.ia1 = UltraProfessionalIA1TechnicalAnalyst()  
+        # 🚀 NOUVELLE FEATURE: MODE ADAPTATIF (Activable/Désactivable)
+        self.adaptive_mode_enabled = True  # Flag pour activer la logique adaptative
+        
         self.ia2 = UltraProfessionalIA2DecisionAgent()
         self.advanced_strategy_manager = advanced_strategy_manager
         
