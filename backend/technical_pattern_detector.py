@@ -1429,6 +1429,11 @@ class TechnicalPatternDetector:
                     trough2 = low_troughs.iloc[i + 1]
                     trough3 = low_troughs.iloc[i + 2]
                     
+                    # ROBUST: Prevent all mathematical errors for triple bottom
+                    if not pd.notna([trough1, trough2, trough3]).all() or \
+                       not all(val > 0 for val in [trough1, trough2, trough3]):
+                        continue
+                        
                     avg_trough = (trough1 + trough2 + trough3) / 3
                     if (avg_trough > 0 and 
                         abs(trough1 - avg_trough) / avg_trough < 0.02 and
