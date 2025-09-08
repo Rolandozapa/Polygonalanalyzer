@@ -1459,6 +1459,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": macd_signal,
+                "stochastic": stochastic_k,  # Add Stochastic %K
+                "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
                 "fibonacci_level": self._calculate_fibonacci_retracement(historical_data),
                 "support_levels": self._find_support_levels(historical_data, current_price),
