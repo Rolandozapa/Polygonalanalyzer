@@ -829,12 +829,21 @@ class TechnicalPatternDetector:
         if len(df) < 15:
             return patterns
         
-        # Calcule le momentum sur différentes périodes - FIXED: Prevent division by zero
+        # Calcule le momentum sur différentes périodes - ROBUST: Prevent all mathematical errors
+        if len(df) < 12:  # Need at least 12 data points
+            return patterns
+            
         close_6_ago = df['Close'].iloc[-6] if len(df) > 6 else df['Close'].iloc[0]
         close_11_ago = df['Close'].iloc[-11] if len(df) > 11 else df['Close'].iloc[0]
+        current_close = df['Close'].iloc[-1]
         
-        momentum_5d = (df['Close'].iloc[-1] - close_6_ago) / max(close_6_ago, 1e-10) if close_6_ago > 0 else 0
-        momentum_10d = (df['Close'].iloc[-1] - close_11_ago) / max(close_11_ago, 1e-10) if close_11_ago > 0 else 0
+        # Validate all values are finite and positive
+        if not pd.notna([current_close, close_6_ago, close_11_ago]).all() or \
+           not all(val > 0 for val in [current_close, close_6_ago, close_11_ago]):
+            return patterns
+        
+        momentum_5d = (current_close - close_6_ago) / close_6_ago if close_6_ago > 0 else 0
+        momentum_10d = (current_close - close_11_ago) / close_11_ago if close_11_ago > 0 else 0
         
         current_price = df['Close'].iloc[-1]
         volume_ratio = df['Volume'].iloc[-3:].mean() / df['Volume'].iloc[-10:-3].mean()
