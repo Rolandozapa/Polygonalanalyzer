@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Enhanced Chartist Pattern Integration with IA1
-Focus: Pattern Detection, Integration Flow, IA1 Pattern Awareness, and Data Flow
+Backend Testing Suite for Multi-RR Decision Engine Analysis - BUSDT Focus
+Focus: Multi-RR calculations, Risk/Reward formulas, BUSDT analysis, and RR optimization
 """
 
 import asyncio
@@ -11,6 +11,8 @@ import os
 import sys
 from datetime import datetime
 from typing import Dict, Any, List
+import pandas as pd
+import numpy as np
 
 # Add backend to path
 sys.path.append('/app/backend')
