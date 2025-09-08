@@ -6487,6 +6487,178 @@ async def get_backtest_status():
         logger.error(f"Backtest status error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get backtest status: {str(e)}")
 
+# AI Training System Endpoints
+@app.post("/api/ai-training/run")
+async def run_ai_training():
+    """Lance l'entraînement complet du système IA avec les données historiques"""
+    try:
+        logger.info("🚀 Starting comprehensive AI training system")
+        
+        # Lance l'entraînement complet
+        training_results = await ai_training_system.run_comprehensive_training()
+        
+        return {
+            'success': True,
+            'data': training_results,
+            'message': f'AI Training completed successfully! Analyzed {training_results["market_conditions_classified"]} market conditions, {training_results["patterns_analyzed"]} patterns, enhanced IA1 with {training_results["ia1_improvements_identified"]} improvements, and trained IA2 with {training_results["ia2_enhancements_generated"]} enhancements.'
+        }
+        
+    except Exception as e:
+        logger.error(f"AI Training error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI Training failed: {str(e)}")
+
+@app.get("/api/ai-training/status") 
+async def get_ai_training_status():
+    """Obtient le statut du système d'entraînement IA"""
+    try:
+        # Vérifier les données disponibles
+        available_symbols = list(ai_training_system.historical_data.keys())
+        
+        # Informations sur les données
+        data_info = []
+        for symbol in available_symbols[:10]:  # Limit to first 10 for performance
+            df = ai_training_system.historical_data[symbol]
+            data_info.append({
+                'symbol': symbol,
+                'data_points': len(df),
+                'date_range': f"{df['Date'].min().strftime('%Y-%m-%d')} to {df['Date'].max().strftime('%Y-%m-%d')}",
+                'has_technical_indicators': 'rsi' in df.columns
+            })
+        
+        # Statistiques d'entraînement
+        training_summary = ai_training_system.get_training_summary()
+        
+        return {
+            'success': True,
+            'data': {
+                'available_symbols': available_symbols,
+                'total_symbols': len(available_symbols),
+                'data_info': data_info,
+                'training_summary': training_summary,
+                'system_status': 'ready',
+                'recommended_action': 'Run comprehensive AI training to enhance IA1 and IA2 performance'
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"AI Training status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get AI training status: {str(e)}")
+
+@app.get("/api/ai-training/results/market-conditions")
+async def get_market_conditions():
+    """Obtient les classifications de conditions de marché"""
+    try:
+        conditions = []
+        for condition in ai_training_system.market_conditions:
+            conditions.append({
+                'period_start': condition.period_start,
+                'period_end': condition.period_end,
+                'symbol': condition.symbol,
+                'condition_type': condition.condition_type,
+                'volatility': condition.volatility,
+                'trend_strength': condition.trend_strength,
+                'success_rate': condition.success_rate,
+                'confidence_score': condition.confidence_score,
+                'pattern_frequency': condition.pattern_frequency
+            })
+        
+        return {
+            'success': True,
+            'data': conditions,
+            'total_conditions': len(conditions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Market conditions error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get market conditions: {str(e)}")
+
+@app.get("/api/ai-training/results/pattern-training")
+async def get_pattern_training_results():
+    """Obtient les résultats d'entraînement des patterns"""
+    try:
+        patterns = []
+        for pattern in ai_training_system.pattern_training:
+            patterns.append({
+                'pattern_type': pattern.pattern_type,
+                'symbol': pattern.symbol,
+                'date': pattern.date,
+                'success': pattern.success,
+                'market_condition': pattern.market_condition,
+                'entry_price': pattern.entry_price,
+                'exit_price': pattern.exit_price,
+                'hold_days': pattern.hold_days,
+                'volume_confirmation': pattern.volume_confirmation,
+                'rsi_level': pattern.rsi_level,
+                'confidence_factors': pattern.confidence_factors
+            })
+        
+        return {
+            'success': True,
+            'data': patterns,
+            'total_patterns': len(patterns)
+        }
+        
+    except Exception as e:
+        logger.error(f"Pattern training results error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pattern training results: {str(e)}")
+
+@app.get("/api/ai-training/results/ia1-enhancements")
+async def get_ia1_enhancements():
+    """Obtient les améliorations identifiées pour IA1"""
+    try:
+        enhancements = []
+        for enhancement in ai_training_system.ia1_enhancements:
+            enhancements.append({
+                'symbol': enhancement.symbol,
+                'date': enhancement.date,
+                'predicted_signal': enhancement.predicted_signal,
+                'actual_outcome': enhancement.actual_outcome,
+                'prediction_accuracy': enhancement.prediction_accuracy,
+                'technical_indicators': enhancement.technical_indicators,
+                'patterns_detected': enhancement.patterns_detected,
+                'market_context': enhancement.market_context,
+                'suggested_improvements': enhancement.suggested_improvements
+            })
+        
+        return {
+            'success': True,
+            'data': enhancements,
+            'total_enhancements': len(enhancements)
+        }
+        
+    except Exception as e:
+        logger.error(f"IA1 enhancements error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get IA1 enhancements: {str(e)}")
+
+@app.get("/api/ai-training/results/ia2-enhancements")
+async def get_ia2_enhancements():
+    """Obtient les améliorations identifiées pour IA2"""
+    try:
+        enhancements = []
+        for enhancement in ai_training_system.ia2_enhancements:
+            enhancements.append({
+                'symbol': enhancement.symbol,
+                'date': enhancement.date,
+                'decision_signal': enhancement.decision_signal,
+                'decision_confidence': enhancement.decision_confidence,
+                'actual_performance': enhancement.actual_performance,
+                'optimal_exit_timing': enhancement.optimal_exit_timing,
+                'risk_reward_realized': enhancement.risk_reward_realized if not np.isnan(enhancement.risk_reward_realized) else None,
+                'market_condition_match': enhancement.market_condition_match,
+                'position_sizing_accuracy': enhancement.position_sizing_accuracy,
+                'suggested_adjustments': enhancement.suggested_adjustments
+            })
+        
+        return {
+            'success': True,
+            'data': enhancements,
+            'total_enhancements': len(enhancements)
+        }
+        
+    except Exception as e:
+        logger.error(f"IA2 enhancements error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get IA2 enhancements: {str(e)}")
+
 @app.get("/api/bingx/positions")
 async def get_bingx_positions():
     """Get current BingX Futures positions (should be empty for safety)"""
