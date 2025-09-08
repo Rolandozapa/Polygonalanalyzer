@@ -1550,73 +1550,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
             
-            # 🚀 MULTI-RR ENGINE PYTHON RÉACTIVÉ - Calculs réels avec formules améliorées
-            
-            # 🚀 APPLIQUER LE MULTI-RR ENGINE AVANT de créer l'analyse finale
-            try:
-                # Créer une analyse temporaire pour le Multi-RR
-                temp_analysis = TechnicalAnalysis(
-                    symbol=opportunity.symbol,
-                    timestamp=get_paris_time(),
-                    **validated_data
-                )
-                
-                multi_rr_result = self._resolve_ia1_contradiction_with_multi_rr(
-                    temp_analysis, opportunity, detected_pattern
-                )
-                
-                if multi_rr_result.get('contradiction', False) or True:  # 🎯 FORCER Multi-RR pour TOUTES les analyses
-                    # Contradiction détectée - intégrer les calculs Multi-RR dans le reasoning
-                    rr_details = multi_rr_result.get('multi_rr_results', {})
-                    final_recommendation = multi_rr_result.get('final_recommendation', 'hold')
-                    
-                    # Construire les détails Multi-RR pour l'affichage
-                    multi_rr_display = "\n\n🤖 **MULTI-RR ANALYSIS:**"
-                    
-                    for option, data in rr_details.items():
-                        rr_ratio = data.get('rr_ratio', 0)
-                        reasoning = data.get('reasoning', '')
-                        multi_rr_display += f"\n  • {option.upper()}: **{rr_ratio:.2f}:1** - {reasoning}"
-                    
-                    multi_rr_display += f"\n\n🏆 **WINNER:** {final_recommendation.upper()}"
-                    multi_rr_display += f" - {multi_rr_result.get('resolution_reasoning', '')}"
-                    
-                    # APPROCHE HYBRIDE: Garder analyse humaine + ajouter commentaire sentiment post Multi-RR
-                    original_reasoning = validated_data.get('reasoning', '')  # IA1 utilise 'reasoning' dans JSON
-                    original_analysis = validated_data.get('analysis', '')
-                    ia1_recommendation = validated_data.get('recommendation', 'hold').upper()
-                    
-                    # 🎯 NOUVEAU: Placer Multi-RR en PREMIER pour visibilité frontend (800 chars)
-                    enhanced_reasoning = multi_rr_display + "\n\n💭 **REFLEXION POST-CALCUL:**"
-                    
-                    if final_recommendation.upper() != ia1_recommendation:
-                        enhanced_reasoning += f"\nMon instinct initial penchait vers {ia1_recommendation}, mais les calculs Multi-RR révèlent que {final_recommendation.upper()} offre un meilleur ratio risque-récompense."
-                        enhanced_reasoning += f"\nJe défère aux mathématiques tout en gardant mon analyse technique comme contexte."
-                    else:
-                        enhanced_reasoning += f"\nMon analyse technique et les calculs Multi-RR convergent vers {final_recommendation.upper()}, renforçant ma conviction."
-                    
-                    # Ajouter le reasoning original à la fin (tronqué pour s'adapter dans 800 chars)
-                    remaining_space = 800 - len(enhanced_reasoning) - 50  # Garde 50 chars de marge
-                    if remaining_space > 100:  # Seulement si assez d'espace
-                        enhanced_reasoning += f"\n\n📊 **ANALYSE TECHNIQUE:**\n{original_reasoning[:remaining_space]}"
-                    
-                    # Mettre à jour validated_data avec Multi-RR
-                    validated_data['reasoning'] = enhanced_reasoning  # Corriger le champ
-                    validated_data['ia1_reasoning'] = enhanced_reasoning  # Pour assurance
-                    validated_data['ia1_signal'] = final_recommendation
-                    
-                    # 🎯 CRUCIAL: Mettre à jour le risk_reward_ratio avec le meilleur RR du Multi-RR
-                    if rr_details:
-                        max_rr = max(data.get('rr_ratio', 0) for data in rr_details.values())
-                        validated_data['risk_reward_ratio'] = max_rr
-                        logger.info(f"🎯 Multi-RR Max RR updated for {opportunity.symbol}: {max_rr:.2f}:1")
-                    
-                    logger.info(f"🎯 Multi-RR applied for {opportunity.symbol}: {final_recommendation.upper()} chosen")
-                
-            except Exception as e:
-                logger.warning(f"⚠️ Multi-RR calculation failed for {opportunity.symbol}: {e}")
-            
-            # Créer l'analyse finale avec les données Multi-RR intégrées
+            # Créer l'analyse finale directement (SYSTEM SIMPLIFIÉ)
             analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
                 timestamp=get_paris_time(),
