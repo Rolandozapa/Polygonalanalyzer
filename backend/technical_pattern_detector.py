@@ -1979,16 +1979,27 @@ class TechnicalPatternDetector:
                     points = pivots[i:i+5]
                     X, A, B, C, D = [p['price'] for p in points]
                     
-                    # Calculer les ratios de Fibonacci
+                    # Calculer les ratios de Fibonacci avec protection
                     XA = abs(A - X)
                     AB = abs(B - A) 
                     BC = abs(C - B)
                     CD = abs(D - C)
                     
-                    if XA > 0 and AB > 0 and BC > 0:
-                        AB_XA = AB / XA
-                        BC_AB = BC / AB
-                        CD_BC = CD / BC if BC > 0 else 0
+                    # Protection contre division par zéro
+                    if XA <= 0 or AB <= 0 or BC <= 0 or CD <= 0:
+                        continue
+                    
+                    # Vérifier que toutes les valeurs sont finies
+                    if not all(np.isfinite([XA, AB, BC, CD])):
+                        continue
+                    
+                    AB_XA = AB / XA
+                    BC_AB = BC / AB
+                    CD_BC = CD / BC if BC > 0 else 0
+                    
+                    # Vérifier que les ratios sont valides
+                    if not all(np.isfinite([AB_XA, BC_AB, CD_BC])):
+                        continue
                         
                         # Pattern Gartley (0.618, 0.382, 1.272)
                         if (0.58 <= AB_XA <= 0.68 and 0.35 <= BC_AB <= 0.42):
