@@ -305,22 +305,18 @@ class EnhancedIAPromptsTestSuite:
             hold_decisions = []
             
             for decision in self.ia2_decisions:
-                confidence = None
-                signal = None
+                confidence = decision.get('confidence')
+                signal = decision.get('signal', '').upper()
                 
-                if isinstance(decision, dict):
-                    confidence = decision.get('confidence') or decision.get('decision_confidence')
-                    signal = decision.get('signal') or decision.get('recommendation')
-                    
-                    if confidence is not None:
-                        if confidence >= self.ia2_execution_threshold:
-                            high_confidence_decisions.append(decision)
-                            if signal and signal.upper() in ['LONG', 'SHORT', 'BUY', 'SELL']:
-                                executed_trades.append(decision)
-                        else:
-                            low_confidence_decisions.append(decision)
-                            if signal and signal.upper() == 'HOLD':
-                                hold_decisions.append(decision)
+                if confidence is not None:
+                    if confidence >= (self.ia2_execution_threshold / 100.0):
+                        high_confidence_decisions.append(decision)
+                        if signal in ['LONG', 'SHORT', 'BUY', 'SELL']:
+                            executed_trades.append(decision)
+                    else:
+                        low_confidence_decisions.append(decision)
+                        if signal == 'HOLD':
+                            hold_decisions.append(decision)
             
             total_decisions = len(self.ia2_decisions)
             high_confidence_count = len(high_confidence_decisions)
