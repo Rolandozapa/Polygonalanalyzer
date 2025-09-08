@@ -441,6 +441,18 @@
         - comment: "✅ IA1 DEDUPLICATION FIX VALIDATED - COMPLETE SUCCESS: (1) ✅ No duplicates in /api/analyses endpoint (0/8 analyses), (2) ✅ 100% Paris timezone consistency across all timestamps, (3) ✅ Live deduplication working - system respects 4-hour window during operation, (4) ✅ Pipeline integrity maintained - IA1 shows 0 duplicates (8 analyses, 8 unique symbols) while maintaining proper Scout→IA1→IA2 flow. CONCLUSION: The IA1 deduplication fix is working perfectly - timezone inconsistency resolved and display issue fixed."
 
 ## backend:
+  - task: "Test Multi-RR Display and IA2 RR Consistency Fixes"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "❌ MULTI-RR DISPLAY AND IA2 RR CONSISTENCY FIXES TESTING COMPLETED - CRITICAL ISSUES IDENTIFIED: Comprehensive testing of the two critical fixes reveals SIGNIFICANT PROBLEMS that need immediate attention. FINDINGS: (1) ❌ MULTI-RR DISPLAY POSITIONING FAILED - Multi-RR analysis appears at END of IA1 reasoning text (positions 893-943) instead of BEGINNING, making it invisible within 800-character frontend limit. All 3 tested analyses (AI16ZUSDT, ATHUSDT, XRPUSDT) have Multi-RR content beyond the display threshold, (2) ❌ IA2 RR CONSISTENCY BROKEN - IA2 decisions are recalculating RR values instead of using IA1 calculations. Evidence: IPUSDT (IA1: 0.00, IA2: 1.04, diff: 1.036), ENAUSDT (IA1: 0.00, IA2: 0.47, diff: 0.472). Zero consistent RR values found across tested decisions, (3) ❌ RR FILTERING THRESHOLD NOT ENFORCED - Low RR analyses (all showing 0.00 RR) are incorrectly passing to IA2. XRPUSDT and VIRTUALUSDT with 0.00 RR should be filtered but have IA2 decisions, violating the >= 2.0 threshold requirement. CRITICAL EVIDENCE: Multi-RR analysis format found: '🤖 **MULTI-RR ANALYSIS:** • HOLD: **0.14:1** • LONG: **0.56:1** 🏆 **WINNER:** LONG' but positioned at character 893+ instead of beginning. IA1 analyses show 0.00 RR values while IA2 decisions show different calculated values, proving recalculation is occurring. CONCLUSION: 0/3 critical fixes are working - Multi-RR display positioning failed, IA2 RR consistency broken, RR filtering threshold not enforced. All three fixes require immediate correction."
+
   - task: "Test IA1 Deduplication Fix"
     implemented: true
     working: true
