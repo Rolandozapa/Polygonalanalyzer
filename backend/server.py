@@ -1338,8 +1338,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
             6. For SHORT signals: Stop-Loss MUST be above current price, Take-Profit below
             7. Risk-Reward ratio MUST be calculated as: (Take_Profit - Entry) / (Entry - Stop_Loss) for LONG
             8. Risk-Reward ratio MUST be calculated as: (Entry - Take_Profit) / (Stop_Loss - Entry) for SHORT
-            9. ONLY recommend trades with RR >= 2.0 (minimum requirement for profitable trading)
-            10. If your calculation gives RR < 2.0, either adjust levels or recommend "hold"
+            9. Recommend LONG/SHORT based on the strongest pattern direction and confluence
+            10. Your recommendation should reflect the overall pattern analysis, not just RR calculation
+            11. Calculate RR to inform risk assessment, but don't let RR < 2.0 force a HOLD recommendation
             
             Required JSON format:
             {{
