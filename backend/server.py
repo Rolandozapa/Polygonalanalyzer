@@ -2730,14 +2730,24 @@ MARKET DATA:
 - Data Sources: {', '.join(opportunity.data_sources)}
 - Data Confidence: {opportunity.data_confidence:.2%}
 
-IA1 TECHNICAL ANALYSIS:
+IA1 COMPREHENSIVE TECHNICAL ANALYSIS WITH HISTORICAL CONTEXT:
 - RSI: {analysis.rsi:.2f} (Oversold: <30, Overbought: >70)
 - MACD Signal: {analysis.macd_signal:.6f}
-- Bollinger Position: {analysis.bollinger_position}
-- Support Level: ${analysis.support_levels[0] if analysis.support_levels else analysis.rsi:.6f}
-- Resistance Level: ${analysis.resistance_levels[0] if analysis.resistance_levels else analysis.rsi:.6f}
+- Stochastic: %K {analysis.stochastic:.2f}, %D {analysis.stochastic_d:.2f}
+- Bollinger Position: {analysis.bollinger_position:.2f} (-1=lower band, +1=upper band)
+
+HISTORICAL SUPPORT/RESISTANCE ANALYSIS:
+- Primary Support: ${getattr(analysis, 'primary_support', analysis.support_levels[0] if analysis.support_levels else opportunity.current_price * 0.97):.6f}
+- Primary Resistance: ${getattr(analysis, 'primary_resistance', analysis.resistance_levels[0] if analysis.resistance_levels else opportunity.current_price * 1.03):.6f}
+- Support Reasoning: {getattr(analysis, 'support_reasoning', 'Technical support level identified')}
+- Resistance Reasoning: {getattr(analysis, 'resistance_reasoning', 'Technical resistance level identified')}
+
+FIBONACCI & PATTERN CONTEXT:
+- Fibonacci Level: {analysis.fibonacci_level:.2f}
+- Fibonacci Nearest: {analysis.fibonacci_nearest_level}%
+- Fibonacci Trend: {analysis.fibonacci_trend_direction}
 - ALL Patterns Detected: {', '.join(analysis.patterns_detected)}
-- Analysis Confidence: {analysis.analysis_confidence:.2%}
+- Pattern Analysis Confidence: {analysis.analysis_confidence:.2%}
 
 IA1 RISK-REWARD CALCULATION:
 - Entry Price: ${analysis.entry_price:.4f}
