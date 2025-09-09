@@ -1148,6 +1148,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
     def __init__(self):
         self.chat = get_ia1_chat()
         self.market_aggregator = advanced_market_aggregator
+        self.advanced_indicators = AdvancedTechnicalIndicators()
     
     def analyze_multi_timeframe_hierarchy(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> dict:
         """
