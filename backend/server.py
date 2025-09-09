@@ -2022,34 +2022,37 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 if (daily_direction == "bullish" and signal_direction == "short") or \
                    (daily_direction == "bearish" and signal_direction == "long"):
                     
-                    # 🎯 VALIDATION SOPHISTIQUÉE : Vrai retournement vs Erreur ?
-                    reversal_indicators = self._validate_legitimate_reversal(
+                    # 🎯 SYSTÈME DE PÉNALITÉ PONDÉRÉ INTELLIGENT
+                    penalty_result = self._calculate_weighted_momentum_penalty(
                         rsi, stochastic_k, bb_position, opportunity.volatility, daily_momentum, analysis_confidence
                     )
                     
-                    if reversal_indicators["is_legitimate_reversal"]:
-                        # RETOURNEMENT LÉGITIME : Réduction modérée (20%)
-                        confidence_penalty = 0.2
-                        analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.5)
-                        correction_type = "legitimate_reversal"
-                        momentum_correction_applied = True
-                        
+                    # Appliquer la nouvelle confiance calculée
+                    analysis_confidence = penalty_result["new_confidence"]
+                    correction_type = penalty_result["penalty_type"]
+                    momentum_correction_applied = True
+                    
+                    # Log détaillé selon le type de pénalité
+                    if penalty_result["penalty_type"] == "legitimate_reversal":
                         logger.info(f"✅ LEGITIMATE REVERSAL DETECTED {opportunity.symbol}:")
-                        logger.info(f"   🔄 Reversal signals: {reversal_indicators['signals_detected']}")
-                        logger.info(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%} cautious reduction)")
+                        logger.info(f"   🎯 Reversal intensity: {penalty_result['reversal_intensity']:.2f}")
+                        logger.info(f"   📊 Penalty: {penalty_result['total_penalty']:.1%} (light for legitimate reversal)")
+                        logger.info(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
                         
-                    else:
-                        # ERREUR POTENTIELLE : Pénalité plus forte (35%)  
-                        confidence_penalty = 0.35
-                        analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.3)
-                        correction_type = "momentum_error"
-                        momentum_correction_applied = True
+                    elif penalty_result["penalty_type"] == "uncertain_reversal":
+                        logger.warning(f"⚠️ UNCERTAIN REVERSAL {opportunity.symbol}:")
+                        logger.warning(f"   🎯 Reversal intensity: {penalty_result['reversal_intensity']:.2f} (moderate)")
+                        logger.warning(f"   📊 Penalty: {penalty_result['total_penalty']:.1%} (moderate uncertainty)")
+                        logger.warning(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
                         
+                    else:  # momentum_error
                         logger.warning(f"⚠️ POTENTIAL MOMENTUM ERROR {opportunity.symbol}:")
                         logger.warning(f"   💥 Daily momentum: {opportunity.price_change_24h:.1f}% ({daily_direction.upper()})")
                         logger.warning(f"   💥 IA1 signal: {signal_direction.upper()} (COUNTER-TREND)")
-                        logger.warning(f"   💥 Reversal validation: FAILED ({reversal_indicators['failure_reason']})")
-                        logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%})")
+                        logger.warning(f"   💥 Reversal intensity: {penalty_result['reversal_intensity']:.2f} (weak)")
+                        logger.warning(f"   💥 Momentum danger: {penalty_result['momentum_danger_intensity']:.2f}")
+                        logger.warning(f"   💥 Penalty: {penalty_result['total_penalty']:.1%} (proportional to risk)")
+                        logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
                         
                         # Si la confiance devient trop faible, forcer HOLD
                         if analysis_confidence < 0.4:
