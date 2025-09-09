@@ -69,13 +69,30 @@ class TrendingAutoUpdater:
         logger.info("Auto-trending updater stopped")
     
     async def _update_loop(self):
-        """Boucle principale d'update toutes les 6h"""
+        """Boucle principale d'update toutes les 6h avec protection CPU"""
+        # Attendre un peu avant le premier update pour éviter la surcharge au startup
+        await asyncio.sleep(60)  # 1 minute de delay
+        
         while self.is_running:
             try:
+                # 🚨 PROTECTION CPU - Vérifier la charge avant l'update
+                try:
+                    import psutil
+                    cpu_usage = psutil.cpu_percent(interval=1)
+                    if cpu_usage > 70.0:
+                        logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Skipping trending update")
+                        await asyncio.sleep(3600)  # Wait 1 hour
+                        continue
+                except ImportError:
+                    pass  # Si psutil pas disponible, continuer normalement
+                
+                logger.info("🔍 Starting trending update cycle...")
                 await self.update_trending_list()
                 logger.info(f"⏰ Next trending update in 6 hours")
                 await asyncio.sleep(self.update_interval)
+                
             except asyncio.CancelledError:
+                logger.info("Trending update loop cancelled")
                 break
             except Exception as e:
                 logger.error(f"Error in trending update loop: {e}")
