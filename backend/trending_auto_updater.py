@@ -53,8 +53,9 @@ class TrendingAutoUpdater:
         self.update_task = asyncio.create_task(self._update_loop())
         logger.info("🔄 Auto-trending updater started - checking every 6 hours")
         
-        # Premier update immédiat
-        await self.update_trending_list()
+        # 🚨 CORRECTION: Pas de premier update immédiat au startup pour éviter les blocages
+        # L'update se fera lors du premier cycle de la boucle
+        logger.info("⏰ First trending update will occur in the background loop")
     
     async def stop_auto_update(self):
         """Arrête le système d'auto-update"""
