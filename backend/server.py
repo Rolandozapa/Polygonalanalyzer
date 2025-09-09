@@ -2618,12 +2618,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
         )
 
 class UltraProfessionalIA2DecisionAgent:
-    def __init__(self):
+    def __init__(self, active_position_manager=None):
         self.chat = get_ia2_chat()
         self.market_aggregator = advanced_market_aggregator
         self.bingx_engine = bingx_official_engine
         self.live_trading_enabled = True  # Set to False for simulation only
         self.max_risk_per_trade = 0.02  # 2% risk per trade
+        self.active_position_manager = active_position_manager
     
     async def _get_crypto_market_sentiment(self) -> dict:
         """Get overall crypto market sentiment for leverage calculation"""
