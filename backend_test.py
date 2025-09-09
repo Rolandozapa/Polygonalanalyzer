@@ -268,7 +268,8 @@ class IA1IA2PipelineTestSuite:
             # Check for successful IA2 decisions with adaptive context
             ia2_response = requests.get(f"{self.api_url}/decisions", timeout=30)
             if ia2_response.status_code == 200:
-                decisions = ia2_response.json()
+                decisions_data = ia2_response.json()
+                decisions = decisions_data.get('decisions', [])
                 recent_decisions = [d for d in decisions if self._is_recent_timestamp(d.get('timestamp', ''))]
                 
                 # Check if decisions have adaptive context applied (look for enhanced reasoning)
