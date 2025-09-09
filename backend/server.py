@@ -4336,6 +4336,46 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     "strategy_source": "fallback_5_level"
                 }
                 
+            # 🎯 NOUVEAU: RR RECALCULATION WITH IA2 TECHNICAL LEVELS
+            # Extract IA2's recalculated technical levels for enhanced RR calculation
+            market_analysis = claude_decision.get("market_analysis", {})
+            recalculated_levels = market_analysis.get("recalculated_technical_levels", {})
+            
+            enhanced_rr_data = {}
+            if recalculated_levels:
+                ia2_support = recalculated_levels.get("ia2_support_level")
+                ia2_resistance = recalculated_levels.get("ia2_resistance_level") 
+                ia2_rr_ratio = recalculated_levels.get("ia2_calculated_rr")
+                technical_reasoning = recalculated_levels.get("technical_reasoning", "")
+                
+                # If IA2 provided recalculated levels, use them to enhance RR calculation
+                if ia2_support and ia2_resistance and ia2_rr_ratio:
+                    enhanced_rr_data = {
+                        "ia2_support_level": ia2_support,
+                        "ia2_resistance_level": ia2_resistance,
+                        "ia2_calculated_rr": ia2_rr_ratio,
+                        "ia1_original_rr": analysis.risk_reward_ratio,
+                        "technical_reasoning": technical_reasoning,
+                        "rr_improvement_detected": ia2_rr_ratio > analysis.risk_reward_ratio,
+                        "final_rr_source": "ia2_recalculated"
+                    }
+                    
+                    logger.info(f"🎯 IA2 RR ENHANCEMENT: {opportunity.symbol} - IA1 RR: {analysis.risk_reward_ratio:.2f} → IA2 RR: {ia2_rr_ratio:.2f}")
+                else:
+                    # Fallback to IA1 RR if IA2 didn't provide complete data
+                    enhanced_rr_data = {
+                        "final_rr_ratio": analysis.risk_reward_ratio,
+                        "final_rr_source": "ia1_fallback",
+                        "ia1_original_rr": analysis.risk_reward_ratio
+                    }
+            else:
+                # No enhanced data available, use IA1 RR
+                enhanced_rr_data = {
+                    "final_rr_ratio": analysis.risk_reward_ratio, 
+                    "final_rr_source": "ia1_original",
+                    "ia1_original_rr": analysis.risk_reward_ratio
+                }
+                
         reasoning = f"IA2 Advanced Strategy Analysis: {claude_reasoning[:300]} " if claude_reasoning else "Ultra professional advanced trading analysis: "
         
         # Add dynamic leverage info to reasoning
