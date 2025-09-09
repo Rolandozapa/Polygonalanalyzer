@@ -6428,6 +6428,17 @@ class UltraProfessionalTradingOrchestrator:
             return 1.0
         else:  # > 1B = large cap
             return 1.1  # Moins de pénalité
+    
+    def _get_mc_bucket_name(self, market_cap: float) -> str:
+        """Retourne le nom du bucket market cap pour les logs"""
+        if market_cap < 10_000_000:  # < 10M = micro cap
+            return "Micro Cap"
+        elif market_cap < 100_000_000:  # < 100M = small cap
+            return "Small Cap"
+        elif market_cap < 1_000_000_000:  # < 1B = mid cap
+            return "Mid Cap"
+        else:  # > 1B = large cap
+            return "Large Cap"
 
     async def start(self):
         """Legacy start method - redirects to start_trading_system"""
