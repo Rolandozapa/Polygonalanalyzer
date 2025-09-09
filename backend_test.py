@@ -309,8 +309,11 @@ class IA1IA2PipelineTestSuite:
                 self.log_test_result("New IA2 Decisions Generation", False, "Could not retrieve system data")
                 return
             
-            analyses = analyses_response.json()
-            decisions = decisions_response.json()
+            analyses_data = analyses_response.json()
+            decisions_data = decisions_response.json()
+            
+            analyses = analyses_data.get('analyses', [])
+            decisions = decisions_data.get('decisions', [])
             
             # Filter recent data (today's data)
             recent_analyses = [a for a in analyses if self._is_recent_timestamp(a.get('timestamp', ''))]
