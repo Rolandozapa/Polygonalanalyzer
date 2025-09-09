@@ -1616,11 +1616,33 @@ class UltraProfessionalIA1TechnicalAnalyst:
             1H Context: {timeframe_analysis.get('h1_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('h1_trend', {}).get('strength', 0.0):.1%})
             {f"⚠️ ANTI-MOMENTUM RISK: {timeframe_analysis.get('anti_momentum_risk', 'NONE')}" if timeframe_analysis.get('anti_momentum_risk') else "✅ Momentum Alignment: OK"}
             
-            ⚠️ CRITICAL MULTI-TIMEFRAME GUIDANCE:
-            - The DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} timeframe should be your PRIMARY basis for direction
-            - Patterns from lower timeframes are SECONDARY and should only provide entry/exit timing
-            - If Anti-Momentum Risk is HIGH, significantly reduce confidence for counter-trend signals
-            - Daily momentum > 5% should heavily influence your decision (current: {opportunity.price_change_24h:.1f}%)
+            ⚠️ MANDATORY MULTI-TIMEFRAME DECISION RULES (MUST FOLLOW):
+            
+            🎯 PRIMARY RULE: Use DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} as main direction
+            - If Decisive Pattern = DAILY_BULLISH_MOMENTUM: STRONG bias toward LONG (confidence boost +15%)
+            - If Decisive Pattern = DAILY_BEARISH_MOMENTUM: STRONG bias toward SHORT (confidence boost +15%) 
+            - If Decisive Pattern = H4_BULLISH_CONTINUATION: Moderate bias toward LONG (confidence boost +10%)
+            - If Decisive Pattern = H4_BEARISH_CONTINUATION: Moderate bias toward SHORT (confidence boost +10%)
+            
+            🚨 MOMENTUM CONFLICT RULE: Current daily momentum: {opportunity.price_change_24h:.1f}%
+            - If |momentum| > 7% AND your signal opposes momentum: REDUCE confidence by 25-40%
+            - If |momentum| > 5% AND your signal opposes momentum: REDUCE confidence by 15-25%
+            - If |momentum| > 3% AND your signal aligns with momentum: BOOST confidence by 10-15%
+            
+            🎯 REVERSAL VALIDATION RULE: If considering counter-momentum signal, CHECK:
+            - RSI extreme (>75 or <25): Reversal possible, maintain confidence
+            - Stochastic extreme (>80 or <20): Reversal supported, maintain confidence  
+            - BB extreme position (>0.8 or <-0.8): Exhaustion signal, reversal valid
+            - NO EXTREMES detected: DANGEROUS counter-momentum, reduce confidence by 30-50%
+            
+            📊 CONFIDENCE CALCULATION FORMULA:
+            Base Confidence + Timeframe Boost + Momentum Alignment - Counter-Momentum Penalty - Technical Uncertainty
+            
+            🚨 EXAMPLES FOR CURRENT SETUP:
+            Current: {opportunity.symbol} momentum {opportunity.price_change_24h:.1f}%, RSI {rsi:.1f}, Stoch {stochastic_k:.1f}
+            - If considering SHORT with +7% momentum: Check RSI >75? If NO → confidence max 60%
+            - If considering LONG with -5% momentum: Check RSI <30? If NO → confidence max 65%
+            - If considering direction = momentum: confidence can reach 85-95%
             
             📊 FIBONACCI RETRACEMENT LEVELS:
             Current Position: {fib_data['current_position']:.1%} | Nearest Level: {fib_data['nearest_level']}% | Trend: {fib_data['trend_direction'].upper()}
