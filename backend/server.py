@@ -9828,10 +9828,9 @@ async def ultra_professional_trading_loop():
             cycle_start = datetime.now()
             logger.info(f"🚀 Starting trading cycle #{orchestrator.cycle_count + 1} (CPU: {cpu_usage:.1f}%)")
             
-            # 🚨 TRADING CYCLE TEMPORAIREMENT DÉSACTIVÉ POUR STABILISATION
-            # opportunities_processed = await orchestrator.run_trading_cycle()
-            opportunities_processed = 0
-            logger.info("🛑 Trading cycle disabled for CPU stabilization")
+            # 🔧 TRADING CYCLE AVEC PROTECTIONS CPU RÉACTIVÉ
+            opportunities_processed = await orchestrator.run_trading_cycle()
+            logger.info(f"✅ Trading cycle completed - {opportunities_processed} opportunities processed")
             
             cycle_duration = (datetime.now() - cycle_start).total_seconds()
             logger.info(f"Ultra professional trending cycle #{orchestrator.cycle_count} completed in {cycle_duration:.2f}s, processed {opportunities_processed} opportunities")
