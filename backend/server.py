@@ -3208,6 +3208,67 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return 1.0
         else:  # > 1B = large cap
             return 1.1  # Moins de pénalité
+    
+    def tanh_norm(self, x: float, s: float = 1.0) -> float:
+        """Normalise x à [-1,1] via tanh avec seuil s (sensibilité)."""
+        import math
+        return math.tanh(x / s)
+    
+    def clamp(self, x: float, lo: float = 0.0, hi: float = 100.0) -> float:
+        """Borne x entre lo et hi."""
+        return max(lo, min(hi, x))
+    
+    def compute_final_score(self, note_base: float,
+                           factor_scores: dict,   # dict {'var_cap': value_raw, ...} raw values
+                           norm_funcs: dict,      # dict {'var_cap': func, ...} mapping to normalization funcs
+                           weights: dict,         # dict {'var_cap': w_varcap, ...}
+                           amplitude: float = 20.0,
+                           mc_mult: float = 1.0) -> dict:
+        """
+        🎯 FORMULE FINALE DE SCORING PROFESSIONNEL
+        Applique bonus/malus de marché et token-spécifiques au score de base
+        
+        note_base: float 0-100 (score fourni par le bot IA2)
+        factor_scores: dict key->raw_value (ex: {'var_cap': 3.5, 'var_vol': 40, 'fg': 25, ...})
+        norm_funcs: dict key->function(raw_value)->[-1,1]
+        weights: dict key->weight (non-nécessairement sommant à 1)
+        amplitude: max points appliqués (ex: 20)
+        mc_mult: multiplicateur selon bucket market cap (ex: 0.9, 1.0, 1.1)
+        """
+        try:
+            # 1) normaliser chaque facteur en [-1,1]
+            normalized = {}
+            for k, raw in factor_scores.items():
+                norm_fn = norm_funcs.get(k, self.tanh_norm)  # Direct method reference - no lambda!
+                normalized[k] = norm_fn(raw)
+
+            # 2) somme pondérée (on peut normaliser la somme des poids si besoin)
+            total_weight = sum(weights.values()) if weights else 1.0
+            weighted_sum = 0.0
+            for k, w in weights.items():
+                s = normalized.get(k, 0.0)
+                weighted_sum += (w / total_weight) * s
+
+            # 3) ajustement final
+            adjustment = weighted_sum * amplitude * mc_mult
+            note_final = self.clamp(note_base + adjustment, 0.0, 100.0)
+            
+            return {
+                'note_base': note_base,
+                'normalized': normalized,
+                'weighted_sum': weighted_sum,
+                'adjustment': adjustment,
+                'note_final': note_final,
+                'mc_mult': mc_mult,
+                'amplitude': amplitude
+            }
+        except Exception as e:
+            logger.error(f"❌ Error in final scoring: {e}")
+            return {
+                'note_base': note_base,
+                'note_final': note_base,  # Fallback to base score
+                'error': str(e)
+            }
 
 class UltraProfessionalIA2DecisionAgent:
     def __init__(self, active_position_manager=None):
