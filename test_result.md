@@ -228,7 +228,8 @@
   run_ui: false
 
 ## test_plan:
-  current_focus: []
+  current_focus:
+    - "Validate IA1 Risk-Reward Calculation Logic"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
