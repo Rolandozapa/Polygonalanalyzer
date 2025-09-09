@@ -3129,7 +3129,18 @@ For LONG/SHORT signals:
             "ia2_resistance_level": {{calculated_resistance_price}}, 
             "technical_reasoning": "Detailed reasoning for why these levels are optimal for the chosen strategy",
             "ia2_calculated_rr": {{updated_rr_ratio}},
-            "rr_improvement_reason": "Explanation of how this RR is more precise than IA1's calculation"
+            "rr_improvement_reason": "Explanation of how this RR is more precise than IA1's calculation",
+            "sophisticated_rr_analysis": {{
+                "composite_rr": {composite_rr_data['composite_rr']:.2f},
+                "bullish_scenario_rr": {composite_rr_data['bullish_rr']:.2f},
+                "bearish_scenario_rr": {composite_rr_data['bearish_rr']:.2f},
+                "neutral_volatility_rr": {composite_rr_data['neutral_rr']:.2f},
+                "rr_validation_status": "{rr_validation_status}",
+                "rr_divergence_from_ia1": {rr_divergence:.2f},
+                "volatility_adjusted_upside": {composite_rr_data['upside_target']:.6f},
+                "volatility_adjusted_downside": {composite_rr_data['downside_target']:.6f},
+                "sophisticated_risk_level": "{sophisticated_risk_level}"
+            }}
         }},
         "sentiment_score": {market_sentiment['sentiment_score']},
         "leverage_justification": "Market sentiment alignment with trade direction"
