@@ -1842,6 +1842,89 @@ class UltraProfessionalIA1TechnicalAnalyst:
             else:
                 logger.warning(f"⚠️ No IA1 RR analysis found for {opportunity.symbol}, using fallback calculation")
             
+            # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
+            # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
+            
+            # Calculer d'abord la confiance d'analyse pour l'utiliser dans la validation
+            analysis_confidence = self._calculate_analysis_confidence(
+                rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
+            )
+            
+            # Construire l'analyse technique temporaire pour la validation
+            temp_analysis = TechnicalAnalysis(
+                symbol=opportunity.symbol,
+                rsi=rsi,
+                macd_signal=macd_signal,
+                stochastic=stochastic_k,
+                stochastic_d=stochastic_d,
+                bollinger_position=bb_position,
+                fibonacci_level=fib_data.get("current_level", 50.0),
+                fibonacci_nearest_level=fib_data.get("nearest_level", "50%"),
+                fibonacci_trend_direction=fib_data.get("trend_direction", "neutral"),
+                fibonacci_levels=fib_data.get("levels", {}),
+                support_levels=[],
+                resistance_levels=[],
+                patterns_detected=[],
+                analysis_confidence=analysis_confidence,
+                ia1_signal=SignalType(ia1_signal.lower()),
+                ia1_reasoning=reasoning,
+                risk_reward_ratio=ia1_risk_reward_ratio,
+                entry_price=opportunity.current_price,
+                stop_loss_price=opportunity.current_price,
+                take_profit_price=opportunity.current_price,
+                rr_reasoning=""
+            )
+            
+            # Appliquer l'analyse multi-timeframe pour validation
+            timeframe_analysis = self.analyze_multi_timeframe_hierarchy(opportunity, temp_analysis)
+            
+            logger.info(f"🎯 MULTI-TIMEFRAME VALIDATION {opportunity.symbol}:")
+            logger.info(f"   📊 Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}")
+            logger.info(f"   📊 Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}")
+            logger.info(f"   📊 Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.2f}")
+            
+            # 🚨 CORRECTION ANTI-MOMENTUM : Cas comme GRTUSDT
+            original_signal = ia1_signal
+            original_confidence = analysis_confidence
+            momentum_correction_applied = False
+            
+            # Détecter les cas anti-momentum dangereux
+            daily_momentum = abs(opportunity.price_change_24h or 0)
+            if daily_momentum > 5.0:  # Mouvement fort (>5%)
+                daily_direction = "bullish" if opportunity.price_change_24h > 0 else "bearish"
+                signal_direction = ia1_signal.lower()
+                
+                # Cas problématique : Signal contre momentum fort
+                if (daily_direction == "bullish" and signal_direction == "short") or \
+                   (daily_direction == "bearish" and signal_direction == "long"):
+                    
+                    # CORRECTION DRACONIENNE pour éviter les erreurs
+                    confidence_penalty = 0.4  # Réduction de 40%
+                    analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.3)
+                    momentum_correction_applied = True
+                    
+                    logger.warning(f"🚨 ANTI-MOMENTUM CORRECTION {opportunity.symbol}:")
+                    logger.warning(f"   💥 Daily momentum: {opportunity.price_change_24h:.1f}% ({daily_direction.upper()})")
+                    logger.warning(f"   💥 IA1 signal: {signal_direction.upper()} (COUNTER-TREND)")
+                    logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%})")
+                    
+                    # Si la confiance devient trop faible, forcer HOLD
+                    if analysis_confidence < 0.5:
+                        ia1_signal = "hold"
+                        analysis_confidence = 0.4
+                        logger.warning(f"   💥 FORCED HOLD: Confidence too low after momentum correction")
+                        momentum_correction_applied = True
+            
+            # Log du résultat final
+            if momentum_correction_applied:
+                logger.info(f"✅ MULTI-TIMEFRAME CORRECTION APPLIED {opportunity.symbol}: {original_signal.upper()} {original_confidence:.1%} → {ia1_signal.upper()} {analysis_confidence:.1%}")
+            else:
+                logger.info(f"✅ MULTI-TIMEFRAME VALIDATION PASSED {opportunity.symbol}: {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
+            
+            # Si anti-momentum risk détecté, l'ajouter aux données
+            if timeframe_analysis.get('anti_momentum_risk'):
+                logger.warning(f"   ⚠️ Anti-Momentum Risk: {timeframe_analysis['anti_momentum_risk']}")
+            
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": macd_signal,
