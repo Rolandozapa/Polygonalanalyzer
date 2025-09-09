@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Sophisticated RR Analysis System
-Focus: TEST SOPHISTICATED RR ANALYSIS SYSTEM - Verify that the new sophisticated RR analysis system with neutral/composite calculations is implemented and functional.
+Backend Testing Suite for Multi-Timeframe Hierarchical Analysis System
+Focus: TEST MULTI-TIMEFRAME HIERARCHICAL ANALYSIS - Verify that the new multi-timeframe analysis system correctly identifies decisive chart patterns and prevents counter-momentum trading errors like the GRTUSDT SHORT issue.
 
-New sophisticated RR features to test:
-1. calculate_neutral_risk_reward() - Volatility-based RR calculation without direction
-2. calculate_composite_rr() - Combines directional + neutral RR approaches  
-3. evaluate_sophisticated_risk_level() - LOW/MEDIUM/HIGH based on composite RR + volatility
-4. RR validation (IA1 vs Composite RR divergence detection)
-5. Enhanced IA2 prompt with sophisticated RR analysis section
-6. Sophisticated risk level integration in IA2 JSON response
+New multi-timeframe features to test:
+1. analyze_multi_timeframe_hierarchy() method implementation
+2. Daily/4H/1H timeframe strength analysis  
+3. Decisive pattern identification based on timeframe hierarchy
+4. Anti-momentum risk detection for strong daily moves (>5%)
+5. Enhanced IA1 prompt with multi-timeframe context
+6. Confidence reduction for counter-trend signals
 
 Expected log patterns:
-- "🧠 SOPHISTICATED ANALYSIS {symbol}:"
-- "📊 Composite RR: X.XX"  
-- "📊 Bullish RR: X.XX, Bearish RR: X.XX"
-- "📊 Neutral RR: X.XX"
-- "🎯 Sophisticated Risk Level: LOW/MEDIUM/HIGH"
-- "✅ RR VALIDATION {symbol}: IA1 RR X.XX ↔ Composite RR X.XX (ALIGNED/DIVERGENT)"
-- "⚠️ SIGNIFICANT RR DIVERGENCE {symbol}: IA1 RR X.XX vs Composite RR X.XX"
+- "🎯 MULTI-TIMEFRAME ANALYSIS {symbol}:"
+- "📊 Dominant Timeframe: DAILY/4H/1H"
+- "📊 Decisive Pattern: DAILY_BULLISH_MOMENTUM/H4_BEARISH_CONTINUATION/etc"
+- "📊 Hierarchy Confidence: X.XX"
+- "⚠️ Anti-Momentum Risk: HIGH" (for counter-trend signals)
+- IA1 should show improved decision-making for strong momentum cases
 
-Verify the sophisticated RR system enhances IA2's decision-making with advanced validation and risk assessment capabilities.
+Test specifically for cases like GRTUSDT where strong daily momentum (+7.75%) should prevent high-confidence SHORT signals. The system should now detect dominant daily bullish momentum and either reduce SHORT confidence significantly or choose HOLD.
+
+Verify the multi-timeframe system enhances chartist maturity and prevents trading against strong established trends.
 """
 
 import asyncio
