@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for IA1→IA2 Pipeline Blockage Resolution Verification
-Focus: PIPELINE BLOCKAGE DIAGNOSIS - Test if the IA1→IA2 pipeline blockage has been resolved after fixing the _calculate_market_stress method signature bug.
+Backend Testing Suite for Enhanced RR Validation System
+Focus: TEST ENHANCED RR VALIDATION SYSTEM - Verify that the new IA2 RR calculation validation system works correctly with proper LONG/SHORT equation validation.
 
-Background: Identified and fixed two critical bugs:
-1. Missing _apply_adaptive_context_to_decision method in orchestrator (FIXED)
-2. Wrong signature for _calculate_market_stress method (JUST FIXED)
+New features to test:
+1. IA2 receives enhanced prompt with CRITICAL RR CALCULATION FORMULAS
+2. Backend validates IA2's RR calculations using correct equations:
+   - LONG: Risk = Entry - Stop Loss, Reward = Take Profit - Entry
+   - SHORT: Risk = Stop Loss - Entry, Reward = Entry - Take Profit
+3. Validation checks level order (LONG: SL < Entry < TP, SHORT: TP < Entry < SL)
+4. System corrects IA2's RR if calculation is wrong
+5. Fallback to IA1 RR if validation fails
 
-Current situation: 8 IA1 analyses are eligible and waiting:
-- AEROUSDT: SHORT 91% confidence  
-- SPXUSDT: SHORT 88% confidence
-- ATHUSDT: LONG 94% confidence
-- RENDERUSDT: LONG 93% confidence
-- FORMUSDT: LONG 83% confidence
-- ONDOUSDT: SHORT 87% confidence
-- HBARUSDT: SHORT 72% confidence  
-- ARKMUSDT: LONG 96% confidence
+Expected log patterns:
+- "🔧 IA2 RR CORRECTION: {symbol} - IA2 claimed X, corrected to Y"  
+- "✅ IA2 RR VALIDATED: {symbol} - {rr} ({validation_message})"
+- "❌ IA2 RR VALIDATION FAILED: {symbol} - {validation_message}"
+- "🎯 USING IA2 ENHANCED RR" or "🔄 USING IA1 ORIGINAL RR"
 
-Test requirements:
-1. Verify no more AdaptiveContextSystem errors in logs
-2. Test if IA2 processing now works for eligible IA1 analyses
-3. Check if new IA2 decisions are generated today (2025-09-09)
-4. Verify the complete IA1→IA2 pipeline flow
-5. Identify any remaining blockers
-
-Expected: The 8 eligible IA1 analyses should now be processed by IA2 and new decisions should appear.
+Test by triggering IA2 decision making and verify the validation system works correctly for both LONG and SHORT positions.
 """
 
 import asyncio
