@@ -1618,13 +1618,35 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 }}
             }}
             
-            🎯 DECISION LOGIC:
-            - LONG: If bullish patterns dominate (bullish_channel, bullish_momentum, golden_cross, etc.)
-            - SHORT: If bearish patterns dominate (bearish_channel, diamond_top, rising_wedge, etc.)  
-            - HOLD: Only if patterns truly conflict or no clear directional bias
-            - DON'T default to HOLD due to low RR - the filtering system will handle RR requirements
+            🎯 ENHANCED DECISION LOGIC WITH MULTI-TIMEFRAME HIERARCHY:
             
-            🚨 MANDATORY: Your 'patterns' array MUST contain ALL detected pattern names. Analyze each pattern individually and show their confluence.
+            PRIMARY DECISION CRITERIA (Based on Dominant Timeframe):
+            - Use the DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} as your MAIN directional bias
+            - The dominant pattern ({timeframe_analysis.get('decisive_pattern', 'Unknown')}) should carry {timeframe_analysis.get('hierarchy_confidence', 0.0)*100:.0f}% weight in your decision
+            
+            MOMENTUM VALIDATION:
+            - Current 24h momentum: {opportunity.price_change_24h:.1f}%
+            - If momentum > +5% and you consider SHORT: Reduce confidence by 30-50%
+            - If momentum < -5% and you consider LONG: Reduce confidence by 30-50%
+            {f"- ⚠️ ANTI-MOMENTUM WARNING: Strong daily {('bullish' if opportunity.price_change_24h > 0 else 'bearish')} momentum detected" if abs(opportunity.price_change_24h) > 5 else ""}
+            
+            DECISION HIERARCHY:
+            1. **DOMINANT PATTERN ALIGNMENT**: Does your signal align with the decisive pattern?
+            2. **MOMENTUM VALIDATION**: Is your signal fighting against strong daily momentum?
+            3. **CONFLUENCE CHECK**: Do supporting timeframes confirm or contradict?
+            4. **RISK ASSESSMENT**: If counter-trend, reduce confidence significantly
+            
+            FINAL SIGNAL LOGIC:
+            - LONG: If bullish patterns dominate AND not fighting strong bearish momentum
+            - SHORT: If bearish patterns dominate AND not fighting strong bullish momentum
+            - HOLD: If patterns conflict OR signal fights dominant momentum with >5% daily move
+            - CONFIDENCE ADJUSTMENT: Reduce by 20-50% if counter-trend to daily momentum
+            
+            🚨 MANDATORY: 
+            1. Your 'patterns' array MUST contain ALL detected pattern names
+            2. Explain how the decisive pattern influences your final decision
+            3. Address any momentum-pattern conflicts explicitly
+            4. Justify confidence level considering timeframe hierarchy
             """
             
             response = await self.chat.send_message(UserMessage(text=prompt))
