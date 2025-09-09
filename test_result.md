@@ -214,7 +214,7 @@
 
 ## test_plan:
   current_focus:
-    - "Test Sophisticated RR Analysis System"
+    - "Test FORMUSDT IA1→IA2 Pipeline Processing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
