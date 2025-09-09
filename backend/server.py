@@ -1457,6 +1457,42 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Calculate Fibonacci retracement levels
             fib_data = self._calculate_fibonacci_levels(historical_data)
             
+            # 🎯 ANALYSE MULTI-TIMEFRAME HIÉRARCHIQUE
+            # Construire l'analyse technique de base pour le multi-timeframe
+            basic_analysis = TechnicalAnalysis(
+                symbol=opportunity.symbol,
+                rsi=rsi,
+                macd_signal=macd_signal,
+                stochastic=stochastic_k,
+                stochastic_d=stochastic_d,
+                bollinger_position=bb_position,
+                fibonacci_level=fib_data.get("current_level", 50.0),
+                fibonacci_nearest_level=fib_data.get("nearest_level", "50%"),
+                fibonacci_trend_direction=fib_data.get("trend_direction", "neutral"),
+                fibonacci_levels=fib_data.get("levels", {}),
+                support_levels=[],
+                resistance_levels=[],
+                patterns_detected=[],
+                analysis_confidence=0.5,
+                ia1_signal=SignalType.HOLD,
+                ia1_reasoning="",
+                risk_reward_ratio=1.0,
+                entry_price=opportunity.current_price,
+                stop_loss_price=opportunity.current_price,
+                take_profit_price=opportunity.current_price,
+                rr_reasoning=""
+            )
+            
+            # Analyse multi-timeframe pour identifier la figure décisive
+            timeframe_analysis = self.analyze_multi_timeframe_hierarchy(opportunity, basic_analysis)
+            
+            logger.info(f"🎯 MULTI-TIMEFRAME ANALYSIS {opportunity.symbol}:")
+            logger.info(f"   📊 Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}")
+            logger.info(f"   📊 Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}")
+            logger.info(f"   📊 Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.2f}")
+            if timeframe_analysis.get('anti_momentum_risk'):
+                logger.warning(f"   ⚠️ Anti-Momentum Risk: {timeframe_analysis['anti_momentum_risk']}")
+            
             # Create ultra professional analysis prompt
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
