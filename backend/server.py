@@ -1883,43 +1883,63 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"   📊 Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}")
             logger.info(f"   📊 Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.2f}")
             
-            # 🚨 CORRECTION ANTI-MOMENTUM : Cas comme GRTUSDT
+            # 🚨 VALIDATION SOPHISTIQUÉE ANTI-MOMENTUM (Version affinée)
             original_signal = ia1_signal
             original_confidence = analysis_confidence
             momentum_correction_applied = False
+            correction_type = "none"
             
-            # Détecter les cas anti-momentum dangereux
+            # Détecter les cas anti-momentum avec validation sophistiquée
             daily_momentum = abs(opportunity.price_change_24h or 0)
             if daily_momentum > 5.0:  # Mouvement fort (>5%)
                 daily_direction = "bullish" if opportunity.price_change_24h > 0 else "bearish"
                 signal_direction = ia1_signal.lower()
                 
-                # Cas problématique : Signal contre momentum fort
+                # Cas potentiellement problématique : Signal contre momentum fort
                 if (daily_direction == "bullish" and signal_direction == "short") or \
                    (daily_direction == "bearish" and signal_direction == "long"):
                     
-                    # CORRECTION DRACONIENNE pour éviter les erreurs
-                    confidence_penalty = 0.4  # Réduction de 40%
-                    analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.3)
-                    momentum_correction_applied = True
+                    # 🎯 VALIDATION SOPHISTIQUÉE : Vrai retournement vs Erreur ?
+                    reversal_indicators = self._validate_legitimate_reversal(
+                        rsi, stochastic_k, bb_position, opportunity.volatility, daily_momentum, analysis_confidence
+                    )
                     
-                    logger.warning(f"🚨 ANTI-MOMENTUM CORRECTION {opportunity.symbol}:")
-                    logger.warning(f"   💥 Daily momentum: {opportunity.price_change_24h:.1f}% ({daily_direction.upper()})")
-                    logger.warning(f"   💥 IA1 signal: {signal_direction.upper()} (COUNTER-TREND)")
-                    logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%})")
-                    
-                    # Si la confiance devient trop faible, forcer HOLD
-                    if analysis_confidence < 0.5:
-                        ia1_signal = "hold"
-                        analysis_confidence = 0.4
-                        logger.warning(f"   💥 FORCED HOLD: Confidence too low after momentum correction")
+                    if reversal_indicators["is_legitimate_reversal"]:
+                        # RETOURNEMENT LÉGITIME : Réduction modérée (20%)
+                        confidence_penalty = 0.2
+                        analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.5)
+                        correction_type = "legitimate_reversal"
                         momentum_correction_applied = True
+                        
+                        logger.info(f"✅ LEGITIMATE REVERSAL DETECTED {opportunity.symbol}:")
+                        logger.info(f"   🔄 Reversal signals: {reversal_indicators['signals_detected']}")
+                        logger.info(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%} cautious reduction)")
+                        
+                    else:
+                        # ERREUR POTENTIELLE : Pénalité plus forte (35%)  
+                        confidence_penalty = 0.35
+                        analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.3)
+                        correction_type = "momentum_error"
+                        momentum_correction_applied = True
+                        
+                        logger.warning(f"⚠️ POTENTIAL MOMENTUM ERROR {opportunity.symbol}:")
+                        logger.warning(f"   💥 Daily momentum: {opportunity.price_change_24h:.1f}% ({daily_direction.upper()})")
+                        logger.warning(f"   💥 IA1 signal: {signal_direction.upper()} (COUNTER-TREND)")
+                        logger.warning(f"   💥 Reversal validation: FAILED ({reversal_indicators['failure_reason']})")
+                        logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%} (-{confidence_penalty:.0%})")
+                        
+                        # Si la confiance devient trop faible, forcer HOLD
+                        if analysis_confidence < 0.4:
+                            ia1_signal = "hold"
+                            analysis_confidence = 0.35
+                            correction_type = "forced_hold"
+                            logger.warning(f"   💥 FORCED HOLD: Confidence too low after momentum correction")
             
             # Log du résultat final
             if momentum_correction_applied:
-                logger.info(f"✅ MULTI-TIMEFRAME CORRECTION APPLIED {opportunity.symbol}: {original_signal.upper()} {original_confidence:.1%} → {ia1_signal.upper()} {analysis_confidence:.1%}")
+                logger.info(f"✅ SOPHISTICATED VALIDATION APPLIED {opportunity.symbol}: {original_signal.upper()} {original_confidence:.1%} → {ia1_signal.upper()} {analysis_confidence:.1%} ({correction_type})")
             else:
-                logger.info(f"✅ MULTI-TIMEFRAME VALIDATION PASSED {opportunity.symbol}: {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
+                logger.info(f"✅ MOMENTUM VALIDATION PASSED {opportunity.symbol}: {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
             
             # Si anti-momentum risk détecté, l'ajouter aux données
             if timeframe_analysis.get('anti_momentum_risk'):
