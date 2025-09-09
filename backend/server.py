@@ -1996,70 +1996,59 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"   📊 Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}")
             logger.info(f"   📊 Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.2f}")
             
-            # 🚨 VALIDATION SOPHISTIQUÉE ANTI-MOMENTUM (Version affinée)
+            # 🎯 STREAMLINED POST-PROCESSING: Focus on critical corrections only
+            # Apply essential multi-timeframe validation for severe errors
+            
             original_signal = ia1_signal
             original_confidence = analysis_confidence
-            momentum_correction_applied = False
+            correction_applied = False
             correction_type = "none"
             
-            # Détecter les cas anti-momentum avec validation sophistiquée
+            # CRITICAL CORRECTION: Only intervene for high-risk counter-momentum cases
             daily_momentum = abs(opportunity.price_change_24h or 0)
-            if daily_momentum > 5.0:  # Mouvement fort (>5%)
+            if daily_momentum > 7.0:  # Only for strong momentum (>7%)
                 daily_direction = "bullish" if opportunity.price_change_24h > 0 else "bearish"
                 signal_direction = ia1_signal.lower()
                 
-                # Cas potentiellement problématique : Signal contre momentum fort
-                if (daily_direction == "bullish" and signal_direction == "short") or \
-                   (daily_direction == "bearish" and signal_direction == "long"):
+                # High-risk case: Strong momentum + counter-signal + no technical extremes
+                if ((daily_direction == "bullish" and signal_direction == "short") or 
+                    (daily_direction == "bearish" and signal_direction == "long")):
                     
-                    # 🎯 NOUVEAU : SYSTÈME DE PÉNALITÉ PONDÉRÉ INTELLIGENT
-                    penalty_data = self._calculate_weighted_momentum_penalty(
-                        rsi, stochastic_k, bb_position, opportunity.volatility, daily_momentum, analysis_confidence
-                    )
+                    # Quick technical extremes check (simplified)
+                    has_reversal_signals = (rsi > 75 or rsi < 25 or stochastic_k > 80 or stochastic_k < 20 or abs(bb_position) > 0.8)
                     
-                    analysis_confidence = penalty_data["new_confidence"]
-                    correction_type = penalty_data["penalty_type"]
-                    momentum_correction_applied = True
-                    
-                    # Logs détaillés selon le type de pénalité
-                    if correction_type == "legitimate_reversal":
-                        logger.info(f"✅ LEGITIMATE REVERSAL DETECTED {opportunity.symbol}:")
-                        logger.info(f"   🔄 Reversal intensity: {penalty_data['reversal_intensity']:.2f}")
-                        logger.info(f"   📊 Penalty: {penalty_data['total_penalty']:.1%} (Proportional to signal strength)")
-                        logger.info(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
-                        logger.info(f"   🎯 Breakdown: RSI:{penalty_data['penalty_breakdown']['rsi_contribution']:.2f}, Stoch:{penalty_data['penalty_breakdown']['stoch_contribution']:.2f}, BB:{penalty_data['penalty_breakdown']['bb_contribution']:.2f}")
+                    if not has_reversal_signals:
+                        # CRITICAL ERROR: Strong counter-momentum without technical justification
+                        confidence_penalty = min(daily_momentum / 30.0, 0.4)  # Max 40% penalty
+                        analysis_confidence = max(analysis_confidence * (1 - confidence_penalty), 0.35)
+                        correction_applied = True
+                        correction_type = "critical_momentum_error"
                         
-                    elif correction_type == "uncertain_reversal":
-                        logger.warning(f"⚠️ UNCERTAIN REVERSAL {opportunity.symbol}:")
-                        logger.warning(f"   🔄 Reversal intensity: {penalty_data['reversal_intensity']:.2f} (moderate)")
-                        logger.warning(f"   📊 Penalty: {penalty_data['total_penalty']:.1%} (Moderate caution)")
-                        logger.warning(f"   📊 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
+                        logger.warning(f"🚨 CRITICAL MOMENTUM CORRECTION {opportunity.symbol}:")
+                        logger.warning(f"   💥 Strong momentum: {opportunity.price_change_24h:.1f}% vs {signal_direction.upper()} signal")
+                        logger.warning(f"   💥 No technical extremes detected (RSI:{rsi:.1f}, Stoch:{stochastic_k:.1f}, BB:{bb_position:.2f})")
+                        logger.warning(f"   💥 Penalty: {confidence_penalty:.1%} → Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
                         
-                    else:  # momentum_error
-                        logger.warning(f"🚨 MOMENTUM ERROR LIKELY {opportunity.symbol}:")
-                        logger.warning(f"   💥 Daily momentum: {opportunity.price_change_24h:.1f}% ({daily_direction.upper()})")
-                        logger.warning(f"   💥 IA1 signal: {signal_direction.upper()} (COUNTER-TREND)")
-                        logger.warning(f"   💥 Reversal intensity: {penalty_data['reversal_intensity']:.2f} (weak)")
-                        logger.warning(f"   💥 Penalty: {penalty_data['total_penalty']:.1%} (High risk)")
-                        logger.warning(f"   💥 Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
-                        
-                        # Si la confiance devient trop faible, forcer HOLD
                         if analysis_confidence < 0.4:
                             ia1_signal = "hold"
                             analysis_confidence = 0.35
                             correction_type = "forced_hold"
-                            logger.warning(f"   💥 FORCED HOLD: Confidence too low after weighted penalty")
+                            logger.warning(f"   💥 FORCED HOLD: Confidence too low")
+                    
+                    else:
+                        # LEGITIMATE REVERSAL: Minor caution adjustment only
+                        analysis_confidence = max(analysis_confidence * 0.9, 0.6)  # Max 10% caution penalty
+                        correction_applied = True
+                        correction_type = "reversal_caution"
+                        logger.info(f"✅ LEGITIMATE REVERSAL {opportunity.symbol}: Technical extremes justify counter-momentum signal")
             
-            # Log du résultat final
-            if momentum_correction_applied:
-                logger.info(f"✅ SOPHISTICATED VALIDATION APPLIED {opportunity.symbol}: {original_signal.upper()} {original_confidence:.1%} → {ia1_signal.upper()} {analysis_confidence:.1%} ({correction_type})")
+            # Log result
+            if correction_applied:
+                logger.info(f"📊 STREAMLINED VALIDATION: {opportunity.symbol} {original_signal.upper()} {original_confidence:.1%} → {ia1_signal.upper()} {analysis_confidence:.1%} ({correction_type})")
             else:
-                logger.info(f"✅ MOMENTUM VALIDATION PASSED {opportunity.symbol}: {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
+                logger.info(f"📊 STREAMLINED VALIDATION: {opportunity.symbol} {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
             
-            # Si anti-momentum risk détecté, l'ajouter aux données
-            if timeframe_analysis.get('anti_momentum_risk'):
-                logger.warning(f"   ⚠️ Anti-Momentum Risk: {timeframe_analysis['anti_momentum_risk']}")
-            
+            # Remove complex multi-timeframe calculations and use simplified approach
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": macd_signal,
