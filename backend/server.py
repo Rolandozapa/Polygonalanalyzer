@@ -2821,7 +2821,16 @@ MANDATORY RULES:
 4. If IA1 shows current price near historical extremes → Adjust position sizing accordingly
 5. Your role is strategic confirmation + position sizing + advanced TP strategy using IA1's historical foundation
 
-TASK: Create an ultra professional trading decision with PROBABILISTIC OPTIMAL TP SYSTEM.
+TASK: Create an ultra professional trading decision with PROBABILISTIC OPTIMAL TP SYSTEM and RECALCULATED TECHNICAL LEVELS.
+
+🎯 ENHANCED RR CALCULATION REQUEST:
+Based on YOUR strategic decision (LONG/SHORT/HOLD), recalculate precise technical levels:
+1. **Recalculated Support Level:** Based on your chosen direction, what is the most reliable support level?
+2. **Recalculated Resistance Level:** Based on your chosen direction, what is the most reliable resistance level?
+3. **Your Reasoning:** Why these levels are more appropriate than IA1's levels for your strategy
+4. **Updated RR Ratio:** Using your recalculated levels, what is the realistic Risk-Reward ratio?
+
+This will allow combining IA1's RR calculation methodology with your strategic technical analysis.
 
 ⚠️ CRITICAL RULE: Only generate take_profit_strategy when signal is "LONG" or "SHORT". For "HOLD" signals, omit the take_profit_strategy section entirely.
 
