@@ -2854,6 +2854,46 @@ class UltraProfessionalIA2DecisionAgent:
             # NEW: Get crypto market sentiment for leverage calculation
             market_sentiment = await self._get_crypto_market_sentiment()
             
+            # 🎯 ADVANCED RR CALCULATIONS: Composite & Neutral Analysis
+            # Extract support/resistance from IA1 analysis
+            ia1_support = getattr(analysis, 'primary_support', 
+                                analysis.support_levels[0] if analysis.support_levels else opportunity.current_price * 0.97)
+            ia1_resistance = getattr(analysis, 'primary_resistance', 
+                                   analysis.resistance_levels[0] if analysis.resistance_levels else opportunity.current_price * 1.03)
+            
+            # Calculate sophisticated RR metrics
+            composite_rr_data = self.calculate_composite_rr(
+                opportunity.current_price, 
+                opportunity.volatility, 
+                ia1_support, 
+                ia1_resistance
+            )
+            
+            # Evaluate sophisticated risk level
+            sophisticated_risk_level = self.evaluate_sophisticated_risk_level(
+                composite_rr_data['composite_rr'], 
+                opportunity.volatility, 
+                market_sentiment
+            )
+            
+            logger.info(f"🧠 SOPHISTICATED ANALYSIS {opportunity.symbol}:")
+            logger.info(f"   📊 Composite RR: {composite_rr_data['composite_rr']:.2f}")
+            logger.info(f"   📊 Bullish RR: {composite_rr_data['bullish_rr']:.2f}, Bearish RR: {composite_rr_data['bearish_rr']:.2f}")
+            logger.info(f"   📊 Neutral RR: {composite_rr_data['neutral_rr']:.2f}")
+            logger.info(f"   🎯 Sophisticated Risk Level: {sophisticated_risk_level}")
+            logger.info(f"   📈 Upside Target: ${composite_rr_data['upside_target']:.6f}")
+            logger.info(f"   📉 Downside Target: ${composite_rr_data['downside_target']:.6f}")
+            
+            # RR Validation: Compare IA1 directional RR vs Composite RR
+            ia1_rr = analysis.risk_reward_ratio
+            rr_divergence = abs(ia1_rr - composite_rr_data['composite_rr'])
+            rr_validation_status = "ALIGNED" if rr_divergence < 0.5 else "DIVERGENT"
+            
+            if rr_divergence > 1.0:
+                logger.warning(f"⚠️ SIGNIFICANT RR DIVERGENCE {opportunity.symbol}: IA1 RR {ia1_rr:.2f} vs Composite RR {composite_rr_data['composite_rr']:.2f}")
+            else:
+                logger.info(f"✅ RR VALIDATION {opportunity.symbol}: IA1 RR {ia1_rr:.2f} ↔ Composite RR {composite_rr_data['composite_rr']:.2f} ({rr_validation_status})")
+            
             # Create comprehensive prompt for Claude with market sentiment and leverage logic
             prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
