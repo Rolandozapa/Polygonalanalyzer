@@ -1920,82 +1920,86 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Enrichir avec calculs techniques précis
             fib_data = self._calculate_fibonacci_levels(historical_data)
             
-            # 🎯 NOUVEAU: Extraire les niveaux techniques et calculer RR réaliste
+            # 🎯 ANCIEN CALCUL RR - TEMPORAIREMENT DÉSACTIVÉ POUR UTILISER LES PRIX RÉELS
+            # ia1_risk_reward_ratio = 1.0  # Default fallback
+            # ia1_calculated_levels = {}
+            # 
+            # if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
+            #     rr_analysis = ia1_complete_json['risk_reward_analysis']
+            #     
+            #     # Extraire les niveaux techniques
+            #     current_price = float(rr_analysis.get('entry_price', opportunity.current_price))
+            #     primary_support = float(rr_analysis.get('primary_support', current_price * 0.97))
+            #     primary_resistance = float(rr_analysis.get('primary_resistance', current_price * 1.03))
+            #     
+            #     # Calculer RR basé sur la recommandation IA1
+            #     if ia1_signal == 'long':
+            #         ia1_risk_reward_ratio = self.calculate_bullish_rr(current_price, primary_resistance, primary_support)
+            #     elif ia1_signal == 'short':
+            #         ia1_risk_reward_ratio = self.calculate_bearish_rr(current_price, primary_support, primary_resistance)
+            #     else:  # hold
+            #         ia1_risk_reward_ratio = self.calculate_composite_rr(current_price, opportunity.volatility, primary_support, primary_resistance)
+            #     
+            #     # Cap RR pour éviter valeurs aberrantes
+            #     ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
+            #     
+            #     ia1_calculated_levels = {
+            #         'entry_price': current_price,
+            #         'primary_support': primary_support,
+            #         'primary_resistance': primary_resistance,
+            #         'support_reasoning': rr_analysis.get('support_reasoning', 'Technical support level'),
+            #         'resistance_reasoning': rr_analysis.get('resistance_reasoning', 'Technical resistance level'),
+            #         'calculated_rr': ia1_risk_reward_ratio
+            #     }
+            #     logger.info(f"✅ IA1 technical RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
+            # else:
+            #     logger.warning(f"⚠️ No IA1 RR analysis found for {opportunity.symbol}, using fallback calculation")
+            #     
+            #     # 🔧 FALLBACK RR CALCULATION: Calcul basé sur support/résistance techniques
+            #     support_levels = self._find_support_levels(historical_data, current_price)
+            #     resistance_levels = self._find_resistance_levels(historical_data, current_price)
+            #     
+            #     primary_support = support_levels[0] if support_levels else current_price * 0.97
+            #     primary_resistance = resistance_levels[0] if resistance_levels else current_price * 1.03
+            #     
+            #     # Calculer RR fallback selon signal AVEC LES MÊMES FORMULES QUE IA2
+            #     if ia1_signal.lower() == "long":
+            #         # LONG: Formule IA2 - avec validation
+            #         if primary_support >= current_price:
+            #             ia1_risk_reward_ratio = 1.0  # Support invalide
+            #         else:
+            #             reward = primary_resistance - current_price  # Take Profit - Entry
+            #             risk = current_price - primary_support      # Entry - Stop Loss
+            #             ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+            #             
+            #     elif ia1_signal.lower() == "short":  
+            #         # SHORT: Formule IA2 - avec validation
+            #         if primary_resistance <= current_price:
+            #             ia1_risk_reward_ratio = 1.0  # Resistance invalide
+            #         else:
+            #             reward = current_price - primary_support      # Entry - Take Profit
+            #             risk = primary_resistance - current_price     # Stop Loss - Entry
+            #             ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+            #             
+            #     else:  # hold
+            #         # HOLD: Utiliser la formule composite d'IA2
+            #         bullish_rr = (primary_resistance - current_price) / (current_price - primary_support) if primary_support < current_price else 0.0
+            #         bearish_rr = (current_price - primary_support) / (primary_resistance - current_price) if primary_resistance > current_price else 0.0
+            #         ia1_risk_reward_ratio = (bullish_rr + bearish_rr) / 2 if (bullish_rr > 0 or bearish_rr > 0) else 1.0
+            #     
+            #     # Cap RR pour éviter valeurs aberrantes
+            #     ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
+            #     
+            #     logger.info(f"🔧 FALLBACK RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
+            # 
+            # # Ensure ia1_risk_reward_ratio is never zero
+            # if ia1_risk_reward_ratio <= 0:
+            #     ia1_risk_reward_ratio = 1.0
+            #     logger.warning(f"⚠️ RR was <= 0 for {opportunity.symbol}, forced to 1.0")
+            
+            # 🎯 NOUVEAU: Utiliser les prix réels directement depuis IA1 JSON
             ia1_risk_reward_ratio = 1.0  # Default fallback
-            ia1_calculated_levels = {}
-            
-            if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
-                rr_analysis = ia1_complete_json['risk_reward_analysis']
-                
-                # Extraire les niveaux techniques
-                current_price = float(rr_analysis.get('entry_price', opportunity.current_price))
-                primary_support = float(rr_analysis.get('primary_support', current_price * 0.97))
-                primary_resistance = float(rr_analysis.get('primary_resistance', current_price * 1.03))
-                
-                # Calculer RR basé sur la recommandation IA1
-                if ia1_signal == 'long':
-                    ia1_risk_reward_ratio = self.calculate_bullish_rr(current_price, primary_resistance, primary_support)
-                elif ia1_signal == 'short':
-                    ia1_risk_reward_ratio = self.calculate_bearish_rr(current_price, primary_support, primary_resistance)
-                else:  # hold
-                    ia1_risk_reward_ratio = self.calculate_composite_rr(current_price, opportunity.volatility, primary_support, primary_resistance)
-                
-                # Cap RR pour éviter valeurs aberrantes
-                ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
-                
-                ia1_calculated_levels = {
-                    'entry_price': current_price,
-                    'primary_support': primary_support,
-                    'primary_resistance': primary_resistance,
-                    'support_reasoning': rr_analysis.get('support_reasoning', 'Technical support level'),
-                    'resistance_reasoning': rr_analysis.get('resistance_reasoning', 'Technical resistance level'),
-                    'calculated_rr': ia1_risk_reward_ratio
-                }
-                logger.info(f"✅ IA1 technical RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
-            else:
-                logger.warning(f"⚠️ No IA1 RR analysis found for {opportunity.symbol}, using fallback calculation")
-                
-                # 🔧 FALLBACK RR CALCULATION: Calcul basé sur support/résistance techniques
-                support_levels = self._find_support_levels(historical_data, current_price)
-                resistance_levels = self._find_resistance_levels(historical_data, current_price)
-                
-                primary_support = support_levels[0] if support_levels else current_price * 0.97
-                primary_resistance = resistance_levels[0] if resistance_levels else current_price * 1.03
-                
-                # Calculer RR fallback selon signal AVEC LES MÊMES FORMULES QUE IA2
-                if ia1_signal.lower() == "long":
-                    # LONG: Formule IA2 - avec validation
-                    if primary_support >= current_price:
-                        ia1_risk_reward_ratio = 1.0  # Support invalide
-                    else:
-                        reward = primary_resistance - current_price  # Take Profit - Entry
-                        risk = current_price - primary_support      # Entry - Stop Loss
-                        ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                        
-                elif ia1_signal.lower() == "short":  
-                    # SHORT: Formule IA2 - avec validation
-                    if primary_resistance <= current_price:
-                        ia1_risk_reward_ratio = 1.0  # Resistance invalide
-                    else:
-                        reward = current_price - primary_support      # Entry - Take Profit
-                        risk = primary_resistance - current_price     # Stop Loss - Entry
-                        ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                        
-                else:  # hold
-                    # HOLD: Utiliser la formule composite d'IA2
-                    bullish_rr = (primary_resistance - current_price) / (current_price - primary_support) if primary_support < current_price else 0.0
-                    bearish_rr = (current_price - primary_support) / (primary_resistance - current_price) if primary_resistance > current_price else 0.0
-                    ia1_risk_reward_ratio = (bullish_rr + bearish_rr) / 2 if (bullish_rr > 0 or bearish_rr > 0) else 1.0
-                
-                # Cap RR pour éviter valeurs aberrantes
-                ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
-                
-                logger.info(f"🔧 FALLBACK RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
-            
-            # Ensure ia1_risk_reward_ratio is never zero
-            if ia1_risk_reward_ratio <= 0:
-                ia1_risk_reward_ratio = 1.0
-                logger.warning(f"⚠️ RR was <= 0 for {opportunity.symbol}, forced to 1.0")
+            ia1_calculated_levels = {}  # Empty dict to maintain compatibility
             
             # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
             # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
