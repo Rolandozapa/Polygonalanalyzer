@@ -1,27 +1,29 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Multi-Timeframe Hierarchical Analysis System
-Focus: TEST MULTI-TIMEFRAME HIERARCHICAL ANALYSIS - Verify that the new multi-timeframe analysis system correctly identifies decisive chart patterns and prevents counter-momentum trading errors like the GRTUSDT SHORT issue.
+Backend Testing Suite for Refined Anti-Momentum Validation System
+Focus: TEST REFINED ANTI-MOMENTUM VALIDATION SYSTEM - Verify that the refined sophisticated validation system correctly distinguishes between legitimate reversals (like XLM/GRT SHORT predictions that were correct) and momentum errors.
 
-New multi-timeframe features to test:
-1. analyze_multi_timeframe_hierarchy() method implementation
-2. Daily/4H/1H timeframe strength analysis  
-3. Decisive pattern identification based on timeframe hierarchy
-4. Anti-momentum risk detection for strong daily moves (>5%)
-5. Enhanced IA1 prompt with multi-timeframe context
-6. Confidence reduction for counter-trend signals
+Refined validation features to test:
+1. _validate_legitimate_reversal() method implementation  
+2. Sophisticated reversal signal detection (RSI extremes, Stochastic, Bollinger, volatility exhaustion)
+3. Differentiated penalties: 20% for legitimate reversals vs 35% for momentum errors
+4. Warning signal detection for false counter-momentum signals
+5. Reversal score vs warning score evaluation logic
+6. Enhanced logging for legitimate_reversal vs momentum_error cases
 
 Expected log patterns:
-- "🎯 MULTI-TIMEFRAME ANALYSIS {symbol}:"
-- "📊 Dominant Timeframe: DAILY/4H/1H"
-- "📊 Decisive Pattern: DAILY_BULLISH_MOMENTUM/H4_BEARISH_CONTINUATION/etc"
-- "📊 Hierarchy Confidence: X.XX"
-- "⚠️ Anti-Momentum Risk: HIGH" (for counter-trend signals)
-- IA1 should show improved decision-making for strong momentum cases
+- "✅ LEGITIMATE REVERSAL DETECTED {symbol}:" (for cases like XLM/GRT SHORT)
+- "🔄 Reversal signals: [RSI_OVERBOUGHT_EXTREME, STOCHASTIC_OVERBOUGHT, etc]"
+- "⚠️ POTENTIAL MOMENTUM ERROR {symbol}:" (for dangerous counter-momentum cases)
+- "💥 Reversal validation: FAILED (NO_REVERSAL_SIGNALS/INSUFFICIENT_REVERSAL_CONFIRMATION)"
+- "✅ SOPHISTICATED VALIDATION APPLIED {symbol}: ... (legitimate_reversal/momentum_error/forced_hold)"
 
-Test specifically for cases like GRTUSDT where strong daily momentum (+7.75%) should prevent high-confidence SHORT signals. The system should now detect dominant daily bullish momentum and either reduce SHORT confidence significantly or choose HOLD.
+Test specifically:
+- Strong momentum + RSI >75 + Stochastic >80 → Should detect LEGITIMATE REVERSAL
+- Strong momentum + RSI 45-55 + no extremes → Should detect MOMENTUM ERROR  
+- System should now preserve good counter-momentum signals while filtering bad ones
 
-Verify the multi-timeframe system enhances chartist maturity and prevents trading against strong established trends.
+Verify the refined system balances reversal detection with momentum error prevention, allowing legitimate contrarian trades while blocking dangerous ones.
 """
 
 import asyncio
