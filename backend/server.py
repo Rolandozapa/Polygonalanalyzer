@@ -2093,7 +2093,31 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     stop_loss_price = opportunity.current_price * 0.98  # -2% stop loss
                     take_profit_price = opportunity.current_price * 1.02  # +2% take profit
             
-            logger.info(f"💰 PRIX CALCULÉS {opportunity.symbol} ({ia1_signal.upper()}): Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f}")
+            # 🔧 CALCUL RR BASÉ SUR LES PRIX RÉELS CALCULÉS
+            # Au lieu d'utiliser des niveaux techniques séparés, calculer RR directement à partir des prix
+            if ia1_signal.lower() == "long":
+                # LONG: RR = (Take Profit - Entry) / (Entry - Stop Loss)
+                reward = take_profit_price - entry_price
+                risk = entry_price - stop_loss_price
+                ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                logger.info(f"🔢 LONG RR CALCULATION {opportunity.symbol}: Reward=${reward:.6f} / Risk=${risk:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+                
+            elif ia1_signal.lower() == "short":
+                # SHORT: RR = (Entry - Take Profit) / (Stop Loss - Entry)
+                reward = entry_price - take_profit_price
+                risk = stop_loss_price - entry_price
+                ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                logger.info(f"🔢 SHORT RR CALCULATION {opportunity.symbol}: Reward=${reward:.6f} / Risk=${risk:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+                
+            else:  # hold
+                # HOLD: RR basé sur les niveaux neutres calculés
+                reward_up = take_profit_price - entry_price
+                risk_down = entry_price - stop_loss_price
+                ia1_risk_reward_ratio = reward_up / risk_down if risk_down > 0 else 1.0
+                logger.info(f"🔢 HOLD RR CALCULATION {opportunity.symbol}: Reward_up=${reward_up:.6f} / Risk_down=${risk_down:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+            
+            # Cap RR pour éviter valeurs aberrantes mais permettre RR élevés réalistes
+            ia1_risk_reward_ratio = min(max(ia1_risk_reward_ratio, 0.1), 20.0)
 
             # Construire l'analyse technique temporaire pour la validation
             temp_analysis = TechnicalAnalysis(
