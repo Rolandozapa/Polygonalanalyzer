@@ -2205,7 +2205,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             if ia1_calculated_levels:
                 analysis_data.update(ia1_calculated_levels)
             
+            # 🔧 AJOUTER LES PRIX CALCULÉS DANS ANALYSIS_DATA
+            analysis_data.update({
+                "entry_price": entry_price,
+                "stop_loss_price": stop_loss_price,
+                "take_profit_price": take_profit_price,
+                "risk_reward_ratio": ia1_risk_reward_ratio,
+                "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}"
+            })
+            
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
+            logger.info(f"🔧 PRIX AJOUTÉS À ANALYSIS_DATA {opportunity.symbol}: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
