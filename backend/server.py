@@ -1148,6 +1148,177 @@ class UltraProfessionalIA1TechnicalAnalyst:
     def __init__(self):
         self.chat = get_ia1_chat()
         self.market_aggregator = advanced_market_aggregator
+    
+    def analyze_multi_timeframe_hierarchy(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> dict:
+        """
+        🎯 ANALYSE RÉGRESSIVE MULTI-TIMEFRAME : Long terme → Court terme
+        Identifie la figure chartiste décisive selon la hiérarchie temporelle
+        """
+        try:
+            current_price = opportunity.current_price
+            price_change_24h = opportunity.price_change_24h or 0
+            volatility = opportunity.volatility or 0.05
+            
+            # 📊 TIMEFRAME ANALYSIS (Régression Long → Court)
+            timeframe_analysis = {
+                "daily_trend": self._analyze_daily_context(price_change_24h, volatility),
+                "h4_trend": self._analyze_h4_context(analysis, current_price),
+                "h1_trend": self._analyze_h1_context(analysis),
+                "dominant_timeframe": None,
+                "decisive_pattern": None,
+                "hierarchy_confidence": 0.0
+            }
+            
+            # 🎯 IDENTIFICATION DE LA FIGURE DÉCISIVE
+            # Hiérarchie : Daily > 4H > 1H (le timeframe le plus élevé domine)
+            
+            daily_strength = timeframe_analysis["daily_trend"]["strength"]
+            h4_strength = timeframe_analysis["h4_trend"]["strength"] 
+            h1_strength = timeframe_analysis["h1_trend"]["strength"]
+            
+            # Déterminer le timeframe dominant
+            if daily_strength >= 0.7:  # Strong daily trend dominates
+                timeframe_analysis["dominant_timeframe"] = "DAILY"
+                timeframe_analysis["decisive_pattern"] = timeframe_analysis["daily_trend"]["pattern"]
+                timeframe_analysis["hierarchy_confidence"] = daily_strength
+            elif h4_strength >= 0.6:  # Strong 4H trend
+                timeframe_analysis["dominant_timeframe"] = "4H" 
+                timeframe_analysis["decisive_pattern"] = timeframe_analysis["h4_trend"]["pattern"]
+                timeframe_analysis["hierarchy_confidence"] = h4_strength
+            else:  # Fall back to 1H
+                timeframe_analysis["dominant_timeframe"] = "1H"
+                timeframe_analysis["decisive_pattern"] = timeframe_analysis["h1_trend"]["pattern"]
+                timeframe_analysis["hierarchy_confidence"] = h1_strength
+            
+            # 🚨 ANTI-MOMENTUM FILTER : Éviter les signaux contre-tendance majeure
+            anti_momentum_warning = False
+            if abs(price_change_24h) > 5.0:  # Strong daily momentum
+                daily_direction = "BULLISH" if price_change_24h > 0 else "BEARISH"
+                if timeframe_analysis["decisive_pattern"]:
+                    pattern_direction = "BULLISH" if "bullish" in timeframe_analysis["decisive_pattern"].lower() else "BEARISH"
+                    if daily_direction != pattern_direction:
+                        anti_momentum_warning = True
+                        timeframe_analysis["anti_momentum_risk"] = "HIGH"
+                        logger.warning(f"⚠️ ANTI-MOMENTUM WARNING {opportunity.symbol}: Daily {daily_direction} vs Pattern {pattern_direction}")
+            
+            return timeframe_analysis
+            
+        except Exception as e:
+            logger.error(f"❌ Error in multi-timeframe analysis for {opportunity.symbol}: {e}")
+            return {
+                "dominant_timeframe": "1H",
+                "decisive_pattern": "UNCERTAIN",
+                "hierarchy_confidence": 0.5,
+                "error": str(e)
+            }
+    
+    def _analyze_daily_context(self, price_change_24h: float, volatility: float) -> dict:
+        """Analyse du contexte daily (1D)"""
+        abs_change = abs(price_change_24h)
+        
+        if abs_change > 8.0:  # Strong daily movement
+            strength = min(abs_change / 15.0, 1.0)  # Normalize to 0-1
+            direction = "BULLISH" if price_change_24h > 0 else "BEARISH"
+            pattern = f"DAILY_{direction}_MOMENTUM"
+        elif abs_change > 3.0:  # Moderate movement
+            strength = min(abs_change / 8.0, 0.8)
+            direction = "BULLISH" if price_change_24h > 0 else "BEARISH"  
+            pattern = f"DAILY_{direction}_TREND"
+        else:  # Consolidation
+            strength = 0.3
+            pattern = "DAILY_CONSOLIDATION"
+        
+        return {
+            "strength": strength,
+            "pattern": pattern,
+            "price_change": price_change_24h,
+            "timeframe": "1D"
+        }
+    
+    def _analyze_h4_context(self, analysis: TechnicalAnalysis, current_price: float) -> dict:
+        """Analyse du contexte 4H"""
+        # Use technical indicators to infer 4H trend
+        rsi = analysis.rsi
+        macd = analysis.macd_signal
+        bollinger = analysis.bollinger_position
+        
+        # 4H trend inference from indicators combination
+        bullish_signals = 0
+        bearish_signals = 0
+        
+        # RSI context (4H perspective)
+        if rsi < 40:
+            bullish_signals += 1
+        elif rsi > 60:
+            bearish_signals += 1
+            
+        # MACD 4H inference
+        if macd > 0.001:
+            bullish_signals += 1
+        elif macd < -0.001:
+            bearish_signals += 1
+            
+        # Bollinger 4H inference  
+        if bollinger < -0.5:
+            bullish_signals += 1
+        elif bollinger > 0.5:
+            bearish_signals += 1
+        
+        # Determine 4H pattern
+        signal_diff = bullish_signals - bearish_signals
+        if signal_diff >= 2:
+            strength = 0.8
+            pattern = "H4_BULLISH_CONTINUATION"
+        elif signal_diff <= -2: 
+            strength = 0.8
+            pattern = "H4_BEARISH_CONTINUATION"
+        elif signal_diff == 1:
+            strength = 0.6
+            pattern = "H4_BULLISH_BIAS"
+        elif signal_diff == -1:
+            strength = 0.6
+            pattern = "H4_BEARISH_BIAS"
+        else:
+            strength = 0.4
+            pattern = "H4_CONSOLIDATION"
+        
+        return {
+            "strength": strength,
+            "pattern": pattern,
+            "bullish_signals": bullish_signals,
+            "bearish_signals": bearish_signals,
+            "timeframe": "4H"
+        }
+    
+    def _analyze_h1_context(self, analysis: TechnicalAnalysis) -> dict:
+        """Analyse du contexte 1H (indicateurs courts)"""
+        rsi = analysis.rsi
+        stochastic = analysis.stochastic
+        
+        # 1H overbought/oversold analysis
+        if rsi > 75 and stochastic > 80:
+            strength = 0.7
+            pattern = "H1_OVERBOUGHT"
+        elif rsi < 25 and stochastic < 20:
+            strength = 0.7  
+            pattern = "H1_OVERSOLD"
+        elif rsi > 60:
+            strength = 0.5
+            pattern = "H1_BULLISH_MOMENTUM"
+        elif rsi < 40:
+            strength = 0.5
+            pattern = "H1_BEARISH_MOMENTUM" 
+        else:
+            strength = 0.3
+            pattern = "H1_NEUTRAL"
+        
+        return {
+            "strength": strength,
+            "pattern": pattern,
+            "rsi": rsi,
+            "stochastic": stochastic,
+            "timeframe": "1H"
+        }
         self.advanced_indicators = AdvancedTechnicalIndicators()
     
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
