@@ -1321,104 +1321,105 @@ class UltraProfessionalIA1TechnicalAnalyst:
             "timeframe": "1H"
         }
     
-    def _validate_legitimate_reversal(self, rsi: float, stochastic: float, bb_position: float, 
-                                    volatility: float, daily_momentum: float, confidence: float) -> dict:
+    def _calculate_weighted_momentum_penalty(self, rsi: float, stochastic: float, bb_position: float, 
+                                           volatility: float, daily_momentum: float, original_confidence: float) -> dict:
         """
-        🎯 VALIDATION SOPHISTIQUÉE : Distinguer vrai retournement vs erreur momentum
-        Analyse des signaux techniques pour valider la légitimité d'un signal contre-momentum
+        🎯 SYSTÈME DE PÉNALITÉ PONDÉRÉ INTELLIGENT
+        Calcule une pénalité proportionnelle à l'intensité des signaux techniques
         """
         try:
-            reversal_signals = []
-            warning_signals = []
+            # 📊 CALCUL DE L'INTENSITÉ DES SIGNAUX DE RETOURNEMENT
+            reversal_intensity = 0.0
+            momentum_danger_intensity = 0.0
             
-            # 📊 SIGNAUX DE RETOURNEMENT LÉGITIMES
+            # 1. RSI Intensity (0.0 à 1.0)
+            if rsi > 70:
+                rsi_intensity = min((rsi - 70) / 20, 1.0)  # 70-90 → 0.0-1.0
+                reversal_intensity += rsi_intensity * 0.3  # Poids 30%
+            elif rsi < 30:
+                rsi_intensity = min((30 - rsi) / 20, 1.0)  # 30-10 → 0.0-1.0
+                reversal_intensity += rsi_intensity * 0.3
             
-            # 1. RSI Divergence/Extrême
-            if rsi > 75:  # Overbought extrême
-                reversal_signals.append("RSI_OVERBOUGHT_EXTREME")
-            elif rsi > 65:  # Overbought modéré
-                reversal_signals.append("RSI_OVERBOUGHT_MODERATE")
-            elif rsi < 25:  # Oversold extrême  
-                reversal_signals.append("RSI_OVERSOLD_EXTREME")
-            elif rsi < 35:  # Oversold modéré
-                reversal_signals.append("RSI_OVERSOLD_MODERATE")
+            # 2. Stochastic Intensity (0.0 à 1.0)
+            if stochastic > 75:
+                stoch_intensity = min((stochastic - 75) / 20, 1.0)  # 75-95 → 0.0-1.0
+                reversal_intensity += stoch_intensity * 0.25  # Poids 25%
+            elif stochastic < 25:
+                stoch_intensity = min((25 - stochastic) / 20, 1.0)  # 25-5 → 0.0-1.0
+                reversal_intensity += stoch_intensity * 0.25
             
-            # 2. Stochastic Confirmation
-            if stochastic > 80:  # Surachat stochastique
-                reversal_signals.append("STOCHASTIC_OVERBOUGHT")
-            elif stochastic < 20:  # Survente stochastique
-                reversal_signals.append("STOCHASTIC_OVERSOLD")
+            # 3. Bollinger Intensity (0.0 à 1.0)
+            bb_intensity = min(abs(bb_position), 1.0)  # Position absolue dans les bandes
+            if bb_intensity > 0.6:
+                reversal_intensity += (bb_intensity - 0.6) * 0.25  # Poids 25%
             
-            # 3. Bollinger Bands Extrême
-            if abs(bb_position) > 0.8:  # Position extrême dans les bandes
-                reversal_signals.append("BOLLINGER_EXTREME_POSITION")
-            elif abs(bb_position) > 0.6:  # Position forte
-                reversal_signals.append("BOLLINGER_STRONG_POSITION")
+            # 4. Volatility Intensity (0.0 à 1.0)
+            vol_intensity = min(volatility / 0.25, 1.0)  # Normaliser volatilité à 25%
+            if vol_intensity > 0.6:  # Haute volatilité = possible épuisement
+                reversal_intensity += (vol_intensity - 0.6) * 0.2  # Poids 20%
             
-            # 4. Volatilité et Épuisement
-            if volatility > 0.15:  # Haute volatilité (possible épuisement)
-                reversal_signals.append("HIGH_VOLATILITY_EXHAUSTION")
+            # 📈 CALCUL DE L'INTENSITÉ DU DANGER MOMENTUM
+            momentum_abs = abs(daily_momentum)
             
-            # 5. Momentum vs Confidence Divergence
-            if daily_momentum > 8.0 and confidence > 0.85:  # Fort momentum mais IA1 très confiant
-                reversal_signals.append("MOMENTUM_CONFIDENCE_DIVERGENCE")
+            # Intensité du momentum (0.0 à 1.0)
+            momentum_strength = min(momentum_abs / 15.0, 1.0)  # 0-15% → 0.0-1.0
             
-            # 📈 SIGNAUX D'ALERTE (Contre-indicateurs de retournement)
+            # Manque de signaux de retournement = danger accru
+            reversal_deficit = max(0.0, 0.5 - reversal_intensity)  # Si < 50% signaux retournement
+            momentum_danger_intensity = momentum_strength + (reversal_deficit * 1.5)
+            momentum_danger_intensity = min(momentum_danger_intensity, 1.0)
             
-            # 1. Momentum modéré sans extrêmes techniques
-            if 5.0 <= daily_momentum <= 8.0 and rsi > 35 and rsi < 65:
-                warning_signals.append("MODERATE_MOMENTUM_NO_EXTREMES")
+            # 🎯 CALCUL DE LA PÉNALITÉ PONDÉRÉE
+            if reversal_intensity > 0.5:  # Signaux de retournement forts
+                # RETOURNEMENT LÉGITIME : Pénalité faible et proportionnelle
+                base_penalty = 0.1  # 10% base
+                momentum_penalty = momentum_strength * 0.15  # 0-15% selon momentum
+                total_penalty = base_penalty + momentum_penalty
+                penalty_type = "legitimate_reversal"
+                
+            elif reversal_intensity > 0.3:  # Signaux modérés
+                # RETOURNEMENT INCERTAIN : Pénalité moyenne
+                base_penalty = 0.2  # 20% base
+                momentum_penalty = momentum_strength * 0.2  # 0-20% selon momentum
+                total_penalty = base_penalty + momentum_penalty
+                penalty_type = "uncertain_reversal"
+                
+            else:  # Signaux faibles ou absents
+                # ERREUR MOMENTUM PROBABLE : Pénalité forte et proportionnelle
+                base_penalty = 0.25  # 25% base
+                momentum_penalty = momentum_danger_intensity * 0.25  # 0-25% selon danger
+                total_penalty = base_penalty + momentum_penalty
+                penalty_type = "momentum_error"
             
-            # 2. Bandes de Bollinger centrales (pas d'extrême)
-            if abs(bb_position) < 0.4:
-                warning_signals.append("BOLLINGER_CENTRAL_POSITION")
+            # Cap la pénalité totale à 60%
+            total_penalty = min(total_penalty, 0.6)
             
-            # 3. Volatilité normale (pas d'épuisement)
-            if volatility < 0.08:
-                warning_signals.append("LOW_VOLATILITY_NO_EXHAUSTION")
-            
-            # 🎯 ÉVALUATION FINALE
-            reversal_score = len(reversal_signals)
-            warning_score = len(warning_signals)
-            
-            # Critères de validation du retournement légitime
-            is_legitimate = False
-            failure_reason = ""
-            
-            if reversal_score >= 3:  # 3+ signaux de retournement
-                is_legitimate = True
-            elif reversal_score >= 2 and warning_score <= 1:  # 2 signaux + peu d'alertes
-                is_legitimate = True
-            elif reversal_score >= 1 and "RSI_OVERBOUGHT_EXTREME" in reversal_signals:  # RSI extrême seul
-                is_legitimate = True
-            elif reversal_score >= 1 and "MOMENTUM_CONFIDENCE_DIVERGENCE" in reversal_signals:  # Divergence momentum/confidence
-                is_legitimate = True
-            else:
-                is_legitimate = False
-                if reversal_score == 0:
-                    failure_reason = "NO_REVERSAL_SIGNALS"
-                elif warning_score > reversal_score:
-                    failure_reason = "MORE_WARNING_THAN_REVERSAL_SIGNALS"
-                else:
-                    failure_reason = "INSUFFICIENT_REVERSAL_CONFIRMATION"
+            # Calculer la nouvelle confiance
+            new_confidence = max(original_confidence * (1 - total_penalty), 0.25)
             
             return {
-                "is_legitimate_reversal": is_legitimate,
-                "reversal_score": reversal_score,
-                "warning_score": warning_score,
-                "signals_detected": reversal_signals,
-                "warning_signals": warning_signals,
-                "failure_reason": failure_reason,
-                "validation_summary": f"{reversal_score} reversal signals, {warning_score} warnings"
+                "penalty_type": penalty_type,
+                "total_penalty": total_penalty,
+                "new_confidence": new_confidence,
+                "reversal_intensity": reversal_intensity,
+                "momentum_danger_intensity": momentum_danger_intensity,
+                "penalty_breakdown": {
+                    "base_penalty": base_penalty if 'base_penalty' in locals() else 0.0,
+                    "momentum_penalty": momentum_penalty if 'momentum_penalty' in locals() else 0.0,
+                    "rsi_contribution": rsi_intensity if 'rsi_intensity' in locals() else 0.0,
+                    "stoch_contribution": stoch_intensity if 'stoch_intensity' in locals() else 0.0,
+                    "bb_contribution": bb_intensity,
+                    "vol_contribution": vol_intensity
+                }
             }
             
         except Exception as e:
-            logger.error(f"❌ Error in reversal validation: {e}")
+            logger.error(f"❌ Error calculating weighted penalty: {e}")
             return {
-                "is_legitimate_reversal": False,
-                "failure_reason": f"VALIDATION_ERROR: {str(e)}",
-                "signals_detected": [],
-                "warning_signals": []
+                "penalty_type": "error_fallback",
+                "total_penalty": 0.3,  # Fallback penalty
+                "new_confidence": original_confidence * 0.7,
+                "error": str(e)
             }
     
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
