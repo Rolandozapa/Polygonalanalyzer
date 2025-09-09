@@ -214,7 +214,7 @@
 
 ## test_plan:
   current_focus:
-    - "Test FORMUSDT Risk-Reward Calculation Fix"
+    - "Diagnose IA1 Technical Indicators Calculation Issues"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
