@@ -5722,6 +5722,13 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             "five_level_tp": five_level_tp_data,
             # 🎯 ENHANCED RR DATA WITH IA2 RECALCULATED LEVELS
             "enhanced_rr": enhanced_rr_data,
+            # 🧠 SOPHISTICATED ANALYSIS DATA
+            "sophisticated_analysis": {
+                "composite_rr_data": composite_rr_data or {},
+                "risk_level": sophisticated_risk_level,
+                "rr_validation_status": rr_validation_status,
+                "rr_divergence": rr_divergence
+            },
             # Additional TP levels for advanced strategy
             "tp4": locals().get('tp4', tp3),  # TP4 if calculated
             "tp5": locals().get('tp5', tp3),  # TP5 if calculated
