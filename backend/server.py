@@ -3197,6 +3197,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             market_sentiment="neutral",
             data_sources=opportunity.data_sources
         )
+    
+    def get_market_cap_multiplier(self, market_cap: float) -> float:
+        """Détermine le multiplicateur selon le bucket market cap"""
+        if market_cap < 10_000_000:  # < 10M = micro cap
+            return 0.8  # Plus prudent
+        elif market_cap < 100_000_000:  # < 100M = small cap
+            return 0.95
+        elif market_cap < 1_000_000_000:  # < 1B = mid cap
+            return 1.0
+        else:  # > 1B = large cap
+            return 1.1  # Moins de pénalité
 
 class UltraProfessionalIA2DecisionAgent:
     def __init__(self, active_position_manager=None):
