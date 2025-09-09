@@ -3771,72 +3771,12 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     current_context.current_regime.value
                 )
                 
-                # 🎯 NOUVEAU: Optimisation avec les figures chartistes
-                enhanced_decision_dict = ai_performance_enhancer.enhance_ia2_decision_with_chartist(
-                    enhanced_decision_dict,
+                # Apply AI performance enhancement
+                enhanced_decision_dict = await self.orchestrator.ai_performance_enhancer.apply_enhancements(
+                    decision.dict(),
                     analysis.dict(),
                     current_context.current_regime.value
                 )
-                
-                # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL
-                # Appliquer bonus/malus de marché et token-spécifiques
-                original_confidence = decision.confidence
-                
-                # Préparer les facteurs de marché
-                factor_scores = {
-                    'var_cap': abs(opportunity.price_change_24h or 0),  # Volatilité prix 24h
-                    'var_vol': getattr(opportunity, 'volume_change_24h', 0) or 0,  # Variation volume 24h  
-                    'fg': market_sentiment.get('sentiment_score', 50) * 100,  # Fear & Greed (0-100)
-                    'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap else 0.05,  # Ratio vol/cap
-                    'rr_quality': final_rr,  # Qualité du Risk-Reward
-                    'volatility': opportunity.volatility or 0.05  # Volatilité générale
-                }
-                
-                # Définir les fonctions de normalisation
-                norm_funcs = {
-                    'var_cap': lambda x: -self.tanh_norm(x, s=10),  # Pénaliser forte volatilité prix
-                    'var_vol': lambda x: self.tanh_norm((x - 20) / 50, s=1),  # Récompenser volume > 20% 
-                    'fg': lambda x: ((50.0 - x) / 50.0) * -1.0,  # Approche contrarian F&G
-                    'volcap': lambda x: self.tanh_norm((x - 0.02) * 25, s=5),  # Optimal vers 0.02
-                    'rr_quality': lambda x: self.tanh_norm((x - 1.5) * 2, s=1),  # Récompenser RR > 1.5
-                    'volatility': lambda x: -self.tanh_norm((x - 0.08) * 10, s=2)  # Pénaliser volatilité > 8%
-                }
-                
-                # Poids des facteurs (total = 1.0)
-                weights = {
-                    'var_cap': 0.20,      # 20% - Volatilité prix important
-                    'var_vol': 0.15,      # 15% - Volume change
-                    'fg': 0.10,           # 10% - Sentiment marché
-                    'volcap': 0.15,       # 15% - Liquidité relative
-                    'rr_quality': 0.25,   # 25% - Qualité RR majeure
-                    'volatility': 0.15    # 15% - Volatilité générale
-                }
-                
-                # Calculer le multiplicateur market cap
-                mc_mult = self.get_market_cap_multiplier(opportunity.market_cap or 1_000_000)
-                
-                # Appliquer la formule finale
-                scoring_result = self.compute_final_score(
-                    note_base=original_confidence * 100,  # Convertir 0-1 → 0-100
-                    factor_scores=factor_scores,
-                    norm_funcs=norm_funcs,
-                    weights=weights,
-                    amplitude=15.0,  # Max 15 points d'ajustement
-                    mc_mult=mc_mult
-                )
-                
-                # Convertir le score final en confiance (0-100 → 0-1)
-                final_confidence = scoring_result['note_final'] / 100.0
-                
-                # Logs du scoring professionnel
-                logger.info(f"🎯 PROFESSIONAL SCORING {opportunity.symbol}:")
-                logger.info(f"   📊 Base Confidence: {original_confidence:.1%} → Final: {final_confidence:.1%}")
-                logger.info(f"   📊 Market Adjustment: {scoring_result['adjustment']:.1f} points")
-                logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} ({self._get_mc_bucket_name(opportunity.market_cap or 1_000_000)})")
-                logger.info(f"   🎯 Key Factors: RR={final_rr:.2f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
-                
-                # Appliquer la confiance finale à la décision
-                decision.confidence = final_confidence
                 
                 # Update decision with enhancements
                 if 'ai_enhancements' in enhanced_decision_dict:
