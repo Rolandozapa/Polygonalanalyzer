@@ -2973,14 +2973,19 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 opportunity, analysis, perf_stats, account_balance, claude_decision
             )
             
-            # 🎯 ENHANCED RR: Use IA2's recalculated RR if available, fallback to IA1's original RR
+            # 🎯 ENHANCED RR: Use IA2's recalculated RR if available and validated, fallback to IA1's original RR
             enhanced_rr = decision_logic.get("enhanced_rr", {})
-            if enhanced_rr.get("ia2_calculated_rr") and enhanced_rr.get("final_rr_source") == "ia2_recalculated":
+            if (enhanced_rr.get("ia2_calculated_rr") and 
+                enhanced_rr.get("final_rr_source") in ["ia2_recalculated", "ia2_recalculated_validated"]):
                 final_rr = enhanced_rr["ia2_calculated_rr"]
+                validation_msg = enhanced_rr.get("validation_message", "")
                 logger.info(f"🎯 USING IA2 ENHANCED RR: {opportunity.symbol} - {final_rr:.2f}:1 (improved from IA1: {analysis.risk_reward_ratio:.2f}:1)")
+                if validation_msg:
+                    logger.info(f"✅ VALIDATION: {validation_msg}")
             else:
                 final_rr = analysis.risk_reward_ratio
-                logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1")
+                fallback_reason = enhanced_rr.get("validation_error", "No IA2 RR data available")
+                logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1 (Reason: {fallback_reason})")
             
             # Create advanced trading decision
             decision = TradingDecision(
