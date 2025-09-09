@@ -2936,6 +2936,22 @@ IA1 RISK-REWARD CALCULATION:
 - Risk-Reward Ratio: {analysis.risk_reward_ratio:.2f}:1
 - RR Assessment: {analysis.rr_reasoning}
 
+🎯 SOPHISTICATED RR ANALYSIS (IA2 ADVANCED VALIDATION):
+- Composite RR: {composite_rr_data['composite_rr']:.2f}:1 (Combines directional + neutral approaches)
+- Bullish RR Scenario: {composite_rr_data['bullish_rr']:.2f}:1
+- Bearish RR Scenario: {composite_rr_data['bearish_rr']:.2f}:1  
+- Neutral RR (Volatility-based): {composite_rr_data['neutral_rr']:.2f}:1
+- Upside Target (Volatility): ${composite_rr_data['upside_target']:.6f}
+- Downside Target (Volatility): ${composite_rr_data['downside_target']:.6f}
+- RR Validation Status: {rr_validation_status} (IA1 vs Composite divergence: {rr_divergence:.2f})
+- Sophisticated Risk Level: {sophisticated_risk_level}
+
+⚠️ RR VALIDATION GUIDANCE:
+- If RR validation is DIVERGENT (>0.5 difference), consider the composite RR for more accuracy
+- Sophisticated risk level considers both RR composite and market volatility
+- Use upside/downside targets for refined take-profit and stop-loss placement
+- {sophisticated_risk_level} risk level should influence your position sizing and leverage decisions
+
 IA1 COMPLETE REASONING & STRATEGIC CHOICE:
 {analysis.ia1_reasoning}
 
