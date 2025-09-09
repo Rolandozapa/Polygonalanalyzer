@@ -2828,7 +2828,29 @@ Based on YOUR strategic decision (LONG/SHORT/HOLD), recalculate precise technica
 1. **Recalculated Support Level:** Based on your chosen direction, what is the most reliable support level?
 2. **Recalculated Resistance Level:** Based on your chosen direction, what is the most reliable resistance level?
 3. **Your Reasoning:** Why these levels are more appropriate than IA1's levels for your strategy
-4. **Updated RR Ratio:** Using your recalculated levels, what is the realistic Risk-Reward ratio?
+4. **Updated RR Ratio:** Using your recalculated levels, calculate the realistic Risk-Reward ratio with CORRECT equations:
+
+⚠️ CRITICAL RR CALCULATION FORMULAS (USE EXACT FORMULAS):
+**FOR LONG POSITIONS:**
+- Entry Price: Current price (${opportunity.current_price:.6f})
+- Stop Loss: Your recalculated SUPPORT level (must be < Entry Price)
+- Take Profit: Your recalculated RESISTANCE level (must be > Entry Price)
+- Risk = Entry Price - Stop Loss
+- Reward = Take Profit - Entry Price  
+- RR Ratio = Reward ÷ Risk
+
+**FOR SHORT POSITIONS:**
+- Entry Price: Current price (${opportunity.current_price:.6f})
+- Stop Loss: Your recalculated RESISTANCE level (must be > Entry Price)
+- Take Profit: Your recalculated SUPPORT level (must be < Entry Price)
+- Risk = Stop Loss - Entry Price
+- Reward = Entry Price - Take Profit
+- RR Ratio = Reward ÷ Risk
+
+**VALIDATION RULES:**
+- LONG: SL < Entry < TP (Support < Current < Resistance)
+- SHORT: TP < Entry < SL (Support < Current < Resistance, but TP=Support, SL=Resistance)
+- RR must be > 0. If RR ≤ 0, recalculate your levels or choose HOLD.
 
 This will allow combining IA1's RR calculation methodology with your strategic technical analysis.
 
