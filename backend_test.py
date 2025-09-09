@@ -1,22 +1,18 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for IA1→IA2 Filtering and Processing Pipeline
-Focus: Testing IA1→IA2 filtering, bug fixes, and specific test cases
-Review Request: Test the IA1→IA2 filtering and processing pipeline to verify that:
+Backend Testing Suite for _apply_adaptive_context_to_decision Method Bug Fix Verification
+Focus: CRITICAL BUG FIX VERIFICATION - Test if the _apply_adaptive_context_to_decision method bug has been resolved.
 
-1. IA1 analyses with LONG/SHORT signals and confidence ≥70% pass to IA2 (VOIE 1)
-2. The recent bug fix for missing active_position_manager in IA2 agent is working
-3. The recent bug fix for missing _apply_adaptive_context_to_decision method is resolved
-4. New IA2 decisions are being generated from recent IA1 analyses
+Background: The method was moved from UltraProfessionalIA2DecisionAgent class to UltraProfessionalTradingOrchestrator class to fix the AttributeError.
 
-Specific test cases:
-- ONDOUSDT: SHORT + 87% confidence → should pass VOIE 1
-- HBARUSDT: SHORT + 72% confidence → should pass VOIE 1  
-- ARKMUSDT: LONG + 96% confidence → should pass VOIE 1
-- ENAUSDT: LONG + 98% confidence → should pass VOIE 1
-- FARTCOINUSDT: SHORT + 78% confidence → should pass VOIE 1
+Test requirements:
+1. Verify no more "_apply_adaptive_context_to_decision method not found" errors in logs
+2. Test the /api/start-trading endpoint to trigger IA2 processing
+3. Check if new IA2 decisions are generated with today's timestamps (2025-09-09)
+4. Verify VOIE 1 filtering logic is working (LONG/SHORT + confidence ≥70%)
+5. Look for any new errors or exceptions preventing IA2 completion
 
-Test the /api/start-trading endpoint and verify that new IA2 decisions with today's timestamps are generated.
+Expected: IA2 decisions should now be successfully created and stored without AttributeError exceptions.
 """
 
 import asyncio
