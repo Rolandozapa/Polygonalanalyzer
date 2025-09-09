@@ -2626,6 +2626,145 @@ class UltraProfessionalIA2DecisionAgent:
         self.max_risk_per_trade = 0.02  # 2% risk per trade
         self.active_position_manager = active_position_manager
     
+    def calculate_neutral_risk_reward(self, current_price: float, volatility: float, time_horizon: int = 1) -> dict:
+        """
+        🎯 ADVANCED: Calculate risk/reward ratio without predefined direction
+        Based on volatility-implied price range (neutral approach)
+        """
+        try:
+            # Convert annualized volatility to period volatility
+            period_volatility = volatility * (time_horizon/365)**0.5
+            
+            # Upside target (potential reward)
+            upside_target = current_price * (1 + period_volatility)
+            
+            # Downside target (potential risk)  
+            downside_target = current_price * (1 - period_volatility)
+            
+            # Neutral risk/reward ratio (symmetric)
+            risk_reward_ratio = abs(upside_target - current_price) / abs(current_price - downside_target)
+            
+            return {
+                'upside_target': upside_target,
+                'downside_target': downside_target,
+                'risk_reward_ratio': risk_reward_ratio,
+                'upside_potential_pct': (upside_target - current_price) / current_price * 100,
+                'downside_risk_pct': (current_price - downside_target) / current_price * 100,
+                'period_volatility': period_volatility
+            }
+        except Exception as e:
+            logger.error(f"❌ Error calculating neutral RR: {e}")
+            return {
+                'risk_reward_ratio': 1.0,
+                'upside_target': current_price * 1.05,
+                'downside_target': current_price * 0.95,
+                'upside_potential_pct': 5.0,
+                'downside_risk_pct': 5.0
+            }
+    
+    def calculate_bullish_rr(self, current_price: float, target_resistance: float, support_level: float) -> float:
+        """Calculate risk/reward for bullish scenario"""
+        if support_level >= current_price:
+            return 0.0
+        reward = target_resistance - current_price
+        risk = current_price - support_level
+        return reward / risk if risk > 0 else 0.0
+    
+    def calculate_bearish_rr(self, current_price: float, target_support: float, resistance_level: float) -> float:
+        """Calculate risk/reward for bearish scenario"""
+        if resistance_level <= current_price:
+            return 0.0
+        reward = current_price - target_support
+        risk = resistance_level - current_price
+        return reward / risk if risk > 0 else 0.0
+    
+    def calculate_composite_rr(self, current_price: float, volatility: float, support: float, resistance: float) -> dict:
+        """
+        🧠 SOPHISTICATED: Calculate composite risk/reward using multiple approaches
+        Combines directional and neutral RR for advanced validation
+        """
+        try:
+            # Directional RR calculations
+            bullish_rr = self.calculate_bullish_rr(current_price, resistance, support)
+            bearish_rr = self.calculate_bearish_rr(current_price, support, resistance)
+            
+            # Neutral RR calculation
+            neutral_data = self.calculate_neutral_risk_reward(current_price, volatility)
+            neutral_rr = neutral_data['risk_reward_ratio']
+            
+            # Composite RR (weighted average)
+            # Weight directional RRs by their validity and neutral RR as baseline
+            valid_directional_rrs = [rr for rr in [bullish_rr, bearish_rr] if rr > 0]
+            
+            if valid_directional_rrs:
+                avg_directional_rr = sum(valid_directional_rrs) / len(valid_directional_rrs)
+                # 70% directional, 30% neutral
+                composite_rr = (avg_directional_rr * 0.7) + (neutral_rr * 0.3)
+            else:
+                composite_rr = neutral_rr
+            
+            return {
+                'composite_rr': composite_rr,
+                'bullish_rr': bullish_rr,
+                'bearish_rr': bearish_rr,
+                'neutral_rr': neutral_rr,
+                'directional_validity': len(valid_directional_rrs),
+                'volatility_adjusted': volatility,
+                'upside_target': neutral_data['upside_target'],
+                'downside_target': neutral_data['downside_target']
+            }
+        except Exception as e:
+            logger.error(f"❌ Error calculating composite RR: {e}")
+            return {
+                'composite_rr': 1.5,
+                'bullish_rr': 1.5,
+                'bearish_rr': 1.5,
+                'neutral_rr': 1.0,
+                'directional_validity': 0
+            }
+    
+    def evaluate_sophisticated_risk_level(self, composite_rr: float, volatility: float, market_conditions: dict = None) -> str:
+        """
+        🎯 ADVANCED: Evaluate risk level using composite RR and market conditions
+        Returns: LOW, MEDIUM, HIGH based on sophisticated criteria
+        """
+        try:
+            # Base risk evaluation using composite RR and volatility
+            if composite_rr > 2.5 and volatility < 0.12:
+                base_risk = "LOW"  # Excellent setup: high reward, low volatility
+            elif composite_rr > 1.8 and volatility < 0.18:
+                base_risk = "LOW"  # Good setup
+            elif composite_rr < 1.2 or volatility > 0.25:
+                base_risk = "HIGH"  # Poor setup: low reward or high volatility
+            elif composite_rr < 1.5 or volatility > 0.20:
+                base_risk = "HIGH"  # Mediocre setup trending high risk
+            else:
+                base_risk = "MEDIUM"  # Standard setup
+            
+            # Adjust based on market conditions if available
+            if market_conditions:
+                market_sentiment = market_conditions.get('market_sentiment', 'NEUTRAL')
+                btc_change = market_conditions.get('btc_change_24h', 0)
+                
+                # Market sentiment adjustments
+                if market_sentiment in ['EXTREME_FEAR', 'BEAR_MARKET'] and abs(btc_change) > 8:
+                    # High volatility bear market = higher risk
+                    if base_risk == "LOW":
+                        base_risk = "MEDIUM"
+                    elif base_risk == "MEDIUM":
+                        base_risk = "HIGH"
+                elif market_sentiment in ['EXTREME_GREED', 'BULL_MARKET'] and abs(btc_change) > 5:
+                    # Bull market with momentum can reduce risk for aligned trades
+                    if base_risk == "HIGH" and composite_rr > 1.8:
+                        base_risk = "MEDIUM"
+            
+            logger.info(f"🎯 SOPHISTICATED RISK EVALUATION: Composite RR: {composite_rr:.2f}, Volatility: {volatility:.1%} → Risk Level: {base_risk}")
+            return base_risk
+            
+        except Exception as e:
+            logger.error(f"❌ Error evaluating sophisticated risk level: {e}")
+            return "MEDIUM"  # Safe fallback
+    
     async def _get_crypto_market_sentiment(self) -> dict:
         """Get overall crypto market sentiment for leverage calculation"""
         try:
