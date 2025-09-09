@@ -1937,9 +1937,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "support_levels": self._find_support_levels(historical_data, current_price),
                 "resistance_levels": self._find_resistance_levels(historical_data, current_price),
                 "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
-                "analysis_confidence": self._calculate_analysis_confidence(
-                    rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
-                ),
+                "analysis_confidence": analysis_confidence,
                 "risk_reward_ratio": ia1_risk_reward_ratio,  # 🎯 NOUVEAU: RR basé sur niveaux techniques
                 "ia1_reasoning": reasoning,  # 🎯 SYSTÈME SIMPLIFIÉ: Reasoning IA1 direct sans Multi-RR
                 "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
