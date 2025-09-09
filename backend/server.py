@@ -9817,7 +9817,17 @@ async def ultra_professional_trading_loop():
     
     while orchestrator.is_running:
         try:
+            # 🚨 CIRCUIT BREAKER - Vérifier CPU avant démarrage du cycle
+            import psutil
+            cpu_usage = psutil.cpu_percent(interval=1)
+            if cpu_usage > 80.0:
+                logger.warning(f"🚨 HIGH CPU DETECTED ({cpu_usage:.1f}%) - Skipping cycle to prevent overload")
+                await asyncio.sleep(300)  # Wait 5 minutes
+                continue
+            
             cycle_start = datetime.now()
+            logger.info(f"🚀 Starting trading cycle #{orchestrator.cycle_count + 1} (CPU: {cpu_usage:.1f}%)")
+            
             opportunities_processed = await orchestrator.run_trading_cycle()
             
             cycle_duration = (datetime.now() - cycle_start).total_seconds()
