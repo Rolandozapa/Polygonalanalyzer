@@ -56,6 +56,7 @@
     "AVA-USDT",
     "AVAAI-USDT",
     "AVAX-USDT",
+    "AVNT-USDT",
     "AWE-USDT",
     "AXL-USDT",
     "AXS-USDT",
@@ -479,7 +480,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 478,
-  "updated_at": "2025-09-09T11:54:20.102303",
+  "count": 479,
+  "updated_at": "2025-09-09T18:12:16.661313",
   "source": "BingX Futures API"
 }
