@@ -3654,6 +3654,13 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             # Priority: IA2 Recalculated > Sophisticated Composite > IA1 Original
             enhanced_rr = decision_logic.get("enhanced_rr", {})
             
+            # Get sophisticated data from decision_logic (passed from parameters)
+            sophisticated_data = decision_logic.get("sophisticated_analysis", {})
+            final_composite_rr_data = sophisticated_data.get("composite_rr_data", {})
+            final_sophisticated_risk_level = sophisticated_data.get("risk_level", "MEDIUM")
+            final_rr_validation_status = sophisticated_data.get("rr_validation_status", "UNKNOWN")
+            final_rr_divergence = sophisticated_data.get("rr_divergence", 0.0)
+            
             # Option 1: IA2 recalculated RR (highest priority)
             if (enhanced_rr.get("ia2_calculated_rr") and 
                 enhanced_rr.get("final_rr_source") in ["ia2_recalculated", "ia2_recalculated_validated"]):
@@ -3665,15 +3672,15 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                     logger.info(f"✅ VALIDATION: {validation_msg}")
             
             # Option 2: Sophisticated Composite RR (second priority)
-            elif composite_rr_data.get('composite_rr', 0) > 0:
-                final_rr = composite_rr_data['composite_rr']
+            elif final_composite_rr_data.get('composite_rr', 0) > 0:
+                final_rr = final_composite_rr_data['composite_rr']
                 rr_source = "sophisticated_composite"
                 
                 # Enhanced validation with composite RR
                 if abs(final_rr - analysis.risk_reward_ratio) > 1.0:
                     logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (significant improvement from IA1: {analysis.risk_reward_ratio:.2f}:1)")
-                    logger.info(f"📊 Composite Analysis: Bullish {composite_rr_data['bullish_rr']:.2f}, Bearish {composite_rr_data['bearish_rr']:.2f}, Neutral {composite_rr_data['neutral_rr']:.2f}")
-                    logger.info(f"🎯 Risk Level: {sophisticated_risk_level} | Validation: {rr_validation_status}")
+                    logger.info(f"📊 Composite Analysis: Bullish {final_composite_rr_data.get('bullish_rr', 0):.2f}, Bearish {final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral {final_composite_rr_data.get('neutral_rr', 0):.2f}")
+                    logger.info(f"🎯 Risk Level: {final_sophisticated_risk_level} | Validation: {final_rr_validation_status}")
                 else:
                     logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (aligned with IA1: {analysis.risk_reward_ratio:.2f}:1)")
             
@@ -3687,10 +3694,10 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             # Additional logging for sophisticated analysis results
             logger.info(f"📊 SOPHISTICATED RR SUMMARY {opportunity.symbol}:")
             logger.info(f"   🎯 Final RR: {final_rr:.2f}:1 (Source: {rr_source})")
-            logger.info(f"   📊 Risk Level: {sophisticated_risk_level}")
-            logger.info(f"   📊 RR Validation: {rr_validation_status} (divergence: {rr_divergence:.2f})")
+            logger.info(f"   📊 Risk Level: {final_sophisticated_risk_level}")
+            logger.info(f"   📊 RR Validation: {final_rr_validation_status} (divergence: {final_rr_divergence:.2f})")
             if rr_source == "sophisticated_composite":
-                logger.info(f"   📊 Composite Components: Bull:{composite_rr_data['bullish_rr']:.2f}, Bear:{composite_rr_data['bearish_rr']:.2f}, Neutral:{composite_rr_data['neutral_rr']:.2f}")
+                logger.info(f"   📊 Composite Components: Bull:{final_composite_rr_data.get('bullish_rr', 0):.2f}, Bear:{final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral:{final_composite_rr_data.get('neutral_rr', 0):.2f}")
             
             # Create advanced trading decision
             decision = TradingDecision(
