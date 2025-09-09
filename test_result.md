@@ -224,6 +224,18 @@
     - message: "FORMUSDT INVESTIGATION: L'utilisateur demande spécifiquement pourquoi FORMUSDT n'a pas été admis en IA2. D'après les logs précédents, FORMUSDT était éligible avec Signal=LONG et Confidence=83% ce qui devrait satisfaire les critères VOIE 1 (LONG/SHORT + Confidence ≥ 70%). Je dois tester le backend pour identifier le problème spécifique avec ce symbole et vérifier le pipeline IA1→IA2 pour FORMUSDT. Focus sur : (1) Statut actuel de l'analyse IA1 pour FORMUSDT, (2) Critères d'admission IA2 pour ce symbole, (3) Logs d'erreur spécifiques à FORMUSDT, (4) Validation du processus de filtrage VOIE 1."
 
 ## backend:
+  - task: "Test FORMUSDT IA1→IA2 Pipeline Processing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+        - agent: "testing"
+        - comment: "❌ FORMUSDT INVESTIGATION SPÉCIFIQUE COMPLETED - ROOT CAUSE IDENTIFIED: Comprehensive investigation of FORMUSDT IA1→IA2 pipeline reveals the EXACT ISSUE preventing IA2 admission. CRITICAL FINDINGS: (1) ✅ FORMUSDT FOUND IN IA1 - Located FORMUSDT analysis with Signal=SHORT, Confidence=83%, RR=0:1, confirming the symbol is being analyzed by IA1, (2) ✅ VOIE 1 CRITERIA ANALYSIS - FORMUSDT meets VOIE 1 requirements: SHORT signal (valid LONG/SHORT) + 83% confidence (≥70% required), should be eligible for IA2 via VOIE 1, (3) ❌ VOIE 2 BLOCKED - RR=0:1 blocks VOIE 2 (requires ≥2.0), but this should not matter since VOIE 1 is satisfied, (4) ❌ NO IA2 DECISIONS - Despite meeting VOIE 1 criteria, no IA2 decisions found for FORMUSDT, indicating pipeline blockage, (5) 🔍 ROOT CAUSE IDENTIFIED - The issue is NOT with signal/confidence (user expected LONG but system shows SHORT with 83% confidence), but with IA2 PROCESSING PIPELINE not executing despite VOIE 1 eligibility, (6) ❌ PIPELINE EXECUTION ISSUE - The _should_send_to_ia2() filtering logic appears correct and should accept FORMUSDT via VOIE 1, but IA2 processing is not occurring for eligible analyses. EVIDENCE: FORMUSDT data shows {signal: 'short', confidence: 0.83, rr: 0} which satisfies VOIE 1 (SHORT ∈ ['long','short'] AND 0.83 ≥ 0.70) but no IA2 decision exists. CONCLUSION: FORMUSDT is not admitted to IA2 due to IA2 PROCESSING PIPELINE FAILURE, not filtering criteria failure. The system correctly identifies eligible analyses but fails to execute IA2 decision-making process. This affects all VOIE 1 eligible analyses, not just FORMUSDT."
+
   - task: "Test IA1→IA2 Filtering and Processing Pipeline"
     implemented: true
     working: true
