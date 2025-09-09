@@ -2839,6 +2839,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["support"] = self._ensure_json_safe(analysis_data.get("support", []), [])
             cleaned_data["resistance"] = self._ensure_json_safe(analysis_data.get("resistance", []), [])
             
+            # 🔧 CHAMPS PRIX CRITIQUES - Validation des prix calculés
+            cleaned_data["entry_price"] = self._ensure_json_safe(analysis_data.get("entry_price"), 0.0)
+            cleaned_data["stop_loss_price"] = self._ensure_json_safe(analysis_data.get("stop_loss_price"), 0.0)
+            cleaned_data["take_profit_price"] = self._ensure_json_safe(analysis_data.get("take_profit_price"), 0.0)
+            cleaned_data["risk_reward_ratio"] = self._ensure_json_safe(analysis_data.get("risk_reward_ratio"), 1.0)
+            cleaned_data["rr_reasoning"] = str(analysis_data.get("rr_reasoning", ""))
+            
+            logger.info(f"💰 PRIX VALIDÉS {analysis_data.get('symbol', 'UNKNOWN')}: Entry=${cleaned_data['entry_price']:.6f} | SL=${cleaned_data['stop_loss_price']:.6f} | TP=${cleaned_data['take_profit_price']:.6f} | RR={cleaned_data['risk_reward_ratio']:.2f}:1")
+            
             return cleaned_data
         except Exception as e:
             logger.error(f"Error validating analysis data: {e}")
