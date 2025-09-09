@@ -90,7 +90,8 @@ class IA1IA2PipelineTestSuite:
                 self.log_test_result("VOIE 1 Filtering Logic", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
-            analyses = response.json()
+            data = response.json()
+            analyses = data.get('analyses', [])
             
             if not analyses:
                 self.log_test_result("VOIE 1 Filtering Logic", False, "No IA1 analyses found")
