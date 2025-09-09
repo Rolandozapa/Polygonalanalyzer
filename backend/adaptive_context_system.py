@@ -580,7 +580,7 @@ class AdaptiveContextSystem:
         else:
             return "neutral"
     
-    def _calculate_market_stress(self, volatility: float, price_changes: List[float]) -> float:
+    def _calculate_market_stress(self, volatility: float, price_changes: List[float], indicators_divergence: float = 0.0) -> float:
         """Calculate market stress level"""
         vol_stress = min(volatility / 25, 1.0)  # Normalize volatility
         
@@ -591,7 +591,10 @@ class AdaptiveContextSystem:
         else:
             dispersion_stress = 0.0
         
-        return (vol_stress + dispersion_stress) / 2
+        # Factor in indicators divergence stress
+        divergence_stress = min(abs(indicators_divergence) / 2.0, 1.0)
+        
+        return (vol_stress + dispersion_stress + divergence_stress) / 3
     
     def _assess_liquidity_condition(self, avg_volume_ratio: float) -> str:
         """Assess market liquidity condition"""
