@@ -3076,8 +3076,8 @@ For LONG/SHORT signals:
 {{
     "signal": "LONG",
     "confidence": 0.85,
-    "reasoning": "MARKET SENTIMENT ANALYSIS: {market_sentiment['market_sentiment']} with BTC {market_sentiment['btc_change_24h']:+.1f}% suggests {'favorable' if market_sentiment['sentiment_score'] > 0.6 else 'neutral'} conditions for {'LONG' if market_sentiment['btc_change_24h'] > 0 else 'SHORT'} positions. TECHNICAL CONFLUENCE: RSI at {analysis.rsi:.1f} with MACD {analysis.macd_signal:.4f} confirms {'bullish' if analysis.macd_signal > 0 else 'bearish'} momentum. PROBABILISTIC TP ANALYSIS: Based on current volatility {{volatility:.1%}} and technical patterns, implementing {{tp_count}}-level TP strategy with {{main_distribution}}% allocated to TP{{main_tp}} for optimal risk-reward. Market conditions favor {{tp_logic}} approach.",
-    "risk_level": "MEDIUM",
+    "reasoning": "MARKET SENTIMENT ANALYSIS: {market_sentiment['market_sentiment']} with BTC {market_sentiment['btc_change_24h']:+.1f}% suggests {'favorable' if market_sentiment['sentiment_score'] > 0.6 else 'neutral'} conditions for {'LONG' if market_sentiment['btc_change_24h'] > 0 else 'SHORT'} positions. TECHNICAL CONFLUENCE: RSI at {analysis.rsi:.1f} with MACD {analysis.macd_signal:.4f} confirms {'bullish' if analysis.macd_signal > 0 else 'bearish'} momentum. SOPHISTICATED RR ANALYSIS: Composite RR {composite_rr_data['composite_rr']:.2f} with {sophisticated_risk_level} risk level based on volatility {opportunity.volatility:.1%} and market conditions. PROBABILISTIC TP ANALYSIS: Implementing multi-level TP strategy optimized for current market setup.",
+    "risk_level": "{sophisticated_risk_level}",
     "strategy_type": "PROBABILISTIC_OPTIMAL_TP",
     "leverage": {{
         "calculated_leverage": 4.5,
