@@ -351,7 +351,8 @@ class IA1IA2PipelineTestSuite:
         try:
             # Get initial state
             initial_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            initial_decisions = initial_response.json() if initial_response.status_code == 200 else []
+            initial_data = initial_response.json() if initial_response.status_code == 200 else {}
+            initial_decisions = initial_data.get('decisions', [])
             initial_count = len(initial_decisions)
             
             logger.info(f"   📊 Initial IA2 decisions count: {initial_count}")
