@@ -2951,6 +2951,15 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 opportunity, analysis, perf_stats, account_balance, claude_decision
             )
             
+            # 🎯 ENHANCED RR: Use IA2's recalculated RR if available, fallback to IA1's original RR
+            enhanced_rr = decision_logic.get("enhanced_rr", {})
+            if enhanced_rr.get("ia2_calculated_rr") and enhanced_rr.get("final_rr_source") == "ia2_recalculated":
+                final_rr = enhanced_rr["ia2_calculated_rr"]
+                logger.info(f"🎯 USING IA2 ENHANCED RR: {opportunity.symbol} - {final_rr:.2f}:1 (improved from IA1: {analysis.risk_reward_ratio:.2f}:1)")
+            else:
+                final_rr = analysis.risk_reward_ratio
+                logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1")
+            
             # Create advanced trading decision
             decision = TradingDecision(
                 symbol=opportunity.symbol,
@@ -2962,7 +2971,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 take_profit_2=decision_logic["tp2"],
                 take_profit_3=decision_logic["tp3"],
                 position_size=decision_logic["position_size"],
-                risk_reward_ratio=analysis.risk_reward_ratio,  # 🎯 NOUVEAU: Utiliser le RR calculé par IA1 au lieu de le recalculer
+                risk_reward_ratio=final_rr,  # 🎯 ENHANCED: Use IA2 recalculated RR when available
                 ia1_analysis_id=analysis.id,
                 ia2_reasoning=decision_logic["reasoning"] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
                 status=TradingStatus.PENDING
