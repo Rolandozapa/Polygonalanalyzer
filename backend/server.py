@@ -2907,6 +2907,13 @@ For LONG/SHORT signals:
     "market_analysis": {{
         "market_sentiment": "{market_sentiment['market_sentiment']}",
         "btc_change_24h": {market_sentiment['btc_change_24h']},
+        "recalculated_technical_levels": {{
+            "ia2_support_level": {{calculated_support_price}},
+            "ia2_resistance_level": {{calculated_resistance_price}}, 
+            "technical_reasoning": "Detailed reasoning for why these levels are optimal for the chosen strategy",
+            "ia2_calculated_rr": {{updated_rr_ratio}},
+            "rr_improvement_reason": "Explanation of how this RR is more precise than IA1's calculation"
+        }},
         "sentiment_score": {market_sentiment['sentiment_score']},
         "leverage_justification": "Market sentiment alignment with trade direction"
     }},
