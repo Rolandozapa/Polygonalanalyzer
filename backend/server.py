@@ -9928,8 +9928,9 @@ async def startup_event():
     try:
         logger.info("🚀 Application startup - Initializing systems...")
         
-        # Initialize orchestrator (this also initializes the trending system)
-        await orchestrator.initialize()
+        # 🚨 ORCHESTRATOR INIT TEMPORAIREMENT DÉSACTIVÉ POUR STABILISATION
+        logger.info("🛑 Orchestrator initialization disabled for system stabilization")
+        # await orchestrator.initialize()
         
         # Initialize BingX tradable symbols fetcher
         logger.info("🔄 Initializing BingX tradable symbols...")
