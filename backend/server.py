@@ -1320,7 +1320,6 @@ class UltraProfessionalIA1TechnicalAnalyst:
             "stochastic": stochastic,
             "timeframe": "1H"
         }
-        self.advanced_indicators = AdvancedTechnicalIndicators()
     
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
         """Ultra professional technical analysis avec validation multi-sources OHLCV (économie API intelligente)"""
