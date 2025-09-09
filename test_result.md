@@ -176,7 +176,7 @@
 
 ## test_plan:
   current_focus:
-    - "Test IA1→IA2 Conditional Filtering Logic (VOIE 1 & VOIE 2)"
+    - "Test IA1→IA2 Filtering and Processing Pipeline"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
