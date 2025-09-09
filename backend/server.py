@@ -3649,19 +3649,47 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 opportunity, analysis, perf_stats, account_balance, claude_decision
             )
             
-            # 🎯 ENHANCED RR: Use IA2's recalculated RR if available and validated, fallback to IA1's original RR
+            # 🎯 ENHANCED RR WITH SOPHISTICATED ANALYSIS: 
+            # Priority: IA2 Recalculated > Sophisticated Composite > IA1 Original
             enhanced_rr = decision_logic.get("enhanced_rr", {})
+            
+            # Option 1: IA2 recalculated RR (highest priority)
             if (enhanced_rr.get("ia2_calculated_rr") and 
                 enhanced_rr.get("final_rr_source") in ["ia2_recalculated", "ia2_recalculated_validated"]):
                 final_rr = enhanced_rr["ia2_calculated_rr"]
+                rr_source = "ia2_recalculated"
                 validation_msg = enhanced_rr.get("validation_message", "")
                 logger.info(f"🎯 USING IA2 ENHANCED RR: {opportunity.symbol} - {final_rr:.2f}:1 (improved from IA1: {analysis.risk_reward_ratio:.2f}:1)")
                 if validation_msg:
                     logger.info(f"✅ VALIDATION: {validation_msg}")
+            
+            # Option 2: Sophisticated Composite RR (second priority)
+            elif composite_rr_data.get('composite_rr', 0) > 0:
+                final_rr = composite_rr_data['composite_rr']
+                rr_source = "sophisticated_composite"
+                
+                # Enhanced validation with composite RR
+                if abs(final_rr - analysis.risk_reward_ratio) > 1.0:
+                    logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (significant improvement from IA1: {analysis.risk_reward_ratio:.2f}:1)")
+                    logger.info(f"📊 Composite Analysis: Bullish {composite_rr_data['bullish_rr']:.2f}, Bearish {composite_rr_data['bearish_rr']:.2f}, Neutral {composite_rr_data['neutral_rr']:.2f}")
+                    logger.info(f"🎯 Risk Level: {sophisticated_risk_level} | Validation: {rr_validation_status}")
+                else:
+                    logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (aligned with IA1: {analysis.risk_reward_ratio:.2f}:1)")
+            
+            # Option 3: IA1 Original RR (fallback)
             else:
                 final_rr = analysis.risk_reward_ratio
-                fallback_reason = enhanced_rr.get("validation_error", "No IA2 RR data available")
+                rr_source = "ia1_original"
+                fallback_reason = enhanced_rr.get("validation_error", "No enhanced RR data available")
                 logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1 (Reason: {fallback_reason})")
+            
+            # Additional logging for sophisticated analysis results
+            logger.info(f"📊 SOPHISTICATED RR SUMMARY {opportunity.symbol}:")
+            logger.info(f"   🎯 Final RR: {final_rr:.2f}:1 (Source: {rr_source})")
+            logger.info(f"   📊 Risk Level: {sophisticated_risk_level}")
+            logger.info(f"   📊 RR Validation: {rr_validation_status} (divergence: {rr_divergence:.2f})")
+            if rr_source == "sophisticated_composite":
+                logger.info(f"   📊 Composite Components: Bull:{composite_rr_data['bullish_rr']:.2f}, Bear:{composite_rr_data['bearish_rr']:.2f}, Neutral:{composite_rr_data['neutral_rr']:.2f}")
             
             # Create advanced trading decision
             decision = TradingDecision(
