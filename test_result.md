@@ -214,7 +214,7 @@
 
 ## test_plan:
   current_focus:
-    - "Validate IA1 Technical Indicators Post-Correction"
+    - "Test IA1 Enhanced Scoring System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
