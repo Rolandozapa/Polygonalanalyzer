@@ -9928,9 +9928,21 @@ async def startup_event():
     try:
         logger.info("🚀 Application startup - Initializing systems...")
         
-        # 🚨 ORCHESTRATOR INIT TEMPORAIREMENT DÉSACTIVÉ POUR STABILISATION
-        logger.info("🛑 Orchestrator initialization disabled for system stabilization")
-        # await orchestrator.initialize()
+        # 🔧 ORCHESTRATOR INIT AVEC PROTECTIONS CPU
+        logger.info("🚀 Initializing orchestrator with CPU protections...")
+        
+        # Vérifier CPU avant initialisation
+        try:
+            import psutil
+            cpu_usage = psutil.cpu_percent(interval=1)
+            if cpu_usage > 50.0:
+                logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Skipping orchestrator init")
+                return
+        except ImportError:
+            pass
+            
+        await orchestrator.initialize()
+        logger.info("✅ Orchestrator initialized successfully")
         
         # Initialize BingX tradable symbols fetcher
         logger.info("🔄 Initializing BingX tradable symbols...")
