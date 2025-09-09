@@ -1507,6 +1507,21 @@ class UltraProfessionalIA1TechnicalAnalyst:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
+            🎯 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS:
+            Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
+            Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}
+            Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.1%}
+            Daily Context: {timeframe_analysis.get('daily_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('daily_trend', {}).get('strength', 0.0):.1%})
+            4H Context: {timeframe_analysis.get('h4_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('h4_trend', {}).get('strength', 0.0):.1%})
+            1H Context: {timeframe_analysis.get('h1_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('h1_trend', {}).get('strength', 0.0):.1%})
+            {f"⚠️ ANTI-MOMENTUM RISK: {timeframe_analysis.get('anti_momentum_risk', 'NONE')}" if timeframe_analysis.get('anti_momentum_risk') else "✅ Momentum Alignment: OK"}
+            
+            ⚠️ CRITICAL MULTI-TIMEFRAME GUIDANCE:
+            - The DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} timeframe should be your PRIMARY basis for direction
+            - Patterns from lower timeframes are SECONDARY and should only provide entry/exit timing
+            - If Anti-Momentum Risk is HIGH, significantly reduce confidence for counter-trend signals
+            - Daily momentum > 5% should heavily influence your decision (current: {opportunity.price_change_24h:.1f}%)
+            
             📊 FIBONACCI RETRACEMENT LEVELS:
             Current Position: {fib_data['current_position']:.1%} | Nearest Level: {fib_data['nearest_level']}% | Trend: {fib_data['trend_direction'].upper()}
             Key Levels: 23.6%=${fib_data['levels']['23.6']:.4f} | 38.2%=${fib_data['levels']['38.2']:.4f} | 50%=${fib_data['levels']['50.0']:.4f} | 61.8%=${fib_data['levels']['61.8']:.4f} | 78.6%=${fib_data['levels']['78.6']:.4f}
