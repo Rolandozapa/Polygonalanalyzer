@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for _apply_adaptive_context_to_decision Method Bug Fix Verification
-Focus: CRITICAL BUG FIX VERIFICATION - Test if the _apply_adaptive_context_to_decision method bug has been resolved.
+Backend Testing Suite for IA1→IA2 Pipeline Blockage Resolution Verification
+Focus: PIPELINE BLOCKAGE DIAGNOSIS - Test if the IA1→IA2 pipeline blockage has been resolved after fixing the _calculate_market_stress method signature bug.
 
-Background: The method was moved from UltraProfessionalIA2DecisionAgent class to UltraProfessionalTradingOrchestrator class to fix the AttributeError.
+Background: Identified and fixed two critical bugs:
+1. Missing _apply_adaptive_context_to_decision method in orchestrator (FIXED)
+2. Wrong signature for _calculate_market_stress method (JUST FIXED)
+
+Current situation: 8 IA1 analyses are eligible and waiting:
+- AEROUSDT: SHORT 91% confidence  
+- SPXUSDT: SHORT 88% confidence
+- ATHUSDT: LONG 94% confidence
+- RENDERUSDT: LONG 93% confidence
+- FORMUSDT: LONG 83% confidence
+- ONDOUSDT: SHORT 87% confidence
+- HBARUSDT: SHORT 72% confidence  
+- ARKMUSDT: LONG 96% confidence
 
 Test requirements:
-1. Verify no more "_apply_adaptive_context_to_decision method not found" errors in logs
-2. Test the /api/start-trading endpoint to trigger IA2 processing
-3. Check if new IA2 decisions are generated with today's timestamps (2025-09-09)
-4. Verify VOIE 1 filtering logic is working (LONG/SHORT + confidence ≥70%)
-5. Look for any new errors or exceptions preventing IA2 completion
+1. Verify no more AdaptiveContextSystem errors in logs
+2. Test if IA2 processing now works for eligible IA1 analyses
+3. Check if new IA2 decisions are generated today (2025-09-09)
+4. Verify the complete IA1→IA2 pipeline flow
+5. Identify any remaining blockers
 
-Expected: IA2 decisions should now be successfully created and stored without AttributeError exceptions.
+Expected: The 8 eligible IA1 analyses should now be processed by IA2 and new decisions should appear.
 """
 
 import asyncio
