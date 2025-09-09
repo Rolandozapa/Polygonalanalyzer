@@ -214,7 +214,7 @@
 
 ## test_plan:
   current_focus:
-    - "Diagnose IA1 Technical Indicators Calculation Issues"
+    - "Validate IA1 Technical Indicators Post-Correction"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
