@@ -2062,6 +2062,39 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} (Market Cap: {opportunity.market_cap or 1_000_000:,.0f})")
             logger.info(f"   🎯 Key Factors: RSI={rsi:.1f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
             
+            # 🔧 CALCUL DES PRIX RÉALISTES BASÉS SUR LES NIVEAUX TECHNIQUES
+            # Utiliser les niveaux techniques calculés pour définir des prix réalistes
+            entry_price = opportunity.current_price
+            stop_loss_price = opportunity.current_price
+            take_profit_price = opportunity.current_price
+            
+            if ia1_calculated_levels:
+                entry_price = ia1_calculated_levels.get('entry_price', opportunity.current_price)
+                
+                if ia1_signal.lower() == "long":
+                    stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
+                    take_profit_price = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
+                elif ia1_signal.lower() == "short":
+                    stop_loss_price = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
+                    take_profit_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
+                else:  # hold
+                    # Pour HOLD, utiliser des niveaux neutres mais différents
+                    stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.98)
+                    take_profit_price = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.02)
+            else:
+                # Fallback si pas de niveaux calculés - utiliser des pourcentages par défaut
+                if ia1_signal.lower() == "long":
+                    stop_loss_price = opportunity.current_price * 0.95  # -5% stop loss
+                    take_profit_price = opportunity.current_price * 1.10  # +10% take profit
+                elif ia1_signal.lower() == "short":
+                    stop_loss_price = opportunity.current_price * 1.05  # +5% stop loss (price increase)
+                    take_profit_price = opportunity.current_price * 0.90  # -10% take profit (price decrease)
+                else:  # hold
+                    stop_loss_price = opportunity.current_price * 0.98  # -2% stop loss
+                    take_profit_price = opportunity.current_price * 1.02  # +2% take profit
+            
+            logger.info(f"💰 PRIX CALCULÉS {opportunity.symbol} ({ia1_signal.upper()}): Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f}")
+
             # Construire l'analyse technique temporaire pour la validation
             temp_analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
@@ -2081,9 +2114,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 ia1_signal=SignalType(ia1_signal.lower()),
                 ia1_reasoning=reasoning,
                 risk_reward_ratio=ia1_risk_reward_ratio,
-                entry_price=opportunity.current_price,
-                stop_loss_price=opportunity.current_price,
-                take_profit_price=opportunity.current_price,
+                entry_price=entry_price,
+                stop_loss_price=stop_loss_price,
+                take_profit_price=take_profit_price,
                 rr_reasoning=""
             )
             
