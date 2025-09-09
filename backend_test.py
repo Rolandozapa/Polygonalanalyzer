@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Enhanced RR Validation System
-Focus: TEST ENHANCED RR VALIDATION SYSTEM - Verify that the new IA2 RR calculation validation system works correctly with proper LONG/SHORT equation validation.
+Backend Testing Suite for Sophisticated RR Analysis System
+Focus: TEST SOPHISTICATED RR ANALYSIS SYSTEM - Verify that the new sophisticated RR analysis system with neutral/composite calculations is implemented and functional.
 
-New features to test:
-1. IA2 receives enhanced prompt with CRITICAL RR CALCULATION FORMULAS
-2. Backend validates IA2's RR calculations using correct equations:
-   - LONG: Risk = Entry - Stop Loss, Reward = Take Profit - Entry
-   - SHORT: Risk = Stop Loss - Entry, Reward = Entry - Take Profit
-3. Validation checks level order (LONG: SL < Entry < TP, SHORT: TP < Entry < SL)
-4. System corrects IA2's RR if calculation is wrong
-5. Fallback to IA1 RR if validation fails
+New sophisticated RR features to test:
+1. calculate_neutral_risk_reward() - Volatility-based RR calculation without direction
+2. calculate_composite_rr() - Combines directional + neutral RR approaches  
+3. evaluate_sophisticated_risk_level() - LOW/MEDIUM/HIGH based on composite RR + volatility
+4. RR validation (IA1 vs Composite RR divergence detection)
+5. Enhanced IA2 prompt with sophisticated RR analysis section
+6. Sophisticated risk level integration in IA2 JSON response
 
 Expected log patterns:
-- "🔧 IA2 RR CORRECTION: {symbol} - IA2 claimed X, corrected to Y"  
-- "✅ IA2 RR VALIDATED: {symbol} - {rr} ({validation_message})"
-- "❌ IA2 RR VALIDATION FAILED: {symbol} - {validation_message}"
-- "🎯 USING IA2 ENHANCED RR" or "🔄 USING IA1 ORIGINAL RR"
+- "🧠 SOPHISTICATED ANALYSIS {symbol}:"
+- "📊 Composite RR: X.XX"  
+- "📊 Bullish RR: X.XX, Bearish RR: X.XX"
+- "📊 Neutral RR: X.XX"
+- "🎯 Sophisticated Risk Level: LOW/MEDIUM/HIGH"
+- "✅ RR VALIDATION {symbol}: IA1 RR X.XX ↔ Composite RR X.XX (ALIGNED/DIVERGENT)"
+- "⚠️ SIGNIFICANT RR DIVERGENCE {symbol}: IA1 RR X.XX vs Composite RR X.XX"
 
-Test by triggering IA2 decision making and verify the validation system works correctly for both LONG and SHORT positions.
+Verify the sophisticated RR system enhances IA2's decision-making with advanced validation and risk assessment capabilities.
 """
 
 import asyncio
