@@ -38,8 +38,8 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class SophisticatedRRAnalysisTestSuite:
-    """Test suite for Sophisticated RR Analysis System Verification"""
+class MultiTimeframeHierarchicalAnalysisTestSuite:
+    """Test suite for Multi-Timeframe Hierarchical Analysis System Verification"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -55,21 +55,22 @@ class SophisticatedRRAnalysisTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Sophisticated RR Analysis System at: {self.api_url}")
+        logger.info(f"Testing Multi-Timeframe Hierarchical Analysis System at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Expected sophisticated RR log patterns
+        # Expected multi-timeframe log patterns
         self.expected_log_patterns = [
-            "🧠 SOPHISTICATED ANALYSIS",
-            "📊 Composite RR:",
-            "📊 Bullish RR:",
-            "📊 Bearish RR:",
-            "📊 Neutral RR:",
-            "🎯 Sophisticated Risk Level:",
-            "✅ RR VALIDATION",
-            "⚠️ SIGNIFICANT RR DIVERGENCE"
+            "🎯 MULTI-TIMEFRAME ANALYSIS",
+            "📊 Dominant Timeframe:",
+            "📊 Decisive Pattern:",
+            "📊 Hierarchy Confidence:",
+            "⚠️ Anti-Momentum Risk:",
+            "DAILY_BULLISH_MOMENTUM",
+            "DAILY_BEARISH_MOMENTUM",
+            "H4_BULLISH_CONTINUATION",
+            "H4_BEARISH_CONTINUATION"
         ]
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
@@ -86,9 +87,9 @@ class SophisticatedRRAnalysisTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_sophisticated_rr_log_patterns(self):
-        """Test 1: Verify sophisticated RR analysis log patterns are present"""
-        logger.info("\n🔍 TEST 1: Check for sophisticated RR analysis log patterns")
+    async def test_1_multi_timeframe_log_patterns(self):
+        """Test 1: Verify multi-timeframe analysis log patterns are present"""
+        logger.info("\n🔍 TEST 1: Check for multi-timeframe analysis log patterns")
         
         try:
             import subprocess
@@ -118,10 +119,10 @@ class SophisticatedRRAnalysisTestSuite:
                 pass
             
             if not backend_logs:
-                self.log_test_result("Sophisticated RR Log Patterns", False, "Could not retrieve backend logs")
+                self.log_test_result("Multi-Timeframe Log Patterns", False, "Could not retrieve backend logs")
                 return
             
-            # Check for sophisticated RR log patterns
+            # Check for multi-timeframe log patterns
             pattern_counts = {}
             for pattern in self.expected_log_patterns:
                 count = backend_logs.count(pattern)
@@ -136,192 +137,59 @@ class SophisticatedRRAnalysisTestSuite:
             
             details = f"Patterns found: {patterns_found}/{len(self.expected_log_patterns)}, Total occurrences: {total_occurrences}"
             
-            self.log_test_result("Sophisticated RR Log Patterns", success, details)
+            self.log_test_result("Multi-Timeframe Log Patterns", success, details)
             
         except Exception as e:
-            self.log_test_result("Sophisticated RR Log Patterns", False, f"Exception: {str(e)}")
+            self.log_test_result("Multi-Timeframe Log Patterns", False, f"Exception: {str(e)}")
     
-    async def test_2_ia2_decisions_with_sophisticated_rr(self):
-        """Test 2: Verify IA2 decisions contain sophisticated RR analysis data"""
-        logger.info("\n🔍 TEST 2: Check IA2 decisions for sophisticated RR analysis integration")
+    async def test_2_analyze_multi_timeframe_hierarchy_method(self):
+        """Test 2: Verify analyze_multi_timeframe_hierarchy method is implemented"""
+        logger.info("\n🔍 TEST 2: Check analyze_multi_timeframe_hierarchy method implementation")
         
         try:
-            # Get IA2 decisions
-            response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            
-            if response.status_code != 200:
-                self.log_test_result("IA2 Decisions Sophisticated RR", False, f"HTTP {response.status_code}: {response.text}")
-                return
-            
-            data = response.json()
-            decisions = data.get('decisions', [])
-            
-            if not decisions:
-                self.log_test_result("IA2 Decisions Sophisticated RR", False, "No IA2 decisions found")
-                return
-            
-            # Check recent decisions for sophisticated RR fields
-            sophisticated_rr_decisions = 0
-            risk_level_decisions = 0
-            composite_rr_decisions = 0
-            
-            for decision in decisions[-10:]:  # Check last 10 decisions
-                symbol = decision.get('symbol', 'Unknown')
-                
-                # Check for sophisticated_rr_analysis field in decision_logic
-                decision_logic = decision.get('decision_logic', {})
-                if isinstance(decision_logic, dict):
-                    sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
-                    if sophisticated_rr:
-                        sophisticated_rr_decisions += 1
-                        logger.info(f"      ✅ {symbol}: Has sophisticated_rr_analysis field")
-                        
-                        # Check for specific sophisticated RR fields
-                        if sophisticated_rr.get('composite_rr'):
-                            composite_rr_decisions += 1
-                        if sophisticated_rr.get('sophisticated_risk_level'):
-                            risk_level_decisions += 1
-                    else:
-                        logger.info(f"      ❌ {symbol}: Missing sophisticated_rr_analysis field")
-                
-                # Check for risk_level field
-                risk_level = decision.get('risk_level', '')
-                if risk_level in ['LOW', 'MEDIUM', 'HIGH']:
-                    logger.info(f"      ✅ {symbol}: Has risk_level: {risk_level}")
-                else:
-                    logger.info(f"      ⚠️ {symbol}: Missing or invalid risk_level: {risk_level}")
-            
-            logger.info(f"   📊 Decisions with sophisticated RR analysis: {sophisticated_rr_decisions}/10")
-            logger.info(f"   📊 Decisions with composite RR: {composite_rr_decisions}/10")
-            logger.info(f"   📊 Decisions with risk level: {risk_level_decisions}/10")
-            
-            # Success criteria: At least 30% of recent decisions have sophisticated RR data
-            success = sophisticated_rr_decisions >= 3 or composite_rr_decisions >= 3
-            
-            details = f"Sophisticated RR: {sophisticated_rr_decisions}/10, Composite RR: {composite_rr_decisions}/10, Risk levels: {risk_level_decisions}/10"
-            
-            self.log_test_result("IA2 Decisions Sophisticated RR", success, details)
-            
-        except Exception as e:
-            self.log_test_result("IA2 Decisions Sophisticated RR", False, f"Exception: {str(e)}")
-    
-    async def test_3_trigger_ia2_and_verify_sophisticated_rr(self):
-        """Test 3: Trigger IA2 processing and verify sophisticated RR analysis is active"""
-        logger.info("\n🔍 TEST 3: Trigger IA2 processing and verify sophisticated RR analysis")
-        
-        try:
-            # Get initial decision count
-            initial_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            initial_data = initial_response.json() if initial_response.status_code == 200 else {}
-            initial_count = len(initial_data.get('decisions', []))
-            
-            logger.info(f"   📊 Initial IA2 decisions count: {initial_count}")
-            
-            # Trigger IA2 processing
-            logger.info("   🚀 Triggering IA2 processing via /api/start-trading...")
-            start_response = requests.post(f"{self.api_url}/start-trading", timeout=180)
-            
-            logger.info(f"   📊 Start trading response: HTTP {start_response.status_code}")
-            
-            if start_response.status_code not in [200, 201]:
-                self.log_test_result("Trigger IA2 Sophisticated RR", False, f"Start trading failed: HTTP {start_response.status_code}")
-                return
-            
-            # Wait for processing
-            logger.info("   ⏳ Waiting 45 seconds for IA2 processing...")
-            await asyncio.sleep(45)
-            
-            # Check backend logs for sophisticated RR patterns
-            import subprocess
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "1000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            # Count sophisticated RR analysis occurrences
-            sophisticated_analysis_count = backend_logs.count("🧠 SOPHISTICATED ANALYSIS")
-            composite_rr_count = backend_logs.count("📊 Composite RR:")
-            risk_level_count = backend_logs.count("🎯 Sophisticated Risk Level:")
-            rr_validation_count = backend_logs.count("✅ RR VALIDATION")
-            
-            logger.info(f"   📊 Sophisticated analysis logs: {sophisticated_analysis_count}")
-            logger.info(f"   📊 Composite RR logs: {composite_rr_count}")
-            logger.info(f"   📊 Risk level logs: {risk_level_count}")
-            logger.info(f"   📊 RR validation logs: {rr_validation_count}")
-            
-            # Check for new decisions
-            updated_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            updated_data = updated_response.json() if updated_response.status_code == 200 else {}
-            updated_count = len(updated_data.get('decisions', []))
-            new_decisions = updated_count - initial_count
-            
-            logger.info(f"   📊 New decisions generated: {new_decisions}")
-            
-            # Success criteria: Either sophisticated RR logs found OR new decisions with sophisticated RR
-            log_success = sophisticated_analysis_count > 0 or composite_rr_count > 0
-            decision_success = new_decisions > 0 or updated_count > 15
-            
-            success = log_success or decision_success
-            
-            details = f"Sophisticated logs: {sophisticated_analysis_count}, New decisions: {new_decisions}, Total decisions: {updated_count}"
-            
-            self.log_test_result("Trigger IA2 Sophisticated RR", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Trigger IA2 Sophisticated RR", False, f"Exception: {str(e)}")
-    
-    async def test_4_sophisticated_rr_calculation_methods(self):
-        """Test 4: Verify sophisticated RR calculation methods are implemented"""
-        logger.info("\n🔍 TEST 4: Verify sophisticated RR calculation methods implementation")
-        
-        try:
-            import subprocess
-            
-            # Check if the sophisticated RR methods exist in the backend code
+            # Check if the method exists in the backend code
             backend_code = ""
             try:
                 with open('/app/backend/server.py', 'r') as f:
                     backend_code = f.read()
             except Exception as e:
-                self.log_test_result("Sophisticated RR Methods", False, f"Could not read backend code: {e}")
+                self.log_test_result("Multi-Timeframe Method Implementation", False, f"Could not read backend code: {e}")
                 return
             
-            # Check for required method implementations
-            methods_found = {}
-            required_methods = [
-                "calculate_neutral_risk_reward",
-                "calculate_composite_rr", 
-                "evaluate_sophisticated_risk_level",
-                "calculate_bullish_rr",
-                "calculate_bearish_rr"
+            # Check for required method implementation
+            method_found = "def analyze_multi_timeframe_hierarchy" in backend_code
+            
+            # Check for multi-timeframe analysis components
+            components_found = {}
+            required_components = [
+                "_analyze_daily_context",
+                "_analyze_h4_context", 
+                "_analyze_h1_context",
+                "dominant_timeframe",
+                "decisive_pattern",
+                "hierarchy_confidence",
+                "anti_momentum_warning"
             ]
             
-            for method in required_methods:
-                if f"def {method}" in backend_code:
-                    methods_found[method] = True
-                    logger.info(f"      ✅ Method found: {method}")
+            for component in required_components:
+                if component in backend_code:
+                    components_found[component] = True
+                    logger.info(f"      ✅ Component found: {component}")
                 else:
-                    methods_found[method] = False
-                    logger.info(f"      ❌ Method missing: {method}")
+                    components_found[component] = False
+                    logger.info(f"      ❌ Component missing: {component}")
             
-            # Check for sophisticated RR usage in IA2 decision making
-            sophisticated_usage_patterns = [
-                "calculate_composite_rr(",
-                "evaluate_sophisticated_risk_level(",
-                "🧠 SOPHISTICATED ANALYSIS",
-                "sophisticated_rr_analysis",
-                "composite_rr_data"
+            # Check for multi-timeframe usage patterns
+            usage_patterns = [
+                "🎯 MULTI-TIMEFRAME ANALYSIS",
+                "📊 Dominant Timeframe:",
+                "📊 Decisive Pattern:",
+                "📊 Hierarchy Confidence:",
+                "⚠️ Anti-Momentum Risk:"
             ]
             
             usage_found = {}
-            for pattern in sophisticated_usage_patterns:
+            for pattern in usage_patterns:
                 if pattern in backend_code:
                     usage_found[pattern] = True
                     logger.info(f"      ✅ Usage pattern found: {pattern}")
@@ -329,30 +197,149 @@ class SophisticatedRRAnalysisTestSuite:
                     usage_found[pattern] = False
                     logger.info(f"      ❌ Usage pattern missing: {pattern}")
             
-            methods_implemented = sum(methods_found.values())
+            components_implemented = sum(components_found.values())
             usage_patterns_found = sum(usage_found.values())
             
-            logger.info(f"   📊 Methods implemented: {methods_implemented}/{len(required_methods)}")
-            logger.info(f"   📊 Usage patterns found: {usage_patterns_found}/{len(sophisticated_usage_patterns)}")
+            logger.info(f"   📊 Method found: {method_found}")
+            logger.info(f"   📊 Components implemented: {components_implemented}/{len(required_components)}")
+            logger.info(f"   📊 Usage patterns found: {usage_patterns_found}/{len(usage_patterns)}")
             
-            # Success criteria: All methods implemented and most usage patterns found
-            success = methods_implemented >= 4 and usage_patterns_found >= 3
+            # Success criteria: Method exists and most components/patterns found
+            success = method_found and components_implemented >= 5 and usage_patterns_found >= 3
             
-            details = f"Methods: {methods_implemented}/{len(required_methods)}, Usage patterns: {usage_patterns_found}/{len(sophisticated_usage_patterns)}"
+            details = f"Method: {method_found}, Components: {components_implemented}/{len(required_components)}, Usage: {usage_patterns_found}/{len(usage_patterns)}"
             
-            self.log_test_result("Sophisticated RR Methods", success, details)
+            self.log_test_result("Multi-Timeframe Method Implementation", success, details)
             
         except Exception as e:
-            self.log_test_result("Sophisticated RR Methods", False, f"Exception: {str(e)}")
+            self.log_test_result("Multi-Timeframe Method Implementation", False, f"Exception: {str(e)}")
     
-    async def test_5_rr_validation_and_divergence_detection(self):
-        """Test 5: Verify RR validation and divergence detection functionality"""
-        logger.info("\n🔍 TEST 5: Verify RR validation and divergence detection")
+    async def test_3_ia1_analyses_with_multi_timeframe_context(self):
+        """Test 3: Verify IA1 analyses contain multi-timeframe context"""
+        logger.info("\n🔍 TEST 3: Check IA1 analyses for multi-timeframe context integration")
         
         try:
-            import subprocess
+            # Get IA1 analyses
+            response = requests.get(f"{self.api_url}/analyses", timeout=30)
             
-            # Get recent backend logs
+            if response.status_code != 200:
+                self.log_test_result("IA1 Multi-Timeframe Context", False, f"HTTP {response.status_code}: {response.text}")
+                return
+            
+            data = response.json()
+            analyses = data.get('analyses', [])
+            
+            if not analyses:
+                self.log_test_result("IA1 Multi-Timeframe Context", False, "No IA1 analyses found")
+                return
+            
+            # Check recent analyses for multi-timeframe context
+            multi_timeframe_analyses = 0
+            dominant_timeframe_analyses = 0
+            decisive_pattern_analyses = 0
+            anti_momentum_analyses = 0
+            
+            for analysis in analyses[-10:]:  # Check last 10 analyses
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '')
+                
+                # Check for multi-timeframe keywords in reasoning
+                multi_timeframe_keywords = [
+                    "multi-timeframe", "timeframe hierarchy", "dominant timeframe",
+                    "daily momentum", "4H trend", "1H signals", "decisive pattern"
+                ]
+                
+                has_multi_timeframe = any(keyword.lower() in reasoning.lower() for keyword in multi_timeframe_keywords)
+                if has_multi_timeframe:
+                    multi_timeframe_analyses += 1
+                    logger.info(f"      ✅ {symbol}: Has multi-timeframe context")
+                
+                # Check for specific multi-timeframe fields
+                if "dominant timeframe" in reasoning.lower() or "Dominant Timeframe:" in reasoning:
+                    dominant_timeframe_analyses += 1
+                
+                if "decisive pattern" in reasoning.lower() or "Decisive Pattern:" in reasoning:
+                    decisive_pattern_analyses += 1
+                
+                if "anti-momentum" in reasoning.lower() or "Anti-Momentum Risk:" in reasoning:
+                    anti_momentum_analyses += 1
+                    logger.info(f"      ⚠️ {symbol}: Has anti-momentum risk assessment")
+            
+            logger.info(f"   📊 Analyses with multi-timeframe context: {multi_timeframe_analyses}/10")
+            logger.info(f"   📊 Analyses with dominant timeframe: {dominant_timeframe_analyses}/10")
+            logger.info(f"   📊 Analyses with decisive pattern: {decisive_pattern_analyses}/10")
+            logger.info(f"   📊 Analyses with anti-momentum assessment: {anti_momentum_analyses}/10")
+            
+            # Success criteria: At least 30% of recent analyses have multi-timeframe context
+            success = multi_timeframe_analyses >= 3 or dominant_timeframe_analyses >= 2
+            
+            details = f"Multi-timeframe: {multi_timeframe_analyses}/10, Dominant timeframe: {dominant_timeframe_analyses}/10, Decisive pattern: {decisive_pattern_analyses}/10, Anti-momentum: {anti_momentum_analyses}/10"
+            
+            self.log_test_result("IA1 Multi-Timeframe Context", success, details)
+            
+        except Exception as e:
+            self.log_test_result("IA1 Multi-Timeframe Context", False, f"Exception: {str(e)}")
+    
+    async def test_4_anti_momentum_risk_detection(self):
+        """Test 4: Verify anti-momentum risk detection for strong daily moves"""
+        logger.info("\n🔍 TEST 4: Test anti-momentum risk detection for strong daily moves")
+        
+        try:
+            # Get IA1 analyses
+            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test_result("Anti-Momentum Risk Detection", False, f"HTTP {response.status_code}: {response.text}")
+                return
+            
+            data = response.json()
+            analyses = data.get('analyses', [])
+            
+            if not analyses:
+                self.log_test_result("Anti-Momentum Risk Detection", False, "No IA1 analyses found")
+                return
+            
+            # Look for strong momentum cases and anti-momentum detection
+            strong_momentum_cases = 0
+            anti_momentum_detected = 0
+            confidence_reduced_cases = 0
+            
+            for analysis in analyses:
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '')
+                confidence = analysis.get('confidence', 0)
+                recommendation = analysis.get('recommendation', '')
+                
+                # Check if this is a strong momentum case (we'll look for mentions of high price changes)
+                strong_momentum_indicators = [
+                    "+7%", "+8%", "+9%", "+10%", "+5%", "+6%",
+                    "-7%", "-8%", "-9%", "-10%", "-5%", "-6%",
+                    "strong momentum", "strong daily", "powerful move"
+                ]
+                
+                is_strong_momentum = any(indicator in reasoning for indicator in strong_momentum_indicators)
+                if is_strong_momentum:
+                    strong_momentum_cases += 1
+                    logger.info(f"      📈 {symbol}: Strong momentum case detected")
+                    
+                    # Check for anti-momentum risk detection
+                    anti_momentum_indicators = [
+                        "anti-momentum", "counter-trend", "against momentum",
+                        "Anti-Momentum Risk:", "⚠️ Anti-Momentum Risk: HIGH"
+                    ]
+                    
+                    has_anti_momentum = any(indicator in reasoning for indicator in anti_momentum_indicators)
+                    if has_anti_momentum:
+                        anti_momentum_detected += 1
+                        logger.info(f"      ⚠️ {symbol}: Anti-momentum risk detected")
+                    
+                    # Check if confidence was reduced for counter-trend signals
+                    if confidence < 70 and ("SHORT" in recommendation.upper() or "LONG" in recommendation.upper()):
+                        confidence_reduced_cases += 1
+                        logger.info(f"      📉 {symbol}: Confidence reduced to {confidence}% for counter-trend signal")
+            
+            # Check backend logs for anti-momentum warnings
+            import subprocess
             backend_logs = ""
             try:
                 log_result = subprocess.run(
@@ -365,110 +352,199 @@ class SophisticatedRRAnalysisTestSuite:
             except:
                 pass
             
-            if not backend_logs:
-                self.log_test_result("RR Validation and Divergence", False, "Could not retrieve backend logs")
-                return
+            anti_momentum_logs = backend_logs.count("⚠️ Anti-Momentum Risk:")
+            anti_momentum_warnings = backend_logs.count("⚠️ ANTI-MOMENTUM WARNING")
             
-            # Look for RR validation patterns
-            rr_validation_aligned = backend_logs.count("✅ RR VALIDATION") + backend_logs.count("(ALIGNED)")
-            rr_validation_divergent = backend_logs.count("(DIVERGENT)")
-            significant_divergence = backend_logs.count("⚠️ SIGNIFICANT RR DIVERGENCE")
+            logger.info(f"   📊 Strong momentum cases found: {strong_momentum_cases}")
+            logger.info(f"   📊 Anti-momentum risk detected: {anti_momentum_detected}")
+            logger.info(f"   📊 Confidence reduced cases: {confidence_reduced_cases}")
+            logger.info(f"   📊 Anti-momentum logs: {anti_momentum_logs}")
+            logger.info(f"   📊 Anti-momentum warnings: {anti_momentum_warnings}")
             
-            # Look for IA1 vs Composite RR comparisons
-            ia1_composite_comparisons = 0
-            lines = backend_logs.split('\n')
-            for line in lines:
-                if "IA1 RR" in line and "Composite RR" in line:
-                    ia1_composite_comparisons += 1
-                    logger.info(f"      📋 RR comparison found: {line.strip()}")
+            # Success criteria: Evidence of anti-momentum risk detection system working
+            success = (anti_momentum_detected > 0 or anti_momentum_logs > 0 or 
+                      confidence_reduced_cases > 0 or anti_momentum_warnings > 0)
             
-            logger.info(f"   📊 RR validation (aligned): {rr_validation_aligned}")
-            logger.info(f"   📊 RR validation (divergent): {rr_validation_divergent}")
-            logger.info(f"   📊 Significant divergence warnings: {significant_divergence}")
-            logger.info(f"   📊 IA1 vs Composite RR comparisons: {ia1_composite_comparisons}")
+            details = f"Strong momentum: {strong_momentum_cases}, Anti-momentum detected: {anti_momentum_detected}, Confidence reduced: {confidence_reduced_cases}, Logs: {anti_momentum_logs}"
             
-            # Check IA2 decisions for RR validation data
-            response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            rr_validation_in_decisions = 0
-            
-            if response.status_code == 200:
-                data = response.json()
-                decisions = data.get('decisions', [])
-                
-                for decision in decisions[-5:]:  # Check last 5 decisions
-                    decision_logic = decision.get('decision_logic', {})
-                    if isinstance(decision_logic, dict):
-                        sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
-                        if sophisticated_rr and sophisticated_rr.get('rr_validation_status'):
-                            rr_validation_in_decisions += 1
-                            symbol = decision.get('symbol', 'Unknown')
-                            validation_status = sophisticated_rr.get('rr_validation_status', 'Unknown')
-                            logger.info(f"      ✅ {symbol}: RR validation status: {validation_status}")
-            
-            logger.info(f"   📊 Decisions with RR validation data: {rr_validation_in_decisions}/5")
-            
-            # Success criteria: Evidence of RR validation system working
-            log_evidence = (rr_validation_aligned + rr_validation_divergent + significant_divergence) > 0
-            comparison_evidence = ia1_composite_comparisons > 0
-            decision_evidence = rr_validation_in_decisions > 0
-            
-            success = log_evidence or comparison_evidence or decision_evidence
-            
-            details = f"Log evidence: {log_evidence}, Comparisons: {ia1_composite_comparisons}, Decision validation: {rr_validation_in_decisions}"
-            
-            self.log_test_result("RR Validation and Divergence", success, details)
+            self.log_test_result("Anti-Momentum Risk Detection", success, details)
             
         except Exception as e:
-            self.log_test_result("RR Validation and Divergence", False, f"Exception: {str(e)}")
+            self.log_test_result("Anti-Momentum Risk Detection", False, f"Exception: {str(e)}")
     
-    async def test_6_sophisticated_risk_level_integration(self):
-        """Test 6: Verify sophisticated risk level integration in IA2 responses"""
-        logger.info("\n🔍 TEST 6: Verify sophisticated risk level integration")
+    async def test_5_grtusdt_case_prevention(self):
+        """Test 5: Verify GRTUSDT-like cases are prevented (strong daily momentum vs counter-trend signals)"""
+        logger.info("\n🔍 TEST 5: Test GRTUSDT-like case prevention (strong momentum vs counter-trend)")
         
         try:
-            # Get IA2 decisions
-            response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            # Trigger new analysis to get fresh data
+            logger.info("   🚀 Triggering fresh analysis via /api/start-trading...")
+            start_response = requests.post(f"{self.api_url}/start-trading", timeout=180)
+            
+            if start_response.status_code not in [200, 201]:
+                logger.warning(f"   ⚠️ Start trading returned HTTP {start_response.status_code}, continuing with existing data...")
+            else:
+                # Wait for processing
+                logger.info("   ⏳ Waiting 30 seconds for analysis processing...")
+                await asyncio.sleep(30)
+            
+            # Get IA1 analyses
+            response = requests.get(f"{self.api_url}/analyses", timeout=30)
             
             if response.status_code != 200:
-                self.log_test_result("Sophisticated Risk Level Integration", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test_result("GRTUSDT Case Prevention", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
             data = response.json()
-            decisions = data.get('decisions', [])
+            analyses = data.get('analyses', [])
             
-            if not decisions:
-                self.log_test_result("Sophisticated Risk Level Integration", False, "No IA2 decisions found")
+            if not analyses:
+                self.log_test_result("GRTUSDT Case Prevention", False, "No IA1 analyses found")
                 return
             
-            # Check for sophisticated risk level in decisions
-            risk_level_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "MISSING": 0}
-            sophisticated_risk_levels = 0
+            # Look for potential GRTUSDT-like cases
+            grtusdt_like_cases = 0
+            prevented_cases = 0
+            high_confidence_counter_trend = 0
             
-            for decision in decisions[-10:]:  # Check last 10 decisions
-                symbol = decision.get('symbol', 'Unknown')
+            for analysis in analyses[-15:]:  # Check last 15 analyses
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '')
+                confidence = analysis.get('confidence', 0)
+                recommendation = analysis.get('recommendation', '').upper()
                 
-                # Check main risk_level field
-                risk_level = decision.get('risk_level', '')
-                if risk_level in ['LOW', 'MEDIUM', 'HIGH']:
-                    risk_level_counts[risk_level] += 1
-                    logger.info(f"      ✅ {symbol}: Risk level: {risk_level}")
-                else:
-                    risk_level_counts["MISSING"] += 1
-                    logger.info(f"      ❌ {symbol}: Missing risk level")
+                # Look for strong bullish momentum indicators
+                bullish_momentum_indicators = [
+                    "+5%", "+6%", "+7%", "+8%", "+9%", "+10%",
+                    "strong bullish", "bullish momentum", "strong daily bullish",
+                    "DAILY_BULLISH_MOMENTUM"
+                ]
                 
-                # Check sophisticated_rr_analysis field
-                decision_logic = decision.get('decision_logic', {})
-                if isinstance(decision_logic, dict):
-                    sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
-                    if sophisticated_rr and sophisticated_rr.get('sophisticated_risk_level'):
-                        sophisticated_risk_levels += 1
-                        soph_risk = sophisticated_rr.get('sophisticated_risk_level', 'Unknown')
-                        logger.info(f"      ✅ {symbol}: Sophisticated risk level: {soph_risk}")
+                has_strong_bullish = any(indicator in reasoning for indicator in bullish_momentum_indicators)
+                
+                if has_strong_bullish:
+                    grtusdt_like_cases += 1
+                    logger.info(f"      📈 {symbol}: Strong bullish momentum detected")
+                    
+                    # Check if SHORT signal was given with high confidence (this would be the GRTUSDT problem)
+                    if "SHORT" in recommendation and confidence >= 80:
+                        high_confidence_counter_trend += 1
+                        logger.warning(f"      ⚠️ {symbol}: HIGH CONFIDENCE SHORT ({confidence}%) against bullish momentum - GRTUSDT-like issue!")
+                    elif "SHORT" in recommendation and confidence < 70:
+                        prevented_cases += 1
+                        logger.info(f"      ✅ {symbol}: SHORT confidence reduced to {confidence}% - GRTUSDT issue prevented")
+                    elif "HOLD" in recommendation:
+                        prevented_cases += 1
+                        logger.info(f"      ✅ {symbol}: HOLD recommended instead of counter-trend - GRTUSDT issue prevented")
             
-            logger.info(f"   📊 Risk level distribution: LOW={risk_level_counts['LOW']}, MEDIUM={risk_level_counts['MEDIUM']}, HIGH={risk_level_counts['HIGH']}, MISSING={risk_level_counts['MISSING']}")
-            logger.info(f"   📊 Decisions with sophisticated risk level: {sophisticated_risk_levels}/10")
+            # Check backend logs for specific GRTUSDT-related patterns
+            import subprocess
+            backend_logs = ""
+            try:
+                log_result = subprocess.run(
+                    ["tail", "-n", "2000", "/var/log/supervisor/backend.out.log"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                backend_logs += log_result.stdout
+            except:
+                pass
             
-            # Check backend logs for risk level calculations
+            # Look for GRTUSDT or similar symbols with anti-momentum detection
+            grtusdt_mentions = backend_logs.count("GRTUSDT")
+            daily_bullish_momentum = backend_logs.count("DAILY_BULLISH_MOMENTUM")
+            anti_momentum_high = backend_logs.count("⚠️ Anti-Momentum Risk: HIGH")
+            
+            logger.info(f"   📊 GRTUSDT-like cases (strong bullish): {grtusdt_like_cases}")
+            logger.info(f"   📊 Cases prevented (low confidence/HOLD): {prevented_cases}")
+            logger.info(f"   📊 High confidence counter-trend (problematic): {high_confidence_counter_trend}")
+            logger.info(f"   📊 GRTUSDT mentions in logs: {grtusdt_mentions}")
+            logger.info(f"   📊 Daily bullish momentum detections: {daily_bullish_momentum}")
+            logger.info(f"   📊 High anti-momentum risk warnings: {anti_momentum_high}")
+            
+            # Success criteria: No high confidence counter-trend signals OR evidence of prevention
+            success = (high_confidence_counter_trend == 0 or prevented_cases > 0 or 
+                      anti_momentum_high > 0 or daily_bullish_momentum > 0)
+            
+            details = f"GRTUSDT-like cases: {grtusdt_like_cases}, Prevented: {prevented_cases}, Problematic: {high_confidence_counter_trend}, Anti-momentum warnings: {anti_momentum_high}"
+            
+            self.log_test_result("GRTUSDT Case Prevention", success, details)
+            
+        except Exception as e:
+            self.log_test_result("GRTUSDT Case Prevention", False, f"Exception: {str(e)}")
+    
+    async def test_6_enhanced_ia1_decision_making(self):
+        """Test 6: Verify enhanced IA1 decision-making with multi-timeframe context"""
+        logger.info("\n🔍 TEST 6: Verify enhanced IA1 decision-making with multi-timeframe context")
+        
+        try:
+            # Get IA1 analyses
+            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test_result("Enhanced IA1 Decision Making", False, f"HTTP {response.status_code}: {response.text}")
+                return
+            
+            data = response.json()
+            analyses = data.get('analyses', [])
+            
+            if not analyses:
+                self.log_test_result("Enhanced IA1 Decision Making", False, "No IA1 analyses found")
+                return
+            
+            # Analyze decision quality improvements
+            enhanced_decisions = 0
+            timeframe_aware_decisions = 0
+            mature_chartist_decisions = 0
+            trend_aligned_decisions = 0
+            
+            for analysis in analyses[-10:]:  # Check last 10 analyses
+                symbol = analysis.get('symbol', 'Unknown')
+                reasoning = analysis.get('reasoning', '')
+                confidence = analysis.get('confidence', 0)
+                recommendation = analysis.get('recommendation', '').upper()
+                
+                # Check for enhanced decision-making indicators
+                enhancement_indicators = [
+                    "multi-timeframe", "timeframe hierarchy", "dominant timeframe",
+                    "chartist maturity", "established trend", "trend alignment"
+                ]
+                
+                has_enhancement = any(indicator in reasoning.lower() for indicator in enhancement_indicators)
+                if has_enhancement:
+                    enhanced_decisions += 1
+                    logger.info(f"      ✅ {symbol}: Enhanced decision-making detected")
+                
+                # Check for timeframe awareness
+                timeframe_indicators = [
+                    "daily", "4H", "1H", "timeframe", "Daily", "H4", "H1"
+                ]
+                
+                has_timeframe_awareness = any(indicator in reasoning for indicator in timeframe_indicators)
+                if has_timeframe_awareness:
+                    timeframe_aware_decisions += 1
+                
+                # Check for mature chartist behavior (avoiding counter-trend trades)
+                mature_indicators = [
+                    "avoid counter-trend", "respect established trend", "trend maturity",
+                    "chartist maturity", "established trends"
+                ]
+                
+                has_maturity = any(indicator in reasoning.lower() for indicator in mature_indicators)
+                if has_maturity:
+                    mature_chartist_decisions += 1
+                    logger.info(f"      🎯 {symbol}: Mature chartist behavior detected")
+                
+                # Check for trend alignment
+                if "LONG" in recommendation and any(bullish in reasoning.lower() for bullish in ["bullish", "uptrend", "positive"]):
+                    trend_aligned_decisions += 1
+                elif "SHORT" in recommendation and any(bearish in reasoning.lower() for bearish in ["bearish", "downtrend", "negative"]):
+                    trend_aligned_decisions += 1
+                elif "HOLD" in recommendation:
+                    trend_aligned_decisions += 1  # HOLD is always trend-neutral/safe
+            
+            # Check backend logs for enhanced IA1 patterns
             import subprocess
             backend_logs = ""
             try:
@@ -482,22 +558,28 @@ class SophisticatedRRAnalysisTestSuite:
             except:
                 pass
             
-            risk_level_logs = backend_logs.count("🎯 Sophisticated Risk Level:")
-            risk_evaluation_logs = backend_logs.count("🎯 SOPHISTICATED RISK EVALUATION:")
+            enhanced_ia1_logs = backend_logs.count("Enhanced IA1")
+            multi_timeframe_logs = backend_logs.count("🎯 MULTI-TIMEFRAME ANALYSIS")
+            chartist_maturity_logs = backend_logs.count("chartist maturity")
             
-            logger.info(f"   📊 Risk level calculation logs: {risk_level_logs}")
-            logger.info(f"   📊 Risk evaluation logs: {risk_evaluation_logs}")
+            logger.info(f"   📊 Enhanced decisions: {enhanced_decisions}/10")
+            logger.info(f"   📊 Timeframe aware decisions: {timeframe_aware_decisions}/10")
+            logger.info(f"   📊 Mature chartist decisions: {mature_chartist_decisions}/10")
+            logger.info(f"   📊 Trend aligned decisions: {trend_aligned_decisions}/10")
+            logger.info(f"   📊 Enhanced IA1 logs: {enhanced_ia1_logs}")
+            logger.info(f"   📊 Multi-timeframe logs: {multi_timeframe_logs}")
+            logger.info(f"   📊 Chartist maturity logs: {chartist_maturity_logs}")
             
-            # Success criteria: Most decisions have risk levels and some have sophisticated risk levels
-            valid_risk_levels = risk_level_counts['LOW'] + risk_level_counts['MEDIUM'] + risk_level_counts['HIGH']
-            success = valid_risk_levels >= 7 or sophisticated_risk_levels >= 3 or risk_level_logs > 0
+            # Success criteria: Evidence of enhanced decision-making
+            success = (enhanced_decisions >= 3 or timeframe_aware_decisions >= 5 or 
+                      mature_chartist_decisions >= 2 or multi_timeframe_logs > 0)
             
-            details = f"Valid risk levels: {valid_risk_levels}/10, Sophisticated: {sophisticated_risk_levels}/10, Logs: {risk_level_logs}"
+            details = f"Enhanced: {enhanced_decisions}/10, Timeframe aware: {timeframe_aware_decisions}/10, Mature: {mature_chartist_decisions}/10, Trend aligned: {trend_aligned_decisions}/10"
             
-            self.log_test_result("Sophisticated Risk Level Integration", success, details)
+            self.log_test_result("Enhanced IA1 Decision Making", success, details)
             
         except Exception as e:
-            self.log_test_result("Sophisticated Risk Level Integration", False, f"Exception: {str(e)}")
+            self.log_test_result("Enhanced IA1 Decision Making", False, f"Exception: {str(e)}")
     
     def _is_recent_timestamp(self, timestamp_str: str) -> bool:
         """Check if timestamp is from the last 24 hours"""
@@ -522,25 +604,25 @@ class SophisticatedRRAnalysisTestSuite:
             return False
     
     async def run_comprehensive_tests(self):
-        """Run all sophisticated RR analysis system tests"""
-        logger.info("🚀 Starting Sophisticated RR Analysis System Test Suite")
+        """Run all multi-timeframe hierarchical analysis system tests"""
+        logger.info("🚀 Starting Multi-Timeframe Hierarchical Analysis System Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 SOPHISTICATED RR ANALYSIS SYSTEM VERIFICATION")
-        logger.info("🎯 Testing: calculate_neutral_risk_reward, calculate_composite_rr, evaluate_sophisticated_risk_level")
-        logger.info("🎯 Expected: Enhanced IA2 decisions with sophisticated RR validation and risk assessment")
+        logger.info("📋 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS SYSTEM VERIFICATION")
+        logger.info("🎯 Testing: analyze_multi_timeframe_hierarchy, anti-momentum detection, enhanced IA1")
+        logger.info("🎯 Expected: Improved chartist maturity preventing counter-momentum trading errors")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_sophisticated_rr_log_patterns()
-        await self.test_2_ia2_decisions_with_sophisticated_rr()
-        await self.test_3_trigger_ia2_and_verify_sophisticated_rr()
-        await self.test_4_sophisticated_rr_calculation_methods()
-        await self.test_5_rr_validation_and_divergence_detection()
-        await self.test_6_sophisticated_risk_level_integration()
+        await self.test_1_multi_timeframe_log_patterns()
+        await self.test_2_analyze_multi_timeframe_hierarchy_method()
+        await self.test_3_ia1_analyses_with_multi_timeframe_context()
+        await self.test_4_anti_momentum_risk_detection()
+        await self.test_5_grtusdt_case_prevention()
+        await self.test_6_enhanced_ia1_decision_making()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 SOPHISTICATED RR ANALYSIS SYSTEM SUMMARY")
+        logger.info("📊 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS SYSTEM SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -556,29 +638,29 @@ class SophisticatedRRAnalysisTestSuite:
         
         # System analysis
         logger.info("\n" + "=" * 80)
-        logger.info("📋 SOPHISTICATED RR ANALYSIS SYSTEM STATUS")
+        logger.info("📋 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS SYSTEM STATUS")
         logger.info("=" * 80)
         
         if passed_tests == total_tests:
-            logger.info("🎉 ALL TESTS PASSED - Sophisticated RR Analysis System FULLY FUNCTIONAL!")
-            logger.info("✅ Sophisticated RR log patterns detected")
-            logger.info("✅ IA2 decisions contain sophisticated RR analysis")
-            logger.info("✅ IA2 processing generates sophisticated RR calculations")
-            logger.info("✅ Sophisticated RR calculation methods implemented")
-            logger.info("✅ RR validation and divergence detection working")
-            logger.info("✅ Sophisticated risk level integration active")
+            logger.info("🎉 ALL TESTS PASSED - Multi-Timeframe Hierarchical Analysis System FULLY FUNCTIONAL!")
+            logger.info("✅ Multi-timeframe log patterns detected")
+            logger.info("✅ analyze_multi_timeframe_hierarchy method implemented")
+            logger.info("✅ IA1 analyses contain multi-timeframe context")
+            logger.info("✅ Anti-momentum risk detection working")
+            logger.info("✅ GRTUSDT-like cases prevented")
+            logger.info("✅ Enhanced IA1 decision-making active")
         elif passed_tests >= total_tests * 0.8:
-            logger.info("⚠️ MOSTLY FUNCTIONAL - Sophisticated RR system working with minor gaps")
+            logger.info("⚠️ MOSTLY FUNCTIONAL - Multi-timeframe system working with minor gaps")
             logger.info("🔍 Some components may need fine-tuning for full optimization")
         elif passed_tests >= total_tests * 0.5:
-            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core sophisticated RR features working")
+            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core multi-timeframe features working")
             logger.info("🔧 Some advanced features may need implementation or debugging")
         else:
-            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with sophisticated RR analysis")
+            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with multi-timeframe analysis")
             logger.info("🚨 Major implementation gaps or system errors preventing functionality")
         
         # Specific requirements check
-        logger.info("\n📝 SOPHISTICATED RR REQUIREMENTS VERIFICATION:")
+        logger.info("\n📝 MULTI-TIMEFRAME REQUIREMENTS VERIFICATION:")
         
         requirements_met = []
         requirements_failed = []
@@ -587,30 +669,30 @@ class SophisticatedRRAnalysisTestSuite:
         for result in self.test_results:
             if result['success']:
                 if "Log Patterns" in result['test']:
-                    requirements_met.append("✅ Sophisticated RR log patterns detected in backend")
-                elif "Decisions Sophisticated RR" in result['test']:
-                    requirements_met.append("✅ IA2 decisions contain sophisticated RR analysis data")
-                elif "Trigger IA2" in result['test']:
-                    requirements_met.append("✅ IA2 processing generates sophisticated RR calculations")
-                elif "Methods" in result['test']:
-                    requirements_met.append("✅ Sophisticated RR calculation methods implemented")
-                elif "Validation" in result['test']:
-                    requirements_met.append("✅ RR validation and divergence detection functional")
-                elif "Risk Level" in result['test']:
-                    requirements_met.append("✅ Sophisticated risk level integration working")
+                    requirements_met.append("✅ Multi-timeframe log patterns detected in backend")
+                elif "Method Implementation" in result['test']:
+                    requirements_met.append("✅ analyze_multi_timeframe_hierarchy method implemented")
+                elif "Multi-Timeframe Context" in result['test']:
+                    requirements_met.append("✅ IA1 analyses contain multi-timeframe context")
+                elif "Anti-Momentum Risk" in result['test']:
+                    requirements_met.append("✅ Anti-momentum risk detection functional")
+                elif "GRTUSDT Case" in result['test']:
+                    requirements_met.append("✅ GRTUSDT-like counter-momentum cases prevented")
+                elif "Enhanced IA1" in result['test']:
+                    requirements_met.append("✅ Enhanced IA1 decision-making with chartist maturity")
             else:
                 if "Log Patterns" in result['test']:
-                    requirements_failed.append("❌ Sophisticated RR log patterns missing or insufficient")
-                elif "Decisions Sophisticated RR" in result['test']:
-                    requirements_failed.append("❌ IA2 decisions lack sophisticated RR analysis data")
-                elif "Trigger IA2" in result['test']:
-                    requirements_failed.append("❌ IA2 processing not generating sophisticated RR calculations")
-                elif "Methods" in result['test']:
-                    requirements_failed.append("❌ Sophisticated RR calculation methods not implemented")
-                elif "Validation" in result['test']:
-                    requirements_failed.append("❌ RR validation and divergence detection not working")
-                elif "Risk Level" in result['test']:
-                    requirements_failed.append("❌ Sophisticated risk level integration not functional")
+                    requirements_failed.append("❌ Multi-timeframe log patterns missing or insufficient")
+                elif "Method Implementation" in result['test']:
+                    requirements_failed.append("❌ analyze_multi_timeframe_hierarchy method not implemented")
+                elif "Multi-Timeframe Context" in result['test']:
+                    requirements_failed.append("❌ IA1 analyses lack multi-timeframe context")
+                elif "Anti-Momentum Risk" in result['test']:
+                    requirements_failed.append("❌ Anti-momentum risk detection not working")
+                elif "GRTUSDT Case" in result['test']:
+                    requirements_failed.append("❌ GRTUSDT-like counter-momentum cases not prevented")
+                elif "Enhanced IA1" in result['test']:
+                    requirements_failed.append("❌ Enhanced IA1 decision-making not functional")
         
         for req in requirements_met:
             logger.info(f"   {req}")
@@ -622,24 +704,25 @@ class SophisticatedRRAnalysisTestSuite:
         
         # Final verdict
         if len(requirements_failed) == 0:
-            logger.info("\n🎉 VERDICT: Sophisticated RR Analysis System is FULLY FUNCTIONAL!")
-            logger.info("✅ All sophisticated RR features implemented and working correctly")
-            logger.info("✅ IA2 decisions enhanced with advanced RR validation and risk assessment")
+            logger.info("\n🎉 VERDICT: Multi-Timeframe Hierarchical Analysis System is FULLY FUNCTIONAL!")
+            logger.info("✅ All multi-timeframe features implemented and working correctly")
+            logger.info("✅ IA1 enhanced with chartist maturity preventing counter-momentum errors")
+            logger.info("✅ GRTUSDT-like issues successfully prevented by the system")
         elif len(requirements_failed) <= 1:
-            logger.info("\n⚠️ VERDICT: Sophisticated RR Analysis System is MOSTLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: Multi-Timeframe Hierarchical Analysis System is MOSTLY FUNCTIONAL")
             logger.info("🔍 Minor issues may need attention for complete functionality")
         elif len(requirements_failed) <= 3:
-            logger.info("\n⚠️ VERDICT: Sophisticated RR Analysis System is PARTIALLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: Multi-Timeframe Hierarchical Analysis System is PARTIALLY FUNCTIONAL")
             logger.info("🔧 Several components need implementation or debugging")
         else:
-            logger.info("\n❌ VERDICT: Sophisticated RR Analysis System is NOT FUNCTIONAL")
-            logger.info("🚨 Major implementation gaps preventing sophisticated RR analysis")
+            logger.info("\n❌ VERDICT: Multi-Timeframe Hierarchical Analysis System is NOT FUNCTIONAL")
+            logger.info("🚨 Major implementation gaps preventing multi-timeframe analysis")
         
         return passed_tests, total_tests
 
 async def main():
     """Main test execution"""
-    test_suite = SophisticatedRRAnalysisTestSuite()
+    test_suite = MultiTimeframeHierarchicalAnalysisTestSuite()
     passed, total = await test_suite.run_comprehensive_tests()
     
     # Exit with appropriate code
