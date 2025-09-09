@@ -1321,6 +1321,106 @@ class UltraProfessionalIA1TechnicalAnalyst:
             "timeframe": "1H"
         }
     
+    def _validate_legitimate_reversal(self, rsi: float, stochastic: float, bb_position: float, 
+                                    volatility: float, daily_momentum: float, confidence: float) -> dict:
+        """
+        🎯 VALIDATION SOPHISTIQUÉE : Distinguer vrai retournement vs erreur momentum
+        Analyse des signaux techniques pour valider la légitimité d'un signal contre-momentum
+        """
+        try:
+            reversal_signals = []
+            warning_signals = []
+            
+            # 📊 SIGNAUX DE RETOURNEMENT LÉGITIMES
+            
+            # 1. RSI Divergence/Extrême
+            if rsi > 75:  # Overbought extrême
+                reversal_signals.append("RSI_OVERBOUGHT_EXTREME")
+            elif rsi > 65:  # Overbought modéré
+                reversal_signals.append("RSI_OVERBOUGHT_MODERATE")
+            elif rsi < 25:  # Oversold extrême  
+                reversal_signals.append("RSI_OVERSOLD_EXTREME")
+            elif rsi < 35:  # Oversold modéré
+                reversal_signals.append("RSI_OVERSOLD_MODERATE")
+            
+            # 2. Stochastic Confirmation
+            if stochastic > 80:  # Surachat stochastique
+                reversal_signals.append("STOCHASTIC_OVERBOUGHT")
+            elif stochastic < 20:  # Survente stochastique
+                reversal_signals.append("STOCHASTIC_OVERSOLD")
+            
+            # 3. Bollinger Bands Extrême
+            if abs(bb_position) > 0.8:  # Position extrême dans les bandes
+                reversal_signals.append("BOLLINGER_EXTREME_POSITION")
+            elif abs(bb_position) > 0.6:  # Position forte
+                reversal_signals.append("BOLLINGER_STRONG_POSITION")
+            
+            # 4. Volatilité et Épuisement
+            if volatility > 0.15:  # Haute volatilité (possible épuisement)
+                reversal_signals.append("HIGH_VOLATILITY_EXHAUSTION")
+            
+            # 5. Momentum vs Confidence Divergence
+            if daily_momentum > 8.0 and confidence > 0.85:  # Fort momentum mais IA1 très confiant
+                reversal_signals.append("MOMENTUM_CONFIDENCE_DIVERGENCE")
+            
+            # 📈 SIGNAUX D'ALERTE (Contre-indicateurs de retournement)
+            
+            # 1. Momentum modéré sans extrêmes techniques
+            if 5.0 <= daily_momentum <= 8.0 and rsi > 35 and rsi < 65:
+                warning_signals.append("MODERATE_MOMENTUM_NO_EXTREMES")
+            
+            # 2. Bandes de Bollinger centrales (pas d'extrême)
+            if abs(bb_position) < 0.4:
+                warning_signals.append("BOLLINGER_CENTRAL_POSITION")
+            
+            # 3. Volatilité normale (pas d'épuisement)
+            if volatility < 0.08:
+                warning_signals.append("LOW_VOLATILITY_NO_EXHAUSTION")
+            
+            # 🎯 ÉVALUATION FINALE
+            reversal_score = len(reversal_signals)
+            warning_score = len(warning_signals)
+            
+            # Critères de validation du retournement légitime
+            is_legitimate = False
+            failure_reason = ""
+            
+            if reversal_score >= 3:  # 3+ signaux de retournement
+                is_legitimate = True
+            elif reversal_score >= 2 and warning_score <= 1:  # 2 signaux + peu d'alertes
+                is_legitimate = True
+            elif reversal_score >= 1 and "RSI_OVERBOUGHT_EXTREME" in reversal_signals:  # RSI extrême seul
+                is_legitimate = True
+            elif reversal_score >= 1 and "MOMENTUM_CONFIDENCE_DIVERGENCE" in reversal_signals:  # Divergence momentum/confidence
+                is_legitimate = True
+            else:
+                is_legitimate = False
+                if reversal_score == 0:
+                    failure_reason = "NO_REVERSAL_SIGNALS"
+                elif warning_score > reversal_score:
+                    failure_reason = "MORE_WARNING_THAN_REVERSAL_SIGNALS"
+                else:
+                    failure_reason = "INSUFFICIENT_REVERSAL_CONFIRMATION"
+            
+            return {
+                "is_legitimate_reversal": is_legitimate,
+                "reversal_score": reversal_score,
+                "warning_score": warning_score,
+                "signals_detected": reversal_signals,
+                "warning_signals": warning_signals,
+                "failure_reason": failure_reason,
+                "validation_summary": f"{reversal_score} reversal signals, {warning_score} warnings"
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ Error in reversal validation: {e}")
+            return {
+                "is_legitimate_reversal": False,
+                "failure_reason": f"VALIDATION_ERROR: {str(e)}",
+                "signals_detected": [],
+                "warning_signals": []
+            }
+    
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
         """Ultra professional technical analysis avec validation multi-sources OHLCV (économie API intelligente)"""
         try:
