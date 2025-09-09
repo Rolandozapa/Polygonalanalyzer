@@ -377,6 +377,7 @@
     "SIREN-USDT",
     "SKATE-USDT",
     "SKL-USDT",
+    "SKY-USDT",
     "SKYAI-USDT",
     "SLERF-USDT",
     "SLP-USDT",
@@ -478,7 +479,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 477,
-  "updated_at": "2025-09-09T05:50:30.982202",
+  "count": 478,
+  "updated_at": "2025-09-09T11:54:20.102303",
   "source": "BingX Futures API"
 }
