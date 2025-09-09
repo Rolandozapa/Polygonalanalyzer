@@ -623,7 +623,7 @@ class TradingSystemStartupTestSuite:
         try:
             # Test CORS and basic connectivity
             headers = {
-                'Origin': 'https://ai-analyst-hub-4.preview.emergentagent.com',
+                'Origin': 'https://ai-tradingpro.preview.emergentagent.com',
                 'Access-Control-Request-Method': 'GET',
                 'Access-Control-Request-Headers': 'Content-Type'
             }
@@ -635,7 +635,7 @@ class TradingSystemStartupTestSuite:
             logger.info(f"   📊 CORS preflight: {preflight_response.status_code} - {preflight_success}")
             
             # Test actual requests with CORS headers
-            cors_headers = {'Origin': 'https://ai-analyst-hub-4.preview.emergentagent.com'}
+            cors_headers = {'Origin': 'https://ai-tradingpro.preview.emergentagent.com'}
             
             cors_tests = [
                 '/market-status',

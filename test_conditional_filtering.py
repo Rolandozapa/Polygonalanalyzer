@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_conditional_filtering():
-    api_url = "https://ai-analyst-hub-4.preview.emergentagent.com/api"
+    api_url = "https://ai-tradingpro.preview.emergentagent.com/api"
     
     print("🔍 Testing IA1→IA2 Conditional Filtering Logic")
     print("=" * 60)
