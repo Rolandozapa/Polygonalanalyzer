@@ -6415,7 +6415,7 @@ class UltraProfessionalTradingOrchestrator:
             # 1) normaliser chaque facteur en [-1,1]
             normalized = {}
             for k, raw in factor_scores.items():
-                norm_fn = norm_funcs.get(k, lambda x: self.tanh_norm(x))  # fallback
+                norm_fn = norm_funcs.get(k, self.tanh_norm)  # Direct method reference - no lambda!
                 normalized[k] = norm_fn(raw)
 
             # 2) somme pondérée (on peut normaliser la somme des poids si besoin)
