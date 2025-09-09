@@ -2097,28 +2097,28 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     stop_loss_price = opportunity.current_price * 0.98  # -2% stop loss
                     take_profit_price = opportunity.current_price * 1.02  # +2% take profit
             
-            # 🔧 CALCUL RR BASÉ SUR LES PRIX RÉELS CALCULÉS
-            # Au lieu d'utiliser des niveaux techniques séparés, calculer RR directement à partir des prix
+            # 🔧 CALCUL RR BASÉ SUR LES PRIX RÉELS CALCULÉS - FORMULES IA2 EXACTES
+            # Utiliser les mêmes formules que IA2 pour cohérence totale
             if ia1_signal.lower() == "long":
-                # LONG: RR = (Take Profit - Entry) / (Entry - Stop Loss)
-                reward = take_profit_price - entry_price
-                risk = entry_price - stop_loss_price
+                # LONG: Formule IA2 exacte
+                risk = entry_price - stop_loss_price  # Entry - Stop Loss
+                reward = take_profit_price - entry_price  # Take Profit - Entry
                 ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                logger.info(f"🔢 LONG RR CALCULATION {opportunity.symbol}: Reward=${reward:.6f} / Risk=${risk:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+                logger.info(f"🔢 LONG RR CALCULATION (IA2 formula) {opportunity.symbol}: Entry({entry_price:.6f}) - SL({stop_loss_price:.6f}) = Risk({risk:.6f}), TP({take_profit_price:.6f}) - Entry = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
                 
             elif ia1_signal.lower() == "short":
-                # SHORT: RR = (Entry - Take Profit) / (Stop Loss - Entry)
-                reward = entry_price - take_profit_price
-                risk = stop_loss_price - entry_price
+                # SHORT: Formule IA2 exacte  
+                risk = stop_loss_price - entry_price  # Stop Loss - Entry
+                reward = entry_price - take_profit_price  # Entry - Take Profit
                 ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                logger.info(f"🔢 SHORT RR CALCULATION {opportunity.symbol}: Reward=${reward:.6f} / Risk=${risk:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+                logger.info(f"🔢 SHORT RR CALCULATION (IA2 formula) {opportunity.symbol}: SL({stop_loss_price:.6f}) - Entry({entry_price:.6f}) = Risk({risk:.6f}), Entry - TP({take_profit_price:.6f}) = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
                 
             else:  # hold
-                # HOLD: RR basé sur les niveaux neutres calculés
-                reward_up = take_profit_price - entry_price
-                risk_down = entry_price - stop_loss_price
-                ia1_risk_reward_ratio = reward_up / risk_down if risk_down > 0 else 1.0
-                logger.info(f"🔢 HOLD RR CALCULATION {opportunity.symbol}: Reward_up=${reward_up:.6f} / Risk_down=${risk_down:.6f} = {ia1_risk_reward_ratio:.2f}:1")
+                # HOLD: RR basé sur les niveaux neutres calculés (formule LONG par défaut)
+                risk = entry_price - stop_loss_price  # Entry - Stop Loss
+                reward = take_profit_price - entry_price  # Take Profit - Entry  
+                ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                logger.info(f"🔢 HOLD RR CALCULATION (IA2 formula) {opportunity.symbol}: Entry({entry_price:.6f}) - SL({stop_loss_price:.6f}) = Risk({risk:.6f}), TP({take_profit_price:.6f}) - Entry = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
             
             # Cap RR pour éviter valeurs aberrantes mais permettre RR élevés réalistes
             ia1_risk_reward_ratio = min(max(ia1_risk_reward_ratio, 0.1), 20.0)
