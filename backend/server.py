@@ -3646,7 +3646,8 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             
             # Generate ultra professional decision with advanced strategy considerations
             decision_logic = await self._evaluate_advanced_trading_decision(
-                opportunity, analysis, perf_stats, account_balance, claude_decision
+                opportunity, analysis, perf_stats, account_balance, claude_decision, 
+                composite_rr_data, sophisticated_risk_level, rr_validation_status, rr_divergence
             )
             
             # 🎯 ENHANCED RR WITH SOPHISTICATED ANALYSIS: 
