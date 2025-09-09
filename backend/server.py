@@ -4981,7 +4981,11 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                                                 analysis: TechnicalAnalysis, 
                                                 perf_stats: Dict,
                                                 account_balance: float,
-                                                claude_decision: Dict[str, Any] = None) -> Dict[str, Any]:
+                                                claude_decision: Dict[str, Any] = None,
+                                                composite_rr_data: Dict = None,
+                                                sophisticated_risk_level: str = "MEDIUM",
+                                                rr_validation_status: str = "UNKNOWN",
+                                                rr_divergence: float = 0.0) -> Dict[str, Any]:
         """Evaluate advanced trading decision with multi-level take profits and position inversion"""
         
         signal = SignalType.HOLD
