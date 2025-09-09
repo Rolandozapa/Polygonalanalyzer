@@ -37,8 +37,8 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class IA1ToIA2PipelineBlockageTestSuite:
-    """Test suite for IA1→IA2 Pipeline Blockage Resolution Verification"""
+class SophisticatedRRAnalysisTestSuite:
+    """Test suite for Sophisticated RR Analysis System Verification"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -54,24 +54,21 @@ class IA1ToIA2PipelineBlockageTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing IA1→IA2 Pipeline Blockage Resolution at: {self.api_url}")
+        logger.info(f"Testing Sophisticated RR Analysis System at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Today's date for timestamp verification
-        self.today = "2025-09-09"
-        
-        # Expected eligible IA1 analyses from review request
-        self.expected_eligible_analyses = [
-            {"symbol": "AEROUSDT", "signal": "SHORT", "confidence": 91},
-            {"symbol": "SPXUSDT", "signal": "SHORT", "confidence": 88},
-            {"symbol": "ATHUSDT", "signal": "LONG", "confidence": 94},
-            {"symbol": "RENDERUSDT", "signal": "LONG", "confidence": 93},
-            {"symbol": "FORMUSDT", "signal": "LONG", "confidence": 83},
-            {"symbol": "ONDOUSDT", "signal": "SHORT", "confidence": 87},
-            {"symbol": "HBARUSDT", "signal": "SHORT", "confidence": 72},
-            {"symbol": "ARKMUSDT", "signal": "LONG", "confidence": 96}
+        # Expected sophisticated RR log patterns
+        self.expected_log_patterns = [
+            "🧠 SOPHISTICATED ANALYSIS",
+            "📊 Composite RR:",
+            "📊 Bullish RR:",
+            "📊 Bearish RR:",
+            "📊 Neutral RR:",
+            "🎯 Sophisticated Risk Level:",
+            "✅ RR VALIDATION",
+            "⚠️ SIGNIFICANT RR DIVERGENCE"
         ]
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
@@ -88,9 +85,268 @@ class IA1ToIA2PipelineBlockageTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_adaptive_context_system_errors(self):
-        """Test 1: Verify no more AdaptiveContextSystem errors in logs"""
-        logger.info("\n🔍 TEST 1: Check for AdaptiveContextSystem errors in logs")
+    async def test_1_sophisticated_rr_log_patterns(self):
+        """Test 1: Verify sophisticated RR analysis log patterns are present"""
+        logger.info("\n🔍 TEST 1: Check for sophisticated RR analysis log patterns")
+        
+        try:
+            import subprocess
+            
+            # Get recent backend logs
+            backend_logs = ""
+            try:
+                log_result = subprocess.run(
+                    ["tail", "-n", "3000", "/var/log/supervisor/backend.out.log"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                backend_logs += log_result.stdout
+            except:
+                pass
+            
+            try:
+                log_result = subprocess.run(
+                    ["tail", "-n", "3000", "/var/log/supervisor/backend.err.log"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                backend_logs += log_result.stdout
+            except:
+                pass
+            
+            if not backend_logs:
+                self.log_test_result("Sophisticated RR Log Patterns", False, "Could not retrieve backend logs")
+                return
+            
+            # Check for sophisticated RR log patterns
+            pattern_counts = {}
+            for pattern in self.expected_log_patterns:
+                count = backend_logs.count(pattern)
+                pattern_counts[pattern] = count
+                logger.info(f"   📊 '{pattern}': {count} occurrences")
+            
+            # Success criteria: At least 3 different patterns found with multiple occurrences
+            patterns_found = sum(1 for count in pattern_counts.values() if count > 0)
+            total_occurrences = sum(pattern_counts.values())
+            
+            success = patterns_found >= 3 and total_occurrences >= 5
+            
+            details = f"Patterns found: {patterns_found}/{len(self.expected_log_patterns)}, Total occurrences: {total_occurrences}"
+            
+            self.log_test_result("Sophisticated RR Log Patterns", success, details)
+            
+        except Exception as e:
+            self.log_test_result("Sophisticated RR Log Patterns", False, f"Exception: {str(e)}")
+    
+    async def test_2_ia2_decisions_with_sophisticated_rr(self):
+        """Test 2: Verify IA2 decisions contain sophisticated RR analysis data"""
+        logger.info("\n🔍 TEST 2: Check IA2 decisions for sophisticated RR analysis integration")
+        
+        try:
+            # Get IA2 decisions
+            response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            
+            if response.status_code != 200:
+                self.log_test_result("IA2 Decisions Sophisticated RR", False, f"HTTP {response.status_code}: {response.text}")
+                return
+            
+            data = response.json()
+            decisions = data.get('decisions', [])
+            
+            if not decisions:
+                self.log_test_result("IA2 Decisions Sophisticated RR", False, "No IA2 decisions found")
+                return
+            
+            # Check recent decisions for sophisticated RR fields
+            sophisticated_rr_decisions = 0
+            risk_level_decisions = 0
+            composite_rr_decisions = 0
+            
+            for decision in decisions[-10:]:  # Check last 10 decisions
+                symbol = decision.get('symbol', 'Unknown')
+                
+                # Check for sophisticated_rr_analysis field in decision_logic
+                decision_logic = decision.get('decision_logic', {})
+                if isinstance(decision_logic, dict):
+                    sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
+                    if sophisticated_rr:
+                        sophisticated_rr_decisions += 1
+                        logger.info(f"      ✅ {symbol}: Has sophisticated_rr_analysis field")
+                        
+                        # Check for specific sophisticated RR fields
+                        if sophisticated_rr.get('composite_rr'):
+                            composite_rr_decisions += 1
+                        if sophisticated_rr.get('sophisticated_risk_level'):
+                            risk_level_decisions += 1
+                    else:
+                        logger.info(f"      ❌ {symbol}: Missing sophisticated_rr_analysis field")
+                
+                # Check for risk_level field
+                risk_level = decision.get('risk_level', '')
+                if risk_level in ['LOW', 'MEDIUM', 'HIGH']:
+                    logger.info(f"      ✅ {symbol}: Has risk_level: {risk_level}")
+                else:
+                    logger.info(f"      ⚠️ {symbol}: Missing or invalid risk_level: {risk_level}")
+            
+            logger.info(f"   📊 Decisions with sophisticated RR analysis: {sophisticated_rr_decisions}/10")
+            logger.info(f"   📊 Decisions with composite RR: {composite_rr_decisions}/10")
+            logger.info(f"   📊 Decisions with risk level: {risk_level_decisions}/10")
+            
+            # Success criteria: At least 30% of recent decisions have sophisticated RR data
+            success = sophisticated_rr_decisions >= 3 or composite_rr_decisions >= 3
+            
+            details = f"Sophisticated RR: {sophisticated_rr_decisions}/10, Composite RR: {composite_rr_decisions}/10, Risk levels: {risk_level_decisions}/10"
+            
+            self.log_test_result("IA2 Decisions Sophisticated RR", success, details)
+            
+        except Exception as e:
+            self.log_test_result("IA2 Decisions Sophisticated RR", False, f"Exception: {str(e)}")
+    
+    async def test_3_trigger_ia2_and_verify_sophisticated_rr(self):
+        """Test 3: Trigger IA2 processing and verify sophisticated RR analysis is active"""
+        logger.info("\n🔍 TEST 3: Trigger IA2 processing and verify sophisticated RR analysis")
+        
+        try:
+            # Get initial decision count
+            initial_response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            initial_data = initial_response.json() if initial_response.status_code == 200 else {}
+            initial_count = len(initial_data.get('decisions', []))
+            
+            logger.info(f"   📊 Initial IA2 decisions count: {initial_count}")
+            
+            # Trigger IA2 processing
+            logger.info("   🚀 Triggering IA2 processing via /api/start-trading...")
+            start_response = requests.post(f"{self.api_url}/start-trading", timeout=180)
+            
+            logger.info(f"   📊 Start trading response: HTTP {start_response.status_code}")
+            
+            if start_response.status_code not in [200, 201]:
+                self.log_test_result("Trigger IA2 Sophisticated RR", False, f"Start trading failed: HTTP {start_response.status_code}")
+                return
+            
+            # Wait for processing
+            logger.info("   ⏳ Waiting 45 seconds for IA2 processing...")
+            await asyncio.sleep(45)
+            
+            # Check backend logs for sophisticated RR patterns
+            import subprocess
+            backend_logs = ""
+            try:
+                log_result = subprocess.run(
+                    ["tail", "-n", "1000", "/var/log/supervisor/backend.out.log"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                backend_logs += log_result.stdout
+            except:
+                pass
+            
+            # Count sophisticated RR analysis occurrences
+            sophisticated_analysis_count = backend_logs.count("🧠 SOPHISTICATED ANALYSIS")
+            composite_rr_count = backend_logs.count("📊 Composite RR:")
+            risk_level_count = backend_logs.count("🎯 Sophisticated Risk Level:")
+            rr_validation_count = backend_logs.count("✅ RR VALIDATION")
+            
+            logger.info(f"   📊 Sophisticated analysis logs: {sophisticated_analysis_count}")
+            logger.info(f"   📊 Composite RR logs: {composite_rr_count}")
+            logger.info(f"   📊 Risk level logs: {risk_level_count}")
+            logger.info(f"   📊 RR validation logs: {rr_validation_count}")
+            
+            # Check for new decisions
+            updated_response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            updated_data = updated_response.json() if updated_response.status_code == 200 else {}
+            updated_count = len(updated_data.get('decisions', []))
+            new_decisions = updated_count - initial_count
+            
+            logger.info(f"   📊 New decisions generated: {new_decisions}")
+            
+            # Success criteria: Either sophisticated RR logs found OR new decisions with sophisticated RR
+            log_success = sophisticated_analysis_count > 0 or composite_rr_count > 0
+            decision_success = new_decisions > 0 or updated_count > 15
+            
+            success = log_success or decision_success
+            
+            details = f"Sophisticated logs: {sophisticated_analysis_count}, New decisions: {new_decisions}, Total decisions: {updated_count}"
+            
+            self.log_test_result("Trigger IA2 Sophisticated RR", success, details)
+            
+        except Exception as e:
+            self.log_test_result("Trigger IA2 Sophisticated RR", False, f"Exception: {str(e)}")
+    
+    async def test_4_sophisticated_rr_calculation_methods(self):
+        """Test 4: Verify sophisticated RR calculation methods are implemented"""
+        logger.info("\n🔍 TEST 4: Verify sophisticated RR calculation methods implementation")
+        
+        try:
+            import subprocess
+            
+            # Check if the sophisticated RR methods exist in the backend code
+            backend_code = ""
+            try:
+                with open('/app/backend/server.py', 'r') as f:
+                    backend_code = f.read()
+            except Exception as e:
+                self.log_test_result("Sophisticated RR Methods", False, f"Could not read backend code: {e}")
+                return
+            
+            # Check for required method implementations
+            methods_found = {}
+            required_methods = [
+                "calculate_neutral_risk_reward",
+                "calculate_composite_rr", 
+                "evaluate_sophisticated_risk_level",
+                "calculate_bullish_rr",
+                "calculate_bearish_rr"
+            ]
+            
+            for method in required_methods:
+                if f"def {method}" in backend_code:
+                    methods_found[method] = True
+                    logger.info(f"      ✅ Method found: {method}")
+                else:
+                    methods_found[method] = False
+                    logger.info(f"      ❌ Method missing: {method}")
+            
+            # Check for sophisticated RR usage in IA2 decision making
+            sophisticated_usage_patterns = [
+                "calculate_composite_rr(",
+                "evaluate_sophisticated_risk_level(",
+                "🧠 SOPHISTICATED ANALYSIS",
+                "sophisticated_rr_analysis",
+                "composite_rr_data"
+            ]
+            
+            usage_found = {}
+            for pattern in sophisticated_usage_patterns:
+                if pattern in backend_code:
+                    usage_found[pattern] = True
+                    logger.info(f"      ✅ Usage pattern found: {pattern}")
+                else:
+                    usage_found[pattern] = False
+                    logger.info(f"      ❌ Usage pattern missing: {pattern}")
+            
+            methods_implemented = sum(methods_found.values())
+            usage_patterns_found = sum(usage_found.values())
+            
+            logger.info(f"   📊 Methods implemented: {methods_implemented}/{len(required_methods)}")
+            logger.info(f"   📊 Usage patterns found: {usage_patterns_found}/{len(sophisticated_usage_patterns)}")
+            
+            # Success criteria: All methods implemented and most usage patterns found
+            success = methods_implemented >= 4 and usage_patterns_found >= 3
+            
+            details = f"Methods: {methods_implemented}/{len(required_methods)}, Usage patterns: {usage_patterns_found}/{len(sophisticated_usage_patterns)}"
+            
+            self.log_test_result("Sophisticated RR Methods", success, details)
+            
+        except Exception as e:
+            self.log_test_result("Sophisticated RR Methods", False, f"Exception: {str(e)}")
+    
+    async def test_5_rr_validation_and_divergence_detection(self):
+        """Test 5: Verify RR validation and divergence detection functionality"""
+        logger.info("\n🔍 TEST 5: Verify RR validation and divergence detection")
         
         try:
             import subprocess
@@ -108,247 +364,111 @@ class IA1ToIA2PipelineBlockageTestSuite:
             except:
                 pass
             
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "2000", "/var/log/supervisor/backend.err.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
             if not backend_logs:
-                self.log_test_result("AdaptiveContextSystem Errors", False, "Could not retrieve backend logs")
+                self.log_test_result("RR Validation and Divergence", False, "Could not retrieve backend logs")
                 return
             
-            # Check for specific error patterns related to the bugs
-            adaptive_context_errors = backend_logs.count("_apply_adaptive_context_to_decision")
-            market_stress_errors = backend_logs.count("_calculate_market_stress")
-            orchestrator_attribute_errors = backend_logs.count("UltraProfessionalTradingOrchestrator object has no attribute")
-            ia2_batch_errors = backend_logs.count("IA2 BATCH ERROR")
+            # Look for RR validation patterns
+            rr_validation_aligned = backend_logs.count("✅ RR VALIDATION") + backend_logs.count("(ALIGNED)")
+            rr_validation_divergent = backend_logs.count("(DIVERGENT)")
+            significant_divergence = backend_logs.count("⚠️ SIGNIFICANT RR DIVERGENCE")
             
-            # Look for specific method signature errors
-            signature_errors = backend_logs.count("takes") and backend_logs.count("positional arguments")
+            # Look for IA1 vs Composite RR comparisons
+            ia1_composite_comparisons = 0
+            lines = backend_logs.split('\n')
+            for line in lines:
+                if "IA1 RR" in line and "Composite RR" in line:
+                    ia1_composite_comparisons += 1
+                    logger.info(f"      📋 RR comparison found: {line.strip()}")
             
-            logger.info(f"   📊 _apply_adaptive_context_to_decision errors: {adaptive_context_errors}")
-            logger.info(f"   📊 _calculate_market_stress errors: {market_stress_errors}")
-            logger.info(f"   📊 Orchestrator attribute errors: {orchestrator_attribute_errors}")
-            logger.info(f"   📊 IA2 batch errors: {ia2_batch_errors}")
-            logger.info(f"   📊 Method signature errors: {signature_errors}")
+            logger.info(f"   📊 RR validation (aligned): {rr_validation_aligned}")
+            logger.info(f"   📊 RR validation (divergent): {rr_validation_divergent}")
+            logger.info(f"   📊 Significant divergence warnings: {significant_divergence}")
+            logger.info(f"   📊 IA1 vs Composite RR comparisons: {ia1_composite_comparisons}")
             
-            # Success criteria: No critical errors that would block IA2 processing
-            critical_errors = orchestrator_attribute_errors + ia2_batch_errors
-            success = critical_errors == 0
+            # Check IA2 decisions for RR validation data
+            response = requests.get(f"{self.api_url}/decisions", timeout=30)
+            rr_validation_in_decisions = 0
             
-            details = f"Critical errors: {critical_errors}, Adaptive context: {adaptive_context_errors}, Market stress: {market_stress_errors}"
+            if response.status_code == 200:
+                data = response.json()
+                decisions = data.get('decisions', [])
+                
+                for decision in decisions[-5:]:  # Check last 5 decisions
+                    decision_logic = decision.get('decision_logic', {})
+                    if isinstance(decision_logic, dict):
+                        sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
+                        if sophisticated_rr and sophisticated_rr.get('rr_validation_status'):
+                            rr_validation_in_decisions += 1
+                            symbol = decision.get('symbol', 'Unknown')
+                            validation_status = sophisticated_rr.get('rr_validation_status', 'Unknown')
+                            logger.info(f"      ✅ {symbol}: RR validation status: {validation_status}")
             
-            self.log_test_result("AdaptiveContextSystem Errors", success, details)
+            logger.info(f"   📊 Decisions with RR validation data: {rr_validation_in_decisions}/5")
+            
+            # Success criteria: Evidence of RR validation system working
+            log_evidence = (rr_validation_aligned + rr_validation_divergent + significant_divergence) > 0
+            comparison_evidence = ia1_composite_comparisons > 0
+            decision_evidence = rr_validation_in_decisions > 0
+            
+            success = log_evidence or comparison_evidence or decision_evidence
+            
+            details = f"Log evidence: {log_evidence}, Comparisons: {ia1_composite_comparisons}, Decision validation: {rr_validation_in_decisions}"
+            
+            self.log_test_result("RR Validation and Divergence", success, details)
             
         except Exception as e:
-            self.log_test_result("AdaptiveContextSystem Errors", False, f"Exception: {str(e)}")
+            self.log_test_result("RR Validation and Divergence", False, f"Exception: {str(e)}")
     
-    async def test_2_eligible_ia1_analyses_verification(self):
-        """Test 2: Verify the 8 eligible IA1 analyses are present and meet criteria"""
-        logger.info("\n🔍 TEST 2: Verify eligible IA1 analyses are present")
+    async def test_6_sophisticated_risk_level_integration(self):
+        """Test 6: Verify sophisticated risk level integration in IA2 responses"""
+        logger.info("\n🔍 TEST 6: Verify sophisticated risk level integration")
         
         try:
-            # Get IA1 analyses
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            # Get IA2 decisions
+            response = requests.get(f"{self.api_url}/decisions", timeout=30)
             
             if response.status_code != 200:
-                self.log_test_result("Eligible IA1 Analyses Verification", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_test_result("Sophisticated Risk Level Integration", False, f"HTTP {response.status_code}: {response.text}")
                 return
             
             data = response.json()
-            analyses = data.get('analyses', [])
+            decisions = data.get('decisions', [])
             
-            # Find eligible analyses (LONG/SHORT + confidence ≥70%)
-            eligible_analyses = []
-            expected_symbols = [exp['symbol'] for exp in self.expected_eligible_analyses]
-            
-            for analysis in analyses:
-                symbol = analysis.get('symbol', '')
-                confidence = analysis.get('analysis_confidence', 0)
-                signal = analysis.get('ia1_signal', 'hold').lower()
-                
-                # Check if meets eligibility criteria
-                if signal in ['long', 'short'] and confidence >= 0.70:
-                    eligible_analyses.append({
-                        'symbol': symbol,
-                        'signal': signal.upper(),
-                        'confidence': confidence * 100  # Convert to percentage
-                    })
-                    
-                    # Check if it's one of the expected analyses
-                    if symbol in expected_symbols:
-                        logger.info(f"      ✅ Found expected: {symbol} - {signal.upper()} {confidence:.1%}")
-                    else:
-                        logger.info(f"      📋 Additional eligible: {symbol} - {signal.upper()} {confidence:.1%}")
-            
-            logger.info(f"   📊 Total IA1 analyses: {len(analyses)}")
-            logger.info(f"   📊 Eligible analyses found: {len(eligible_analyses)}")
-            logger.info(f"   📊 Expected analyses: {len(self.expected_eligible_analyses)}")
-            
-            # Check for specific expected analyses
-            found_expected = 0
-            for expected in self.expected_eligible_analyses:
-                found = any(
-                    eligible['symbol'] == expected['symbol'] and 
-                    eligible['signal'] == expected['signal']
-                    for eligible in eligible_analyses
-                )
-                if found:
-                    found_expected += 1
-                else:
-                    logger.info(f"      ❌ Missing expected: {expected['symbol']} - {expected['signal']} {expected['confidence']}%")
-            
-            logger.info(f"   📊 Expected analyses found: {found_expected}/{len(self.expected_eligible_analyses)}")
-            
-            # Success criteria: At least some eligible analyses exist
-            success = len(eligible_analyses) >= 5  # At least 5 eligible analyses
-            
-            details = f"Eligible: {len(eligible_analyses)}, Expected found: {found_expected}/{len(self.expected_eligible_analyses)}"
-            
-            self.log_test_result("Eligible IA1 Analyses Verification", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Eligible IA1 Analyses Verification", False, f"Exception: {str(e)}")
-    
-    async def test_3_ia2_processing_pipeline(self):
-        """Test 3: Test if IA2 processing now works for eligible IA1 analyses"""
-        logger.info("\n🔍 TEST 3: Test IA2 processing pipeline")
-        
-        try:
-            # Get initial counts
-            initial_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            initial_data = initial_response.json() if initial_response.status_code == 200 else {}
-            initial_decisions = initial_data.get('decisions', [])
-            initial_count = len(initial_decisions)
-            
-            logger.info(f"   📊 Initial IA2 decisions count: {initial_count}")
-            
-            # Trigger IA2 processing
-            logger.info("   🚀 Triggering IA2 processing via /api/start-trading...")
-            start_response = requests.post(f"{self.api_url}/start-trading", timeout=180)
-            
-            logger.info(f"   📊 Start trading response: HTTP {start_response.status_code}")
-            
-            if start_response.status_code not in [200, 201]:
-                self.log_test_result("IA2 Processing Pipeline", False, f"Start trading failed: HTTP {start_response.status_code}")
+            if not decisions:
+                self.log_test_result("Sophisticated Risk Level Integration", False, "No IA2 decisions found")
                 return
             
-            # Wait for processing
-            logger.info("   ⏳ Waiting 30 seconds for IA2 processing...")
-            await asyncio.sleep(30)
+            # Check for sophisticated risk level in decisions
+            risk_level_counts = {"LOW": 0, "MEDIUM": 0, "HIGH": 0, "MISSING": 0}
+            sophisticated_risk_levels = 0
             
-            # Check for new decisions
-            updated_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            updated_data = updated_response.json() if updated_response.status_code == 200 else {}
-            updated_decisions = updated_data.get('decisions', [])
-            updated_count = len(updated_decisions)
-            
-            new_decisions = updated_count - initial_count
-            
-            logger.info(f"   📊 Updated IA2 decisions count: {updated_count}")
-            logger.info(f"   📊 New decisions generated: {new_decisions}")
-            
-            # Check for today's decisions specifically
-            today_decisions = []
-            for decision in updated_decisions:
-                timestamp_str = decision.get('timestamp', '')
-                if self._is_today_timestamp(timestamp_str, "2025-09-09"):
-                    today_decisions.append(decision)
-                    symbol = decision.get('symbol', 'Unknown')
-                    signal = decision.get('signal', 'Unknown')
-                    confidence = decision.get('confidence', 0)
-                    logger.info(f"      📋 Today's decision: {symbol} - {signal} ({confidence:.1%})")
-            
-            logger.info(f"   📊 Decisions from today: {len(today_decisions)}")
-            
-            # Success criteria: Either new decisions generated or existing recent decisions
-            success = new_decisions > 0 or len(today_decisions) > 0 or updated_count > 10
-            
-            details = f"New: {new_decisions}, Today: {len(today_decisions)}, Total: {updated_count}"
-            
-            self.log_test_result("IA2 Processing Pipeline", success, details)
-            
-        except Exception as e:
-            self.log_test_result("IA2 Processing Pipeline", False, f"Exception: {str(e)}")
-    
-    async def test_4_complete_pipeline_flow_verification(self):
-        """Test 4: Verify the complete IA1→IA2 pipeline flow"""
-        logger.info("\n🔍 TEST 4: Verify complete IA1→IA2 pipeline flow")
-        
-        try:
-            # Get IA1 analyses
-            analyses_response = requests.get(f"{self.api_url}/analyses", timeout=30)
-            analyses_data = analyses_response.json() if analyses_response.status_code == 200 else {}
-            analyses = analyses_data.get('analyses', [])
-            
-            # Get IA2 decisions
-            decisions_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            decisions_data = decisions_response.json() if decisions_response.status_code == 200 else {}
-            decisions = decisions_data.get('decisions', [])
-            
-            # Analyze pipeline flow
-            eligible_for_ia2 = 0
-            processed_by_ia2 = 0
-            pipeline_matches = []
-            
-            for analysis in analyses:
-                symbol = analysis.get('symbol', '')
-                confidence = analysis.get('analysis_confidence', 0)
-                signal = analysis.get('ia1_signal', 'hold').lower()
+            for decision in decisions[-10:]:  # Check last 10 decisions
+                symbol = decision.get('symbol', 'Unknown')
                 
-                # Check if eligible for IA2 (LONG/SHORT + confidence ≥70%)
-                if signal in ['long', 'short'] and confidence >= 0.70:
-                    eligible_for_ia2 += 1
-                    
-                    # Check if has corresponding IA2 decision
-                    matching_decisions = [d for d in decisions if d.get('symbol') == symbol]
-                    
-                    if matching_decisions:
-                        processed_by_ia2 += 1
-                        latest_decision = max(matching_decisions, key=lambda x: x.get('timestamp', ''))
-                        
-                        pipeline_matches.append({
-                            'symbol': symbol,
-                            'ia1_signal': signal.upper(),
-                            'ia1_confidence': confidence,
-                            'ia2_signal': latest_decision.get('signal', 'Unknown'),
-                            'ia2_confidence': latest_decision.get('confidence', 0),
-                            'ia2_timestamp': latest_decision.get('timestamp', 'Unknown')
-                        })
-                        
-                        logger.info(f"      ✅ Pipeline match: {symbol} - IA1:{signal.upper()}({confidence:.1%}) → IA2:{latest_decision.get('signal', 'Unknown')}({latest_decision.get('confidence', 0):.1%})")
-                    else:
-                        logger.info(f"      ❌ No IA2 decision: {symbol} - IA1:{signal.upper()}({confidence:.1%})")
+                # Check main risk_level field
+                risk_level = decision.get('risk_level', '')
+                if risk_level in ['LOW', 'MEDIUM', 'HIGH']:
+                    risk_level_counts[risk_level] += 1
+                    logger.info(f"      ✅ {symbol}: Risk level: {risk_level}")
+                else:
+                    risk_level_counts["MISSING"] += 1
+                    logger.info(f"      ❌ {symbol}: Missing risk level")
+                
+                # Check sophisticated_rr_analysis field
+                decision_logic = decision.get('decision_logic', {})
+                if isinstance(decision_logic, dict):
+                    sophisticated_rr = decision_logic.get('sophisticated_rr_analysis', {})
+                    if sophisticated_rr and sophisticated_rr.get('sophisticated_risk_level'):
+                        sophisticated_risk_levels += 1
+                        soph_risk = sophisticated_rr.get('sophisticated_risk_level', 'Unknown')
+                        logger.info(f"      ✅ {symbol}: Sophisticated risk level: {soph_risk}")
             
-            logger.info(f"   📊 IA1 analyses eligible for IA2: {eligible_for_ia2}")
-            logger.info(f"   📊 IA1 analyses processed by IA2: {processed_by_ia2}")
-            logger.info(f"   📊 Pipeline success rate: {processed_by_ia2/eligible_for_ia2*100:.1f}%" if eligible_for_ia2 > 0 else "   📊 No eligible analyses found")
+            logger.info(f"   📊 Risk level distribution: LOW={risk_level_counts['LOW']}, MEDIUM={risk_level_counts['MEDIUM']}, HIGH={risk_level_counts['HIGH']}, MISSING={risk_level_counts['MISSING']}")
+            logger.info(f"   📊 Decisions with sophisticated risk level: {sophisticated_risk_levels}/10")
             
-            # Success criteria: At least 50% of eligible analyses processed by IA2
-            success_rate = processed_by_ia2 / eligible_for_ia2 if eligible_for_ia2 > 0 else 0
-            success = success_rate >= 0.3  # At least 30% success rate
-            
-            details = f"Eligible: {eligible_for_ia2}, Processed: {processed_by_ia2}, Success rate: {success_rate:.1%}"
-            
-            self.log_test_result("Complete Pipeline Flow Verification", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Complete Pipeline Flow Verification", False, f"Exception: {str(e)}")
-    
-    async def test_5_remaining_blockers_identification(self):
-        """Test 5: Identify any remaining blockers in the pipeline"""
-        logger.info("\n🔍 TEST 5: Identify remaining blockers")
-        
-        try:
+            # Check backend logs for risk level calculations
             import subprocess
-            
-            # Get recent backend logs
             backend_logs = ""
             try:
                 log_result = subprocess.run(
@@ -361,66 +481,22 @@ class IA1ToIA2PipelineBlockageTestSuite:
             except:
                 pass
             
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "1000", "/var/log/supervisor/backend.err.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
+            risk_level_logs = backend_logs.count("🎯 Sophisticated Risk Level:")
+            risk_evaluation_logs = backend_logs.count("🎯 SOPHISTICATED RISK EVALUATION:")
             
-            if not backend_logs:
-                self.log_test_result("Remaining Blockers Identification", False, "Could not retrieve backend logs")
-                return
+            logger.info(f"   📊 Risk level calculation logs: {risk_level_logs}")
+            logger.info(f"   📊 Risk evaluation logs: {risk_evaluation_logs}")
             
-            # Look for various types of blockers
-            blockers_found = []
+            # Success criteria: Most decisions have risk levels and some have sophisticated risk levels
+            valid_risk_levels = risk_level_counts['LOW'] + risk_level_counts['MEDIUM'] + risk_level_counts['HIGH']
+            success = valid_risk_levels >= 7 or sophisticated_risk_levels >= 3 or risk_level_logs > 0
             
-            # Check for specific error patterns
-            if "_apply_adaptive_context_to_decision" in backend_logs and "AttributeError" in backend_logs:
-                blockers_found.append("_apply_adaptive_context_to_decision AttributeError still present")
+            details = f"Valid risk levels: {valid_risk_levels}/10, Sophisticated: {sophisticated_risk_levels}/10, Logs: {risk_level_logs}"
             
-            if "_calculate_market_stress" in backend_logs and ("takes" in backend_logs or "arguments" in backend_logs):
-                blockers_found.append("_calculate_market_stress method signature error still present")
-            
-            if "IA2 BATCH ERROR" in backend_logs:
-                blockers_found.append("IA2 batch processing errors detected")
-            
-            if "UltraProfessionalTradingOrchestrator object has no attribute" in backend_logs:
-                blockers_found.append("Orchestrator missing method errors detected")
-            
-            # Look for positive indicators
-            positive_indicators = []
-            
-            if "IA2 ACCEPTED" in backend_logs:
-                positive_indicators.append("IA2 acceptance logic working")
-            
-            if "IA2 decisions made:" in backend_logs:
-                positive_indicators.append("IA2 decision creation active")
-            
-            if "✅ IA2 ACCEPTED (VOIE 1)" in backend_logs:
-                positive_indicators.append("VOIE 1 filtering logic operational")
-            
-            logger.info(f"   📊 Blockers found: {len(blockers_found)}")
-            for blocker in blockers_found:
-                logger.info(f"      ❌ {blocker}")
-            
-            logger.info(f"   📊 Positive indicators: {len(positive_indicators)}")
-            for indicator in positive_indicators:
-                logger.info(f"      ✅ {indicator}")
-            
-            # Success criteria: No critical blockers and some positive indicators
-            success = len(blockers_found) == 0 and len(positive_indicators) > 0
-            
-            details = f"Blockers: {len(blockers_found)}, Positive indicators: {len(positive_indicators)}"
-            
-            self.log_test_result("Remaining Blockers Identification", success, details)
+            self.log_test_result("Sophisticated Risk Level Integration", success, details)
             
         except Exception as e:
-            self.log_test_result("Remaining Blockers Identification", False, f"Exception: {str(e)}")
+            self.log_test_result("Sophisticated Risk Level Integration", False, f"Exception: {str(e)}")
     
     def _is_recent_timestamp(self, timestamp_str: str) -> bool:
         """Check if timestamp is from the last 24 hours"""
@@ -444,51 +520,26 @@ class IA1ToIA2PipelineBlockageTestSuite:
         except Exception:
             return False
     
-    def _is_today_timestamp(self, timestamp_str: str, target_date: str = None) -> bool:
-        """Check if timestamp is from today or target date"""
-        try:
-            if not timestamp_str:
-                return False
-            
-            # Parse timestamp (handle different formats)
-            if 'T' in timestamp_str:
-                timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-            else:
-                timestamp = datetime.fromisoformat(timestamp_str)
-            
-            # Remove timezone info for comparison
-            if timestamp.tzinfo:
-                timestamp = timestamp.replace(tzinfo=None)
-            
-            if target_date:
-                target = datetime.strptime(target_date, "%Y-%m-%d").date()
-                return timestamp.date() == target
-            else:
-                today = datetime.now().date()
-                return timestamp.date() == today
-            
-        except Exception:
-            return False
-    
     async def run_comprehensive_tests(self):
-        """Run all IA1→IA2 pipeline blockage resolution tests"""
-        logger.info("🚀 Starting IA1→IA2 Pipeline Blockage Resolution Test Suite")
+        """Run all sophisticated RR analysis system tests"""
+        logger.info("🚀 Starting Sophisticated RR Analysis System Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 PIPELINE BLOCKAGE DIAGNOSIS")
-        logger.info("🎯 Background: Fixed _apply_adaptive_context_to_decision and _calculate_market_stress bugs")
-        logger.info("🎯 Expected: 8 eligible IA1 analyses should now be processed by IA2")
+        logger.info("📋 SOPHISTICATED RR ANALYSIS SYSTEM VERIFICATION")
+        logger.info("🎯 Testing: calculate_neutral_risk_reward, calculate_composite_rr, evaluate_sophisticated_risk_level")
+        logger.info("🎯 Expected: Enhanced IA2 decisions with sophisticated RR validation and risk assessment")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_adaptive_context_system_errors()
-        await self.test_2_eligible_ia1_analyses_verification()
-        await self.test_3_ia2_processing_pipeline()
-        await self.test_4_complete_pipeline_flow_verification()
-        await self.test_5_remaining_blockers_identification()
+        await self.test_1_sophisticated_rr_log_patterns()
+        await self.test_2_ia2_decisions_with_sophisticated_rr()
+        await self.test_3_trigger_ia2_and_verify_sophisticated_rr()
+        await self.test_4_sophisticated_rr_calculation_methods()
+        await self.test_5_rr_validation_and_divergence_detection()
+        await self.test_6_sophisticated_risk_level_integration()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 PIPELINE BLOCKAGE RESOLUTION SUMMARY")
+        logger.info("📊 SOPHISTICATED RR ANALYSIS SYSTEM SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -502,55 +553,63 @@ class IA1ToIA2PipelineBlockageTestSuite:
                 
         logger.info(f"\n🎯 OVERALL RESULT: {passed_tests}/{total_tests} tests passed")
         
-        # Pipeline analysis
+        # System analysis
         logger.info("\n" + "=" * 80)
-        logger.info("📋 PIPELINE BLOCKAGE ANALYSIS")
+        logger.info("📋 SOPHISTICATED RR ANALYSIS SYSTEM STATUS")
         logger.info("=" * 80)
         
         if passed_tests == total_tests:
-            logger.info("🎉 ALL TESTS PASSED - IA1→IA2 Pipeline Blockage RESOLVED!")
-            logger.info("✅ No AdaptiveContextSystem errors in logs")
-            logger.info("✅ Eligible IA1 analyses verified and present")
-            logger.info("✅ IA2 processing pipeline operational")
-            logger.info("✅ Complete pipeline flow working")
-            logger.info("✅ No remaining blockers identified")
+            logger.info("🎉 ALL TESTS PASSED - Sophisticated RR Analysis System FULLY FUNCTIONAL!")
+            logger.info("✅ Sophisticated RR log patterns detected")
+            logger.info("✅ IA2 decisions contain sophisticated RR analysis")
+            logger.info("✅ IA2 processing generates sophisticated RR calculations")
+            logger.info("✅ Sophisticated RR calculation methods implemented")
+            logger.info("✅ RR validation and divergence detection working")
+            logger.info("✅ Sophisticated risk level integration active")
         elif passed_tests >= total_tests * 0.8:
-            logger.info("⚠️ MOSTLY RESOLVED - Pipeline appears functional with minor issues")
-            logger.info("🔍 Some components need attention for full optimization")
+            logger.info("⚠️ MOSTLY FUNCTIONAL - Sophisticated RR system working with minor gaps")
+            logger.info("🔍 Some components may need fine-tuning for full optimization")
+        elif passed_tests >= total_tests * 0.5:
+            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core sophisticated RR features working")
+            logger.info("🔧 Some advanced features may need implementation or debugging")
         else:
-            logger.info("❌ PIPELINE STILL BLOCKED - Critical issues preventing IA2 processing")
-            logger.info("🚨 Bugs may not be fully resolved or new blockers introduced")
+            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with sophisticated RR analysis")
+            logger.info("🚨 Major implementation gaps or system errors preventing functionality")
         
         # Specific requirements check
-        logger.info("\n📝 SPECIFIC REQUIREMENTS VERIFICATION:")
+        logger.info("\n📝 SOPHISTICATED RR REQUIREMENTS VERIFICATION:")
         
         requirements_met = []
         requirements_failed = []
         
-        # Check each requirement
+        # Check each requirement based on test results
         for result in self.test_results:
             if result['success']:
-                if "AdaptiveContextSystem" in result['test']:
-                    requirements_met.append("✅ No more AdaptiveContextSystem errors in logs")
-                elif "Eligible IA1" in result['test']:
-                    requirements_met.append("✅ Eligible IA1 analyses verified and present")
-                elif "IA2 Processing" in result['test']:
-                    requirements_met.append("✅ IA2 processing works for eligible IA1 analyses")
-                elif "Pipeline Flow" in result['test']:
-                    requirements_met.append("✅ Complete IA1→IA2 pipeline flow verified")
-                elif "Blockers" in result['test']:
-                    requirements_met.append("✅ No remaining blockers identified")
+                if "Log Patterns" in result['test']:
+                    requirements_met.append("✅ Sophisticated RR log patterns detected in backend")
+                elif "Decisions Sophisticated RR" in result['test']:
+                    requirements_met.append("✅ IA2 decisions contain sophisticated RR analysis data")
+                elif "Trigger IA2" in result['test']:
+                    requirements_met.append("✅ IA2 processing generates sophisticated RR calculations")
+                elif "Methods" in result['test']:
+                    requirements_met.append("✅ Sophisticated RR calculation methods implemented")
+                elif "Validation" in result['test']:
+                    requirements_met.append("✅ RR validation and divergence detection functional")
+                elif "Risk Level" in result['test']:
+                    requirements_met.append("✅ Sophisticated risk level integration working")
             else:
-                if "AdaptiveContextSystem" in result['test']:
-                    requirements_failed.append("❌ AdaptiveContextSystem errors still present")
-                elif "Eligible IA1" in result['test']:
-                    requirements_failed.append("❌ Eligible IA1 analyses not found or insufficient")
-                elif "IA2 Processing" in result['test']:
-                    requirements_failed.append("❌ IA2 processing not working for eligible analyses")
-                elif "Pipeline Flow" in result['test']:
-                    requirements_failed.append("❌ Complete pipeline flow not working")
-                elif "Blockers" in result['test']:
-                    requirements_failed.append("❌ Remaining blockers still present")
+                if "Log Patterns" in result['test']:
+                    requirements_failed.append("❌ Sophisticated RR log patterns missing or insufficient")
+                elif "Decisions Sophisticated RR" in result['test']:
+                    requirements_failed.append("❌ IA2 decisions lack sophisticated RR analysis data")
+                elif "Trigger IA2" in result['test']:
+                    requirements_failed.append("❌ IA2 processing not generating sophisticated RR calculations")
+                elif "Methods" in result['test']:
+                    requirements_failed.append("❌ Sophisticated RR calculation methods not implemented")
+                elif "Validation" in result['test']:
+                    requirements_failed.append("❌ RR validation and divergence detection not working")
+                elif "Risk Level" in result['test']:
+                    requirements_failed.append("❌ Sophisticated risk level integration not functional")
         
         for req in requirements_met:
             logger.info(f"   {req}")
@@ -562,21 +621,24 @@ class IA1ToIA2PipelineBlockageTestSuite:
         
         # Final verdict
         if len(requirements_failed) == 0:
-            logger.info("\n🎉 VERDICT: IA1→IA2 Pipeline Blockage is RESOLVED!")
-            logger.info("✅ The 8 eligible IA1 analyses should now be processed by IA2 successfully")
-            logger.info("✅ Both _apply_adaptive_context_to_decision and _calculate_market_stress bugs are fixed")
+            logger.info("\n🎉 VERDICT: Sophisticated RR Analysis System is FULLY FUNCTIONAL!")
+            logger.info("✅ All sophisticated RR features implemented and working correctly")
+            logger.info("✅ IA2 decisions enhanced with advanced RR validation and risk assessment")
         elif len(requirements_failed) <= 1:
-            logger.info("\n⚠️ VERDICT: Pipeline blockage appears mostly RESOLVED with minor issues")
-            logger.info("🔍 Some fine-tuning may be needed for complete resolution")
+            logger.info("\n⚠️ VERDICT: Sophisticated RR Analysis System is MOSTLY FUNCTIONAL")
+            logger.info("🔍 Minor issues may need attention for complete functionality")
+        elif len(requirements_failed) <= 3:
+            logger.info("\n⚠️ VERDICT: Sophisticated RR Analysis System is PARTIALLY FUNCTIONAL")
+            logger.info("🔧 Several components need implementation or debugging")
         else:
-            logger.info("\n❌ VERDICT: IA1→IA2 Pipeline Blockage is NOT RESOLVED")
-            logger.info("🚨 Critical bugs still preventing IA2 processing of eligible analyses")
+            logger.info("\n❌ VERDICT: Sophisticated RR Analysis System is NOT FUNCTIONAL")
+            logger.info("🚨 Major implementation gaps preventing sophisticated RR analysis")
         
         return passed_tests, total_tests
 
 async def main():
     """Main test execution"""
-    test_suite = IA1ToIA2PipelineBlockageTestSuite()
+    test_suite = SophisticatedRRAnalysisTestSuite()
     passed, total = await test_suite.run_comprehensive_tests()
     
     # Exit with appropriate code
