@@ -371,7 +371,8 @@ class IA1IA2PipelineTestSuite:
             
             # Get updated state
             updated_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            updated_decisions = updated_response.json() if updated_response.status_code == 200 else []
+            updated_data = updated_response.json() if updated_response.status_code == 200 else {}
+            updated_decisions = updated_data.get('decisions', [])
             updated_count = len(updated_decisions)
             
             # Check for new decisions with today's timestamps
