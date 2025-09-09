@@ -1954,6 +1954,37 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 logger.info(f"✅ IA1 technical RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
             else:
                 logger.warning(f"⚠️ No IA1 RR analysis found for {opportunity.symbol}, using fallback calculation")
+                
+                # 🔧 FALLBACK RR CALCULATION: Calcul basé sur support/résistance techniques
+                support_levels = self._find_support_levels(historical_data, current_price)
+                resistance_levels = self._find_resistance_levels(historical_data, current_price)
+                
+                primary_support = support_levels[0] if support_levels else current_price * 0.97
+                primary_resistance = resistance_levels[0] if resistance_levels else current_price * 1.03
+                
+                # Calculer RR fallback selon signal
+                if ia1_signal.lower() == "long":
+                    # LONG: Risk = Entry - Support, Reward = Resistance - Entry
+                    risk = current_price - primary_support
+                    reward = primary_resistance - current_price
+                    ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                elif ia1_signal.lower() == "short":  
+                    # SHORT: Risk = Resistance - Entry, Reward = Entry - Support
+                    risk = primary_resistance - current_price
+                    reward = current_price - primary_support
+                    ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                else:  # hold
+                    ia1_risk_reward_ratio = self.calculate_composite_rr(current_price, opportunity.volatility, primary_support, primary_resistance)
+                
+                # Cap RR pour éviter valeurs aberrantes
+                ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
+                
+                logger.info(f"🔧 FALLBACK RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}:1 ({ia1_signal.upper()}) | Support: ${primary_support:.4f} | Resistance: ${primary_resistance:.4f}")
+            
+            # Ensure ia1_risk_reward_ratio is never zero
+            if ia1_risk_reward_ratio <= 0:
+                ia1_risk_reward_ratio = 1.0
+                logger.warning(f"⚠️ RR was <= 0 for {opportunity.symbol}, forced to 1.0")
             
             # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
             # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
