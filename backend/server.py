@@ -2059,7 +2059,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"🎯 IA1 PROFESSIONAL SCORING {opportunity.symbol}:")
             logger.info(f"   📊 Base Confidence: {base_analysis_confidence:.1%} → Final: {analysis_confidence:.1%}")
             logger.info(f"   📊 Market Adjustment: {scoring_result['adjustment']:.1f} points")
-            logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} ({self._get_mc_bucket_name(opportunity.market_cap or 1_000_000)})")
+            logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} (Market Cap: {opportunity.market_cap or 1_000_000:,.0f})")
             logger.info(f"   🎯 Key Factors: RSI={rsi:.1f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
             
             # Construire l'analyse technique temporaire pour la validation
