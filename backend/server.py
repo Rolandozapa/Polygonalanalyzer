@@ -5364,13 +5364,13 @@ class UltraProfessionalTradingOrchestrator:
         # 🚀 NOUVELLE FEATURE: MODE ADAPTATIF (Activable/Désactivable)
         self.adaptive_mode_enabled = True  # Flag pour activer la logique adaptative
         
-        self.ia2 = UltraProfessionalIA2DecisionAgent()
-        self.advanced_strategy_manager = advanced_strategy_manager
-        
         # Initialize Active Position Manager for live trading execution
         self.active_position_manager = ActivePositionManager(
             execution_mode=TradeExecutionMode.SIMULATION  # Start in simulation mode for safety
         )
+        
+        self.ia2 = UltraProfessionalIA2DecisionAgent(self.active_position_manager)
+        self.advanced_strategy_manager = advanced_strategy_manager
         self.is_running = False
         self.cycle_count = 0
         self._initialized = False
