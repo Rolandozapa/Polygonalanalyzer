@@ -134,25 +134,33 @@ class TrendingAutoUpdater:
             return []
     
     async def _fetch_page_content(self) -> Optional[str]:
-        """Récupère le contenu de la page Readdy"""
+        """Récupère le contenu de la page Readdy avec timeout strict"""
         try:
-            timeout = aiohttp.ClientTimeout(total=30)
+            # 🚨 TIMEOUT STRICT pour éviter les blocages
+            timeout = aiohttp.ClientTimeout(total=10, connect=5)  # Timeout réduit à 10s
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 headers = {
                     'User-Agent': 'Mozilla/5.0 (compatible; TradingBot/3.0; +https://trading-bot.ai)'
                 }
                 
+                logger.info(f"📡 Fetching trending data from {self.trending_url} (timeout: 10s)")
                 async with session.get(self.trending_url, headers=headers) as response:
                     if response.status == 200:
                         content = await response.text()
-                        logger.info(f"Successfully fetched page content ({len(content)} chars)")
+                        logger.info(f"✅ Successfully fetched page content ({len(content)} chars)")
                         return content
                     else:
-                        logger.error(f"HTTP {response.status} when fetching trending page")
+                        logger.warning(f"❌ HTTP {response.status} from trending page")
                         return None
                         
+        except asyncio.TimeoutError:
+            logger.error("⏰ Timeout fetching trending page (10s limit)")
+            return None
+        except aiohttp.ClientError as e:
+            logger.error(f"🌐 Network error fetching trending page: {e}")
+            return None
         except Exception as e:
-            logger.error(f"Error fetching page content: {e}")
+            logger.error(f"💥 Unexpected error fetching trending page: {e}")
             return None
     
     def _parse_trending_cryptos(self, content: str) -> List[TrendingCrypto]:
