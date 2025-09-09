@@ -2884,7 +2884,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "master_pattern": None,
                 "patterns": [],
                 "support": [],
-                "resistance": []
+                "resistance": [],
+                # 🔧 CHAMPS PRIX FALLBACK
+                "entry_price": 0.0,
+                "stop_loss_price": 0.0,
+                "take_profit_price": 0.0,
+                "risk_reward_ratio": 1.0,
+                "rr_reasoning": "Fallback analysis - default pricing"
             }
 
     def _calculate_analysis_confidence(self, rsi: float, macd_histogram: float, bb_position: float, volatility: float, data_confidence: float) -> float:
