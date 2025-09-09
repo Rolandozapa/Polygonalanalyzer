@@ -105,7 +105,8 @@ class IA1IA2PipelineTestSuite:
             
             # Get IA2 decisions for comparison
             ia2_response = requests.get(f"{self.api_url}/decisions", timeout=30)
-            decisions = ia2_response.json() if ia2_response.status_code == 200 else []
+            decisions_data = ia2_response.json() if ia2_response.status_code == 200 else {}
+            decisions = decisions_data.get('decisions', [])
             
             for analysis in analyses:
                 symbol = analysis.get('symbol', '')
