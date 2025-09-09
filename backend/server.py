@@ -4379,19 +4379,81 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 ia2_rr_ratio = recalculated_levels.get("ia2_calculated_rr")
                 technical_reasoning = recalculated_levels.get("technical_reasoning", "")
                 
-                # If IA2 provided recalculated levels, use them to enhance RR calculation
+                # If IA2 provided recalculated levels, validate and use them to enhance RR calculation
                 if ia2_support and ia2_resistance and ia2_rr_ratio:
-                    enhanced_rr_data = {
-                        "ia2_support_level": ia2_support,
-                        "ia2_resistance_level": ia2_resistance,
-                        "ia2_calculated_rr": ia2_rr_ratio,
-                        "ia1_original_rr": analysis.risk_reward_ratio,
-                        "technical_reasoning": technical_reasoning,
-                        "rr_improvement_detected": ia2_rr_ratio > analysis.risk_reward_ratio,
-                        "final_rr_source": "ia2_recalculated"
-                    }
+                    current_price = opportunity.current_price
+                    ia2_signal = claude_decision.get("signal", "HOLD").upper()
                     
-                    logger.info(f"🎯 IA2 RR ENHANCEMENT: {opportunity.symbol} - IA1 RR: {analysis.risk_reward_ratio:.2f} → IA2 RR: {ia2_rr_ratio:.2f}")
+                    # 🎯 VALIDATION: Verify IA2's RR calculation follows correct formulas
+                    validation_passed = False
+                    recalculated_rr = ia2_rr_ratio
+                    validation_message = ""
+                    
+                    if ia2_signal == "LONG":
+                        # LONG validation: SL < Entry < TP (Support < Current < Resistance)
+                        if ia2_support < current_price < ia2_resistance:
+                            # Recalculate RR using correct LONG formula
+                            risk = current_price - ia2_support  # Entry - Stop Loss
+                            reward = ia2_resistance - current_price  # Take Profit - Entry
+                            if risk > 0:
+                                recalculated_rr = reward / risk
+                                validation_passed = True
+                                validation_message = f"LONG RR validation: Entry({current_price:.6f}) - SL({ia2_support:.6f}) = Risk({risk:.6f}), TP({ia2_resistance:.6f}) - Entry = Reward({reward:.6f}), RR = {recalculated_rr:.2f}"
+                            else:
+                                validation_message = f"LONG RR error: Risk calculation invalid (risk={risk:.6f})"
+                        else:
+                            validation_message = f"LONG RR error: Level order invalid - Support({ia2_support:.6f}) < Current({current_price:.6f}) < Resistance({ia2_resistance:.6f})"
+                    
+                    elif ia2_signal == "SHORT":
+                        # SHORT validation: TP < Entry < SL (Support < Current < Resistance, TP=Support, SL=Resistance)
+                        if ia2_support < current_price < ia2_resistance:
+                            # Recalculate RR using correct SHORT formula
+                            risk = ia2_resistance - current_price  # Stop Loss - Entry
+                            reward = current_price - ia2_support  # Entry - Take Profit
+                            if risk > 0:
+                                recalculated_rr = reward / risk
+                                validation_passed = True
+                                validation_message = f"SHORT RR validation: SL({ia2_resistance:.6f}) - Entry({current_price:.6f}) = Risk({risk:.6f}), Entry - TP({ia2_support:.6f}) = Reward({reward:.6f}), RR = {recalculated_rr:.2f}"
+                            else:
+                                validation_message = f"SHORT RR error: Risk calculation invalid (risk={risk:.6f})"
+                        else:
+                            validation_message = f"SHORT RR error: Level order invalid for SHORT - Support({ia2_support:.6f}) < Current({current_price:.6f}) < Resistance({ia2_resistance:.6f})"
+                    
+                    # Log validation results
+                    if validation_passed:
+                        if abs(recalculated_rr - ia2_rr_ratio) > 0.1:  # Significant difference
+                            logger.warning(f"🔧 IA2 RR CORRECTION: {opportunity.symbol} - IA2 claimed {ia2_rr_ratio:.2f}, corrected to {recalculated_rr:.2f}")
+                            logger.info(f"🔍 VALIDATION: {validation_message}")
+                            ia2_rr_ratio = recalculated_rr  # Use corrected RR
+                        else:
+                            logger.info(f"✅ IA2 RR VALIDATED: {opportunity.symbol} - {ia2_rr_ratio:.2f} ({validation_message})")
+                    else:
+                        logger.error(f"❌ IA2 RR VALIDATION FAILED: {opportunity.symbol} - {validation_message}")
+                        logger.info(f"🔄 FALLBACK: Using IA1 RR {analysis.risk_reward_ratio:.2f} instead")
+                        ia2_rr_ratio = None  # Force fallback to IA1
+                    
+                    # Store enhanced RR data only if validation passed
+                    if validation_passed and ia2_rr_ratio and ia2_rr_ratio > 0:
+                        enhanced_rr_data = {
+                            "ia2_support_level": ia2_support,
+                            "ia2_resistance_level": ia2_resistance,
+                            "ia2_calculated_rr": ia2_rr_ratio,
+                            "ia1_original_rr": analysis.risk_reward_ratio,
+                            "technical_reasoning": technical_reasoning,
+                            "rr_improvement_detected": ia2_rr_ratio > analysis.risk_reward_ratio,
+                            "final_rr_source": "ia2_recalculated_validated",
+                            "validation_message": validation_message
+                        }
+                        
+                        logger.info(f"🎯 IA2 RR ENHANCEMENT: {opportunity.symbol} - IA1 RR: {analysis.risk_reward_ratio:.2f} → IA2 RR: {ia2_rr_ratio:.2f}")
+                    else:
+                        # Fallback to IA1 RR if validation failed
+                        enhanced_rr_data = {
+                            "final_rr_ratio": analysis.risk_reward_ratio,
+                            "final_rr_source": "ia1_fallback_validation_failed",
+                            "ia1_original_rr": analysis.risk_reward_ratio,
+                            "validation_error": validation_message
+                        }
                 else:
                     # Fallback to IA1 RR if IA2 didn't provide complete data
                     enhanced_rr_data = {
