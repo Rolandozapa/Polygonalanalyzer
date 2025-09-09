@@ -1958,10 +1958,67 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
             # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
             
-            # Calculer d'abord la confiance d'analyse pour l'utiliser dans la validation
-            analysis_confidence = self._calculate_analysis_confidence(
+            # Calculer d'abord la confiance d'analyse de base
+            base_analysis_confidence = self._calculate_analysis_confidence(
                 rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
             )
+            
+            # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL IA1
+            # Appliquer bonus/malus de marché et token-spécifiques au score IA1
+            logger.info(f"🎯 APPLYING PROFESSIONAL SCORING TO IA1 {opportunity.symbol}")
+            
+            # Préparer les facteurs de marché pour IA1
+            factor_scores = {
+                'var_cap': abs(opportunity.price_change_24h or 0),  # Volatilité prix 24h
+                'var_vol': getattr(opportunity, 'volume_change_24h', 0) or 0,  # Variation volume 24h  
+                'fg': 50,  # Fear & Greed placeholder (à connecter si disponible)
+                'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap else 0.05,  # Ratio vol/cap
+                'rsi_extreme': max(0, rsi - 70) if rsi > 70 else max(0, 30 - rsi) if rsi < 30 else 0,  # RSI extremes
+                'volatility': opportunity.volatility or 0.05  # Volatilité générale
+            }
+            
+            # Définir les fonctions de normalisation pour IA1
+            norm_funcs = {
+                'var_cap': lambda x: -self.tanh_norm(x, s=10),  # Pénaliser forte volatilité prix
+                'var_vol': lambda x: self.tanh_norm((x - 20) / 50, s=1),  # Récompenser volume > 20% 
+                'fg': lambda x: ((50.0 - x) / 50.0) * -1.0,  # Approche contrarian F&G
+                'volcap': lambda x: self.tanh_norm((x - 0.02) * 25, s=5),  # Optimal vers 0.02
+                'rsi_extreme': lambda x: self.tanh_norm(x / 20, s=1),  # Récompenser RSI extremes pour reversals
+                'volatility': lambda x: -self.tanh_norm((x - 0.08) * 10, s=2)  # Pénaliser volatilité > 8%
+            }
+            
+            # Poids des facteurs pour IA1 (total = 1.0)
+            weights = {
+                'var_cap': 0.25,      # 25% - Volatilité prix très important pour IA1
+                'var_vol': 0.20,      # 20% - Volume change crucial
+                'fg': 0.05,           # 5% - Sentiment moins important pour technique
+                'volcap': 0.20,       # 20% - Liquidité critique pour technique
+                'rsi_extreme': 0.15,  # 15% - RSI extremes pour signaux retournement
+                'volatility': 0.15    # 15% - Volatilité générale
+            }
+            
+            # Calculer le multiplicateur market cap
+            mc_mult = self.get_market_cap_multiplier(opportunity.market_cap or 1_000_000)
+            
+            # Appliquer la formule finale au score IA1
+            scoring_result = self.compute_final_score(
+                note_base=base_analysis_confidence * 100,  # Convertir 0-1 → 0-100
+                factor_scores=factor_scores,
+                norm_funcs=norm_funcs,
+                weights=weights,
+                amplitude=12.0,  # Max 12 points d'ajustement pour IA1 (un peu moins qu'IA2)
+                mc_mult=mc_mult
+            )
+            
+            # Convertir le score final en confiance (0-100 → 0-1)
+            analysis_confidence = scoring_result['note_final'] / 100.0
+            
+            # Logs du scoring professionnel IA1
+            logger.info(f"🎯 IA1 PROFESSIONAL SCORING {opportunity.symbol}:")
+            logger.info(f"   📊 Base Confidence: {base_analysis_confidence:.1%} → Final: {analysis_confidence:.1%}")
+            logger.info(f"   📊 Market Adjustment: {scoring_result['adjustment']:.1f} points")
+            logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} ({self._get_mc_bucket_name(opportunity.market_cap or 1_000_000)})")
+            logger.info(f"   🎯 Key Factors: RSI={rsi:.1f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
             
             # Construire l'analyse technique temporaire pour la validation
             temp_analysis = TechnicalAnalysis(
