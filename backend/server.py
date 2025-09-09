@@ -4906,6 +4906,8 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             "dynamic_leverage": calculated_leverage_data,
             # 5-LEVEL TAKE PROFIT DATA
             "five_level_tp": five_level_tp_data,
+            # 🎯 ENHANCED RR DATA WITH IA2 RECALCULATED LEVELS
+            "enhanced_rr": enhanced_rr_data,
             # Additional TP levels for advanced strategy
             "tp4": locals().get('tp4', tp3),  # TP4 if calculated
             "tp5": locals().get('tp5', tp3),  # TP5 if calculated
