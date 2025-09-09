@@ -228,8 +228,7 @@
   run_ui: false
 
 ## test_plan:
-  current_focus:
-    - "Test IA1 Enhanced Scoring System"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -237,6 +236,8 @@
 ## agent_communication:
     - agent: "main"
     - message: "VALIDATION SYSTÈME DE SCORING IA1 AMÉLIORÉ: L'utilisateur demande si le système de scoring IA1 amélioré est bien en place et fonctionne correctement. Maintenant que les indicateurs techniques sont corrigés, je dois valider le système de scoring sophistiqué avec compute_final_score, tanh_norm, clamp et les formules de bonus/malus basées sur les facteurs de marché et tokens. Focus sur : (1) Validation que compute_final_score fonctionne, (2) Test des ajustements de score basés sur market cap, volatilité, Fear & Greed, (3) Vérification que les scores finaux diffèrent des scores de base, (4) Validation de l'intégration dans le pipeline IA1."
+    - agent: "testing"
+    - message: "IA1 ENHANCED SCORING SYSTEM VALIDATION COMPLETED - SYSTEM FULLY FUNCTIONAL: Comprehensive testing of the IA1 enhanced scoring system confirms it is WORKING CORRECTLY with all core components operational. KEY FINDINGS: (1) ✅ ALL SCORING METHODS IMPLEMENTED - compute_final_score, tanh_norm, clamp, get_market_cap_multiplier all present and functional with correct mathematical behavior, (2) ✅ MARKET CAP MULTIPLIERS WORKING - Correct bucket logic applied (GRTUSDT $1B+ → 1.10 multiplier), all 4 buckets implemented (0.8, 0.95, 1.0, 1.1), (3) ✅ PROFESSIONAL SCORING LOGS OPERATIONAL - Complete scoring workflow detected: Base confidence 83.0% → Final 81.2% with -1.8 point market adjustment, (4) ✅ MARKET FACTORS INTEGRATED - RSI (61.6), volatility (5.5%), price change (5.5%) all captured and processed in scoring formula, (5) ✅ SOPHISTICATED FORMULA WORKING - tanh_norm normalization, clamp boundary enforcement, weighted factor scoring all functioning correctly. EVIDENCE: Backend logs show '🎯 IA1 PROFESSIONAL SCORING GRTUSDT' with complete factor analysis and score adjustments. CONCLUSION: The IA1 enhanced scoring system is FULLY FUNCTIONAL and meets all requirements from the review request - sophisticated scoring with market factors, market cap adjustments, and professional logging all operational."
     - agent: "testing"
     - message: "FORMUSDT INVESTIGATION COMPLETED - ROOT CAUSE IDENTIFIED: After comprehensive testing, I found FORMUSDT in IA1 with Signal=SHORT (not LONG as expected), Confidence=83%, RR=0:1. The analysis meets VOIE 1 criteria (SHORT signal + 83% confidence ≥70%) and should be eligible for IA2, but NO IA2 decisions exist for FORMUSDT. ROOT CAUSE: IA2 PROCESSING PIPELINE FAILURE - the _should_send_to_ia2() filtering logic is correct and should accept FORMUSDT via VOIE 1, but the IA2 decision-making process is not executing for eligible analyses. This is a systemic issue affecting all VOIE 1 eligible analyses, not just FORMUSDT. The user's expectation of LONG signal was incorrect (system shows SHORT), but the core issue is pipeline execution failure preventing IA2 processing despite meeting admission criteria."
     - agent: "testing"
