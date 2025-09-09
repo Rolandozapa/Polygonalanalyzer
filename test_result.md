@@ -212,12 +212,17 @@
   test_sequence: 1
   run_ui: false
 
-## test_plan:
-  current_focus:
-    - "Test FORMUSDT IA1→IA2 Pipeline Processing"
-  stuck_tasks: []
-  test_all: false
-  test_priority: "high_first"
+  - task: "Fix FORMUSDT Risk-Reward Calculation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Correction du calcul Risk-Reward pour FORMUSDT et tous les autres symboles. PROBLÈME IDENTIFIÉ: L'analyse IA1 attribuait tous les prix (entry_price, stop_loss_price, take_profit_price) à la même valeur (opportunity.current_price), causant RR=0 et bloquant l'admission IA2. SOLUTION: (1) Ajouté calcul de prix réalistes basés sur les niveaux techniques IA1 (primary_support/primary_resistance), (2) Implémenté fallback avec pourcentages par défaut (LONG: SL=-5%, TP=+10% | SHORT: SL=+5%, TP=-10% | HOLD: SL=-2%, TP=+2%), (3) Ajouté logging détaillé des prix calculés pour diagnostic, (4) Prix différents garantissent RR > 0 pour tous les signaux. FORMUSDT avec Signal=SHORT, Confidence=83% devrait maintenant avoir un RR calculé correctement et être admis en IA2 via VOIE 1."
 
 ## agent_communication:
     - agent: "main"
