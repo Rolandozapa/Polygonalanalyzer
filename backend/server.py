@@ -1962,19 +1962,30 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 primary_support = support_levels[0] if support_levels else current_price * 0.97
                 primary_resistance = resistance_levels[0] if resistance_levels else current_price * 1.03
                 
-                # Calculer RR fallback selon signal
+                # Calculer RR fallback selon signal AVEC LES MÊMES FORMULES QUE IA2
                 if ia1_signal.lower() == "long":
-                    # LONG: Risk = Entry - Support, Reward = Resistance - Entry
-                    risk = current_price - primary_support
-                    reward = primary_resistance - current_price
-                    ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                    # LONG: Formule IA2 - avec validation
+                    if primary_support >= current_price:
+                        ia1_risk_reward_ratio = 1.0  # Support invalide
+                    else:
+                        reward = primary_resistance - current_price  # Take Profit - Entry
+                        risk = current_price - primary_support      # Entry - Stop Loss
+                        ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                        
                 elif ia1_signal.lower() == "short":  
-                    # SHORT: Risk = Resistance - Entry, Reward = Entry - Support
-                    risk = primary_resistance - current_price
-                    reward = current_price - primary_support
-                    ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                    # SHORT: Formule IA2 - avec validation
+                    if primary_resistance <= current_price:
+                        ia1_risk_reward_ratio = 1.0  # Resistance invalide
+                    else:
+                        reward = current_price - primary_support      # Entry - Take Profit
+                        risk = primary_resistance - current_price     # Stop Loss - Entry
+                        ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
+                        
                 else:  # hold
-                    ia1_risk_reward_ratio = self.calculate_composite_rr(current_price, opportunity.volatility, primary_support, primary_resistance)
+                    # HOLD: Utiliser la formule composite d'IA2
+                    bullish_rr = (primary_resistance - current_price) / (current_price - primary_support) if primary_support < current_price else 0.0
+                    bearish_rr = (current_price - primary_support) / (primary_resistance - current_price) if primary_resistance > current_price else 0.0
+                    ia1_risk_reward_ratio = (bullish_rr + bearish_rr) / 2 if (bullish_rr > 0 or bearish_rr > 0) else 1.0
                 
                 # Cap RR pour éviter valeurs aberrantes
                 ia1_risk_reward_ratio = min(ia1_risk_reward_ratio, 10.0)
