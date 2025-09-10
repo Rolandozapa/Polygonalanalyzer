@@ -162,6 +162,9 @@ class AdvancedTechnicalIndicators:
             # Moving Averages
             df = self._calculate_moving_averages(df)
             
+            # Multi EMA/SMA Trend Hierarchy - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+            df = self._calculate_multi_ema_sma(df)
+            
             # Volume Indicators
             df = self._calculate_volume_indicators(df)
             
