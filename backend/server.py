@@ -3645,9 +3645,34 @@ class UltraProfessionalIA2DecisionAgent:
                 "data_source": "error_fallback"
             }
     async def make_decision(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
-        """Make ultra professional trading decision with advanced strategies and dynamic leverage"""
+        """Make ultra professional trading decision with MULTI-TIMEFRAME analysis and advanced strategies"""
         try:
-            logger.info(f"IA2 making ultra professional ADVANCED decision for {opportunity.symbol}")
+            logger.info(f"IA2 making ultra professional MULTI-TIMEFRAME decision for {opportunity.symbol}")
+            
+            # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
+            # Get historical data for multi-timeframe analysis
+            historical_data = await self.market_aggregator.get_ohlcv_data(
+                opportunity.symbol, 
+                limit=300,  # Assez pour multi-timeframe
+                interval='1m'
+            )
+            
+            if historical_data is not None and len(historical_data) > 50:
+                # Calculate multi-timeframe indicators for IA2 intelligence
+                opportunity_df = pd.DataFrame(historical_data)
+                multi_tf_indicators = self.market_aggregator.advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
+                multi_tf_formatted = self.market_aggregator.advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+                
+                # Get current indicators too
+                current_indicators = self.market_aggregator.advanced_technical_indicators.get_latest_indicators(
+                    self.market_aggregator.advanced_technical_indicators.calculate_all_indicators(opportunity_df)
+                )
+                
+                logger.info(f"🎯 IA2 MULTI-TIMEFRAME DATA: {len(multi_tf_indicators)} timeframes available for {opportunity.symbol}")
+            else:
+                logger.warning(f"⚠️ IA2: Limited data for {opportunity.symbol}, using single-timeframe analysis")
+                multi_tf_formatted = "⚠️ Multi-timeframe data limited"
+                current_indicators = None
             
             # Check for position inversion opportunity first
             await self._check_position_inversion(opportunity, analysis)
