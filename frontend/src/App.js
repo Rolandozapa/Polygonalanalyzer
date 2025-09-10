@@ -1495,6 +1495,13 @@ const TradingDashboard = () => {
                             <td className="py-2 text-slate-600">{new Date(trade.time).toLocaleString()}</td>
                           </tr>
                         ))}
+                        {(!bingxTradingHistory || !Array.isArray(bingxTradingHistory) || bingxTradingHistory.length === 0) && (
+                          <tr>
+                            <td colSpan="6" className="py-8 text-center text-slate-500">
+                              No trading history available
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
