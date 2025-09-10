@@ -108,7 +108,7 @@ const TradingDashboard = () => {
       ]);
 
       setBingxStatus(statusRes.data);
-      setBingxBalance(balanceRes.data.balance || null);
+      setBingxBalance(balanceRes.data || null);  // Use direct data, not .balance
       setBingxPositions(positionsRes.data.positions || []);
       setBingxTradingHistory(historyRes.data.trading_history || []);
       setBingxRiskConfig(riskRes.data.risk_config || null);
