@@ -146,6 +146,9 @@ class AdvancedTechnicalIndicators:
             # VWAP & Deviation Bands
             df = self._calculate_vwap_bands(df)
             
+            # Money Flow Index (MFI) - Volume-weighted RSI for institutional detection
+            df = self._calculate_mfi(df)
+            
             # Composite Indicators
             df = self._calculate_composite_indicators(df)
             
