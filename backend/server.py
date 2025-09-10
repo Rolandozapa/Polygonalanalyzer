@@ -4113,6 +4113,44 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                                 decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
                         else:
                             logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                        
+                        # 🎯 BINGX INTEGRATION: Execute trade on BingX if enabled
+                        try:
+                            logger.info(f"🎯 EXECUTING IA2 TRADE ON BINGX: {decision.symbol} {decision.signal}")
+                            
+                            # Prepare BingX trade data
+                            bingx_trade_data = {
+                                'symbol': decision.symbol,
+                                'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                                'confidence': decision.confidence,
+                                'position_size': ia2_position_size,  # IA2 position size percentage
+                                'entry_price': decision.entry_price,
+                                'stop_loss': decision.stop_loss,
+                                'take_profit': decision.take_profit_1,
+                                'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 5.0),
+                                'risk_reward_ratio': decision.risk_reward_ratio
+                            }
+                            
+                            # Execute on BingX
+                            bingx_result = await bingx_manager.execute_ia2_trade(bingx_trade_data)
+                            
+                            if bingx_result.get('status') == 'executed':
+                                logger.info(f"✅ BINGX TRADE EXECUTED: {decision.symbol} - Order ID: {bingx_result.get('order_id')}")
+                                # Add BingX execution info to reasoning
+                                bingx_info = f" | BINGX EXECUTED: Order {bingx_result.get('order_id')} | "
+                                if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
+                                    decision.ia2_reasoning = (decision.ia2_reasoning + bingx_info)[:1500]
+                            elif bingx_result.get('status') == 'skipped':
+                                logger.info(f"⏭️ BINGX TRADE SKIPPED: {decision.symbol} - {bingx_result.get('reason')}")
+                            elif bingx_result.get('status') == 'rejected':
+                                logger.warning(f"❌ BINGX TRADE REJECTED: {decision.symbol} - {bingx_result.get('errors')}")
+                            else:
+                                logger.error(f"❌ BINGX TRADE ERROR: {decision.symbol} - {bingx_result.get('error')}")
+                                
+                        except Exception as bingx_error:
+                            logger.error(f"❌ BINGX INTEGRATION ERROR for {decision.symbol}: {bingx_error}")
+                            # Don't fail the entire decision if BingX fails
+                            pass
                             
                 except Exception as e:
                     logger.error(f"❌ Error executing trade for {decision.symbol}: {e}")
