@@ -1586,6 +1586,23 @@ class UltraProfessionalIA1TechnicalAnalyst:
             bb_lower = indicators.bb_lower
             bb_position = indicators.bb_position
             
+            # 🔥 NOUVEAUX INDICATEURS MFI + VWAP POUR PRECISION ULTIME 🔥
+            mfi = indicators.mfi
+            mfi_overbought = indicators.mfi_overbought
+            mfi_oversold = indicators.mfi_oversold
+            mfi_extreme_overbought = indicators.mfi_extreme_overbought
+            mfi_extreme_oversold = indicators.mfi_extreme_oversold
+            institutional_activity = indicators.institutional_activity
+            mfi_divergence = indicators.mfi_divergence
+            
+            vwap = indicators.vwap
+            vwap_position = indicators.vwap_position
+            vwap_trend = indicators.vwap_trend
+            vwap_overbought = indicators.vwap_overbought
+            vwap_oversold = indicators.vwap_oversold
+            vwap_extreme_overbought = indicators.vwap_extreme_overbought
+            vwap_extreme_oversold = indicators.vwap_extreme_oversold
+            
             # Debug logging pour vérifier les vraies valeurs calculées
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}, Sources: {multi_source_quality['sources_count']}")
             
