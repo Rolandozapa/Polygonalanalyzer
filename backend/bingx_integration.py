@@ -363,18 +363,19 @@ class BingXTradingClient:
             # Set leverage first
             await self.set_leverage(position.symbol, position.leverage)
             
-            # Determine order side based on position direction
-            order_side = OrderSide.BUY.value if position.side == "LONG" else OrderSide.SELL.value
-            position_side = PositionSide.LONG.value if position.side == "LONG" else PositionSide.SHORT.value
+            # Determine order side based on position direction (BingX uses LONG/SHORT instead of BUY/SELL for futures)
+            order_side = "BUY" if position.side == "LONG" else "SELL"  # Keep BUY/SELL for side
+            position_side = "LONG" if position.side == "LONG" else "SHORT"  # Use LONG/SHORT for positionSide
             
-            # Create order data with correct BingX parameter names
+            # Create order data with correct BingX parameter names and add recvWindow
             order_data = {
                 "symbol": position.symbol,
                 "side": order_side,
                 "positionSide": position_side,
-                "type": OrderType.MARKET.value,
-                "quantity": str(position.quantity),  # BingX might expect string format
-                "timestamp": get_correct_timestamp()  # Add timestamp as required by BingX
+                "type": "MARKET",
+                "quantity": str(position.quantity),  # BingX expects string format
+                "recvWindow": 5000,  # Add recvWindow parameter (5 seconds tolerance)
+                "timestamp": get_correct_timestamp()  # Use BingX server time
             }
             
             logger.info(f"🚀 PLACING BINGX ORDER: {order_data}")
