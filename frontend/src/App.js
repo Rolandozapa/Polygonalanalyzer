@@ -1473,7 +1473,7 @@ const TradingDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {bingxTradingHistory?.map((trade, index) => (
+                        {(Array.isArray(bingxTradingHistory) ? bingxTradingHistory : [])?.map((trade, index) => (
                           <tr key={index} className="border-b">
                             <td className="py-2 font-medium">{trade.symbol}</td>
                             <td className="py-2">
