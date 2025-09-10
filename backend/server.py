@@ -1714,12 +1714,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             {'- 🎯 VWAP EXTREME OVERSOLD: Excellent LONG entry precision near VWAP support' if vwap_extreme_oversold else ''}
             {'- 🎯 VWAP EXTREME OVERBOUGHT: Excellent SHORT entry precision near VWAP resistance' if vwap_extreme_overbought else ''}
             
-            📊 **HIGHER QUALITY STANDARDS WITH BETTER TOOLS**:
-            - Minimum Confidence: 75% (higher than before due to MFI+VWAP precision)
-            - Minimum Risk-Reward: 2.5:1 (higher than before due to VWAP precision levels)
-            - Required: MFI institutional confirmation OR VWAP extreme positioning
-            - Required: Traditional indicators confluence (RSI, MACD, etc.)
-            - If ANY conflict between MFI and traditional indicators → HOLD (institutions know something)
+            📊 **BALANCED QUALITY STANDARDS WITH PRECISION TOOLS**:
+            - Minimum Confidence: 70% (balanced - multi-timeframe removes bad signals)
+            - Minimum Risk-Reward: 2.0:1 (balanced - VWAP precision allows realistic targets)
+            - Preferred: MFI institutional confirmation OR VWAP extreme positioning
+            - Required: Multi-timeframe confluence OR strong traditional indicators
+            - Philosophy: QUALITY through better analysis, not artificial barriers
             
             🎯 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS:
             Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
