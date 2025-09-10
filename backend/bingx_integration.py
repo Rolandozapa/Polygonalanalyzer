@@ -363,7 +363,7 @@ class BingXTradingClient:
                 "positionSide": position_side,
                 "type": OrderType.MARKET.value,
                 "quantity": str(position.quantity),  # BingX might expect string format
-                "timestamp": int(time.time() * 1000)  # Add timestamp as required by BingX
+                "timestamp": get_correct_timestamp()  # Add timestamp as required by BingX
             }
             
             logger.info(f"🚀 PLACING BINGX ORDER: {order_data}")
