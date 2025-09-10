@@ -5372,15 +5372,48 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 
             # 🎯 NOUVEAU: RR RECALCULATION WITH IA2 TECHNICAL LEVELS
             # Extract IA2's recalculated technical levels for enhanced RR calculation
-            market_analysis = claude_decision.get("market_analysis", {})
-            recalculated_levels = market_analysis.get("recalculated_technical_levels", {})
-            
+            # 🎯 IA2 TECHNICAL LEVELS EXTRACTION - Extract Claude's re-analyzed support/resistance
             enhanced_rr_data = {}
-            if recalculated_levels:
-                ia2_support = recalculated_levels.get("ia2_support_level")
-                ia2_resistance = recalculated_levels.get("ia2_resistance_level") 
-                ia2_rr_ratio = recalculated_levels.get("ia2_calculated_rr")
-                technical_reasoning = recalculated_levels.get("technical_reasoning", "")
+            
+            # NEW: Extract from ia2_technical_levels (Claude's direct analysis)
+            ia2_technical_levels = claude_decision.get("ia2_technical_levels", {})
+            if ia2_technical_levels and isinstance(ia2_technical_levels, dict):
+                ia2_support = float(ia2_technical_levels.get("support_level", 0))
+                ia2_resistance = float(ia2_technical_levels.get("resistance_level", 0))
+                ia2_rr_ratio = ia2_technical_levels.get("calculated_rr", 0)
+                
+                # Extract Claude's reasoning for the levels
+                support_reasoning = ia2_technical_levels.get("support_reasoning", "IA2 technical analysis")
+                resistance_reasoning = ia2_technical_levels.get("resistance_reasoning", "IA2 technical analysis")
+                rr_calculation = ia2_technical_levels.get("rr_calculation", "No calculation provided")
+                technical_reasoning = f"IA2 Support: {support_reasoning}. IA2 Resistance: {resistance_reasoning}. {rr_calculation}"
+                
+                logger.info(f"🎯 IA2 TECHNICAL LEVELS EXTRACTED {opportunity.symbol}:")
+                logger.info(f"   📊 Support: ${ia2_support:.6f} - {support_reasoning}")
+                logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} - {resistance_reasoning}")
+                logger.info(f"   🧮 IA2 RR Calculation: {rr_calculation}")
+                
+            else:
+                # FALLBACK: Try old extraction method or generic levels
+                market_analysis = claude_decision.get("market_analysis", {})
+                recalculated_levels = market_analysis.get("recalculated_technical_levels", {})
+                
+                if recalculated_levels:
+                    ia2_support = recalculated_levels.get("ia2_support_level")
+                    ia2_resistance = recalculated_levels.get("ia2_resistance_level") 
+                    ia2_rr_ratio = recalculated_levels.get("ia2_calculated_rr")
+                    technical_reasoning = recalculated_levels.get("technical_reasoning", "")
+                    logger.info(f"🔄 FALLBACK: Using old market_analysis format for {opportunity.symbol}")
+                else:
+                    # Generic fallback
+                    ia2_support = opportunity.current_price * 0.97
+                    ia2_resistance = opportunity.current_price * 1.03
+                    ia2_rr_ratio = 1.0
+                    technical_reasoning = "Generic fallback levels - IA2 analysis not available"
+                    logger.warning(f"⚠️ IA2 LEVELS MISSING for {opportunity.symbol} - using generic fallback")
+            
+            # Continue with existing validation logic
+            if ia2_support and ia2_resistance and ia2_rr_ratio:
                 
                 # If IA2 provided recalculated levels, validate and use them to enhance RR calculation
                 if ia2_support and ia2_resistance and ia2_rr_ratio:
