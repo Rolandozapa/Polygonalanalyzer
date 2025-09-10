@@ -204,7 +204,7 @@ class BingXTradingClient:
         if data:
             all_params.update(data)  # BingX puts ALL parameters in query string, not body!
         
-        # Add timestamp (BingX requirement)
+        # Add timestamp (BingX requirement) - Get fresh timestamp just before signature
         all_params['timestamp'] = get_correct_timestamp()
         
         # Sort parameters alphabetically by key (BingX requirement for consistent signature)
