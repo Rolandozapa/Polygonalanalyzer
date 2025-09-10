@@ -1689,13 +1689,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
             Price: ${opportunity.current_price:,.2f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
             Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
             
-            TECHNICAL INDICATORS:
+            TECHNICAL INDICATORS - MULTI-TIMEFRAME PROFESSIONAL ANALYSIS:
+            {multi_tf_formatted}
+            
+            🎯 CURRENT SNAPSHOT FOR PRECISE ENTRY/EXIT:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
-            
-            🔥 INSTITUTIONAL MONEY FLOW (MFI): {mfi:.1f} {'🚨 EXTREME OVERSOLD' if mfi_extreme_oversold else '📉 OVERSOLD' if mfi_oversold else '🚨 EXTREME OVERBOUGHT' if mfi_extreme_overbought else '📈 OVERBOUGHT' if mfi_overbought else 'NEUTRAL'} | Institution Activity: {institutional_activity.upper()}
-            
-            ⚡ VWAP PRECISION: ${vwap:.4f} | Position: {vwap_position:+.2f}% | Trend: {vwap_trend.upper()} {'🎯 EXTREME PRECISION ENTRY' if vwap_extreme_oversold or vwap_extreme_overbought else '🎯 HIGH PRECISION' if vwap_oversold or vwap_overbought else ''}
-            
+            MFI: {mfi:.1f} ({'🚨 EXTREME OVERSOLD' if mfi_extreme_oversold else '📉 OVERSOLD' if mfi_oversold else '🚨 EXTREME OVERBOUGHT' if mfi_extreme_overbought else '📈 OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}) | Institution: {institutional_activity.upper()}
+            VWAP: ${vwap:.4f} | Position: {vwap_position:+.2f}% | Trend: {vwap_trend.upper()} {'🎯 EXTREME PRECISION' if vwap_extreme_oversold or vwap_extreme_overbought else '🎯 HIGH PRECISION' if vwap_oversold or vwap_overbought else ''}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
             🏦 RR CALCULATION PRECISION WITH VWAP LEVELS:
