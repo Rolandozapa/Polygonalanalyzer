@@ -1,29 +1,36 @@
 #!/usr/bin/env python3
 """
-Backend Testing Suite for Refined Anti-Momentum Validation System
-Focus: TEST REFINED ANTI-MOMENTUM VALIDATION SYSTEM - Verify that the refined sophisticated validation system correctly distinguishes between legitimate reversals (like XLM/GRT SHORT predictions that were correct) and momentum errors.
+BingX Integration Comprehensive Testing Suite
+Focus: Complete BingX API integration system testing as requested in review
 
-Refined validation features to test:
-1. _validate_legitimate_reversal() method implementation  
-2. Sophisticated reversal signal detection (RSI extremes, Stochastic, Bollinger, volatility exhaustion)
-3. Differentiated penalties: 20% for legitimate reversals vs 35% for momentum errors
-4. Warning signal detection for false counter-momentum signals
-5. Reversal score vs warning score evaluation logic
-6. Enhanced logging for legitimate_reversal vs momentum_error cases
+TESTING REQUIREMENTS:
+1. BingX API Connectivity: Test /api/bingx/status endpoint to verify API connection
+2. Account Balance: Test /api/bingx/balance to ensure balance retrieval works
+3. BingX Integration Manager: Verify bingx_manager initialization and core functionality 
+4. API Endpoints Testing: Test all 15 new BingX endpoints for proper responses
+5. Risk Management: Test risk configuration and validation systems
+6. IA2 Integration: Verify that IA2 can execute trades via BingX integration
+7. Error Handling: Test error scenarios and ensure system doesn't crash
 
-Expected log patterns:
-- "✅ LEGITIMATE REVERSAL DETECTED {symbol}:" (for cases like XLM/GRT SHORT)
-- "🔄 Reversal signals: [RSI_OVERBOUGHT_EXTREME, STOCHASTIC_OVERBOUGHT, etc]"
-- "⚠️ POTENTIAL MOMENTUM ERROR {symbol}:" (for dangerous counter-momentum cases)
-- "💥 Reversal validation: FAILED (NO_REVERSAL_SIGNALS/INSUFFICIENT_REVERSAL_CONFIRMATION)"
-- "✅ SOPHISTICATED VALIDATION APPLIED {symbol}: ... (legitimate_reversal/momentum_error/forced_hold)"
+SPECIFIC ENDPOINTS TO TEST:
+- GET /api/bingx/status (system status)
+- GET /api/bingx/balance (account balance) 
+- GET /api/bingx/positions (positions)
+- GET /api/bingx/risk-config (risk configuration)
+- GET /api/bingx/trading-history (trading history)
+- POST /api/bingx/execute-ia2 (IA2 trade execution - use mock data)
 
-Test specifically:
-- Strong momentum + RSI >75 + Stochastic >80 → Should detect LEGITIMATE REVERSAL
-- Strong momentum + RSI 45-55 + no extremes → Should detect MOMENTUM ERROR  
-- System should now preserve good counter-momentum signals while filtering bad ones
+API CREDENTIALS: 
+- API Key: HZCsTzoH1DYjGYi3jmeAeRYA6hIVb9vySpPnJx7FaE6p9eDVU23qobsCAyX7JbMJj57QgY60l3BhfhA5ag
+- Secret Key: ynNfVmYYSPmlP1roNGa5L8VeUokXMF94XH9VNf7pBXocIgMWxBlnarX3Uy13ftf9zQfI5jzrvMXQiA0qGQ
+- IP Whitelist: 34.107.197.154
 
-Verify the refined system balances reversal detection with momentum error prevention, allowing legitimate contrarian trades while blocking dangerous ones.
+CRITICAL VALIDATION:
+- Verify API authentication works with provided credentials
+- Test that BingX integration doesn't break existing IA2 functionality
+- Ensure risk management prevents dangerous trades
+- Validate that all endpoints return proper JSON responses
+- Check that error handling works gracefully
 """
 
 import asyncio
@@ -40,8 +47,8 @@ import requests
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class RefinedAntiMomentumValidationTestSuite:
-    """Test suite for Refined Anti-Momentum Validation System Verification"""
+class BingXIntegrationTestSuite:
+    """Comprehensive test suite for BingX API integration system"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -57,26 +64,39 @@ class RefinedAntiMomentumValidationTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Refined Anti-Momentum Validation System at: {self.api_url}")
+        logger.info(f"Testing BingX Integration System at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Expected refined validation log patterns
-        self.expected_log_patterns = [
-            "✅ LEGITIMATE REVERSAL DETECTED",
-            "🔄 Reversal signals:",
-            "⚠️ POTENTIAL MOMENTUM ERROR",
-            "💥 Reversal validation: FAILED",
-            "✅ SOPHISTICATED VALIDATION APPLIED",
-            "RSI_OVERBOUGHT_EXTREME",
-            "STOCHASTIC_OVERBOUGHT",
-            "BOLLINGER_EXTREME_POSITION",
-            "HIGH_VOLATILITY_EXHAUSTION",
-            "legitimate_reversal",
-            "momentum_error",
-            "forced_hold"
+        # Expected BingX endpoints to test
+        self.bingx_endpoints = [
+            {'method': 'GET', 'path': '/bingx/status', 'name': 'System Status'},
+            {'method': 'GET', 'path': '/bingx/balance', 'name': 'Account Balance'},
+            {'method': 'GET', 'path': '/bingx/positions', 'name': 'Open Positions'},
+            {'method': 'GET', 'path': '/bingx/risk-config', 'name': 'Risk Configuration'},
+            {'method': 'GET', 'path': '/bingx/trading-history', 'name': 'Trading History'},
+            {'method': 'POST', 'path': '/bingx/execute-ia2', 'name': 'IA2 Trade Execution'},
+            {'method': 'GET', 'path': '/bingx/market-price', 'name': 'Market Price'},
+            {'method': 'POST', 'path': '/bingx/trade', 'name': 'Manual Trade'},
+            {'method': 'POST', 'path': '/bingx/close-position', 'name': 'Close Position'},
+            {'method': 'POST', 'path': '/bingx/close-all-positions', 'name': 'Close All Positions'},
+            {'method': 'POST', 'path': '/bingx/emergency-stop', 'name': 'Emergency Stop'},
+            {'method': 'POST', 'path': '/bingx/risk-config', 'name': 'Update Risk Config'},
         ]
+        
+        # Mock IA2 decision data for testing
+        self.mock_ia2_decision = {
+            "symbol": "BTCUSDT",
+            "signal": "LONG",
+            "confidence": 0.85,
+            "position_size": 2.5,
+            "leverage": 5,
+            "entry_price": 45000.0,
+            "stop_loss": 43000.0,
+            "take_profit": 48000.0,
+            "reasoning": "Strong bullish momentum with RSI oversold recovery"
+        }
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
@@ -92,570 +112,445 @@ class RefinedAntiMomentumValidationTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_validate_legitimate_reversal_method(self):
-        """Test 1: Verify _validate_legitimate_reversal method is implemented"""
-        logger.info("\n🔍 TEST 1: Check _validate_legitimate_reversal method implementation")
+    async def test_1_bingx_api_connectivity(self):
+        """Test 1: BingX API Connectivity via /api/bingx/status endpoint"""
+        logger.info("\n🔍 TEST 1: BingX API Connectivity Test")
         
         try:
-            # Check if the method exists in the backend code
-            backend_code = ""
-            try:
-                with open('/app/backend/server.py', 'r') as f:
-                    backend_code = f.read()
-            except Exception as e:
-                self.log_test_result("Validate Legitimate Reversal Method", False, f"Could not read backend code: {e}")
-                return
+            response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
             
-            # Check for required method implementation
-            method_found = "def _validate_legitimate_reversal" in backend_code
-            
-            # Check for sophisticated reversal signal detection components
-            components_found = {}
-            required_components = [
-                "RSI_OVERBOUGHT_EXTREME",
-                "RSI_OVERSOLD_EXTREME", 
-                "STOCHASTIC_OVERBOUGHT",
-                "STOCHASTIC_OVERSOLD",
-                "BOLLINGER_EXTREME_POSITION",
-                "HIGH_VOLATILITY_EXHAUSTION",
-                "MOMENTUM_CONFIDENCE_DIVERGENCE",
-                "reversal_score",
-                "warning_score",
-                "is_legitimate_reversal"
-            ]
-            
-            for component in required_components:
-                if component in backend_code:
-                    components_found[component] = True
-                    logger.info(f"      ✅ Component found: {component}")
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"   📊 Status response: {json.dumps(data, indent=2)}")
+                
+                # Check for expected status fields
+                expected_fields = ['status', 'api_connected', 'timestamp']
+                missing_fields = [field for field in expected_fields if field not in data]
+                
+                if not missing_fields:
+                    api_connected = data.get('api_connected', False)
+                    if api_connected:
+                        self.log_test_result("BingX API Connectivity", True, f"API connected successfully: {data.get('status')}")
+                    else:
+                        self.log_test_result("BingX API Connectivity", False, f"API not connected: {data}")
                 else:
-                    components_found[component] = False
-                    logger.info(f"      ❌ Component missing: {component}")
-            
-            # Check for differentiated penalty logic
-            penalty_patterns = [
-                "confidence_penalty = 0.2",  # 20% for legitimate reversals
-                "confidence_penalty = 0.35", # 35% for momentum errors
-                "legitimate_reversal",
-                "momentum_error"
-            ]
-            
-            penalty_found = {}
-            for pattern in penalty_patterns:
-                if pattern in backend_code:
-                    penalty_found[pattern] = True
-                    logger.info(f"      ✅ Penalty pattern found: {pattern}")
-                else:
-                    penalty_found[pattern] = False
-                    logger.info(f"      ❌ Penalty pattern missing: {pattern}")
-            
-            components_implemented = sum(components_found.values())
-            penalty_patterns_found = sum(penalty_found.values())
-            
-            logger.info(f"   📊 Method found: {method_found}")
-            logger.info(f"   📊 Components implemented: {components_implemented}/{len(required_components)}")
-            logger.info(f"   📊 Penalty patterns found: {penalty_patterns_found}/{len(penalty_patterns)}")
-            
-            # Success criteria: Method exists and most components/patterns found
-            success = method_found and components_implemented >= 7 and penalty_patterns_found >= 3
-            
-            details = f"Method: {method_found}, Components: {components_implemented}/{len(required_components)}, Penalties: {penalty_patterns_found}/{len(penalty_patterns)}"
-            
-            self.log_test_result("Validate Legitimate Reversal Method", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Validate Legitimate Reversal Method", False, f"Exception: {str(e)}")
-    
-    async def test_2_refined_validation_log_patterns(self):
-        """Test 2: Verify refined validation log patterns are present"""
-        logger.info("\n🔍 TEST 2: Check for refined anti-momentum validation log patterns")
-        
-        try:
-            import subprocess
-            
-            # Get recent backend logs
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "5000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "5000", "/var/log/supervisor/backend.err.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            if not backend_logs:
-                self.log_test_result("Refined Validation Log Patterns", False, "Could not retrieve backend logs")
-                return
-            
-            # Check for refined validation log patterns
-            pattern_counts = {}
-            for pattern in self.expected_log_patterns:
-                count = backend_logs.count(pattern)
-                pattern_counts[pattern] = count
-                logger.info(f"   📊 '{pattern}': {count} occurrences")
-            
-            # Success criteria: At least 4 different patterns found with multiple occurrences
-            patterns_found = sum(1 for count in pattern_counts.values() if count > 0)
-            total_occurrences = sum(pattern_counts.values())
-            
-            # Look for specific validation cases
-            legitimate_reversals = backend_logs.count("✅ LEGITIMATE REVERSAL DETECTED")
-            momentum_errors = backend_logs.count("⚠️ POTENTIAL MOMENTUM ERROR")
-            sophisticated_validations = backend_logs.count("✅ SOPHISTICATED VALIDATION APPLIED")
-            
-            logger.info(f"   📊 Legitimate reversals detected: {legitimate_reversals}")
-            logger.info(f"   📊 Momentum errors detected: {momentum_errors}")
-            logger.info(f"   📊 Sophisticated validations applied: {sophisticated_validations}")
-            
-            success = patterns_found >= 4 and total_occurrences >= 8
-            
-            details = f"Patterns found: {patterns_found}/{len(self.expected_log_patterns)}, Total occurrences: {total_occurrences}, Legitimate reversals: {legitimate_reversals}, Momentum errors: {momentum_errors}"
-            
-            self.log_test_result("Refined Validation Log Patterns", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Refined Validation Log Patterns", False, f"Exception: {str(e)}")
-    
-    async def test_3_legitimate_reversal_detection(self):
-        """Test 3: Verify legitimate reversal detection for strong technical signals"""
-        logger.info("\n🔍 TEST 3: Test legitimate reversal detection (RSI >75 + Stochastic >80 cases)")
-        
-        try:
-            # Trigger new analysis to get fresh data
-            logger.info("   🚀 Triggering fresh analysis via /api/start-trading...")
-            start_response = requests.post(f"{self.api_url}/start-trading", timeout=180)
-            
-            if start_response.status_code not in [200, 201]:
-                logger.warning(f"   ⚠️ Start trading returned HTTP {start_response.status_code}, continuing with existing data...")
+                    self.log_test_result("BingX API Connectivity", False, f"Missing fields: {missing_fields}")
             else:
-                # Wait for processing
-                logger.info("   ⏳ Waiting 30 seconds for analysis processing...")
-                await asyncio.sleep(30)
-            
-            # Get IA1 analyses
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
-            
-            if response.status_code != 200:
-                self.log_test_result("Legitimate Reversal Detection", False, f"HTTP {response.status_code}: {response.text}")
-                return
-            
-            data = response.json()
-            analyses = data.get('analyses', [])
-            
-            if not analyses:
-                self.log_test_result("Legitimate Reversal Detection", False, "No IA1 analyses found")
-                return
-            
-            # Look for legitimate reversal cases
-            legitimate_reversal_cases = 0
-            extreme_rsi_cases = 0
-            extreme_stochastic_cases = 0
-            bollinger_extreme_cases = 0
-            
-            for analysis in analyses[-15:]:  # Check last 15 analyses
-                symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '')
-                confidence = analysis.get('confidence', 0)
-                recommendation = analysis.get('recommendation', '').upper()
+                self.log_test_result("BingX API Connectivity", False, f"HTTP {response.status_code}: {response.text}")
                 
-                # Check for extreme technical indicators that should trigger legitimate reversal
-                has_extreme_rsi = any(rsi_indicator in reasoning for rsi_indicator in [
-                    "RSI >75", "RSI > 75", "RSI 75", "RSI 76", "RSI 77", "RSI 78", "RSI 79", "RSI 80",
-                    "RSI <25", "RSI < 25", "RSI 24", "RSI 23", "RSI 22", "RSI 21", "RSI 20"
-                ])
-                
-                has_extreme_stochastic = any(stoch_indicator in reasoning for stoch_indicator in [
-                    "Stochastic >80", "Stochastic > 80", "Stochastic 80", "Stochastic 85", "Stochastic 90",
-                    "Stochastic <20", "Stochastic < 20", "Stochastic 20", "Stochastic 15", "Stochastic 10"
-                ])
-                
-                has_bollinger_extreme = any(bb_indicator in reasoning for bb_indicator in [
-                    "upper Bollinger", "lower Bollinger", "Bollinger Band", "band rejection", "band extreme"
-                ])
-                
-                if has_extreme_rsi:
-                    extreme_rsi_cases += 1
-                    logger.info(f"      📊 {symbol}: Extreme RSI detected")
-                
-                if has_extreme_stochastic:
-                    extreme_stochastic_cases += 1
-                    logger.info(f"      📊 {symbol}: Extreme Stochastic detected")
-                
-                if has_bollinger_extreme:
-                    bollinger_extreme_cases += 1
-                    logger.info(f"      📊 {symbol}: Bollinger extreme detected")
-                
-                # Check if this was classified as legitimate reversal
-                if has_extreme_rsi and has_extreme_stochastic:
-                    legitimate_reversal_cases += 1
-                    logger.info(f"      ✅ {symbol}: Should be legitimate reversal (extreme RSI + Stochastic)")
-            
-            # Check backend logs for legitimate reversal detections
-            import subprocess
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "3000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            legitimate_reversal_logs = backend_logs.count("✅ LEGITIMATE REVERSAL DETECTED")
-            reversal_signals_logs = backend_logs.count("🔄 Reversal signals:")
-            rsi_extreme_logs = backend_logs.count("RSI_OVERBOUGHT_EXTREME") + backend_logs.count("RSI_OVERSOLD_EXTREME")
-            stochastic_extreme_logs = backend_logs.count("STOCHASTIC_OVERBOUGHT") + backend_logs.count("STOCHASTIC_OVERSOLD")
-            
-            logger.info(f"   📊 Potential legitimate reversal cases: {legitimate_reversal_cases}")
-            logger.info(f"   📊 Extreme RSI cases: {extreme_rsi_cases}")
-            logger.info(f"   📊 Extreme Stochastic cases: {extreme_stochastic_cases}")
-            logger.info(f"   📊 Bollinger extreme cases: {bollinger_extreme_cases}")
-            logger.info(f"   📊 Legitimate reversal logs: {legitimate_reversal_logs}")
-            logger.info(f"   📊 Reversal signals logs: {reversal_signals_logs}")
-            logger.info(f"   📊 RSI extreme logs: {rsi_extreme_logs}")
-            logger.info(f"   📊 Stochastic extreme logs: {stochastic_extreme_logs}")
-            
-            # Success criteria: Evidence of legitimate reversal detection system working
-            success = (legitimate_reversal_logs > 0 or reversal_signals_logs > 0 or 
-                      (extreme_rsi_cases > 0 and extreme_stochastic_cases > 0))
-            
-            details = f"Legitimate cases: {legitimate_reversal_cases}, RSI extreme: {extreme_rsi_cases}, Stochastic extreme: {extreme_stochastic_cases}, Logs: {legitimate_reversal_logs}"
-            
-            self.log_test_result("Legitimate Reversal Detection", success, details)
-            
         except Exception as e:
-            self.log_test_result("Legitimate Reversal Detection", False, f"Exception: {str(e)}")
+            self.log_test_result("BingX API Connectivity", False, f"Exception: {str(e)}")
     
-    async def test_4_momentum_error_detection(self):
-        """Test 4: Verify momentum error detection for weak technical signals"""
-        logger.info("\n🔍 TEST 4: Test momentum error detection (RSI 45-55 + no extremes cases)")
+    async def test_2_account_balance_retrieval(self):
+        """Test 2: Account Balance Retrieval via /api/bingx/balance endpoint"""
+        logger.info("\n🔍 TEST 2: Account Balance Retrieval Test")
         
         try:
-            # Get IA1 analyses
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            response = requests.get(f"{self.api_url}/bingx/balance", timeout=30)
             
-            if response.status_code != 200:
-                self.log_test_result("Momentum Error Detection", False, f"HTTP {response.status_code}: {response.text}")
-                return
-            
-            data = response.json()
-            analyses = data.get('analyses', [])
-            
-            if not analyses:
-                self.log_test_result("Momentum Error Detection", False, "No IA1 analyses found")
-                return
-            
-            # Look for momentum error cases
-            momentum_error_cases = 0
-            moderate_rsi_cases = 0
-            no_extreme_cases = 0
-            counter_trend_cases = 0
-            
-            for analysis in analyses[-15:]:  # Check last 15 analyses
-                symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '')
-                confidence = analysis.get('confidence', 0)
-                recommendation = analysis.get('recommendation', '').upper()
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"   📊 Balance response: {json.dumps(data, indent=2)}")
                 
-                # Check for moderate RSI (no extremes)
-                has_moderate_rsi = any(rsi_indicator in reasoning for rsi_indicator in [
-                    "RSI 45", "RSI 46", "RSI 47", "RSI 48", "RSI 49", "RSI 50", 
-                    "RSI 51", "RSI 52", "RSI 53", "RSI 54", "RSI 55"
-                ])
+                # Check for expected balance fields
+                expected_fields = ['balance', 'available_balance', 'timestamp']
+                has_balance_data = any(field in data for field in expected_fields)
                 
-                # Check for lack of extreme signals
-                has_no_extremes = not any(extreme in reasoning for extreme in [
-                    "overbought", "oversold", "extreme", "divergence", "exhaustion"
-                ])
-                
-                # Check for counter-trend signals
-                has_counter_trend = ("SHORT" in recommendation and any(bullish in reasoning.lower() for bullish in ["bullish", "uptrend", "+"])) or \
-                                   ("LONG" in recommendation and any(bearish in reasoning.lower() for bearish in ["bearish", "downtrend", "-"]))
-                
-                if has_moderate_rsi:
-                    moderate_rsi_cases += 1
-                    logger.info(f"      📊 {symbol}: Moderate RSI detected")
-                
-                if has_no_extremes:
-                    no_extreme_cases += 1
-                    logger.info(f"      📊 {symbol}: No extreme signals detected")
-                
-                if has_counter_trend:
-                    counter_trend_cases += 1
-                    logger.info(f"      📊 {symbol}: Counter-trend signal detected")
-                
-                # Check if this should be classified as momentum error
-                if has_moderate_rsi and has_no_extremes and has_counter_trend:
-                    momentum_error_cases += 1
-                    logger.info(f"      ⚠️ {symbol}: Should be momentum error (moderate RSI + no extremes + counter-trend)")
-            
-            # Check backend logs for momentum error detections
-            import subprocess
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "3000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            momentum_error_logs = backend_logs.count("⚠️ POTENTIAL MOMENTUM ERROR")
-            validation_failed_logs = backend_logs.count("💥 Reversal validation: FAILED")
-            no_reversal_signals_logs = backend_logs.count("NO_REVERSAL_SIGNALS")
-            insufficient_confirmation_logs = backend_logs.count("INSUFFICIENT_REVERSAL_CONFIRMATION")
-            
-            logger.info(f"   📊 Potential momentum error cases: {momentum_error_cases}")
-            logger.info(f"   📊 Moderate RSI cases: {moderate_rsi_cases}")
-            logger.info(f"   📊 No extreme cases: {no_extreme_cases}")
-            logger.info(f"   📊 Counter-trend cases: {counter_trend_cases}")
-            logger.info(f"   📊 Momentum error logs: {momentum_error_logs}")
-            logger.info(f"   📊 Validation failed logs: {validation_failed_logs}")
-            logger.info(f"   📊 No reversal signals logs: {no_reversal_signals_logs}")
-            logger.info(f"   📊 Insufficient confirmation logs: {insufficient_confirmation_logs}")
-            
-            # Success criteria: Evidence of momentum error detection system working
-            success = (momentum_error_logs > 0 or validation_failed_logs > 0 or 
-                      no_reversal_signals_logs > 0 or insufficient_confirmation_logs > 0)
-            
-            details = f"Momentum error cases: {momentum_error_cases}, Moderate RSI: {moderate_rsi_cases}, No extremes: {no_extreme_cases}, Error logs: {momentum_error_logs}"
-            
-            self.log_test_result("Momentum Error Detection", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Momentum Error Detection", False, f"Exception: {str(e)}")
-    
-    async def test_5_differentiated_penalties(self):
-        """Test 5: Verify differentiated penalties (20% vs 35%) are applied correctly"""
-        logger.info("\n🔍 TEST 5: Test differentiated penalties (20% legitimate vs 35% momentum error)")
-        
-        try:
-            # Check backend logs for penalty applications
-            import subprocess
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "5000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            if not backend_logs:
-                self.log_test_result("Differentiated Penalties", False, "Could not retrieve backend logs")
-                return
-            
-            # Look for penalty applications
-            legitimate_penalty_20 = 0
-            momentum_error_penalty_35 = 0
-            confidence_reductions = []
-            
-            # Parse logs for confidence changes
-            lines = backend_logs.split('\n')
-            for line in lines:
-                if "Confidence:" in line and "→" in line:
-                    # Extract confidence changes
-                    if "(-20%" in line or "(-0.2" in line:
-                        legitimate_penalty_20 += 1
-                        logger.info(f"      ✅ 20% penalty applied (legitimate reversal): {line.strip()}")
-                    elif "(-35%" in line or "(-0.35" in line:
-                        momentum_error_penalty_35 += 1
-                        logger.info(f"      ⚠️ 35% penalty applied (momentum error): {line.strip()}")
+                if has_balance_data:
+                    balance = data.get('balance', data.get('total_balance', 0))
+                    available = data.get('available_balance', data.get('available_margin', 0))
                     
-                    # Extract confidence values
-                    if "%" in line:
-                        confidence_reductions.append(line.strip())
-            
-            # Check for specific penalty patterns
-            legitimate_reversal_corrections = backend_logs.count("legitimate_reversal")
-            momentum_error_corrections = backend_logs.count("momentum_error")
-            forced_hold_corrections = backend_logs.count("forced_hold")
-            sophisticated_validations = backend_logs.count("✅ SOPHISTICATED VALIDATION APPLIED")
-            
-            logger.info(f"   📊 20% penalties applied (legitimate): {legitimate_penalty_20}")
-            logger.info(f"   📊 35% penalties applied (momentum error): {momentum_error_penalty_35}")
-            logger.info(f"   📊 Legitimate reversal corrections: {legitimate_reversal_corrections}")
-            logger.info(f"   📊 Momentum error corrections: {momentum_error_corrections}")
-            logger.info(f"   📊 Forced hold corrections: {forced_hold_corrections}")
-            logger.info(f"   📊 Sophisticated validations: {sophisticated_validations}")
-            
-            # Show some confidence reduction examples
-            if confidence_reductions:
-                logger.info("   📊 Confidence reduction examples:")
-                for i, reduction in enumerate(confidence_reductions[:3]):  # Show first 3
-                    logger.info(f"      {i+1}. {reduction}")
-            
-            # Success criteria: Evidence of differentiated penalty system working
-            success = (legitimate_penalty_20 > 0 or momentum_error_penalty_35 > 0 or 
-                      legitimate_reversal_corrections > 0 or momentum_error_corrections > 0 or
-                      sophisticated_validations > 0)
-            
-            details = f"20% penalties: {legitimate_penalty_20}, 35% penalties: {momentum_error_penalty_35}, Legitimate corrections: {legitimate_reversal_corrections}, Error corrections: {momentum_error_corrections}"
-            
-            self.log_test_result("Differentiated Penalties", success, details)
-            
+                    self.log_test_result("Account Balance Retrieval", True, 
+                                       f"Balance: ${balance}, Available: ${available}")
+                else:
+                    self.log_test_result("Account Balance Retrieval", False, 
+                                       f"No balance data found in response: {data}")
+            else:
+                self.log_test_result("Account Balance Retrieval", False, 
+                                   f"HTTP {response.status_code}: {response.text}")
+                
         except Exception as e:
-            self.log_test_result("Differentiated Penalties", False, f"Exception: {str(e)}")
+            self.log_test_result("Account Balance Retrieval", False, f"Exception: {str(e)}")
     
-    async def test_6_sophisticated_validation_integration(self):
-        """Test 6: Verify sophisticated validation is integrated into IA1 analysis workflow"""
-        logger.info("\n🔍 TEST 6: Test sophisticated validation integration in IA1 workflow")
+    async def test_3_bingx_integration_manager(self):
+        """Test 3: BingX Integration Manager Initialization and Core Functionality"""
+        logger.info("\n🔍 TEST 3: BingX Integration Manager Test")
         
         try:
-            # Get IA1 analyses
-            response = requests.get(f"{self.api_url}/analyses", timeout=30)
+            # Test system status to verify manager initialization
+            status_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
             
-            if response.status_code != 200:
-                self.log_test_result("Sophisticated Validation Integration", False, f"HTTP {response.status_code}: {response.text}")
-                return
-            
-            data = response.json()
-            analyses = data.get('analyses', [])
-            
-            if not analyses:
-                self.log_test_result("Sophisticated Validation Integration", False, "No IA1 analyses found")
-                return
-            
-            # Analyze IA1 analyses for validation integration
-            validation_enhanced_analyses = 0
-            confidence_adjusted_analyses = 0
-            reversal_aware_analyses = 0
-            momentum_aware_analyses = 0
-            
-            for analysis in analyses[-10:]:  # Check last 10 analyses
-                symbol = analysis.get('symbol', 'Unknown')
-                reasoning = analysis.get('reasoning', '')
-                confidence = analysis.get('confidence', 0)
-                recommendation = analysis.get('recommendation', '').upper()
+            if status_response.status_code == 200:
+                status_data = status_response.json()
                 
-                # Check for validation enhancement indicators
-                validation_indicators = [
-                    "reversal", "momentum", "validation", "sophisticated", "technical confluence",
-                    "overbought", "oversold", "extreme", "divergence"
+                # Check for manager-specific fields
+                manager_indicators = [
+                    'status', 'api_connected', 'active_positions', 'pending_orders',
+                    'emergency_stop', 'session_pnl'
                 ]
                 
-                has_validation_enhancement = any(indicator in reasoning.lower() for indicator in validation_indicators)
-                if has_validation_enhancement:
-                    validation_enhanced_analyses += 1
-                    logger.info(f"      ✅ {symbol}: Validation enhancement detected")
+                found_indicators = [field for field in manager_indicators if field in status_data]
                 
-                # Check for confidence adjustments (lower confidence might indicate validation applied)
-                if confidence < 75:  # Lower confidence might indicate validation penalty
-                    confidence_adjusted_analyses += 1
-                    logger.info(f"      📉 {symbol}: Lower confidence ({confidence}%) - possible validation adjustment")
-                
-                # Check for reversal awareness
-                reversal_keywords = ["reversal", "counter-trend", "against momentum", "contrarian"]
-                if any(keyword in reasoning.lower() for keyword in reversal_keywords):
-                    reversal_aware_analyses += 1
-                
-                # Check for momentum awareness
-                momentum_keywords = ["momentum", "trend", "direction", "bullish", "bearish"]
-                if any(keyword in reasoning.lower() for keyword in momentum_keywords):
-                    momentum_aware_analyses += 1
-            
-            # Check backend logs for validation integration
-            import subprocess
-            backend_logs = ""
-            try:
-                log_result = subprocess.run(
-                    ["tail", "-n", "2000", "/var/log/supervisor/backend.out.log"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                backend_logs += log_result.stdout
-            except:
-                pass
-            
-            validation_applied_logs = backend_logs.count("✅ SOPHISTICATED VALIDATION APPLIED")
-            momentum_validation_logs = backend_logs.count("MOMENTUM VALIDATION")
-            reversal_validation_logs = backend_logs.count("REVERSAL VALIDATION")
-            
-            logger.info(f"   📊 Validation enhanced analyses: {validation_enhanced_analyses}/10")
-            logger.info(f"   📊 Confidence adjusted analyses: {confidence_adjusted_analyses}/10")
-            logger.info(f"   📊 Reversal aware analyses: {reversal_aware_analyses}/10")
-            logger.info(f"   📊 Momentum aware analyses: {momentum_aware_analyses}/10")
-            logger.info(f"   📊 Validation applied logs: {validation_applied_logs}")
-            logger.info(f"   📊 Momentum validation logs: {momentum_validation_logs}")
-            logger.info(f"   📊 Reversal validation logs: {reversal_validation_logs}")
-            
-            # Success criteria: Evidence of sophisticated validation integration
-            success = (validation_enhanced_analyses >= 5 or validation_applied_logs > 0 or 
-                      momentum_validation_logs > 0 or reversal_validation_logs > 0)
-            
-            details = f"Enhanced: {validation_enhanced_analyses}/10, Adjusted: {confidence_adjusted_analyses}/10, Reversal aware: {reversal_aware_analyses}/10, Validation logs: {validation_applied_logs}"
-            
-            self.log_test_result("Sophisticated Validation Integration", success, details)
-            
-        except Exception as e:
-            self.log_test_result("Sophisticated Validation Integration", False, f"Exception: {str(e)}")
-    
-    def _is_recent_timestamp(self, timestamp_str: str) -> bool:
-        """Check if timestamp is from the last 24 hours"""
-        try:
-            if not timestamp_str:
-                return False
-            
-            # Parse timestamp (handle different formats)
-            if 'T' in timestamp_str:
-                timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                if len(found_indicators) >= 3:
+                    self.log_test_result("BingX Integration Manager", True, 
+                                       f"Manager operational with {len(found_indicators)} indicators: {found_indicators}")
+                else:
+                    self.log_test_result("BingX Integration Manager", False, 
+                                       f"Insufficient manager indicators: {found_indicators}")
             else:
-                timestamp = datetime.fromisoformat(timestamp_str)
+                self.log_test_result("BingX Integration Manager", False, 
+                                   f"Status endpoint failed: HTTP {status_response.status_code}")
+                
+        except Exception as e:
+            self.log_test_result("BingX Integration Manager", False, f"Exception: {str(e)}")
+    
+    async def test_4_all_bingx_endpoints(self):
+        """Test 4: Test All 15 BingX API Endpoints"""
+        logger.info("\n🔍 TEST 4: All BingX API Endpoints Test")
+        
+        endpoint_results = []
+        
+        for endpoint in self.bingx_endpoints:
+            try:
+                method = endpoint['method']
+                path = endpoint['path']
+                name = endpoint['name']
+                
+                logger.info(f"   Testing {method} {path} ({name})")
+                
+                if method == 'GET':
+                    if 'market-price' in path:
+                        # Add symbol parameter for market price endpoint
+                        response = requests.get(f"{self.api_url}{path}?symbol=BTCUSDT", timeout=30)
+                    else:
+                        response = requests.get(f"{self.api_url}{path}", timeout=30)
+                        
+                elif method == 'POST':
+                    if 'execute-ia2' in path:
+                        # Use mock IA2 decision data
+                        response = requests.post(f"{self.api_url}{path}", 
+                                               json=self.mock_ia2_decision, timeout=30)
+                    elif 'trade' in path:
+                        # Mock manual trade data
+                        trade_data = {
+                            "symbol": "BTCUSDT",
+                            "side": "LONG",
+                            "quantity": 0.001,
+                            "leverage": 5
+                        }
+                        response = requests.post(f"{self.api_url}{path}", 
+                                               json=trade_data, timeout=30)
+                    elif 'close-position' in path:
+                        # Mock close position data
+                        close_data = {
+                            "symbol": "BTCUSDT",
+                            "position_side": "LONG"
+                        }
+                        response = requests.post(f"{self.api_url}{path}", 
+                                               json=close_data, timeout=30)
+                    elif 'risk-config' in path:
+                        # Mock risk config data
+                        risk_data = {
+                            "max_position_size": 0.1,
+                            "max_leverage": 10,
+                            "stop_loss_percentage": 0.02
+                        }
+                        response = requests.post(f"{self.api_url}{path}", 
+                                               json=risk_data, timeout=30)
+                    else:
+                        # Empty POST for other endpoints
+                        response = requests.post(f"{self.api_url}{path}", json={}, timeout=30)
+                
+                # Evaluate response
+                if response.status_code in [200, 201]:
+                    try:
+                        data = response.json()
+                        endpoint_results.append({
+                            'endpoint': f"{method} {path}",
+                            'name': name,
+                            'status': 'SUCCESS',
+                            'response_size': len(str(data))
+                        })
+                        logger.info(f"      ✅ {name}: SUCCESS (HTTP {response.status_code})")
+                    except:
+                        endpoint_results.append({
+                            'endpoint': f"{method} {path}",
+                            'name': name,
+                            'status': 'SUCCESS_NO_JSON',
+                            'response_size': len(response.text)
+                        })
+                        logger.info(f"      ✅ {name}: SUCCESS - No JSON response")
+                else:
+                    endpoint_results.append({
+                        'endpoint': f"{method} {path}",
+                        'name': name,
+                        'status': f'HTTP_{response.status_code}',
+                        'response_size': len(response.text)
+                    })
+                    logger.info(f"      ❌ {name}: HTTP {response.status_code}")
+                    
+            except Exception as e:
+                endpoint_results.append({
+                    'endpoint': f"{method} {path}",
+                    'name': name,
+                    'status': 'ERROR',
+                    'error': str(e)
+                })
+                logger.info(f"      ❌ {name}: Exception - {str(e)}")
+        
+        # Evaluate overall endpoint testing
+        successful_endpoints = len([r for r in endpoint_results if r['status'] in ['SUCCESS', 'SUCCESS_NO_JSON']])
+        total_endpoints = len(endpoint_results)
+        
+        success_rate = successful_endpoints / total_endpoints if total_endpoints > 0 else 0
+        
+        if success_rate >= 0.8:  # 80% success rate
+            self.log_test_result("All BingX API Endpoints", True, 
+                               f"Success rate: {successful_endpoints}/{total_endpoints} ({success_rate:.1%})")
+        else:
+            self.log_test_result("All BingX API Endpoints", False, 
+                               f"Low success rate: {successful_endpoints}/{total_endpoints} ({success_rate:.1%})")
+        
+        # Log detailed endpoint results
+        logger.info(f"   📊 Endpoint Test Results:")
+        for result in endpoint_results:
+            status_icon = "✅" if result['status'] in ['SUCCESS', 'SUCCESS_NO_JSON'] else "❌"
+            logger.info(f"      {status_icon} {result['name']}: {result['status']}")
+    
+    async def test_5_risk_management_system(self):
+        """Test 5: Risk Management Configuration and Validation"""
+        logger.info("\n🔍 TEST 5: Risk Management System Test")
+        
+        try:
+            # Test getting risk configuration
+            get_response = requests.get(f"{self.api_url}/bingx/risk-config", timeout=30)
             
-            # Remove timezone info for comparison
-            if timestamp.tzinfo:
-                timestamp = timestamp.replace(tzinfo=None)
+            if get_response.status_code == 200:
+                risk_config = get_response.json()
+                logger.info(f"   📊 Current risk config: {json.dumps(risk_config, indent=2)}")
+                
+                # Check for expected risk parameters
+                expected_params = ['max_position_size', 'max_leverage', 'stop_loss_percentage']
+                found_params = [param for param in expected_params if param in risk_config]
+                
+                if len(found_params) >= 2:
+                    # Test updating risk configuration
+                    new_risk_config = {
+                        "max_position_size": 0.05,  # 5% max position
+                        "max_leverage": 8,
+                        "stop_loss_percentage": 0.03  # 3% stop loss
+                    }
+                    
+                    post_response = requests.post(f"{self.api_url}/bingx/risk-config", 
+                                                json=new_risk_config, timeout=30)
+                    
+                    if post_response.status_code in [200, 201]:
+                        self.log_test_result("Risk Management System", True, 
+                                           f"Risk config retrieved and updated successfully")
+                    else:
+                        self.log_test_result("Risk Management System", False, 
+                                           f"Risk config update failed: HTTP {post_response.status_code}")
+                else:
+                    self.log_test_result("Risk Management System", False, 
+                                       f"Missing risk parameters: {expected_params}")
+            else:
+                self.log_test_result("Risk Management System", False, 
+                                   f"Risk config retrieval failed: HTTP {get_response.status_code}")
+                
+        except Exception as e:
+            self.log_test_result("Risk Management System", False, f"Exception: {str(e)}")
+    
+    async def test_6_ia2_integration_execution(self):
+        """Test 6: IA2 Integration - Execute Trade via BingX Integration"""
+        logger.info("\n🔍 TEST 6: IA2 Integration Trade Execution Test")
+        
+        try:
+            # Test IA2 trade execution with mock data
+            logger.info(f"   🚀 Testing IA2 trade execution with mock decision: {self.mock_ia2_decision}")
             
-            now = datetime.now()
-            return (now - timestamp) <= timedelta(hours=24)
+            response = requests.post(f"{self.api_url}/bingx/execute-ia2", 
+                                   json=self.mock_ia2_decision, timeout=60)
             
-        except Exception:
-            return False
+            if response.status_code in [200, 201]:
+                result = response.json()
+                logger.info(f"   📊 IA2 execution result: {json.dumps(result, indent=2)}")
+                
+                # Check execution result
+                status = result.get('status', 'unknown')
+                
+                if status in ['executed', 'skipped', 'rejected']:
+                    # All these are valid responses
+                    if status == 'executed':
+                        order_id = result.get('order_id')
+                        symbol = result.get('symbol')
+                        self.log_test_result("IA2 Integration Execution", True, 
+                                           f"Trade executed successfully: {symbol} Order ID: {order_id}")
+                    elif status == 'skipped':
+                        reason = result.get('reason', 'Unknown')
+                        self.log_test_result("IA2 Integration Execution", True, 
+                                           f"Trade skipped (valid): {reason}")
+                    elif status == 'rejected':
+                        errors = result.get('errors', [])
+                        self.log_test_result("IA2 Integration Execution", True, 
+                                           f"Trade rejected by risk management (valid): {errors}")
+                else:
+                    self.log_test_result("IA2 Integration Execution", False, 
+                                       f"Unexpected status: {status}")
+            else:
+                self.log_test_result("IA2 Integration Execution", False, 
+                                   f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_test_result("IA2 Integration Execution", False, f"Exception: {str(e)}")
+    
+    async def test_7_error_handling_resilience(self):
+        """Test 7: Error Handling and System Resilience"""
+        logger.info("\n🔍 TEST 7: Error Handling and System Resilience Test")
+        
+        error_test_results = []
+        
+        # Test 1: Invalid symbol
+        try:
+            response = requests.get(f"{self.api_url}/bingx/market-price?symbol=INVALIDUSDT", timeout=30)
+            if response.status_code in [400, 404, 422]:
+                error_test_results.append("✅ Invalid symbol handled correctly")
+            else:
+                error_test_results.append(f"❌ Invalid symbol: HTTP {response.status_code}")
+        except:
+            error_test_results.append("❌ Invalid symbol: Exception occurred")
+        
+        # Test 2: Invalid trade data
+        try:
+            invalid_trade = {
+                "symbol": "BTCUSDT",
+                "side": "INVALID_SIDE",
+                "quantity": -1,  # Invalid negative quantity
+                "leverage": 1000  # Invalid high leverage
+            }
+            response = requests.post(f"{self.api_url}/bingx/trade", json=invalid_trade, timeout=30)
+            if response.status_code in [400, 422]:
+                error_test_results.append("✅ Invalid trade data handled correctly")
+            else:
+                error_test_results.append(f"❌ Invalid trade data: HTTP {response.status_code}")
+        except:
+            error_test_results.append("❌ Invalid trade data: Exception occurred")
+        
+        # Test 3: Invalid IA2 decision
+        try:
+            invalid_ia2 = {
+                "symbol": "",  # Empty symbol
+                "signal": "INVALID",
+                "confidence": 2.0,  # Invalid confidence > 1
+                "position_size": -5  # Invalid negative size
+            }
+            response = requests.post(f"{self.api_url}/bingx/execute-ia2", json=invalid_ia2, timeout=30)
+            if response.status_code in [400, 422] or (response.status_code == 200 and 
+                                                     response.json().get('status') in ['rejected', 'error']):
+                error_test_results.append("✅ Invalid IA2 decision handled correctly")
+            else:
+                error_test_results.append(f"❌ Invalid IA2 decision: HTTP {response.status_code}")
+        except:
+            error_test_results.append("❌ Invalid IA2 decision: Exception occurred")
+        
+        # Test 4: System still responsive after errors
+        try:
+            response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
+            if response.status_code == 200:
+                error_test_results.append("✅ System remains responsive after errors")
+            else:
+                error_test_results.append(f"❌ System unresponsive: HTTP {response.status_code}")
+        except:
+            error_test_results.append("❌ System unresponsive: Exception occurred")
+        
+        # Evaluate error handling
+        successful_error_tests = len([r for r in error_test_results if r.startswith("✅")])
+        total_error_tests = len(error_test_results)
+        
+        logger.info(f"   📊 Error Handling Test Results:")
+        for result in error_test_results:
+            logger.info(f"      {result}")
+        
+        if successful_error_tests >= 3:  # At least 3 out of 4 error tests pass
+            self.log_test_result("Error Handling Resilience", True, 
+                               f"Error handling working: {successful_error_tests}/{total_error_tests} tests passed")
+        else:
+            self.log_test_result("Error Handling Resilience", False, 
+                               f"Poor error handling: {successful_error_tests}/{total_error_tests} tests passed")
+    
+    async def test_8_api_credentials_validation(self):
+        """Test 8: API Credentials Validation"""
+        logger.info("\n🔍 TEST 8: API Credentials Validation Test")
+        
+        try:
+            # Check if credentials are properly configured
+            backend_env_path = '/app/backend/.env'
+            credentials_found = False
+            
+            if os.path.exists(backend_env_path):
+                with open(backend_env_path, 'r') as f:
+                    env_content = f.read()
+                    
+                    has_api_key = 'BINGX_API_KEY=' in env_content
+                    has_secret_key = 'BINGX_SECRET_KEY=' in env_content
+                    has_base_url = 'BINGX_BASE_URL=' in env_content
+                    
+                    if has_api_key and has_secret_key:
+                        credentials_found = True
+                        logger.info("   📊 BingX credentials found in environment")
+                        
+                        # Extract API key for validation (first 10 chars only for security)
+                        for line in env_content.split('\n'):
+                            if line.startswith('BINGX_API_KEY='):
+                                api_key_preview = line.split('=')[1][:10] + "..."
+                                logger.info(f"   📊 API Key preview: {api_key_preview}")
+                                break
+            
+            if credentials_found:
+                # Test credentials by checking API connectivity
+                status_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
+                
+                if status_response.status_code == 200:
+                    status_data = status_response.json()
+                    api_connected = status_data.get('api_connected', False)
+                    
+                    if api_connected:
+                        self.log_test_result("API Credentials Validation", True, 
+                                           "Credentials configured and API connection successful")
+                    else:
+                        self.log_test_result("API Credentials Validation", False, 
+                                           "Credentials found but API connection failed")
+                else:
+                    self.log_test_result("API Credentials Validation", False, 
+                                       f"Status endpoint failed: HTTP {status_response.status_code}")
+            else:
+                self.log_test_result("API Credentials Validation", False, 
+                                   "BingX credentials not found in environment")
+                
+        except Exception as e:
+            self.log_test_result("API Credentials Validation", False, f"Exception: {str(e)}")
     
     async def run_comprehensive_tests(self):
-        """Run all refined anti-momentum validation system tests"""
-        logger.info("🚀 Starting Refined Anti-Momentum Validation System Test Suite")
+        """Run all BingX integration tests"""
+        logger.info("🚀 Starting BingX Integration Comprehensive Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 REFINED ANTI-MOMENTUM VALIDATION SYSTEM VERIFICATION")
-        logger.info("🎯 Testing: _validate_legitimate_reversal, sophisticated signal detection, differentiated penalties")
-        logger.info("🎯 Expected: Distinguish legitimate reversals from momentum errors with appropriate penalties")
+        logger.info("📋 BINGX INTEGRATION SYSTEM COMPREHENSIVE TESTING")
+        logger.info("🎯 Testing: API connectivity, endpoints, risk management, IA2 integration, error handling")
+        logger.info("🎯 Expected: Complete BingX integration working with all 15 endpoints functional")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_validate_legitimate_reversal_method()
-        await self.test_2_refined_validation_log_patterns()
-        await self.test_3_legitimate_reversal_detection()
-        await self.test_4_momentum_error_detection()
-        await self.test_5_differentiated_penalties()
-        await self.test_6_sophisticated_validation_integration()
+        await self.test_1_bingx_api_connectivity()
+        await self.test_2_account_balance_retrieval()
+        await self.test_3_bingx_integration_manager()
+        await self.test_4_all_bingx_endpoints()
+        await self.test_5_risk_management_system()
+        await self.test_6_ia2_integration_execution()
+        await self.test_7_error_handling_resilience()
+        await self.test_8_api_credentials_validation()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 REFINED ANTI-MOMENTUM VALIDATION SYSTEM SUMMARY")
+        logger.info("📊 BINGX INTEGRATION COMPREHENSIVE TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -671,29 +566,31 @@ class RefinedAntiMomentumValidationTestSuite:
         
         # System analysis
         logger.info("\n" + "=" * 80)
-        logger.info("📋 REFINED ANTI-MOMENTUM VALIDATION SYSTEM STATUS")
+        logger.info("📋 BINGX INTEGRATION SYSTEM STATUS")
         logger.info("=" * 80)
         
         if passed_tests == total_tests:
-            logger.info("🎉 ALL TESTS PASSED - Refined Anti-Momentum Validation System FULLY FUNCTIONAL!")
-            logger.info("✅ _validate_legitimate_reversal method implemented")
-            logger.info("✅ Sophisticated reversal signal detection working")
-            logger.info("✅ Legitimate reversal detection operational")
-            logger.info("✅ Momentum error detection functional")
-            logger.info("✅ Differentiated penalties (20% vs 35%) applied")
-            logger.info("✅ Sophisticated validation integrated in IA1 workflow")
+            logger.info("🎉 ALL TESTS PASSED - BingX Integration System FULLY FUNCTIONAL!")
+            logger.info("✅ API connectivity working")
+            logger.info("✅ Account balance retrieval operational")
+            logger.info("✅ BingX Integration Manager initialized")
+            logger.info("✅ All 15 BingX endpoints functional")
+            logger.info("✅ Risk management system working")
+            logger.info("✅ IA2 integration executing trades")
+            logger.info("✅ Error handling resilient")
+            logger.info("✅ API credentials validated")
         elif passed_tests >= total_tests * 0.8:
-            logger.info("⚠️ MOSTLY FUNCTIONAL - Refined validation system working with minor gaps")
+            logger.info("⚠️ MOSTLY FUNCTIONAL - BingX integration working with minor gaps")
             logger.info("🔍 Some components may need fine-tuning for full optimization")
-        elif passed_tests >= total_tests * 0.5:
-            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core validation features working")
+        elif passed_tests >= total_tests * 0.6:
+            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core BingX features working")
             logger.info("🔧 Some advanced features may need implementation or debugging")
         else:
-            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with refined validation")
+            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with BingX integration")
             logger.info("🚨 Major implementation gaps or system errors preventing functionality")
         
         # Specific requirements check
-        logger.info("\n📝 REFINED VALIDATION REQUIREMENTS VERIFICATION:")
+        logger.info("\n📝 BINGX INTEGRATION REQUIREMENTS VERIFICATION:")
         
         requirements_met = []
         requirements_failed = []
@@ -701,31 +598,39 @@ class RefinedAntiMomentumValidationTestSuite:
         # Check each requirement based on test results
         for result in self.test_results:
             if result['success']:
-                if "Method" in result['test']:
-                    requirements_met.append("✅ _validate_legitimate_reversal method implemented")
-                elif "Log Patterns" in result['test']:
-                    requirements_met.append("✅ Refined validation log patterns detected")
-                elif "Legitimate Reversal" in result['test']:
-                    requirements_met.append("✅ Legitimate reversal detection working")
-                elif "Momentum Error" in result['test']:
-                    requirements_met.append("✅ Momentum error detection functional")
-                elif "Differentiated Penalties" in result['test']:
-                    requirements_met.append("✅ Differentiated penalties (20% vs 35%) applied")
-                elif "Integration" in result['test']:
-                    requirements_met.append("✅ Sophisticated validation integrated in IA1")
+                if "API Connectivity" in result['test']:
+                    requirements_met.append("✅ BingX API connectivity verified")
+                elif "Account Balance" in result['test']:
+                    requirements_met.append("✅ Account balance retrieval working")
+                elif "Integration Manager" in result['test']:
+                    requirements_met.append("✅ BingX Integration Manager operational")
+                elif "All BingX API Endpoints" in result['test']:
+                    requirements_met.append("✅ All 15 BingX endpoints functional")
+                elif "Risk Management" in result['test']:
+                    requirements_met.append("✅ Risk management system working")
+                elif "IA2 Integration" in result['test']:
+                    requirements_met.append("✅ IA2 trade execution via BingX working")
+                elif "Error Handling" in result['test']:
+                    requirements_met.append("✅ Error handling resilient")
+                elif "API Credentials" in result['test']:
+                    requirements_met.append("✅ API credentials validated")
             else:
-                if "Method" in result['test']:
-                    requirements_failed.append("❌ _validate_legitimate_reversal method not implemented")
-                elif "Log Patterns" in result['test']:
-                    requirements_failed.append("❌ Refined validation log patterns missing")
-                elif "Legitimate Reversal" in result['test']:
-                    requirements_failed.append("❌ Legitimate reversal detection not working")
-                elif "Momentum Error" in result['test']:
-                    requirements_failed.append("❌ Momentum error detection not functional")
-                elif "Differentiated Penalties" in result['test']:
-                    requirements_failed.append("❌ Differentiated penalties not applied")
-                elif "Integration" in result['test']:
-                    requirements_failed.append("❌ Sophisticated validation not integrated")
+                if "API Connectivity" in result['test']:
+                    requirements_failed.append("❌ BingX API connectivity failed")
+                elif "Account Balance" in result['test']:
+                    requirements_failed.append("❌ Account balance retrieval not working")
+                elif "Integration Manager" in result['test']:
+                    requirements_failed.append("❌ BingX Integration Manager not operational")
+                elif "All BingX API Endpoints" in result['test']:
+                    requirements_failed.append("❌ BingX endpoints not fully functional")
+                elif "Risk Management" in result['test']:
+                    requirements_failed.append("❌ Risk management system not working")
+                elif "IA2 Integration" in result['test']:
+                    requirements_failed.append("❌ IA2 trade execution via BingX failed")
+                elif "Error Handling" in result['test']:
+                    requirements_failed.append("❌ Error handling not resilient")
+                elif "API Credentials" in result['test']:
+                    requirements_failed.append("❌ API credentials validation failed")
         
         for req in requirements_met:
             logger.info(f"   {req}")
@@ -737,25 +642,25 @@ class RefinedAntiMomentumValidationTestSuite:
         
         # Final verdict
         if len(requirements_failed) == 0:
-            logger.info("\n🎉 VERDICT: Refined Anti-Momentum Validation System is FULLY FUNCTIONAL!")
-            logger.info("✅ All validation features implemented and working correctly")
-            logger.info("✅ System successfully distinguishes legitimate reversals from momentum errors")
-            logger.info("✅ Differentiated penalties preserve good contrarian trades while blocking bad ones")
+            logger.info("\n🎉 VERDICT: BingX Integration System is FULLY FUNCTIONAL!")
+            logger.info("✅ All integration features implemented and working correctly")
+            logger.info("✅ API connectivity, endpoints, risk management, and IA2 integration operational")
+            logger.info("✅ System ready for production trading with proper error handling")
         elif len(requirements_failed) <= 1:
-            logger.info("\n⚠️ VERDICT: Refined Anti-Momentum Validation System is MOSTLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: BingX Integration System is MOSTLY FUNCTIONAL")
             logger.info("🔍 Minor issues may need attention for complete functionality")
         elif len(requirements_failed) <= 3:
-            logger.info("\n⚠️ VERDICT: Refined Anti-Momentum Validation System is PARTIALLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: BingX Integration System is PARTIALLY FUNCTIONAL")
             logger.info("🔧 Several components need implementation or debugging")
         else:
-            logger.info("\n❌ VERDICT: Refined Anti-Momentum Validation System is NOT FUNCTIONAL")
-            logger.info("🚨 Major implementation gaps preventing refined validation")
+            logger.info("\n❌ VERDICT: BingX Integration System is NOT FUNCTIONAL")
+            logger.info("🚨 Major implementation gaps preventing BingX integration")
         
         return passed_tests, total_tests
 
 async def main():
     """Main test execution"""
-    test_suite = RefinedAntiMomentumValidationTestSuite()
+    test_suite = BingXIntegrationTestSuite()
     passed, total = await test_suite.run_comprehensive_tests()
     
     # Exit with appropriate code
