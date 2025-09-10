@@ -263,6 +263,15 @@ DECISION OUTPUT FORMAT (JSON):
     "reasoning": "Include enhanced technical indicators analysis: RSI confluence, MACD momentum, Stochastic timing, Bollinger volatility assessment. Show how these indicators influence your confidence calculation and whether it meets the ≥80% execution threshold.",
     "risk_level": "LOW|MEDIUM|HIGH",
     "strategy_type": "PROBABILISTIC_OPTIMAL_ENHANCED",
+    "ia2_technical_levels": {
+        "support_level": 0.2320,  // YOUR re-analyzed support level from market data
+        "resistance_level": 0.2914,  // YOUR re-analyzed resistance level from market data
+        "support_reasoning": "Support identified at 0.2320 based on 3 recent bounces with volume confirmation and RSI oversold reactions",
+        "resistance_reasoning": "Resistance at 0.2914 confirmed by 2 rejections, volume spikes, and RSI overbought reactions",
+        "entry_price": 0.2595,  // Current market price for entry
+        "calculated_rr": 2.45,  // YOUR calculated RR using YOUR levels
+        "rr_calculation": "LONG: RR = (0.2914-0.2595)/(0.2595-0.2320) = 0.0319/0.0275 = 1.16:1"
+    },
     "technical_indicators_analysis": {
         "rsi_impact": "How RSI level affects confidence and TP probabilities",
         "macd_influence": "MACD signal strength and trend confirmation",
