@@ -5416,7 +5416,6 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 # If IA2 provided recalculated levels, validate and use them to enhance RR calculation
                 if ia2_support and ia2_resistance and ia2_rr_ratio:
                     current_price = opportunity.current_price
-                    ia2_signal = claude_decision.get("signal", "HOLD").upper()
                     
                     # 🎯 VALIDATION: Verify IA2's RR calculation follows correct formulas
                     validation_passed = False
