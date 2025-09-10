@@ -46,17 +46,8 @@ class MultiEMASMAIntegrationTestSuite:
     """Comprehensive test suite for Multi EMA/SMA integration system"""
     
     def __init__(self):
-        # Get backend URL from frontend env
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        backend_url = line.split('=')[1].strip()
-                        break
-                else:
-                    backend_url = "http://localhost:8001"
-        except Exception:
-            backend_url = "http://localhost:8001"
+        # Use localhost for internal testing
+        backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
         logger.info(f"Testing Multi EMA/SMA Integration System at: {self.api_url}")
