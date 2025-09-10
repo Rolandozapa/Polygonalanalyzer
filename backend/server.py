@@ -5274,41 +5274,6 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 claude_boost = min((claude_confidence - 0.5) * 0.4, 0.35)  # Up to 0.35 boost
                 confidence = max(confidence + claude_boost, 0.55)
             
-            # 🎯 IA2 TECHNICAL LEVELS EXTRACTION - Extract Claude's re-analyzed support/resistance
-            ia2_technical_levels = claude_decision.get("ia2_technical_levels", {})
-            if ia2_technical_levels and isinstance(ia2_technical_levels, dict):
-                ia2_support = float(ia2_technical_levels.get("support_level", opportunity.current_price * 0.97))
-                ia2_resistance = float(ia2_technical_levels.get("resistance_level", opportunity.current_price * 1.03))
-                ia2_entry = float(ia2_technical_levels.get("entry_price", opportunity.current_price))
-                ia2_calculated_rr = ia2_technical_levels.get("calculated_rr", 1.0)
-                
-                # Extract Claude's reasoning for the levels
-                support_reasoning = ia2_technical_levels.get("support_reasoning", "IA2 technical analysis")
-                resistance_reasoning = ia2_technical_levels.get("resistance_reasoning", "IA2 technical analysis")
-                rr_calculation = ia2_technical_levels.get("rr_calculation", "No calculation provided")
-                
-                logger.info(f"🎯 IA2 TECHNICAL LEVELS EXTRACTED {opportunity.symbol}:")
-                logger.info(f"   📊 Support: ${ia2_support:.6f} - {support_reasoning}")
-                logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} - {resistance_reasoning}")
-                logger.info(f"   🧮 IA2 RR Calculation: {rr_calculation}")
-                
-                technical_reasoning = f"IA2 Support: {support_reasoning}. IA2 Resistance: {resistance_reasoning}. {rr_calculation}"
-            else:
-                # Fallback: Use IA1 levels or generic levels
-                ia1_calculated_levels = getattr(analysis, 'ia1_calculated_levels', {})
-                if ia1_calculated_levels:
-                    ia2_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
-                    ia2_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
-                else:
-                    ia2_support = opportunity.current_price * 0.97  # Generic fallback
-                    ia2_resistance = opportunity.current_price * 1.03
-                
-                ia2_entry = opportunity.current_price
-                ia2_calculated_rr = 1.0
-                technical_reasoning = "Fallback levels - IA2 technical analysis not available"
-                
-                logger.warning(f"⚠️ IA2 TECHNICAL LEVELS MISSING for {opportunity.symbol} - using fallback levels")
-            
             # DYNAMIC LEVERAGE PROCESSING - Extract leverage calculation from Claude
             leverage_data = claude_decision.get("leverage", {})
             if leverage_data and isinstance(leverage_data, dict):
