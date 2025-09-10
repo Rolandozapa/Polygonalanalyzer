@@ -267,11 +267,8 @@ DECISION OUTPUT FORMAT (JSON):
         "support_level": 0.2320,  // YOUR re-analyzed support level from market data
         "resistance_level": 0.2914,  // YOUR re-analyzed resistance level from market data
         "support_reasoning": "Support identified at 0.2320 based on 3 recent bounces with volume confirmation and RSI oversold reactions",
-        "resistance_reasoning": "Resistance at 0.2914 confirmed by 2 rejections, volume spikes, and RSI overbought reactions",
-        "entry_price": 0.2595,  // Current market price for entry
-        "calculated_rr": 1.16,  // YOUR calculated RR using YOUR levels and CORRECT formula
-        "rr_calculation": "LONG: RR = (TP-Entry)/(Entry-SL) = (0.2914-0.2595)/(0.2595-0.2320) = 0.0319/0.0275 = 1.16:1"
-        // For SHORT example: "SHORT: RR = (Entry-TP)/(SL-Entry) = (0.2595-0.2320)/(0.2914-0.2595) = 0.0275/0.0319 = 0.86:1"
+        "resistance_reasoning": "Resistance at 0.2914 confirmed by 2 rejections, volume spikes, and RSI overbought reactions"
+        // NOTE: Risk-Reward will be calculated automatically by our system using these levels
     },
     "technical_indicators_analysis": {
         "rsi_impact": "How RSI level affects confidence and TP probabilities",
