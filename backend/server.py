@@ -5343,23 +5343,53 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             # 🎯 IA2 TECHNICAL LEVELS EXTRACTION - Extract Claude's re-analyzed support/resistance
             enhanced_rr_data = {}
             
+            # Get IA2 signal early for RR calculation
+            ia2_signal = claude_decision.get("signal", "HOLD").upper()
+            
             # NEW: Extract from ia2_technical_levels (Claude's direct analysis)
             ia2_technical_levels = claude_decision.get("ia2_technical_levels", {})
             if ia2_technical_levels and isinstance(ia2_technical_levels, dict):
                 ia2_support = float(ia2_technical_levels.get("support_level", 0))
                 ia2_resistance = float(ia2_technical_levels.get("resistance_level", 0))
-                ia2_rr_ratio = ia2_technical_levels.get("calculated_rr", 0)
                 
                 # Extract Claude's reasoning for the levels
                 support_reasoning = ia2_technical_levels.get("support_reasoning", "IA2 technical analysis")
                 resistance_reasoning = ia2_technical_levels.get("resistance_reasoning", "IA2 technical analysis")
-                rr_calculation = ia2_technical_levels.get("rr_calculation", "No calculation provided")
-                technical_reasoning = f"IA2 Support: {support_reasoning}. IA2 Resistance: {resistance_reasoning}. {rr_calculation}"
                 
-                logger.info(f"🎯 IA2 TECHNICAL LEVELS EXTRACTED {opportunity.symbol}:")
+                # 🧮 CALCULATE RR AUTOMATICALLY WITH CORRECT FORMULAS
+                current_price = opportunity.current_price
+                ia2_rr_ratio = 1.0  # Default fallback
+                
+                if ia2_support > 0 and ia2_resistance > 0:
+                    if ia2_signal == "LONG":
+                        # LONG: RR = (Resistance - Current) / (Current - Support)
+                        if current_price > ia2_support:
+                            reward = ia2_resistance - current_price
+                            risk = current_price - ia2_support
+                            ia2_rr_ratio = reward / risk if risk > 0 else 1.0
+                        else:
+                            ia2_rr_ratio = 1.0  # Invalid support level
+                            
+                    elif ia2_signal == "SHORT":
+                        # SHORT: RR = (Current - Support) / (Resistance - Current)
+                        if current_price < ia2_resistance:
+                            reward = current_price - ia2_support
+                            risk = ia2_resistance - current_price
+                            ia2_rr_ratio = reward / risk if risk > 0 else 1.0
+                        else:
+                            ia2_rr_ratio = 1.0  # Invalid resistance level
+                
+                # 🔒 VALIDATE LEVELS LOGIC
+                levels_valid = (ia2_support < current_price < ia2_resistance)
+                if not levels_valid:
+                    logger.warning(f"⚠️ IA2 LEVELS INVALID for {opportunity.symbol}: Support={ia2_support:.6f}, Price={current_price:.6f}, Resistance={ia2_resistance:.6f}")
+                
+                technical_reasoning = f"IA2 Support: {support_reasoning}. IA2 Resistance: {resistance_reasoning}."
+                
+                logger.info(f"🎯 IA2 TECHNICAL LEVELS {opportunity.symbol} ({ia2_signal}):")
                 logger.info(f"   📊 Support: ${ia2_support:.6f} - {support_reasoning}")
                 logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} - {resistance_reasoning}")
-                logger.info(f"   🧮 IA2 RR Calculation: {rr_calculation}")
+                logger.info(f"   🧮 AUTO-CALCULATED RR: {ia2_rr_ratio:.2f}:1 (using {ia2_signal} formula)")
                 
             else:
                 # FALLBACK: Try old extraction method or generic levels
