@@ -167,53 +167,88 @@ class BingXTradingClient:
         
         url = f"{self.authenticator.base_url}{endpoint}"
         
-        # Prepare ALL parameters for query string (BingX requirement - everything in query string!)
-        all_params = {}
-        if params:
-            all_params.update(params)
-        if data:
-            all_params.update(data)  # Critical: BingX puts ALL parameters in query string, not body!
-        
-        # Add timestamp (BingX requirement)
-        all_params['timestamp'] = int(time.time() * 1000)
-        
-        # Sort parameters alphabetically by key (BingX requirement for consistent signature)
-        sorted_params = sorted(all_params.items(), key=lambda x: x[0])
-        
-        # Create query string for signature (BingX official format)
-        query_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
-        
-        # Generate signature using the exact BingX specification format
-        # BingX signature = HMAC-SHA256(query_string, secret_key)
-        signature = hmac.new(
-            self.authenticator.secret_key.encode('utf-8'),
-            query_string.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        
-        # Add signature to query string (BingX approach)
-        final_query_string = f"{query_string}&signature={signature}"
-        final_url = f"{url}?{final_query_string}"
-        
-        # Create headers (BingX official format)
-        headers = {
-            'X-BX-APIKEY': self.authenticator.api_key,
-            'Content-Type': 'application/json'  # Always include Content-Type
-        }
+        # BingX Authentication: Different approach for GET vs POST
+        if method.upper() == "GET":
+            # GET requests: All parameters in query string
+            all_params = {}
+            if params:
+                all_params.update(params)
+            if data:
+                all_params.update(data)
+            
+            # Add timestamp
+            all_params['timestamp'] = int(time.time() * 1000)
+            
+            # Sort parameters alphabetically by key (BingX requirement for consistent signature)
+            sorted_params = sorted(all_params.items(), key=lambda x: x[0])
+            
+            # Create query string for signature (BingX official format)
+            query_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
+            
+            # Generate signature
+            signature = hmac.new(
+                self.authenticator.secret_key.encode('utf-8'),
+                query_string.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Build final URL with signature
+            final_query_string = f"{query_string}&signature={signature}"
+            final_url = f"{url}?{final_query_string}"
+            
+            # Headers for GET
+            headers = {
+                'X-BX-APIKEY': self.authenticator.api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            # Make GET request
+            response = await self.client.get(final_url, headers=headers)
+            
+        elif method.upper() == "POST":
+            # POST requests: Parameters in body, signature based on body params
+            request_body = {}
+            if params:
+                request_body.update(params)
+            if data:
+                request_body.update(data)
+            
+            # Add timestamp to body
+            request_body['timestamp'] = int(time.time() * 1000)
+            
+            # Sort parameters alphabetically for signature generation
+            sorted_params = sorted(request_body.items(), key=lambda x: x[0])
+            
+            # Create parameter string for signature (from body parameters)
+            params_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
+            
+            # Generate signature using body parameters
+            signature = hmac.new(
+                self.authenticator.secret_key.encode('utf-8'),
+                params_string.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Build URL with only signature in query string
+            final_url = f"{url}?signature={signature}"
+            
+            # Headers for POST
+            headers = {
+                'X-BX-APIKEY': self.authenticator.api_key,
+                'Content-Type': 'application/json'
+            }
+            
+            logger.info(f"🚀 BINGX POST REQUEST: URL={final_url}")
+            logger.info(f"🚀 BINGX POST BODY: {request_body}")
+            
+            # Make POST request with JSON body
+            response = await self.client.post(final_url, headers=headers, json=request_body)
+            
+        else:
+            # Other methods (PUT, DELETE, etc.)
+            raise Exception(f"Unsupported HTTP method: {method}")
         
         try:
-            # BingX critical requirement: send empty body for POST requests
-            # All parameters are in the URL query string, not in the request body
-            if method.upper() == "POST":
-                # POST request with empty body (all params in URL)
-                response = await self.client.post(final_url, headers=headers, json={})
-            elif method.upper() == "GET":
-                # GET request (no body)
-                response = await self.client.get(final_url, headers=headers)
-            else:
-                # Other methods
-                response = await self.client.request(method, final_url, headers=headers, json={})
-            
             response.raise_for_status()
             result = response.json()
             
