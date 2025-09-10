@@ -325,7 +325,7 @@
 
 ## test_plan:
   current_focus:
-    - "Validate IA1 Risk-Reward Calculation Logic"
+    - "BingX API Connectivity After IP Update - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
