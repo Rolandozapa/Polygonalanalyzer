@@ -867,6 +867,16 @@ class AdvancedTechnicalIndicators:
             money_flow_ratio=last_row.get('money_flow_ratio', 1.0),
             institutional_activity=last_row.get('institutional_activity', 'neutral'),
             
+            # Multi EMA/SMA Trend Hierarchy - THE MISSING PIECE 🎯
+            ema_9=last_row.get('ema_9', 0.0),
+            ema_21=last_row.get('ema_21', 0.0),
+            ema_200=last_row.get('ema_200', 0.0),
+            trend_hierarchy=last_row.get('trend_hierarchy', 'neutral'),
+            trend_momentum=last_row.get('trend_momentum', 'neutral'),
+            price_vs_emas=last_row.get('price_vs_emas', 'mixed'),
+            ema_cross_signal=last_row.get('ema_cross_signal', 'neutral'),
+            trend_strength_score=last_row.get('trend_strength_score', 0.5),
+            
             # Composite
             trend_strength=last_row.get('trend_strength', 0.5),
             momentum_score=last_row.get('momentum_score', 0.5),
