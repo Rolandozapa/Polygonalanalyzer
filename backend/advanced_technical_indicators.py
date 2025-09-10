@@ -1096,5 +1096,122 @@ class AdvancedTechnicalIndicators:
         
         return combo_signals
 
+    def get_multi_timeframe_indicators(self, df: pd.DataFrame) -> Dict[str, TechnicalIndicators]:
+        """
+        🚀 RÉVOLUTION MULTI-TIMEFRAME: Calcule tous les indicateurs sur TOUS les timeframes
+        Comme un trader professionnel qui regarde Daily, 4H, 1H, 5min pour ses décisions !
+        """
+        multi_tf_indicators = {}
+        
+        try:
+            # S'assurer qu'on a assez de données pour tous les timeframes
+            if len(df) < 300:  # Au moins 300 périodes pour avoir 14 jours de données
+                logger.warning(f"⚠️ Pas assez de données pour multi-timeframe: {len(df)} périodes")
+                # Fallback sur timeframes courts seulement
+                available_timeframes = {k: v for k, v in self.timeframes.items() if v <= len(df) // 2}
+            else:
+                available_timeframes = self.timeframes
+            
+            logger.info(f"🔍 MULTI-TIMEFRAME ANALYSIS: Calculating indicators for {len(available_timeframes)} timeframes")
+            
+            for tf_name, periods_back in available_timeframes.items():
+                try:
+                    if tf_name == 'now':
+                        # Timeframe actuel - utilise toute la data
+                        tf_df = df.copy()
+                    else:
+                        # Timeframes historiques - décale les données
+                        if periods_back >= len(df):
+                            continue  # Skip si pas assez de données
+                        
+                        # Prendre un snapshot des données à ce moment dans le passé
+                        end_idx = len(df) - periods_back
+                        tf_df = df.iloc[:end_idx + 50].copy()  # +50 pour avoir assez de données pour les calculs
+                        
+                        if len(tf_df) < 50:  # Minimum pour calculer les indicateurs
+                            continue
+                    
+                    # Calculer tous les indicateurs pour ce timeframe
+                    tf_df_with_indicators = self.calculate_all_indicators(tf_df)
+                    
+                    if len(tf_df_with_indicators) > 0:
+                        # Extraire les dernières valeurs (plus récentes pour ce timeframe)
+                        tf_indicators = self.get_latest_indicators(tf_df_with_indicators)
+                        multi_tf_indicators[tf_name] = tf_indicators
+                        
+                        logger.debug(f"✅ {tf_name}: RSI={tf_indicators.rsi_14:.1f}, MFI={tf_indicators.mfi:.1f}, VWAP=${tf_indicators.vwap:.4f}")
+                    
+                except Exception as e:
+                    logger.error(f"Error calculating {tf_name} indicators: {e}")
+                    continue
+            
+            logger.info(f"🎯 MULTI-TIMEFRAME SUCCESS: {len(multi_tf_indicators)} timeframes calculated")
+            return multi_tf_indicators
+            
+        except Exception as e:
+            logger.error(f"Error in multi-timeframe calculation: {e}")
+            # Fallback to current timeframe only
+            try:
+                current_indicators = self.get_latest_indicators(self.calculate_all_indicators(df))
+                return {'now': current_indicators}
+            except:
+                # Ultimate fallback - empty dict
+                return {}
+    
+    def format_multi_timeframe_for_prompt(self, multi_tf_indicators: Dict[str, TechnicalIndicators]) -> str:
+        """
+        🎯 Formate les indicateurs multi-timeframe pour le prompt IA1
+        Structure hiérarchique: Long terme → Court terme (comme un trader pro)
+        """
+        try:
+            if not multi_tf_indicators:
+                return "⚠️ Multi-timeframe data not available"
+            
+            # Ordre hiérarchique pour analyse professionnelle
+            timeframe_order = ['14d', '5d', '1d', '4h', '1h', '5min', 'now']
+            available_tfs = [tf for tf in timeframe_order if tf in multi_tf_indicators]
+            
+            if not available_tfs:
+                return "⚠️ No timeframe data available"
+            
+            formatted_lines = []
+            formatted_lines.append("🔍 MULTI-TIMEFRAME PROFESSIONAL ANALYSIS:")
+            
+            for tf in available_tfs:
+                indicators = multi_tf_indicators[tf]
+                
+                # Nom du timeframe plus lisible
+                tf_names = {
+                    '14d': '📅 14-DAY TREND',
+                    '5d': '📈 5-DAY MOMENTUM', 
+                    '1d': '📊 DAILY STRUCTURE',
+                    '4h': '⏰ 4H INTERMEDIATE',
+                    '1h': '🕐 1H SHORT-TERM',
+                    '5min': '⚡ 5MIN PRECISION',
+                    'now': '🎯 CURRENT LEVELS'
+                }
+                
+                # Indicateurs clés formatés
+                rsi_status = "OVERSOLD" if indicators.rsi_14 < 30 else "OVERBOUGHT" if indicators.rsi_14 > 70 else "NEUTRAL"
+                mfi_status = "ACCUMULATION" if indicators.mfi < 30 else "DISTRIBUTION" if indicators.mfi > 70 else "NEUTRAL"
+                vwap_status = "ABOVE" if indicators.vwap_position > 0 else "BELOW"
+                
+                # Ligne formatée pour ce timeframe
+                tf_line = f"{tf_names.get(tf, tf.upper())}: RSI {indicators.rsi_14:.1f}({rsi_status}) | MFI {indicators.mfi:.1f}({mfi_status}) | VWAP {vwap_status}({indicators.vwap_position:+.1f}%)"
+                
+                # Ajouter des signaux spéciaux pour timeframes clés
+                if tf in ['14d', '5d'] and (indicators.mfi < 20 or indicators.mfi > 80):
+                    tf_line += f" | 🚨 INSTITUTIONAL {'LOADING' if indicators.mfi < 20 else 'DUMPING'}"
+                elif tf == 'now' and (indicators.vwap_extreme_oversold or indicators.vwap_extreme_overbought):
+                    tf_line += f" | 🎯 PRECISION {'ENTRY' if indicators.vwap_extreme_oversold else 'EXIT'}"
+                
+                formatted_lines.append(tf_line)
+            
+            return '\n            '.join(formatted_lines)
+            
+        except Exception as e:
+            logger.error(f"Error formatting multi-timeframe data: {e}")
+            return "⚠️ Error formatting multi-timeframe analysis"
+
 # Instance globale
 advanced_technical_indicators = AdvancedTechnicalIndicators()
