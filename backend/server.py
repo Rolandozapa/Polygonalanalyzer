@@ -3974,11 +3974,48 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 take_profit_2=decision_logic["tp2"],
                 take_profit_3=decision_logic["tp3"],
                 position_size=decision_logic["position_size"],
-                risk_reward_ratio=final_rr,  # 🎯 ENHANCED: Use IA2 recalculated RR when available
+                risk_reward_ratio=final_rr,  # Will be recalculated below with actual prices
                 ia1_analysis_id=analysis.id,
                 ia2_reasoning=decision_logic["reasoning"] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
                 status=TradingStatus.PENDING
             )
+            
+            # 🎯 RECALCULATE RR WITH ACTUAL DECISION PRICES - CRITICAL FIX
+            actual_entry = opportunity.current_price
+            actual_sl = decision_logic["stop_loss"] 
+            actual_tp = decision_logic["tp1"]
+            ia2_final_signal = decision_logic["signal"].upper()
+            
+            if actual_sl != actual_entry and actual_tp != actual_entry:
+                if ia2_final_signal == "LONG":
+                    # LONG: RR = (TP - Entry) / (Entry - SL)
+                    if actual_entry > actual_sl:
+                        reward = actual_tp - actual_entry
+                        risk = actual_entry - actual_sl
+                        corrected_rr = reward / risk if risk > 0 else 1.0
+                    else:
+                        corrected_rr = 1.0  # Invalid SL
+                        
+                elif ia2_final_signal == "SHORT":
+                    # SHORT: RR = (Entry - TP) / (SL - Entry)
+                    if actual_sl > actual_entry:
+                        reward = actual_entry - actual_tp
+                        risk = actual_sl - actual_entry
+                        corrected_rr = reward / risk if risk > 0 else 1.0
+                    else:
+                        corrected_rr = 1.0  # Invalid SL
+                else:
+                    corrected_rr = final_rr  # Keep original for HOLD
+                
+                # Update the decision with corrected RR
+                decision.risk_reward_ratio = corrected_rr
+                
+                logger.info(f"🎯 CORRECTED RR WITH ACTUAL PRICES {opportunity.symbol} ({ia2_final_signal}):")
+                logger.info(f"   💰 Entry: ${actual_entry:.6f} | SL: ${actual_sl:.6f} | TP: ${actual_tp:.6f}")
+                logger.info(f"   🧮 CORRECTED RR: {corrected_rr:.2f}:1 (was {final_rr:.2f}:1)")
+                
+            else:
+                logger.warning(f"⚠️ IDENTICAL PRICES for {opportunity.symbol} - keeping original RR {final_rr:.2f}:1")
             
             # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT FOR IA2
             # Apply AI training insights to improve IA2 decision-making
