@@ -233,6 +233,23 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **Stochastic Precision**: Leverage %K/%D relationships for optimal entry timing
 - **Bollinger Bands Strategy**: Incorporate volatility bands for TP level optimization and stop loss placement
 
+🎯 **CRITICAL IA2 TECHNICAL LEVELS RE-ANALYSIS**:
+YOU MUST RE-ANALYZE THE PROVIDED MARKET DATA TO ESTABLISH YOUR OWN TECHNICAL LEVELS:
+1. **Support Level Identification**: Based on the historical data provided, identify the strongest support level using:
+   - Recent swing lows and bounce points
+   - Volume confirmation at support tests
+   - RSI oversold reactions at specific price levels
+   - Previous resistance turned support
+2. **Resistance Level Identification**: Based on the historical data, identify the strongest resistance using:
+   - Recent swing highs and rejection points  
+   - Volume spikes at resistance tests
+   - RSI overbought reactions at specific price levels
+   - Previous support turned resistance
+3. **Risk-Reward Calculation**: Use YOUR identified support/resistance levels to calculate precise entry, stop-loss, and take-profit:
+   - LONG: Entry=Current, SL=Your_Support_Level, TP=Your_Resistance_Level
+   - SHORT: Entry=Current, SL=Your_Resistance_Level, TP=Your_Support_Level
+   - Calculate RR = (TP-Entry)/(Entry-SL) for LONG or (Entry-TP)/(SL-Entry) for SHORT
+
 🎯 PROBABILISTIC TP METHODOLOGY:
 1. **Token Characterization**: Volatility profile enhanced by Bollinger Band width, resistance strength via RSI/Stochastic levels
 2. **Probability Mapping**: Each TP level probability adjusted by technical indicators confluence
