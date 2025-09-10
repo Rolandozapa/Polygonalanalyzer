@@ -195,7 +195,7 @@ class BingXTradingClient:
                 all_params.update(data)
             
             # Add timestamp
-            all_params['timestamp'] = int(time.time() * 1000)
+            all_params['timestamp'] = get_correct_timestamp()
             
             # Sort parameters alphabetically by key (BingX requirement for consistent signature)
             sorted_params = sorted(all_params.items(), key=lambda x: x[0])
