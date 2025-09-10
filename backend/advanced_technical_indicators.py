@@ -103,13 +103,24 @@ class IndicatorSignal:
     reasoning: str
 
 class AdvancedTechnicalIndicators:
-    """Calculateur avancé d'indicateurs techniques"""
+    """Calculateur avancé d'indicateurs techniques avec support MULTI-TIMEFRAME 🚀"""
     
     def __init__(self):
         self.lookback_periods = {
             'short': 14,
             'medium': 50,
             'long': 200
+        }
+        
+        # 🔥 TIMEFRAMES POUR ANALYSE PROFESSIONNELLE 🔥
+        self.timeframes = {
+            'now': 1,           # Valeurs actuelles
+            '5min': 5,          # 5 minutes ago  
+            '1h': 60,           # 1 heure ago (60 min)
+            '4h': 240,          # 4 heures ago (240 min)
+            '1d': 1440,         # 1 jour ago (1440 min)
+            '5d': 7200,         # 5 jours ago (7200 min)
+            '14d': 20160        # 14 jours ago (20160 min)
         }
         logger.info("Advanced Technical Indicators system initialized")
     
