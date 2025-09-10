@@ -5354,55 +5354,59 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 
             # 🎯 NOUVEAU: RR RECALCULATION WITH IA2 TECHNICAL LEVELS
             # Extract IA2's recalculated technical levels for enhanced RR calculation
-            # 🎯 IA2 TECHNICAL LEVELS - USE IA1 LEVELS WITH CORRECT RR CALCULATION
+            # 🎯 IA2 RR CALCULATION - EXTRACT CLAUDE'S CALCULATED RR
             enhanced_rr_data = {}
             
-            # Get IA2 signal early for RR calculation
+            # Get IA2 signal early for validation
             ia2_signal = claude_decision.get("signal", "HOLD").upper()
             
-            # SIMPLIFIED: Use IA1 levels but apply correct RR formulas for IA2
-            ia1_calculated_levels = getattr(analysis, 'ia1_calculated_levels', {})
-            if ia1_calculated_levels:
-                ia2_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
-                ia2_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
+            # NEW APPROACH: Extract Claude's calculated RR directly
+            claude_calculated_rr = claude_decision.get("calculated_rr", None)
+            rr_reasoning = claude_decision.get("rr_reasoning", "")
+            
+            if claude_calculated_rr is not None and claude_calculated_rr > 0:
+                ia2_rr_ratio = float(claude_calculated_rr)
+                technical_reasoning = rr_reasoning
                 
-                # 🧮 CALCULATE RR AUTOMATICALLY WITH CORRECT FORMULAS
-                current_price = opportunity.current_price
-                ia2_rr_ratio = 1.0  # Default fallback
+                logger.info(f"🎯 IA2 RR FROM CLAUDE {opportunity.symbol} ({ia2_signal}):")
+                logger.info(f"   🧮 CLAUDE CALCULATED RR: {ia2_rr_ratio:.2f}:1")
+                logger.info(f"   📝 Claude's reasoning: {rr_reasoning}")
                 
-                if ia2_support > 0 and ia2_resistance > 0:
-                    if ia2_signal == "LONG":
-                        # LONG: RR = (Resistance - Current) / (Current - Support)
-                        if current_price > ia2_support:
-                            reward = ia2_resistance - current_price
-                            risk = current_price - ia2_support
-                            ia2_rr_ratio = reward / risk if risk > 0 else 1.0
-                        else:
-                            ia2_rr_ratio = 1.0  # Invalid support level
-                            
-                    elif ia2_signal == "SHORT":
-                        # SHORT: RR = (Current - Support) / (Resistance - Current)
-                        if current_price < ia2_resistance:
-                            reward = current_price - ia2_support
-                            risk = ia2_resistance - current_price
-                            ia2_rr_ratio = reward / risk if risk > 0 else 1.0
-                        else:
-                            ia2_rr_ratio = 1.0  # Invalid resistance level
-                
-                technical_reasoning = f"Using IA1 levels: Support ${ia2_support:.6f}, Resistance ${ia2_resistance:.6f}"
-                
-                logger.info(f"🎯 IA2 RR USING IA1 LEVELS {opportunity.symbol} ({ia2_signal}):")
-                logger.info(f"   📊 Support: ${ia2_support:.6f} (from IA1)")
-                logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} (from IA1)")
-                logger.info(f"   🧮 AUTO-CALCULATED RR: {ia2_rr_ratio:.2f}:1 (using {ia2_signal} formula)")
-                
-            else:
-                # Generic fallback if no IA1 levels
+                # Set dummy levels for compatibility (we'll extract them from reasoning if needed)
                 ia2_support = opportunity.current_price * 0.97
                 ia2_resistance = opportunity.current_price * 1.03
-                ia2_rr_ratio = 1.0
-                technical_reasoning = "Generic fallback levels - no IA1 data available"
-                logger.warning(f"⚠️ NO IA1 LEVELS for {opportunity.symbol} - using generic fallback")
+                
+            else:
+                # FALLBACK: Use IA1 levels with our calculation
+                logger.warning(f"⚠️ Claude didn't provide calculated_rr for {opportunity.symbol}, using IA1 fallback")
+                
+                ia1_calculated_levels = getattr(analysis, 'ia1_calculated_levels', {})
+                if ia1_calculated_levels:
+                    ia2_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
+                    ia2_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
+                    
+                    # Calculate RR with correct formulas
+                    current_price = opportunity.current_price
+                    if ia2_signal == "LONG":
+                        reward = ia2_resistance - current_price
+                        risk = current_price - ia2_support
+                        ia2_rr_ratio = reward / risk if risk > 0 else 1.0
+                    elif ia2_signal == "SHORT":
+                        reward = current_price - ia2_support
+                        risk = ia2_resistance - current_price
+                        ia2_rr_ratio = reward / risk if risk > 0 else 1.0
+                    else:
+                        ia2_rr_ratio = 1.0
+                    
+                    technical_reasoning = f"Fallback using IA1 levels: Support ${ia2_support:.6f}, Resistance ${ia2_resistance:.6f}"
+                    logger.info(f"🔄 FALLBACK RR for {opportunity.symbol}: {ia2_rr_ratio:.2f}:1 using IA1 levels")
+                    
+                else:
+                    # Generic fallback
+                    ia2_support = opportunity.current_price * 0.97
+                    ia2_resistance = opportunity.current_price * 1.03
+                    ia2_rr_ratio = 1.0
+                    technical_reasoning = "Generic fallback - no IA1 or Claude data available"
             
             # Continue with existing validation logic
             if ia2_support and ia2_resistance and ia2_rr_ratio:
