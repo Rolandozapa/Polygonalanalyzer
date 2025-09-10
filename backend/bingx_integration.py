@@ -232,7 +232,7 @@ class BingXTradingClient:
                 request_body.update(data)
             
             # Add timestamp to body
-            request_body['timestamp'] = int(time.time() * 1000)
+            request_body['timestamp'] = get_correct_timestamp()
             
             # Sort parameters alphabetically for signature generation
             sorted_params = sorted(request_body.items(), key=lambda x: x[0])
