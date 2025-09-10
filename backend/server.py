@@ -264,11 +264,10 @@ DECISION OUTPUT FORMAT (JSON):
     "risk_level": "LOW|MEDIUM|HIGH",
     "strategy_type": "PROBABILISTIC_OPTIMAL_ENHANCED",
     "ia2_technical_levels": {
-        "support_level": 0.2320,  // YOUR re-analyzed support level from market data
-        "resistance_level": 0.2914,  // YOUR re-analyzed resistance level from market data
-        "support_reasoning": "Support identified at 0.2320 based on 3 recent bounces with volume confirmation and RSI oversold reactions",
-        "resistance_reasoning": "Resistance at 0.2914 confirmed by 2 rejections, volume spikes, and RSI overbought reactions"
-        // NOTE: Risk-Reward will be calculated automatically by our system using these levels
+        "support_level": 0.2320,  // REQUIRED: YOUR re-analyzed support level - MUST BE A SPECIFIC PRICE
+        "resistance_level": 0.2914,  // REQUIRED: YOUR re-analyzed resistance level - MUST BE A SPECIFIC PRICE  
+        "support_reasoning": "REQUIRED: Explain WHY this support level (bounces, volume, RSI reactions)",
+        "resistance_reasoning": "REQUIRED: Explain WHY this resistance level (rejections, volume, RSI reactions)"
     },
     "technical_indicators_analysis": {
         "rsi_impact": "How RSI level affects confidence and TP probabilities",
