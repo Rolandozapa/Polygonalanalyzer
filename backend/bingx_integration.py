@@ -316,7 +316,7 @@ class BingXTradingClient:
         try:
             data = {
                 "symbol": symbol,
-                "side": "BOTH",  # Required by BingX for futures leverage
+                "side": "LONG",  # BingX requires LONG or SHORT, not BOTH in hedge mode
                 "leverage": leverage
             }
             
