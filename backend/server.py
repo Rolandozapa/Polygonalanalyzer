@@ -8657,6 +8657,313 @@ async def test_bingx_connection():
     except Exception as e:
         logger.error(f"Error testing BingX connection: {e}")
         raise HTTPException(status_code=500, detail=f"Connection test failed: {str(e)}")
+
+# ====================================================================================================
+# BINGX INTEGRATION API ENDPOINTS - Live Trading System
+# ====================================================================================================
+
+@app.get("/api/bingx/status")
+async def get_bingx_integration_status():
+    """Get comprehensive BingX integration system status"""
+    try:
+        status = await bingx_manager.get_system_status()
+        return {
+            "status": "success",
+            "bingx_integration": status,
+            "timestamp": get_paris_time().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting BingX status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get BingX status: {str(e)}")
+
+@app.get("/api/bingx/balance")
+async def get_bingx_balance():
+    """Get BingX account balance and margin information"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        balance = await bingx_manager.trading_client.get_account_balance()
+        return {
+            "status": "success",
+            "balance": balance,
+            "timestamp": get_paris_time().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting BingX balance: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get balance: {str(e)}")
+
+@app.get("/api/bingx/positions")
+async def get_bingx_positions():
+    """Get all open BingX positions"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        positions = await bingx_manager.trading_client.get_positions()
+        return {
+            "status": "success",
+            "positions": positions,
+            "total_positions": len(positions),
+            "timestamp": get_paris_time().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error getting BingX positions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get positions: {str(e)}")
+
+class BingXTradeRequest(BaseModel):
+    symbol: str
+    side: str  # LONG or SHORT
+    quantity: float
+    leverage: int = 5
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
+
+@app.post("/api/bingx/trade")
+async def execute_bingx_trade(trade_request: BingXTradeRequest):
+    """Execute a manual trade on BingX"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        # Create trading position
+        position = TradingPosition(
+            symbol=trade_request.symbol,
+            side=trade_request.side,
+            quantity=trade_request.quantity,
+            leverage=trade_request.leverage,
+            stop_loss=trade_request.stop_loss,
+            take_profit=trade_request.take_profit
+        )
+        
+        # Validate with risk management
+        validation = await bingx_manager.risk_manager.validate_position(position)
+        
+        if not validation['valid']:
+            return {
+                "status": "rejected",
+                "errors": validation['errors'],
+                "warnings": validation['warnings'],
+                "timestamp": get_paris_time().isoformat()
+            }
+        
+        # Execute trade
+        final_position = validation['adjusted_position'] or position
+        result = await bingx_manager.trading_client.place_market_order(final_position)
+        
+        return {
+            "status": "success",
+            "trade_result": result,
+            "position": {
+                "symbol": final_position.symbol,
+                "side": final_position.side,
+                "quantity": final_position.quantity,
+                "leverage": final_position.leverage
+            },
+            "risk_validation": validation,
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error executing BingX trade: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute trade: {str(e)}")
+
+@app.post("/api/bingx/execute-ia2")
+async def execute_ia2_bingx_trade(decision_data: Dict[str, Any]):
+    """Execute trade based on IA2 decision - INTEGRATION ENDPOINT"""
+    try:
+        logger.info(f"🎯 EXECUTING IA2 TRADE ON BINGX: {decision_data.get('symbol')} {decision_data.get('signal')}")
+        
+        result = await bingx_manager.execute_ia2_trade(decision_data)
+        
+        logger.info(f"✅ IA2 TRADE RESULT: {result.get('status')} - {decision_data.get('symbol')}")
+        
+        return {
+            "status": "success",
+            "execution_result": result,
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error executing IA2 BingX trade: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute IA2 trade: {str(e)}")
+
+@app.post("/api/bingx/close-position/{symbol}")
+async def close_bingx_position(symbol: str, position_side: str):
+    """Close a specific BingX position"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        result = await bingx_manager.trading_client.close_position(symbol, position_side)
+        
+        return {
+            "status": "success",
+            "close_result": result,
+            "symbol": symbol,
+            "position_side": position_side,
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error closing BingX position: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to close position: {str(e)}")
+
+@app.post("/api/bingx/close-all-positions")
+async def close_all_bingx_positions():
+    """Close all open BingX positions (EMERGENCY)"""
+    try:
+        result = await bingx_manager.close_all_positions()
+        
+        return {
+            "status": "success",
+            "close_all_result": result,
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error closing all BingX positions: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to close all positions: {str(e)}")
+
+@app.get("/api/bingx/trading-history")
+async def get_bingx_trading_history(limit: int = 50):
+    """Get BingX trading history"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        history = await bingx_manager.trading_client.get_trading_history(limit)
+        
+        return {
+            "status": "success",
+            "trading_history": history,
+            "total_orders": len(history),
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error getting BingX trading history: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get trading history: {str(e)}")
+
+@app.get("/api/bingx/market-price/{symbol}")
+async def get_bingx_market_price(symbol: str):
+    """Get current market price for a symbol from BingX"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        price = await bingx_manager.trading_client.get_market_price(symbol)
+        
+        return {
+            "status": "success",
+            "symbol": symbol,
+            "price": price,
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error getting BingX market price: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get market price: {str(e)}")
+
+class RiskConfigUpdate(BaseModel):
+    max_position_size: Optional[float] = None
+    max_total_exposure: Optional[float] = None
+    max_leverage: Optional[int] = None
+    stop_loss_percentage: Optional[float] = None
+    max_drawdown: Optional[float] = None
+    daily_loss_limit: Optional[float] = None
+
+@app.get("/api/bingx/risk-config")
+async def get_bingx_risk_config():
+    """Get current BingX risk management configuration"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        risk_params = bingx_manager.risk_manager.risk_params
+        
+        return {
+            "status": "success",
+            "risk_config": {
+                "max_position_size": risk_params.max_position_size,
+                "max_total_exposure": risk_params.max_total_exposure,
+                "max_leverage": risk_params.max_leverage,
+                "stop_loss_percentage": risk_params.stop_loss_percentage,
+                "max_drawdown": risk_params.max_drawdown,
+                "daily_loss_limit": risk_params.daily_loss_limit
+            },
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error getting BingX risk config: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get risk config: {str(e)}")
+
+@app.post("/api/bingx/risk-config")
+async def update_bingx_risk_config(config_update: RiskConfigUpdate):
+    """Update BingX risk management configuration"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        risk_params = bingx_manager.risk_manager.risk_params
+        
+        # Update risk parameters
+        if config_update.max_position_size is not None:
+            risk_params.max_position_size = min(config_update.max_position_size, 0.2)  # Cap at 20%
+        if config_update.max_total_exposure is not None:
+            risk_params.max_total_exposure = min(config_update.max_total_exposure, 0.8)  # Cap at 80%
+        if config_update.max_leverage is not None:
+            risk_params.max_leverage = min(config_update.max_leverage, 20)  # Cap at 20x
+        if config_update.stop_loss_percentage is not None:
+            risk_params.stop_loss_percentage = max(config_update.stop_loss_percentage, 0.01)  # Min 1%
+        if config_update.max_drawdown is not None:
+            risk_params.max_drawdown = min(config_update.max_drawdown, 0.3)  # Cap at 30%
+        if config_update.daily_loss_limit is not None:
+            risk_params.daily_loss_limit = min(config_update.daily_loss_limit, 0.15)  # Cap at 15%
+        
+        return {
+            "status": "success",
+            "message": "Risk configuration updated",
+            "updated_config": {
+                "max_position_size": risk_params.max_position_size,
+                "max_total_exposure": risk_params.max_total_exposure,
+                "max_leverage": risk_params.max_leverage,
+                "stop_loss_percentage": risk_params.stop_loss_percentage,
+                "max_drawdown": risk_params.max_drawdown,
+                "daily_loss_limit": risk_params.daily_loss_limit
+            },
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error updating BingX risk config: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update risk config: {str(e)}")
+
+@app.post("/api/bingx/emergency-stop")
+async def trigger_bingx_emergency_stop():
+    """Trigger emergency stop - closes all positions and halts trading"""
+    try:
+        if not bingx_manager._initialized:
+            await bingx_manager.initialize()
+        
+        result = await bingx_manager.risk_manager.trigger_emergency_stop("Manual emergency stop triggered")
+        
+        return {
+            "status": "success",
+            "emergency_stop_result": result,
+            "message": "Emergency stop triggered successfully",
+            "timestamp": get_paris_time().isoformat()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error triggering BingX emergency stop: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to trigger emergency stop: {str(e)}")
+
+# ====================================================================================================
+# END BINGX INTEGRATION API ENDPOINTS
+# ====================================================================================================
+
 @api_router.get("/market-status")
 async def get_market_status():
     """Get ultra professional market status with BingX integration"""
