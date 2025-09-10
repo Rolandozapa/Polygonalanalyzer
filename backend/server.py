@@ -335,19 +335,15 @@ DECISION OUTPUT FORMAT (JSON):
     }
 }
 
-**EXAMPLE COMPLETE RESPONSE WITH REQUIRED TECHNICAL LEVELS:**
+**EXAMPLE COMPLETE RESPONSE WITH REQUIRED RR CALCULATION:**
 {
     "signal": "SHORT",
     "confidence": 0.85,
     "reasoning": "Strong bearish confluence: RSI overbought at 78, MACD showing negative divergence, price rejected at key resistance. Stochastic confirming overbought conditions.",
     "risk_level": "MEDIUM", 
     "strategy_type": "PROBABILISTIC_OPTIMAL_ENHANCED",
-    "ia2_technical_levels": {
-        "support_level": 1.3200,
-        "resistance_level": 1.4800,
-        "support_reasoning": "Strong support at 1.3200 confirmed by 3 bounces in past week with high volume and RSI oversold reactions",
-        "resistance_reasoning": "Key resistance at 1.4800 showing 2 recent rejections with volume spikes and RSI overbought"
-    },
+    "calculated_rr": 1.25,
+    "rr_reasoning": "Support at 1.3200, Resistance at 1.4800, using SHORT formula: (1.4500-1.3200)/(1.4800-1.4500) = 4.33",
     "technical_indicators_analysis": {
         "rsi_impact": "RSI at 78 showing strong overbought, expecting pullback to support",
         "macd_influence": "MACD showing bearish divergence despite price higher highs",
