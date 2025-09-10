@@ -754,7 +754,7 @@ class AdvancedTechnicalIndicators:
         return divergence
     
     def _detect_technical_signals(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Détecte les signaux techniques composites"""
+        """Détecte les signaux techniques composites AVEC CONFLUENCE EMA/SMA! 🚀"""
         df['signal_confidence'] = 0.5  # Default neutral
         
         # Calculate signal confidence based on indicator alignment
@@ -815,6 +815,47 @@ class AdvancedTechnicalIndicators:
                 bearish_divergence = mfi_divergence_signal & (df['mfi'] > 50)  # Divergence + MFI > 50 = bearish
                 bullish_signals += bullish_divergence.astype(int) * 2.5  # HOLY GRAIL weight
                 bearish_signals += bearish_divergence.astype(int) * 2.5
+        
+        # 🚀🚀🚀 MULTI EMA/SMA SIGNALS - THE CONFLUENCE BEAST FINAL BOSS! 🚀🚀🚀
+        if 'trend_hierarchy' in df.columns:
+            total_signals += 4  # MAXIMUM WEIGHT - EMA hierarchy is the KING of trend detection!
+            
+            # Trend Hierarchy Signals (STRONGEST trend confirmation possible)
+            strong_bull_signal = (df['trend_hierarchy'] == 'strong_bull').astype(int)
+            weak_bull_signal = (df['trend_hierarchy'] == 'weak_bull').astype(int)
+            strong_bear_signal = (df['trend_hierarchy'] == 'strong_bear').astype(int)
+            weak_bear_signal = (df['trend_hierarchy'] == 'weak_bear').astype(int)
+            
+            bullish_signals += strong_bull_signal * 3.0   # NUCLEAR bullish weight
+            bullish_signals += weak_bull_signal * 1.5     # Strong bullish weight
+            bearish_signals += strong_bear_signal * 3.0   # NUCLEAR bearish weight
+            bearish_signals += weak_bear_signal * 1.5     # Strong bearish weight
+            
+            # Golden Cross / Death Cross signals (LEGENDARY momentum shift indicators)
+            if 'ema_cross_signal' in df.columns:
+                golden_cross_signal = (df['ema_cross_signal'] == 'golden_cross').astype(int)
+                death_cross_signal = (df['ema_cross_signal'] == 'death_cross').astype(int)
+                bullish_signals += golden_cross_signal * 2.0  # LEGENDARY bullish momentum
+                bearish_signals += death_cross_signal * 2.0   # LEGENDARY bearish momentum
+            
+            # Price vs EMAs positioning (Multi-layer trend confirmation)
+            if 'price_vs_emas' in df.columns:
+                above_all_emas = (df['price_vs_emas'] == 'above_all').astype(int)
+                above_fast_emas = (df['price_vs_emas'] == 'above_fast').astype(int)
+                below_fast_emas = (df['price_vs_emas'] == 'below_fast').astype(int)
+                below_all_emas = (df['price_vs_emas'] == 'below_all').astype(int)
+                
+                bullish_signals += above_all_emas * 2.0      # STRONG bullish positioning
+                bullish_signals += above_fast_emas * 1.0     # Moderate bullish positioning
+                bearish_signals += below_fast_emas * 1.0     # Moderate bearish positioning
+                bearish_signals += below_all_emas * 2.0      # STRONG bearish positioning
+            
+            # EMA Trend Momentum signals (Rate of change confirmation)
+            if 'trend_momentum' in df.columns:
+                accelerating_signal = (df['trend_momentum'] == 'accelerating').astype(int)
+                decelerating_signal = (df['trend_momentum'] == 'decelerating').astype(int)
+                bullish_signals += accelerating_signal * 1.5  # Acceleration = bullish momentum
+                bearish_signals += decelerating_signal * 1.5  # Deceleration = bearish momentum
         
         # Stochastic signals
         if 'stoch_k' in df.columns:
