@@ -95,6 +95,110 @@ const TradingDashboard = () => {
     }
   };
 
+  // BingX Integration Functions
+  const fetchBingxData = async () => {
+    setBingxLoading(true);
+    try {
+      const [statusRes, balanceRes, positionsRes, historyRes, riskRes] = await Promise.all([
+        axios.get(`${API}/bingx/status`).catch(() => ({ data: { status: 'error', message: 'Not connected' } })),
+        axios.get(`${API}/bingx/balance`).catch(() => ({ data: { status: 'error' } })),
+        axios.get(`${API}/bingx/positions`).catch(() => ({ data: { positions: [] } })),
+        axios.get(`${API}/bingx/trading-history?limit=20`).catch(() => ({ data: { trading_history: [] } })),
+        axios.get(`${API}/bingx/risk-config`).catch(() => ({ data: { status: 'error' } }))
+      ]);
+
+      setBingxStatus(statusRes.data);
+      setBingxBalance(balanceRes.data.balance || null);
+      setBingxPositions(positionsRes.data.positions || []);
+      setBingxTradingHistory(historyRes.data.trading_history || []);
+      setBingxRiskConfig(riskRes.data.risk_config || null);
+    } catch (error) {
+      console.error('Error fetching BingX data:', error);
+    } finally {
+      setBingxLoading(false);
+    }
+  };
+
+  const executeBingxTrade = async (tradeData) => {
+    try {
+      setBingxLoading(true);
+      const response = await axios.post(`${API}/bingx/trade`, tradeData);
+      
+      if (response.data.status === 'success') {
+        alert(`Trade executed successfully: ${tradeData.symbol} ${tradeData.side}`);
+        await fetchBingxData(); // Refresh data
+      } else {
+        alert(`Trade rejected: ${response.data.errors?.join(', ') || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error executing BingX trade:', error);
+      alert('Error executing trade: ' + error.message);
+    } finally {
+      setBingxLoading(false);
+    }
+  };
+
+  const closeBingxPosition = async (symbol, positionSide) => {
+    try {
+      setBingxLoading(true);
+      const response = await axios.post(`${API}/bingx/close-position/${symbol}`, { position_side: positionSide });
+      
+      if (response.data.status === 'success') {
+        alert(`Position closed successfully: ${symbol}`);
+        await fetchBingxData(); // Refresh data
+      } else {
+        alert('Error closing position');
+      }
+    } catch (error) {
+      console.error('Error closing BingX position:', error);
+      alert('Error closing position: ' + error.message);
+    } finally {
+      setBingxLoading(false);
+    }
+  };
+
+  const triggerBingxEmergencyStop = async () => {
+    if (!window.confirm('Are you sure you want to trigger emergency stop? This will close ALL positions.')) {
+      return;
+    }
+    
+    try {
+      setBingxLoading(true);
+      const response = await axios.post(`${API}/bingx/emergency-stop`);
+      
+      if (response.data.status === 'success') {
+        alert('Emergency stop triggered successfully');
+        await fetchBingxData(); // Refresh data
+      } else {
+        alert('Error triggering emergency stop');
+      }
+    } catch (error) {
+      console.error('Error triggering emergency stop:', error);
+      alert('Error triggering emergency stop: ' + error.message);
+    } finally {
+      setBingxLoading(false);
+    }
+  };
+
+  const updateBingxRiskConfig = async (newConfig) => {
+    try {
+      setBingxLoading(true);
+      const response = await axios.post(`${API}/bingx/risk-config`, newConfig);
+      
+      if (response.data.status === 'success') {
+        alert('Risk configuration updated successfully');
+        await fetchBingxData(); // Refresh data
+      } else {
+        alert('Error updating risk configuration');
+      }
+    } catch (error) {
+      console.error('Error updating risk config:', error);
+      alert('Error updating risk config: ' + error.message);
+    } finally {
+      setBingxLoading(false);
+    }
+  };
+
   const runStrategyBacktest = async () => {
     try {
       setBacktestLoading(true);
