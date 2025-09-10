@@ -1333,6 +1333,169 @@ class AdvancedTechnicalIndicators:
         combo_signals['reasoning'] = reasoning
         
         return combo_signals
+    
+    def get_ema_sma_trend_analysis(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🎯 ANALYSE COMPLÈTE EMA/SMA TREND HIERARCHY - CONFLUENCE MATRIX FINAL PIECE! 🎯
+        Fournit une analyse détaillée de la hiérarchie des tendances EMA/SMA pour IA1 et IA2
+        """
+        ema_analysis = {
+            'trend_direction': 'neutral',
+            'trend_strength': 'weak',
+            'momentum_state': 'neutral',
+            'price_positioning': 'mixed',
+            'cross_signals': 'none',
+            'support_resistance_levels': [],
+            'confidence_score': 0.5,
+            'risk_reward_potential': 1.0,
+            'trend_probability': 0.5,
+            'recommended_strategy': 'wait',
+            'key_levels': {},
+            'trend_analysis': [],
+            'confluence_factors': []
+        }
+        
+        analysis_points = []
+        confluence_factors = []
+        confidence_factors = []
+        
+        # === 1. TREND HIERARCHY ANALYSIS ===
+        if indicators.trend_hierarchy != 'neutral':
+            if indicators.trend_hierarchy == 'strong_bull':
+                ema_analysis['trend_direction'] = 'strong_bullish'
+                ema_analysis['trend_strength'] = 'very_strong'
+                ema_analysis['confidence_score'] = 0.9
+                ema_analysis['trend_probability'] = 0.85
+                ema_analysis['recommended_strategy'] = 'buy_dips'
+                analysis_points.append("🚀 STRONG BULL HIERARCHY: Price > EMA9 > EMA21 > SMA50 > EMA200")
+                confluence_factors.append("Perfect bull hierarchy alignment")
+            elif indicators.trend_hierarchy == 'weak_bull':
+                ema_analysis['trend_direction'] = 'bullish'
+                ema_analysis['trend_strength'] = 'moderate'
+                ema_analysis['confidence_score'] = 0.7
+                ema_analysis['trend_probability'] = 0.68
+                ema_analysis['recommended_strategy'] = 'cautious_buy'
+                analysis_points.append("📈 WEAK BULL HIERARCHY: Partial bullish EMA alignment")
+                confluence_factors.append("Moderate bullish EMA structure")
+            elif indicators.trend_hierarchy == 'strong_bear':
+                ema_analysis['trend_direction'] = 'strong_bearish'
+                ema_analysis['trend_strength'] = 'very_strong'
+                ema_analysis['confidence_score'] = 0.9
+                ema_analysis['trend_probability'] = 0.15
+                ema_analysis['recommended_strategy'] = 'sell_rallies'
+                analysis_points.append("💥 STRONG BEAR HIERARCHY: Price < EMA9 < EMA21 < SMA50 < EMA200")
+                confluence_factors.append("Perfect bear hierarchy alignment")
+            elif indicators.trend_hierarchy == 'weak_bear':
+                ema_analysis['trend_direction'] = 'bearish'
+                ema_analysis['trend_strength'] = 'moderate'
+                ema_analysis['confidence_score'] = 0.7
+                ema_analysis['trend_probability'] = 0.32
+                ema_analysis['recommended_strategy'] = 'cautious_sell'
+                analysis_points.append("📉 WEAK BEAR HIERARCHY: Partial bearish EMA alignment")
+                confluence_factors.append("Moderate bearish EMA structure")
+        
+        # === 2. PRICE POSITIONING ANALYSIS ===
+        positioning_analysis = {
+            'above_all': ('🟢 MAXIMUM BULLISH POSITIONING', 'Above all EMAs = institutional support', 0.9),
+            'above_fast': ('🟡 MODERATE BULLISH POSITIONING', 'Above fast EMAs = short-term bullish', 0.7),
+            'below_fast': ('🟠 MODERATE BEARISH POSITIONING', 'Below fast EMAs = short-term bearish', 0.3),
+            'below_all': ('🔴 MAXIMUM BEARISH POSITIONING', 'Below all EMAs = institutional resistance', 0.1),
+            'mixed': ('⚪ MIXED POSITIONING', 'Conflicting EMA signals', 0.5)
+        }
+        
+        if indicators.price_vs_emas in positioning_analysis:
+            description, explanation, prob_adjustment = positioning_analysis[indicators.price_vs_emas]
+            ema_analysis['price_positioning'] = indicators.price_vs_emas
+            ema_analysis['trend_probability'] *= prob_adjustment
+            analysis_points.append(f"{description}: {explanation}")
+            confluence_factors.append(f"Price positioning: {indicators.price_vs_emas}")
+        
+        # === 3. GOLDEN/DEATH CROSS ANALYSIS ===
+        if indicators.ema_cross_signal != 'neutral':
+            if indicators.ema_cross_signal == 'golden_cross':
+                ema_analysis['cross_signals'] = 'golden_cross'
+                ema_analysis['momentum_state'] = 'accelerating_bull'
+                ema_analysis['risk_reward_potential'] = 2.5
+                analysis_points.append("⚡ GOLDEN CROSS: EMA9 crossed above EMA21 - MOMENTUM SHIFT!")
+                confluence_factors.append("Golden Cross momentum signal")
+                confidence_factors.append(0.8)
+            elif indicators.ema_cross_signal == 'death_cross':
+                ema_analysis['cross_signals'] = 'death_cross'
+                ema_analysis['momentum_state'] = 'accelerating_bear'
+                ema_analysis['risk_reward_potential'] = 2.5
+                analysis_points.append("💥 DEATH CROSS: EMA9 crossed below EMA21 - MOMENTUM SHIFT!")
+                confluence_factors.append("Death Cross momentum signal")
+                confidence_factors.append(0.8)
+        
+        # === 4. TREND MOMENTUM ANALYSIS ===
+        if indicators.trend_momentum != 'neutral':
+            momentum_analysis = {
+                'accelerating': ('🚀 ACCELERATING', 'EMAs spreading apart = increasing momentum', 0.8),
+                'decelerating': ('🛑 DECELERATING', 'EMAs converging = decreasing momentum', 0.3),
+            }
+            
+            if indicators.trend_momentum in momentum_analysis:
+                description, explanation, momentum_confidence = momentum_analysis[indicators.trend_momentum]
+                ema_analysis['momentum_state'] = indicators.trend_momentum
+                analysis_points.append(f"{description}: {explanation}")
+                confluence_factors.append(f"Trend momentum: {indicators.trend_momentum}")
+                confidence_factors.append(momentum_confidence)
+        
+        # === 5. DYNAMIC SUPPORT/RESISTANCE LEVELS ===
+        key_levels = {}
+        support_resistance = []
+        
+        if indicators.ema_9 > 0:
+            key_levels['ema_9'] = indicators.ema_9
+            support_resistance.append(f"EMA9: ${indicators.ema_9:.4f} (Ultra-fast S/R)")
+        
+        if indicators.ema_21 > 0:
+            key_levels['ema_21'] = indicators.ema_21
+            support_resistance.append(f"EMA21: ${indicators.ema_21:.4f} (Fast S/R)")
+        
+        if indicators.sma_50 > 0:
+            key_levels['sma_50'] = indicators.sma_50
+            support_resistance.append(f"SMA50: ${indicators.sma_50:.4f} (Institutional S/R)")
+        
+        if indicators.ema_200 > 0:
+            key_levels['ema_200'] = indicators.ema_200
+            support_resistance.append(f"EMA200: ${indicators.ema_200:.4f} (Major trend S/R)")
+        
+        ema_analysis['key_levels'] = key_levels
+        ema_analysis['support_resistance_levels'] = support_resistance
+        
+        # === 6. TREND STRENGTH SCORE INTEGRATION ===
+        if indicators.trend_strength_score != 0.5:
+            strength_percentage = indicators.trend_strength_score * 100
+            if strength_percentage > 80:
+                ema_analysis['trend_strength'] = 'very_strong'
+                analysis_points.append(f"💪 VERY STRONG TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage > 60:
+                ema_analysis['trend_strength'] = 'strong'
+                analysis_points.append(f"💪 STRONG TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage < 20:
+                ema_analysis['trend_strength'] = 'very_weak'
+                analysis_points.append(f"📉 VERY WEAK TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage < 40:
+                ema_analysis['trend_strength'] = 'weak'
+                analysis_points.append(f"📉 WEAK TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+        
+        # === 7. CONFLUENCE CALCULATION ===
+        if confidence_factors:
+            ema_analysis['confidence_score'] = min(0.95, np.mean(confidence_factors))
+        
+        # Risk/Reward Potential based on trend clarity
+        if ema_analysis['trend_strength'] in ['very_strong', 'strong'] and ema_analysis['cross_signals'] != 'none':
+            ema_analysis['risk_reward_potential'] = 3.0
+        elif ema_analysis['trend_direction'] in ['strong_bullish', 'strong_bearish']:
+            ema_analysis['risk_reward_potential'] = 2.5
+        elif ema_analysis['cross_signals'] != 'none':
+            ema_analysis['risk_reward_potential'] = 2.0
+        
+        ema_analysis['trend_analysis'] = analysis_points
+        ema_analysis['confluence_factors'] = confluence_factors
+        
+        return ema_analysis
 
     def get_multi_timeframe_indicators(self, df: pd.DataFrame) -> Dict[str, TechnicalIndicators]:
         """
