@@ -350,6 +350,110 @@ class AdvancedTechnicalIndicators:
             df['vwap_trend'] = 'neutral'
             return df
     
+    def _calculate_mfi(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Calcule Money Flow Index (MFI) - RSI pondéré par le volume
+        🔥 DÉTECTION D'ACCUMULATION/DISTRIBUTION INSTITUTIONNELLE 🔥
+        """
+        try:
+            # Typical Price (HLC/3) - Prix représentatif pour chaque période
+            df['typical_price'] = (df['High'] + df['Low'] + df['Close']) / 3
+            
+            # Raw Money Flow = Typical Price * Volume (flux monétaire brut)
+            df['raw_money_flow'] = df['typical_price'] * df['Volume']
+            
+            # Identifier les périodes de hausse/baisse des prix
+            df['price_direction'] = df['typical_price'].diff()
+            
+            # Money Flow Positif (quand prix monte) et Négatif (quand prix baisse)
+            df['positive_money_flow'] = np.where(df['price_direction'] > 0, df['raw_money_flow'], 0)
+            df['negative_money_flow'] = np.where(df['price_direction'] < 0, df['raw_money_flow'], 0)
+            
+            # Calculer les sommes sur période glissante (14 périodes par défaut)
+            period = 14
+            df['positive_mf_sum'] = df['positive_money_flow'].rolling(window=period).sum()
+            df['negative_mf_sum'] = df['negative_money_flow'].rolling(window=period).sum()
+            
+            # Money Flow Ratio = Positive MF / Negative MF
+            df['money_flow_ratio'] = df['positive_mf_sum'] / (df['negative_mf_sum'] + 1e-10)  # Éviter division par 0
+            
+            # Money Flow Index = 100 - (100 / (1 + Money Flow Ratio))
+            df['mfi'] = 100 - (100 / (1 + df['money_flow_ratio']))
+            
+            # MFI signals et zones critiques
+            df['mfi_overbought'] = df['mfi'] > 80       # Distribution zone
+            df['mfi_oversold'] = df['mfi'] < 20         # Accumulation zone  
+            df['mfi_extreme_overbought'] = df['mfi'] > 90  # Extreme distribution
+            df['mfi_extreme_oversold'] = df['mfi'] < 10    # Extreme accumulation
+            
+            # MFI trend determination
+            df['mfi_trend'] = 'neutral'
+            df.loc[df['mfi'] > 55, 'mfi_trend'] = 'bullish'    # Au-dessus de 55 = trend haussier
+            df.loc[df['mfi'] < 45, 'mfi_trend'] = 'bearish'    # En-dessous de 45 = trend baissier
+            
+            # Détection d'activité institutionnelle basée sur MFI + Volume
+            df['institutional_activity'] = 'neutral'
+            
+            # Accumulation institutionnelle (MFI bas + volume élevé)
+            high_volume_threshold = df['Volume'].rolling(20).quantile(0.8)
+            accumulation_conditions = (df['mfi'] < 30) & (df['Volume'] > high_volume_threshold)
+            df.loc[accumulation_conditions, 'institutional_activity'] = 'accumulation'
+            
+            # Distribution institutionnelle (MFI haut + volume élevé)  
+            distribution_conditions = (df['mfi'] > 70) & (df['Volume'] > high_volume_threshold)
+            df.loc[distribution_conditions, 'institutional_activity'] = 'distribution'
+            
+            # Détection de divergences MFI/Prix (signal de retournement puissant)
+            df['mfi_divergence'] = self._detect_mfi_divergence(df)
+            
+            # Nettoyage des colonnes temporaires
+            df.drop(['typical_price', 'raw_money_flow', 'price_direction', 
+                    'positive_money_flow', 'negative_money_flow', 
+                    'positive_mf_sum', 'negative_mf_sum'], 
+                   axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ MFI (Money Flow Index) calculated successfully - Institutional activity detection active! 🔥")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error calculating MFI: {e}")
+            # Set safe defaults if calculation fails
+            df['mfi'] = 50.0
+            df['money_flow_ratio'] = 1.0
+            for col in ['mfi_overbought', 'mfi_oversold', 'mfi_extreme_overbought', 
+                       'mfi_extreme_oversold', 'mfi_divergence']:
+                df[col] = False
+            df['mfi_trend'] = 'neutral'
+            df['institutional_activity'] = 'neutral'
+            return df
+    
+    def _detect_mfi_divergence(self, df: pd.DataFrame) -> pd.Series:
+        """Détecte les divergences entre MFI et prix - signaux de retournement ultra-puissants"""
+        divergence = pd.Series(False, index=df.index)
+        
+        if len(df) < 20:
+            return divergence
+        
+        # Recherche de divergences sur les 15 dernières périodes
+        for i in range(15, len(df)):
+            price_window = df['Close'].iloc[i-15:i+1]
+            mfi_window = df['mfi'].iloc[i-15:i+1]
+            
+            if len(price_window) > 10 and len(mfi_window) > 10:
+                # Divergence haussière: Prix fait un plus bas mais MFI fait un plus haut
+                # (Institutions accumulent malgré baisse des prix)
+                if (price_window.iloc[-1] < price_window.iloc[0] and 
+                    mfi_window.iloc[-1] > mfi_window.iloc[0]):
+                    divergence.iloc[i] = True
+                
+                # Divergence baissière: Prix fait un plus haut mais MFI fait un plus bas  
+                # (Institutions distribuent malgré hausse des prix)
+                elif (price_window.iloc[-1] > price_window.iloc[0] and 
+                      mfi_window.iloc[-1] < mfi_window.iloc[0]):
+                    divergence.iloc[i] = True
+        
+        return divergence
+    
     def _calculate_composite_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calcule indicateurs composites"""
         # Trend Strength (0-1)
