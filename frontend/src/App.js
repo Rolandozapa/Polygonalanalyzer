@@ -109,8 +109,8 @@ const TradingDashboard = () => {
 
       setBingxStatus(statusRes.data);
       setBingxBalance(balanceRes.data || null);  // Use direct data, not .balance
-      setBingxPositions(positionsRes.data.positions || []);
-      setBingxTradingHistory(historyRes.data.trading_history || []);
+      setBingxPositions(Array.isArray(positionsRes.data.positions) ? positionsRes.data.positions : []);
+      setBingxTradingHistory(Array.isArray(historyRes.data.trading_history) ? historyRes.data.trading_history : []);
       setBingxRiskConfig(riskRes.data.risk_config || null);
     } catch (error) {
       console.error('Error fetching BingX data:', error);
