@@ -1589,9 +1589,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # ÉTAPE 6: Toutes les validations passées - APPEL IA1 justifié
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
-            # Calculate comprehensive technical indicators with advanced system
+            # Calculate advanced technical indicators with MULTI-TIMEFRAME ANALYSIS 🚀
             df_with_indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
             indicators = self.advanced_indicators.get_current_indicators(df_with_indicators)
+            
+            # 🔥 RÉVOLUTION MULTI-TIMEFRAME - Vision complète comme un trader PRO 🔥
+            multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
+            multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
             
             # Extract key values for prompt and analysis
             rsi = indicators.rsi_14
