@@ -54,7 +54,7 @@ def test_endpoint(url, method='GET', data=None, timeout=30, description=""):
         return False, str(e)
 
 def main():
-    base_url = "https://smart-trade-bot-50.preview.emergentagent.com/api"
+    base_url = "https://bingx-fusion.preview.emergentagent.com/api"
     
     print("🚀 AI Training System Quick Test")
     print("=" * 60)

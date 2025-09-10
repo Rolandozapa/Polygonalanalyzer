@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class FORMUSDTDiagnostic:
     def __init__(self):
-        self.api_url = "https://smart-trade-bot-50.preview.emergentagent.com/api"
+        self.api_url = "https://bingx-fusion.preview.emergentagent.com/api"
         
     async def run_diagnosis(self):
         logger.info("🔍 FORMUSDT DIAGNOSTIC FINAL - ROOT CAUSE ANALYSIS")
