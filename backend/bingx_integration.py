@@ -703,6 +703,9 @@ class BingXIntegrationManager:
             confidence = decision_data.get('confidence', 0)
             position_size = decision_data.get('position_size', 0)
             
+            # Normalize symbol format for BingX (BTCUSDT -> BTC-USDT)
+            bingx_symbol = self.normalize_symbol(symbol)
+            
             # Skip if HOLD signal or zero position size
             if signal == 'HOLD' or position_size == 0:
                 return {
