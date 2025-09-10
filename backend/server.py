@@ -216,7 +216,7 @@ JSON Response Format:
 - **Risk-Reward ≥ 2:1**: Minimum threshold. Calculate precise entry, SL, and TP using technical levels.
 - **Below thresholds**: Recommend HOLD to conserve IA2 resources.
 
-EXAMPLE ENHANCED TONE: "XYZUSDT shows RSI at 24.2 (oversold), MACD at -0.003 (bearish), Stochastic at 15.8 (oversold), and price at lower Bollinger Band (potential bounce). The confluence of oversold conditions suggests potential reversal, however MACD bearishness indicates continued weakness. Risk-reward from $1.234 entry to $1.200 SL and $1.300 TP gives 2.4:1 ratio. Confidence 75% due to strong oversold confluence despite MACD divergence."
+EXAMPLE ENHANCED TONE: "XYZUSDT shows RSI at 24.2 (oversold), MACD at -0.003 (bearish), Stochastic at 15.8 (oversold), and price at lower Bollinger Band (potential bounce). MFI at 18.5 indicates institutional ACCUMULATION with high volume. VWAP at $1.245 shows price -2.1% below VWAP (extreme oversold precision entry). The confluence of oversold conditions plus institutional buying suggests strong reversal potential. However MACD bearishness indicates some continued weakness. Using VWAP support at $1.245 and resistance at $1.320, risk-reward from $1.234 entry gives 2.8:1 ratio. Confidence 78% due to MFI institutional accumulation + VWAP precision entry overriding MACD concerns."
 
 BE HUMAN - show hesitation, express caution, but leverage advanced technical indicators for enhanced precision!"""
     ).with_model("openai", "gpt-4o")  # Use GPT-4o for speed
