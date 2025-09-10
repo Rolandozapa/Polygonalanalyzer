@@ -1806,13 +1806,26 @@ class UltraProfessionalIA1TechnicalAnalyst:
             📊 EMAs: 9=${ema_9:.4f} | 21=${ema_21:.4f} | SMA50=${sma_50:.4f} | EMA200=${ema_200:.4f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
-            🏦 RR CALCULATION PRECISION WITH VWAP LEVELS:
+            🏦 RR CALCULATION PRECISION WITH 6-INDICATOR CONFLUENCE:
             - Use VWAP (${vwap:.4f}) as key support/resistance level for MORE PRECISE entry/exit points
-            - For LONG: Consider VWAP as dynamic support, use VWAP bands for stop-loss precision  
-            - For SHORT: Consider VWAP as dynamic resistance, use VWAP bands for take-profit precision
+            - Use EMA HIERARCHY for dynamic S/R: EMA21 (${ema_21:.4f}) as primary S/R, SMA50 (${sma_50:.4f}) as institutional level
+            - For LONG: Consider EMA21/VWAP as dynamic support, EMA200/SMA50 as resistance targets
+            - For SHORT: Consider EMA21/VWAP as dynamic resistance, EMA200/SMA50 as support targets
             - MFI extreme levels ({mfi:.1f}) indicate institutional accumulation/distribution - adjust RR accordingly
+            - EMA CROSS SIGNALS: {'🚀 GOLDEN CROSS - Bullish momentum shift' if ema_cross_signal == 'golden_cross' else '💥 DEATH CROSS - Bearish momentum shift' if ema_cross_signal == 'death_cross' else 'No cross signal'}
             {'- 🎯 VWAP EXTREME OVERSOLD: Excellent LONG entry precision near VWAP support' if vwap_extreme_oversold else ''}
             {'- 🎯 VWAP EXTREME OVERBOUGHT: Excellent SHORT entry precision near VWAP resistance' if vwap_extreme_overbought else ''}
+            {'- 🚀 PERFECT EMA HIERARCHY: Strong trend confirmation for ' + ('LONG' if trend_hierarchy in ['strong_bull', 'weak_bull'] else 'SHORT' if trend_hierarchy in ['strong_bear', 'weak_bear'] else 'HOLD') if trend_hierarchy != 'neutral' else ''}
+            
+            🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION:
+            1. MFI (Institutional): {mfi:.1f} - {'ACCUMULATION' if mfi < 30 else 'DISTRIBUTION' if mfi > 70 else 'NEUTRAL'}
+            2. VWAP (Precision): {vwap_position:+.1f}% - {'OVERSOLD' if vwap_oversold else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}
+            3. RSI (Momentum): {rsi:.1f} - {'OVERSOLD' if rsi < 30 else 'OVERBOUGHT' if rsi > 70 else 'NEUTRAL'}
+            4. Multi-Timeframe: Available above
+            5. Volume: {institutional_activity.upper()}
+            6. EMA HIERARCHY: {trend_hierarchy.upper()} ({trend_strength_score:.0f}% strength)
+            
+            CONFLUENCE REQUIREMENT: Need 4+/6 indicators aligned for STRONG signal
             
             📊 **BALANCED QUALITY STANDARDS WITH PRECISION TOOLS**:
             - Minimum Confidence: 70% (balanced - multi-timeframe removes bad signals)
