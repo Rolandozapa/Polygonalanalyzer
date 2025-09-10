@@ -670,6 +670,111 @@ class AdvancedTechnicalIndicators:
             conflicting_indicators=conflicting_indicators,
             reasoning=reasoning
         )
+    
+    def get_vwap_enhanced_signal(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        Génère des signaux VWAP améliorés pour une meilleure précision des entrées/sorties
+        Utilisable par IA1 et IA2 pour des signaux plus sensibles et précis
+        """
+        vwap_signals = {
+            'signal_type': 'neutral',
+            'strength': 0.0,
+            'confidence': 0.0,
+            'entry_precision': 'low',
+            'risk_reward_potential': 1.0,
+            'mean_reversion_opportunity': False,
+            'trend_continuation_opportunity': False,
+            'support_resistance_level': indicators.vwap,
+            'recommended_action': 'hold',
+            'reasoning': []
+        }
+        
+        reasoning = []
+        strength_factors = []
+        
+        # 1. VWAP Trend Analysis (Higher Weight)
+        if indicators.vwap_trend == 'bullish':
+            vwap_signals['trend_continuation_opportunity'] = True
+            strength_factors.append(0.3)  # Strong positive factor
+            reasoning.append(f"Prix {indicators.vwap_position:.1f}% au-dessus VWAP - tendance haussière")
+        elif indicators.vwap_trend == 'bearish':
+            vwap_signals['trend_continuation_opportunity'] = True
+            strength_factors.append(-0.3)  # Strong negative factor
+            reasoning.append(f"Prix {indicators.vwap_position:.1f}% en-dessous VWAP - tendance baissière")
+        
+        # 2. Mean Reversion Analysis (Extreme Levels)
+        if indicators.vwap_extreme_oversold:
+            vwap_signals['mean_reversion_opportunity'] = True
+            vwap_signals['signal_type'] = 'bullish'
+            vwap_signals['recommended_action'] = 'buy'
+            vwap_signals['entry_precision'] = 'high'
+            vwap_signals['risk_reward_potential'] = 2.5  # High RR potential
+            strength_factors.append(0.5)  # Very strong reversal signal
+            reasoning.append("EXTREME OVERSOLD vs VWAP (>2σ) - fort potentiel de rebond")
+        elif indicators.vwap_extreme_overbought:
+            vwap_signals['mean_reversion_opportunity'] = True
+            vwap_signals['signal_type'] = 'bearish'
+            vwap_signals['recommended_action'] = 'sell'
+            vwap_signals['entry_precision'] = 'high'
+            vwap_signals['risk_reward_potential'] = 2.5  # High RR potential
+            strength_factors.append(-0.5)  # Very strong reversal signal
+            reasoning.append("EXTREME OVERBOUGHT vs VWAP (>2σ) - fort potentiel de correction")
+        
+        # 3. Standard Deviation Band Analysis
+        elif indicators.vwap_oversold and not indicators.vwap_extreme_oversold:
+            vwap_signals['signal_type'] = 'bullish'
+            vwap_signals['entry_precision'] = 'medium'
+            vwap_signals['risk_reward_potential'] = 1.8
+            strength_factors.append(0.25)
+            reasoning.append("Oversold vs VWAP (1σ) - opportunité d'achat modérée")
+        elif indicators.vwap_overbought and not indicators.vwap_extreme_overbought:
+            vwap_signals['signal_type'] = 'bearish'
+            vwap_signals['entry_precision'] = 'medium'
+            vwap_signals['risk_reward_potential'] = 1.8
+            strength_factors.append(-0.25)
+            reasoning.append("Overbought vs VWAP (1σ) - opportunité de vente modérée")
+        
+        # 4. VWAP as Dynamic Support/Resistance
+        price_vwap_distance = abs(indicators.vwap_position)
+        if price_vwap_distance < 0.5:  # Very close to VWAP
+            vwap_signals['support_resistance_level'] = indicators.vwap
+            if indicators.vwap_trend != 'neutral':
+                vwap_signals['entry_precision'] = 'high'
+                reasoning.append(f"Prix près du VWAP ({price_vwap_distance:.2f}%) - niveau clé de S/R")
+        
+        # 5. Volume-Price Analysis Enhancement
+        if hasattr(indicators, 'volume_ratio') and indicators.volume_ratio > 1.5:
+            # High volume enhances VWAP signal reliability
+            volume_boost = min(0.2, (indicators.volume_ratio - 1) * 0.1)
+            if strength_factors:
+                if strength_factors[-1] > 0:
+                    strength_factors.append(volume_boost)
+                else:
+                    strength_factors.append(-volume_boost)
+                reasoning.append(f"Volume élevé ({indicators.volume_ratio:.1f}x) confirme signal VWAP")
+        
+        # Calculate final strength and confidence
+        if strength_factors:
+            total_strength = np.mean(strength_factors)
+            vwap_signals['strength'] = min(1.0, abs(total_strength))
+            vwap_signals['confidence'] = min(0.95, vwap_signals['strength'] * 1.2)
+            
+            if total_strength > 0.1:
+                vwap_signals['signal_type'] = 'bullish'
+                if total_strength > 0.3:
+                    vwap_signals['recommended_action'] = 'strong_buy'
+                else:
+                    vwap_signals['recommended_action'] = 'buy'
+            elif total_strength < -0.1:
+                vwap_signals['signal_type'] = 'bearish'
+                if total_strength < -0.3:
+                    vwap_signals['recommended_action'] = 'strong_sell'
+                else:
+                    vwap_signals['recommended_action'] = 'sell'
+        
+        vwap_signals['reasoning'] = reasoning
+        
+        return vwap_signals
 
 # Instance globale
 advanced_technical_indicators = AdvancedTechnicalIndicators()
