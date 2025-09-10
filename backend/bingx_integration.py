@@ -312,13 +312,15 @@ class BingXTradingClient:
             raise
     
     async def set_leverage(self, symbol: str, leverage: int) -> bool:
-        """Set leverage for a trading pair"""
+        """Set leverage for a trading pair - Fixed BingX parameters"""
         try:
             data = {
                 "symbol": symbol,
+                "side": "BOTH",  # Required by BingX for futures leverage
                 "leverage": leverage
             }
             
+            logger.info(f"🚀 SETTING BINGX LEVERAGE: {symbol} = {leverage}x")
             result = await self._make_request("POST", "/openApi/swap/v2/trade/leverage", data=data)
             return result.get('code') == 0
         
