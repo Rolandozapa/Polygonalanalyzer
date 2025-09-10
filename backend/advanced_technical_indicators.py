@@ -705,6 +705,17 @@ class AdvancedTechnicalIndicators:
             vwap_extreme_oversold=last_row.get('vwap_extreme_oversold', False),
             vwap_trend=last_row.get('vwap_trend', 'neutral'),
             
+            # Money Flow Index (MFI) - Institutional Money Detection 🔥
+            mfi=last_row.get('mfi', 50.0),
+            mfi_overbought=last_row.get('mfi_overbought', False),
+            mfi_oversold=last_row.get('mfi_oversold', False),
+            mfi_extreme_overbought=last_row.get('mfi_extreme_overbought', False),
+            mfi_extreme_oversold=last_row.get('mfi_extreme_oversold', False),
+            mfi_trend=last_row.get('mfi_trend', 'neutral'),
+            mfi_divergence=last_row.get('mfi_divergence', False),
+            money_flow_ratio=last_row.get('money_flow_ratio', 1.0),
+            institutional_activity=last_row.get('institutional_activity', 'neutral'),
+            
             # Composite
             trend_strength=last_row.get('trend_strength', 0.5),
             momentum_score=last_row.get('momentum_score', 0.5),
