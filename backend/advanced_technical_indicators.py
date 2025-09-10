@@ -352,6 +352,11 @@ class AdvancedTechnicalIndicators:
         if 'macd_above_zero' in df.columns:
             trend_signals.append(df['macd_above_zero'].astype(int))
         
+        # VWAP trend signal (enhanced precision)
+        if 'vwap_trend' in df.columns:
+            vwap_bullish = (df['vwap_trend'] == 'bullish').astype(int)
+            trend_signals.append(vwap_bullish)
+        
         if trend_signals:
             df['trend_strength'] = np.mean(trend_signals, axis=0)
         else:
