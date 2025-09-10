@@ -132,6 +132,9 @@ class AdvancedTechnicalIndicators:
             # Volume Indicators
             df = self._calculate_volume_indicators(df)
             
+            # VWAP & Deviation Bands
+            df = self._calculate_vwap_bands(df)
+            
             # Composite Indicators
             df = self._calculate_composite_indicators(df)
             
