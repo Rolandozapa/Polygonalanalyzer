@@ -769,10 +769,8 @@ class BingXIntegrationManager:
             market_price = await self.trading_client.get_market_price(bingx_symbol)
             
             # Calculate base risk amount from position size percentage
-            if position_size > 1:
-                risk_percentage = position_size / 100  # Convert percentage to decimal
-            else:
-                risk_percentage = position_size  # Already in decimal
+            # position_size should be treated as percentage (1.0 = 1%, 0.1 = 0.1%)
+            risk_percentage = position_size / 100  # Always divide by 100 to get decimal percentage
             
             risk_amount = balance['balance'] * risk_percentage
             leverage = min(decision_data.get('leverage', 5), 10)  # Cap at 10x
