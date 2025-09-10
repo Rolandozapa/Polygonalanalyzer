@@ -1139,9 +1139,9 @@ const TradingDashboard = () => {
                   {/* Connection Status */}
                   <div className="text-center">
                     <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      bingxStatus?.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      (bingxStatus?.status === 'success' && bingxStatus?.bingx_integration?.status === 'operational') ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
-                      {bingxStatus?.status === 'success' ? '🟢 Connected' : '🔴 Disconnected'}
+                      {(bingxStatus?.status === 'success' && bingxStatus?.bingx_integration?.status === 'operational') ? '🟢 Connected' : '🔴 Disconnected'}
                     </div>
                     <p className="mt-2 text-sm text-slate-600">API Status</p>
                   </div>
@@ -1149,7 +1149,7 @@ const TradingDashboard = () => {
                   {/* Account Balance */}
                   <div className="text-center">
                     <div className="text-2xl font-bold text-slate-900">
-                      ${bingxBalance?.balance?.toFixed(2) || '0.00'}
+                      ${bingxStatus?.bingx_integration?.balance?.balance?.toFixed(2) || bingxBalance?.balance?.toFixed(2) || '0.00'}
                     </div>
                     <p className="text-sm text-slate-600">Account Balance</p>
                   </div>
