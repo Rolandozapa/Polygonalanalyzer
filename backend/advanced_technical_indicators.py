@@ -292,6 +292,132 @@ class AdvancedTechnicalIndicators:
         
         return df
     
+    def _calculate_multi_ema_sma(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        🚀 CALCULE MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+        Professional-grade trend analysis with multiple EMAs and SMAs for ULTIMATE precision
+        """
+        try:
+            # === FAST TREND EMAs (Ultra-reactive for momentum detection) ===
+            df['ema_9'] = df['Close'].ewm(span=9).mean()       # Lightning-fast trend changes
+            df['ema_21'] = df['Close'].ewm(span=21).mean()     # Medium-term momentum
+            
+            # === SLOW TREND & STRUCTURAL LEVELS ===
+            df['sma_50'] = df['Close'].rolling(window=50).mean()     # Institutional level
+            df['ema_200'] = df['Close'].ewm(span=200).mean()         # Major trend determinant
+            
+            # === TREND HIERARCHY ANALYSIS ===
+            # Perfect hierarchy: Price > EMA9 > EMA21 > SMA50 > EMA200 (STRONG BULL)
+            # Inverse: Price < EMA9 < EMA21 < SMA50 < EMA200 (STRONG BEAR)
+            
+            df['trend_hierarchy'] = 'neutral'
+            df['trend_momentum'] = 'neutral'
+            df['price_vs_emas'] = 'mixed'
+            df['ema_cross_signal'] = 'neutral'
+            df['trend_strength_score'] = 0.5
+            
+            for i in range(len(df)):
+                if i < 200:  # Need enough data for EMA200
+                    continue
+                    
+                price = df['Close'].iloc[i]
+                ema9 = df['ema_9'].iloc[i]
+                ema21 = df['ema_21'].iloc[i]
+                sma50 = df['sma_50'].iloc[i]
+                ema200 = df['ema_200'].iloc[i]
+                
+                # Skip if any EMA is NaN
+                if pd.isna(ema9) or pd.isna(ema21) or pd.isna(sma50) or pd.isna(ema200):
+                    continue
+                
+                # === PRICE VS EMAs CLASSIFICATION ===
+                emas_above_price = sum([
+                    price > ema9,
+                    price > ema21, 
+                    price > sma50,
+                    price > ema200
+                ])
+                
+                if emas_above_price == 4:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'above_all'
+                elif emas_above_price >= 2:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'above_fast'
+                elif emas_above_price == 1:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'below_fast'
+                else:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'below_all'
+                
+                # === TREND HIERARCHY STRENGTH ===
+                # Perfect bull alignment: EMA9 > EMA21 > SMA50 > EMA200
+                bull_alignment_score = 0
+                if ema9 > ema21: bull_alignment_score += 0.25
+                if ema21 > sma50: bull_alignment_score += 0.25  
+                if sma50 > ema200: bull_alignment_score += 0.25
+                if price > ema9: bull_alignment_score += 0.25
+                
+                df.loc[df.index[i], 'trend_strength_score'] = bull_alignment_score
+                
+                # === TREND HIERARCHY CLASSIFICATION ===
+                if bull_alignment_score >= 0.8:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'strong_bull'
+                elif bull_alignment_score >= 0.6:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'weak_bull'
+                elif bull_alignment_score <= 0.2:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'strong_bear'
+                elif bull_alignment_score <= 0.4:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'weak_bear'
+                else:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'neutral'
+            
+            # === MOMENTUM ANALYSIS (Rate of Change in EMAs) ===
+            df['ema9_slope'] = df['ema_9'].pct_change(periods=3) * 100  # 3-period slope
+            df['ema21_slope'] = df['ema_21'].pct_change(periods=5) * 100  # 5-period slope
+            
+            # Momentum classification based on EMA slopes
+            momentum_conditions = (
+                (df['ema9_slope'] > 0.1) & (df['ema21_slope'] > 0.05)  # Both EMAs rising
+            )
+            deceleration_conditions = (
+                (df['ema9_slope'] < -0.1) & (df['ema21_slope'] < -0.05)  # Both EMAs falling
+            )
+            
+            df.loc[momentum_conditions, 'trend_momentum'] = 'accelerating'
+            df.loc[deceleration_conditions, 'trend_momentum'] = 'decelerating'
+            # Default 'neutral' for others
+            
+            # === GOLDEN CROSS / DEATH CROSS DETECTION ===
+            # Golden Cross: EMA9 crosses ABOVE EMA21 (Bullish)
+            # Death Cross: EMA9 crosses BELOW EMA21 (Bearish)
+            golden_cross = (df['ema_9'] > df['ema_21']) & (df['ema_9'].shift(1) <= df['ema_21'].shift(1))
+            death_cross = (df['ema_9'] < df['ema_21']) & (df['ema_9'].shift(1) >= df['ema_21'].shift(1))
+            
+            df.loc[golden_cross & (df['trend_strength_score'] > 0.5), 'ema_cross_signal'] = 'golden_cross'
+            df.loc[death_cross & (df['trend_strength_score'] < 0.5), 'ema_cross_signal'] = 'death_cross'
+            
+            # === DYNAMIC SUPPORT/RESISTANCE LEVELS ===
+            # EMAs act as dynamic S/R - closer EMAs = stronger S/R
+            df['ema_support_resistance'] = df[['ema_9', 'ema_21', 'sma_50']].mean(axis=1)
+            
+            # Clean up temporary columns
+            df.drop(['ema9_slope', 'ema21_slope', 'ema_support_resistance'], axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ MULTI EMA/SMA TREND HIERARCHY calculated - CONFLUENCE BEAST IS NOW COMPLETE! 🚀")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error calculating Multi EMA/SMA: {e}")
+            # Set safe defaults
+            for col in ['ema_9', 'ema_21', 'sma_50', 'ema_200']:
+                df[col] = df.get('Close', 0)
+            
+            df['trend_hierarchy'] = 'neutral'
+            df['trend_momentum'] = 'neutral' 
+            df['price_vs_emas'] = 'mixed'
+            df['ema_cross_signal'] = 'neutral'
+            df['trend_strength_score'] = 0.5
+            
+            return df
+    
     def _calculate_volume_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calcule indicateurs de volume"""
         # Volume SMA
