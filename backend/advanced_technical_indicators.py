@@ -593,6 +593,31 @@ class AdvancedTechnicalIndicators:
             bullish_signals += extreme_oversold  # Buy when extremely oversold
             bearish_signals += extreme_overbought  # Sell when extremely overbought
         
+        # MFI signals (INSTITUTIONAL MONEY DETECTION) 🔥💰
+        if 'mfi' in df.columns and 'mfi_overbought' in df.columns:
+            total_signals += 3  # Weight MFI HEAVILY - institutions move markets!
+            
+            # MFI overbought/oversold (stronger than regular RSI due to volume weighting)
+            mfi_oversold_signal = df['mfi_oversold'].astype(int)
+            mfi_overbought_signal = df['mfi_overbought'].astype(int)
+            bullish_signals += mfi_oversold_signal * 1.5  # Higher weight
+            bearish_signals += mfi_overbought_signal * 1.5
+            
+            # MFI extreme levels (ULTRA-STRONG signals)
+            mfi_extreme_oversold = df['mfi_extreme_oversold'].astype(int)
+            mfi_extreme_overbought = df['mfi_extreme_overbought'].astype(int)
+            bullish_signals += mfi_extreme_oversold * 2.0  # MAXIMUM weight - institutions loading up!
+            bearish_signals += mfi_extreme_overbought * 2.0  # MAXIMUM weight - institutions dumping!
+            
+            # MFI divergence (HOLY GRAIL signal - price vs institutional money flow)
+            if 'mfi_divergence' in df.columns:
+                mfi_divergence_signal = df['mfi_divergence'].astype(int)
+                # Divergence can be bullish or bearish - add complexity based on MFI level
+                bullish_divergence = mfi_divergence_signal & (df['mfi'] < 50)  # Divergence + MFI < 50 = bullish
+                bearish_divergence = mfi_divergence_signal & (df['mfi'] > 50)  # Divergence + MFI > 50 = bearish
+                bullish_signals += bullish_divergence.astype(int) * 2.5  # HOLY GRAIL weight
+                bearish_signals += bearish_divergence.astype(int) * 2.5
+        
         # Stochastic signals
         if 'stoch_k' in df.columns:
             total_signals += 1
