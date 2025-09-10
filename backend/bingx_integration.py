@@ -597,9 +597,9 @@ class RiskManager:
         balance = await self.trading_client.get_account_balance()
         current_positions = await self.trading_client.get_positions()
         
-        # Calculate position value
+        # Calculate position value (notional value without double-counting leverage)
         market_price = await self.trading_client.get_market_price(position.symbol)
-        position_value = position.quantity * market_price * position.leverage
+        position_value = position.quantity * market_price  # Don't multiply by leverage here - it's already in quantity calculation
         
         # Check position size limit
         max_position_value = balance['balance'] * self.risk_params.max_position_size
