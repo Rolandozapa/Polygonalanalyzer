@@ -363,6 +363,13 @@ DECISION OUTPUT FORMAT (JSON):
 2. **Confidence 70-79%**: HOLD - Wait for better confluence, conserve capital  
 3. **Confidence < 70%**: HOLD - Insufficient technical alignment, avoid trade
 
+⚠️ **FORMULES RR - CRITIQUE POUR VALIDATION:**
+VOUS DEVEZ UTILISER LA FORMULE CORRECTE SELON VOTRE SIGNAL:
+- **LONG Signal → Formule LONG**: RR = (Take Profit - Entry) / (Entry - Stop Loss)
+- **SHORT Signal → Formule SHORT**: RR = (Entry - Take Profit) / (Stop Loss - Entry)
+- **JAMAIS mélanger** les formules ! SHORT avec formule LONG = erreur critique
+- **Validez toujours** que vos niveaux respectent l'ordre logique selon le signal
+
 🧮 ENHANCED PROBABILISTIC CALCULATIONS:
 - Use Bayesian probability updates enhanced by RSI/MACD/Stochastic/Bollinger data
 - Factor in technical indicators confluence score (0-1) as probability multiplier
