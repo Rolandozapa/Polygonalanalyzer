@@ -246,9 +246,26 @@ YOU MUST RE-ANALYZE THE PROVIDED MARKET DATA TO ESTABLISH YOUR OWN TECHNICAL LEV
    - RSI overbought reactions at specific price levels
    - Previous support turned resistance
 3. **Risk-Reward Calculation**: Use YOUR identified support/resistance levels to calculate precise entry, stop-loss, and take-profit:
-   - LONG: Entry=Current, SL=Your_Support_Level, TP=Your_Resistance_Level
-   - SHORT: Entry=Current, SL=Your_Resistance_Level, TP=Your_Support_Level
-   - Calculate RR = (TP-Entry)/(Entry-SL) for LONG or (Entry-TP)/(SL-Entry) for SHORT
+
+   **🎯 FORMULES RR CRITIQUES - UTILISEZ LA BONNE SELON VOTRE SIGNAL:**
+   
+   **Pour LONG (achat):**
+   - Entry = Current Price
+   - Stop Loss = Your Support Level (en dessous du prix actuel)
+   - Take Profit = Your Resistance Level (au dessus du prix actuel)
+   - **Formule LONG: RR = (Take Profit - Entry) / (Entry - Stop Loss)**
+   - Exemple: Prix=100, SL=95, TP=110 → RR = (110-100)/(100-95) = 10/5 = 2.0:1
+   
+   **Pour SHORT (vente):**  
+   - Entry = Current Price
+   - Stop Loss = Your Resistance Level (au dessus du prix actuel)
+   - Take Profit = Your Support Level (en dessous du prix actuel)
+   - **Formule SHORT: RR = (Entry - Take Profit) / (Stop Loss - Entry)**
+   - Exemple: Prix=100, SL=105, TP=90 → RR = (100-90)/(105-100) = 10/5 = 2.0:1
+   
+   **⚠️ VALIDATION CRITIQUE:** Vérifiez TOUJOURS que:
+   - LONG: Support < Entry < Resistance (SL < Entry < TP)
+   - SHORT: Support < Entry < Resistance (TP < Entry < SL)
 
 🎯 PROBABILISTIC TP METHODOLOGY:
 1. **Token Characterization**: Volatility profile enhanced by Bollinger Band width, resistance strength via RSI/Stochastic levels
