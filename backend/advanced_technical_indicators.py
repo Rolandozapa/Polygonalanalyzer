@@ -448,6 +448,22 @@ class AdvancedTechnicalIndicators:
             bullish_signals += (df['macd_histogram'] > 0).astype(int)
             bearish_signals += (df['macd_histogram'] < 0).astype(int)
         
+        # VWAP signals (enhanced precision for entries/exits)
+        if 'vwap_position' in df.columns and 'vwap_overbought' in df.columns:
+            total_signals += 2  # Weight VWAP more heavily
+            
+            # VWAP trend signal
+            vwap_bullish = (df['vwap_trend'] == 'bullish').astype(int)
+            vwap_bearish = (df['vwap_trend'] == 'bearish').astype(int)
+            bullish_signals += vwap_bullish
+            bearish_signals += vwap_bearish
+            
+            # VWAP mean reversion signal (contrarian when extreme)
+            extreme_oversold = df['vwap_extreme_oversold'].astype(int)
+            extreme_overbought = df['vwap_extreme_overbought'].astype(int)
+            bullish_signals += extreme_oversold  # Buy when extremely oversold
+            bearish_signals += extreme_overbought  # Sell when extremely overbought
+        
         # Stochastic signals
         if 'stoch_k' in df.columns:
             total_signals += 1
