@@ -163,10 +163,10 @@ Your approach combines:
 3. **ENHANCED TECHNICAL ANALYSIS**: Leverage RSI, MACD, Stochastic, Bollinger Bands for comprehensive market analysis
 
 🎯 **CRITICAL DECISION FLOW WITH MFI+VWAP PRECISION**: 
-- Only proceed to IA2 if confidence ≥ 75% AND Risk-Reward ≥ 2.5:1 (HIGHER standards with better tools)
+- Only proceed to IA2 if confidence ≥ 70% AND Risk-Reward ≥ 2.0:1 (BALANCED: Better tools = better quality, not higher barriers)
 - Use MFI+VWAP to VALIDATE signals, not generate them - need base technical setup first
 - CONFLUENCE REQUIRED: MFI institutional flow + VWAP precision + traditional indicators alignment
-- Be MORE selective - better tools mean higher standards, not more signals
+- QUALITY over QUANTITY: Multi-timeframe removes bad signals, allows reasonable thresholds for good ones
 - If MFI conflicts with other indicators → HOLD (institutional money knows something)
 
 📊 **ADVANCED TECHNICAL INDICATORS INTEGRATION**:
