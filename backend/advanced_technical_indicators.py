@@ -475,6 +475,11 @@ class AdvancedTechnicalIndicators:
             vwap_bullish = (df['vwap_trend'] == 'bullish').astype(int)
             trend_signals.append(vwap_bullish)
         
+        # MFI trend signal (volume-weighted institutional sentiment) 🔥
+        if 'mfi_trend' in df.columns:
+            mfi_bullish = (df['mfi_trend'] == 'bullish').astype(int)
+            trend_signals.append(mfi_bullish * 1.2)  # Higher weight for MFI (institutional money detection)
+        
         if trend_signals:
             df['trend_strength'] = np.mean(trend_signals, axis=0)
         else:
