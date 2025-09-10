@@ -1603,8 +1603,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             vwap_extreme_overbought = indicators.vwap_extreme_overbought
             vwap_extreme_oversold = indicators.vwap_extreme_oversold
             
-            # Debug logging pour vérifier les vraies valeurs calculées
-            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}, Sources: {multi_source_quality['sources_count']}")
+            # Debug logging pour vérifier les vraies valeurs calculées AVEC MFI+VWAP
+            logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}")
+            logger.info(f"🔥 {opportunity.symbol} - MFI: {mfi:.1f} ({'EXTREME_OVERSOLD' if mfi_extreme_oversold else 'OVERSOLD' if mfi_oversold else 'EXTREME_OVERBOUGHT' if mfi_extreme_overbought else 'OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}), Institution: {institutional_activity}")
+            logger.info(f"⚡ {opportunity.symbol} - VWAP: ${vwap:.4f}, Position: {vwap_position:.2f}% ({'EXTREME_OVERSOLD' if vwap_extreme_oversold else 'OVERSOLD' if vwap_oversold else 'EXTREME_OVERBOUGHT' if vwap_extreme_overbought else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}), Trend: {vwap_trend}")
             
             # Calculate Bollinger Band position
             current_price = opportunity.current_price
