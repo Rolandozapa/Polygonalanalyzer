@@ -940,6 +940,150 @@ class AdvancedTechnicalIndicators:
         vwap_signals['reasoning'] = reasoning
         
         return vwap_signals
+    
+    def get_mfi_vwap_combo_signal(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🔥 COMBO ULTRA-PUISSANT: MFI + VWAP = DÉTECTION INSTITUTIONNELLE + PRECISION 🔥
+        Cette méthode combine la détection d'activité institutionnelle (MFI) avec la précision d'entrée (VWAP)
+        pour générer des signaux de TRADING ABSOLUMENT DEVASTATEURS ! 💰
+        """
+        combo_signals = {
+            'signal_type': 'neutral',
+            'strength': 0.0,
+            'confidence': 0.0,
+            'institutional_confirmation': False,
+            'precision_entry': False,
+            'risk_reward_potential': 1.0,
+            'signal_quality': 'low',  # low, medium, high, GODLIKE
+            'recommended_action': 'hold',
+            'entry_precision_level': 'VWAP',  # VWAP level to watch
+            'institutional_signal': 'neutral',
+            'combo_strength': 'weak',  # weak, medium, strong, NUCLEAR
+            'reasoning': []
+        }
+        
+        reasoning = []
+        strength_factors = []
+        
+        # === 1. DÉTECTION INSTITUTIONNELLE (MFI) === 
+        institutional_signal = 'neutral'
+        institutional_strength = 0.0
+        
+        if indicators.mfi_extreme_oversold:
+            institutional_signal = 'STRONG_BUY'
+            institutional_strength = 0.8
+            reasoning.append(f"🚨 INSTITUTIONS ACCUMULENT MASSIVEMENT (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_extreme_overbought:
+            institutional_signal = 'STRONG_SELL'
+            institutional_strength = -0.8
+            reasoning.append(f"🚨 INSTITUTIONS DISTRIBUENT MASSIVEMENT (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_oversold:
+            institutional_signal = 'BUY'
+            institutional_strength = 0.5
+            reasoning.append(f"💰 Accumulation institutionnelle (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_overbought:
+            institutional_signal = 'SELL' 
+            institutional_strength = -0.5
+            reasoning.append(f"💸 Distribution institutionnelle (MFI: {indicators.mfi:.1f})")
+        
+        # === 2. PRECISION D'ENTRÉE (VWAP) ===
+        vwap_precision = 'low'
+        vwap_strength = 0.0
+        
+        if indicators.vwap_extreme_oversold:
+            vwap_precision = 'GODLIKE'
+            vwap_strength = 0.7
+            reasoning.append(f"⚡ ENTRY PRECISION MAXIMALE - Prix {indicators.vwap_position:.1f}% sous VWAP (>2σ)")
+        elif indicators.vwap_extreme_overbought:
+            vwap_precision = 'GODLIKE'
+            vwap_strength = -0.7
+            reasoning.append(f"⚡ EXIT PRECISION MAXIMALE - Prix {indicators.vwap_position:.1f}% sur VWAP (>2σ)")
+        elif indicators.vwap_oversold:
+            vwap_precision = 'high'
+            vwap_strength = 0.4
+            reasoning.append(f"🎯 Entrée précise proche VWAP support ({indicators.vwap_position:.1f}%)")
+        elif indicators.vwap_overbought:
+            vwap_precision = 'high'
+            vwap_strength = -0.4
+            reasoning.append(f"🎯 Exit précis proche VWAP résistance ({indicators.vwap_position:.1f}%)")
+        
+        # === 3. COMBO MAGIQUE - CONFLUENCE INSTITUTIONNELLE + PRECISION === 
+        if institutional_strength != 0 and vwap_strength != 0:
+            # Les signaux vont dans la même direction = CONFLUENCE PUISSANTE
+            if (institutional_strength > 0 and vwap_strength > 0) or (institutional_strength < 0 and vwap_strength < 0):
+                combo_signals['institutional_confirmation'] = True
+                combo_signals['precision_entry'] = True
+                
+                # Calcul de la force combinée (multiplicateur de confluence)
+                combined_strength = (abs(institutional_strength) + abs(vwap_strength)) * 1.3  # Bonus confluence
+                final_strength = combined_strength if institutional_strength > 0 else -combined_strength
+                
+                # Détermination de la qualité du signal
+                if combined_strength > 1.0:
+                    combo_signals['signal_quality'] = 'GODLIKE'
+                    combo_signals['combo_strength'] = 'NUCLEAR'
+                    combo_signals['risk_reward_potential'] = 3.5
+                    reasoning.append("🚀 CONFLUENCE NUCLEAIRE: Institutions + VWAP = SIGNAL DEVASTATEUR!")
+                elif combined_strength > 0.7:
+                    combo_signals['signal_quality'] = 'high'
+                    combo_signals['combo_strength'] = 'strong'
+                    combo_signals['risk_reward_potential'] = 2.8
+                    reasoning.append("💎 CONFLUENCE FORTE: Signal institutionnel confirmé par VWAP")
+                else:
+                    combo_signals['signal_quality'] = 'medium'
+                    combo_signals['combo_strength'] = 'medium'
+                    combo_signals['risk_reward_potential'] = 2.2
+                
+                # Direction du signal
+                if final_strength > 0:
+                    combo_signals['signal_type'] = 'bullish'
+                    combo_signals['recommended_action'] = 'strong_buy' if combined_strength > 1.0 else 'buy'
+                else:
+                    combo_signals['signal_type'] = 'bearish'
+                    combo_signals['recommended_action'] = 'strong_sell' if combined_strength > 1.0 else 'sell'
+                
+                combo_signals['strength'] = min(1.0, combined_strength)
+                combo_signals['confidence'] = min(0.98, combined_strength * 0.85)
+                
+        # === 4. SIGNAUX SPÉCIAUX ===
+        
+        # Divergence MFI (HOLY GRAIL) + VWAP support/resistance
+        if indicators.mfi_divergence:
+            divergence_boost = 0.3
+            if indicators.mfi < 50 and indicators.vwap_position < 0:  # Divergence haussière + sous VWAP
+                strength_factors.append(divergence_boost)
+                reasoning.append("👑 HOLY GRAIL: Divergence MFI haussière + VWAP support")
+            elif indicators.mfi > 50 and indicators.vwap_position > 0:  # Divergence baissière + sur VWAP
+                strength_factors.append(-divergence_boost)
+                reasoning.append("👑 HOLY GRAIL: Divergence MFI baissière + VWAP résistance")
+        
+        # Activité institutionnelle massive avec volume
+        if indicators.institutional_activity == 'accumulation' and indicators.vwap_trend == 'bullish':
+            strength_factors.append(0.4)
+            reasoning.append("🏦 INSTITUTIONS ACCUMULENT + VWAP haussier = BUY THE DIP")
+        elif indicators.institutional_activity == 'distribution' and indicators.vwap_trend == 'bearish':
+            strength_factors.append(-0.4)
+            reasoning.append("🏦 INSTITUTIONS DISTRIBUENT + VWAP baissier = SELL THE RALLY")
+        
+        # === 5. FINALISATION DU SIGNAL ===
+        if strength_factors and not combo_signals['institutional_confirmation']:
+            # Signaux moins forts mais valides
+            total_strength = np.mean(strength_factors)
+            combo_signals['strength'] = min(1.0, abs(total_strength))
+            combo_signals['confidence'] = min(0.85, combo_signals['strength'] * 0.9)
+            
+            if total_strength > 0.2:
+                combo_signals['signal_type'] = 'bullish'
+                combo_signals['recommended_action'] = 'buy'
+            elif total_strength < -0.2:
+                combo_signals['signal_type'] = 'bearish'
+                combo_signals['recommended_action'] = 'sell'
+        
+        combo_signals['institutional_signal'] = institutional_signal
+        combo_signals['entry_precision_level'] = indicators.vwap
+        combo_signals['reasoning'] = reasoning
+        
+        return combo_signals
 
 # Instance globale
 advanced_technical_indicators = AdvancedTechnicalIndicators()
