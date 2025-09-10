@@ -378,6 +378,7 @@ const TradingDashboard = () => {
             <TabButton label="IA1 Analysis" active={activeTab === 'analyses'} onClick={() => setActiveTab('analyses')} />
             <TabButton label="IA2 Decisions" active={activeTab === 'decisions'} onClick={() => setActiveTab('decisions')} />
             <TabButton label="Active Positions" active={activeTab === 'positions'} onClick={() => setActiveTab('positions')} />
+            <TabButton label="BingX Trading" active={activeTab === 'bingx'} onClick={() => { setActiveTab('bingx'); fetchBingxData(); }} />
             <TabButton label="Backtesting" active={activeTab === 'backtest'} onClick={() => setActiveTab('backtest')} />
             <TabButton label="Performance" active={activeTab === 'performance'} onClick={() => setActiveTab('performance')} />
           </div>
