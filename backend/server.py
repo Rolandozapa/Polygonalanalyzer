@@ -1676,6 +1676,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
             
+            🏦 RR CALCULATION PRECISION WITH VWAP LEVELS:
+            - Use VWAP (${vwap:.4f}) as key support/resistance level for MORE PRECISE entry/exit points
+            - For LONG: Consider VWAP as dynamic support, use VWAP bands for stop-loss precision  
+            - For SHORT: Consider VWAP as dynamic resistance, use VWAP bands for take-profit precision
+            - MFI extreme levels ({mfi:.1f}) indicate institutional accumulation/distribution - adjust RR accordingly
+            {'- 🎯 VWAP EXTREME OVERSOLD: Excellent LONG entry precision near VWAP support' if vwap_extreme_oversold else ''}
+            {'- 🎯 VWAP EXTREME OVERBOUGHT: Excellent SHORT entry precision near VWAP resistance' if vwap_extreme_overbought else ''}
+            
             🎯 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS:
             Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
             Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}
