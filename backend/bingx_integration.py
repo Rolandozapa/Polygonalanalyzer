@@ -25,7 +25,6 @@ logger = logging.getLogger(__name__)
 def get_correct_timestamp():
     """Get correct timestamp in milliseconds for BingX API using server time synchronization"""
     # Use BingX server time endpoint for proper synchronization
-    # This is the correct approach instead of trying to fix system clock
     
     import requests
     
@@ -34,12 +33,15 @@ def get_correct_timestamp():
         response = requests.get("https://open-api.bingx.com/openApi/swap/v2/server/time", timeout=5)
         
         if response.status_code == 200:
-            server_data = response.json()
-            server_time = server_data.get('serverTime')
+            server_response = response.json()
             
-            if server_time:
-                logger.debug(f"🕐 BINGX SERVER TIME: {server_time}")
-                return int(server_time)
+            # BingX returns: {"code":0,"msg":"","data":{"serverTime":1757528441651}}
+            if server_response.get('code') == 0 and 'data' in server_response:
+                server_time = server_response['data'].get('serverTime')
+                
+                if server_time:
+                    logger.debug(f"🕐 BINGX SERVER TIME: {server_time}")
+                    return int(server_time)
         
         # Fallback to system time if server time fails
         logger.warning("⚠️ Failed to get BingX server time, using system time")
