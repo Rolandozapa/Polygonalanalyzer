@@ -337,6 +337,30 @@ DECISION OUTPUT FORMAT (JSON):
     }
 }
 
+**EXAMPLE COMPLETE RESPONSE WITH REQUIRED TECHNICAL LEVELS:**
+{
+    "signal": "SHORT",
+    "confidence": 0.85,
+    "reasoning": "Strong bearish confluence: RSI overbought at 78, MACD showing negative divergence, price rejected at key resistance. Stochastic confirming overbought conditions.",
+    "risk_level": "MEDIUM", 
+    "strategy_type": "PROBABILISTIC_OPTIMAL_ENHANCED",
+    "ia2_technical_levels": {
+        "support_level": 1.3200,
+        "resistance_level": 1.4800,
+        "support_reasoning": "Strong support at 1.3200 confirmed by 3 bounces in past week with high volume and RSI oversold reactions",
+        "resistance_reasoning": "Key resistance at 1.4800 showing 2 recent rejections with volume spikes and RSI overbought"
+    },
+    "technical_indicators_analysis": {
+        "rsi_impact": "RSI at 78 showing strong overbought, expecting pullback to support",
+        "macd_influence": "MACD showing bearish divergence despite price higher highs",
+        "stochastic_timing": "Stochastic %K at 85 in extreme overbought territory",
+        "bollinger_volatility": "Price touching upper BB with increasing volatility",
+        "confluence_score": 0.92,
+        "confidence_boosters": ["RSI overbought extreme", "Resistance rejection", "Volume spike at resistance"],
+        "confidence_detractors": ["MACD still positive", "No major bearish pattern"]
+    }
+}
+
 🚨 **EXECUTION DECISION LOGIC**:
 1. **Confidence ≥ 80%**: EXECUTE TRADE - All systems go, high probability of success
 2. **Confidence 70-79%**: HOLD - Wait for better confluence, conserve capital  
