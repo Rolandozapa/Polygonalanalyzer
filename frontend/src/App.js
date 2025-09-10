@@ -17,6 +17,14 @@ const TradingDashboard = () => {
   const [backtestResults, setBacktestResults] = useState(null);
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [backtestStatus, setBacktestStatus] = useState(null);
+  
+  // BingX Integration States
+  const [bingxStatus, setBingxStatus] = useState(null);
+  const [bingxBalance, setBingxBalance] = useState(null);
+  const [bingxPositions, setBingxPositions] = useState([]);
+  const [bingxTradingHistory, setBingxTradingHistory] = useState([]);
+  const [bingxRiskConfig, setBingxRiskConfig] = useState(null);
+  const [bingxLoading, setBingxLoading] = useState(false);
 
   // WebSocket connection
   useEffect(() => {
