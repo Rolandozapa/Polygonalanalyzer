@@ -74,6 +74,17 @@ class TechnicalIndicators:
     vwap_extreme_oversold: bool = False    # Price < VWAP - 2 std dev
     vwap_trend: str = "neutral"    # "bullish", "bearish", "neutral" based on price vs VWAP
     
+    # Money Flow Index (MFI) - The Volume-Weighted RSI Beast 🔥
+    mfi: float = 50.0             # Money Flow Index (0-100)
+    mfi_overbought: bool = False  # MFI > 80 (distribution phase)
+    mfi_oversold: bool = False    # MFI < 20 (accumulation phase)
+    mfi_extreme_overbought: bool = False  # MFI > 90 (extreme distribution)
+    mfi_extreme_oversold: bool = False    # MFI < 10 (extreme accumulation)
+    mfi_trend: str = "neutral"    # "bullish", "bearish", "neutral"
+    mfi_divergence: bool = False  # Price vs MFI divergence (powerful reversal signal)
+    money_flow_ratio: float = 1.0 # Positive/Negative money flow ratio
+    institutional_activity: str = "neutral"  # "accumulation", "distribution", "neutral"
+    
     # Composite Indicators
     trend_strength: float = 0.0  # 0-1 score based on multiple indicators
     momentum_score: float = 0.0  # 0-1 score for momentum
