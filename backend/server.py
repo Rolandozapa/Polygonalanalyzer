@@ -233,22 +233,24 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **Stochastic Precision**: Leverage %K/%D relationships for optimal entry timing
 - **Bollinger Bands Strategy**: Incorporate volatility bands for TP level optimization and stop loss placement
 
-🎯 **CRITICAL IA2 TECHNICAL LEVELS RE-ANALYSIS**:
-YOU MUST RE-ANALYZE THE PROVIDED MARKET DATA TO ESTABLISH YOUR OWN TECHNICAL LEVELS:
-1. **Support Level Identification**: Based on the historical data provided, identify the strongest support level using:
-   - Recent swing lows and bounce points
-   - Volume confirmation at support tests
-   - RSI oversold reactions at specific price levels
-   - Previous resistance turned support
-2. **Resistance Level Identification**: Based on the historical data, identify the strongest resistance using:
-   - Recent swing highs and rejection points  
-   - Volume spikes at resistance tests
-   - RSI overbought reactions at specific price levels
-   - Previous support turned resistance
-3. **Technical Validation**: Ensure your levels are logical:
-   - Support should be BELOW current price
-   - Resistance should be ABOVE current price
-   - Levels should have recent market validation (bounces/rejections)
+🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS**:
+Based on your technical analysis of the market data, you must calculate the Risk-Reward ratio using these EXACT formulas:
+
+**IF YOUR SIGNAL IS LONG:**
+- Identify your Support level (for Stop Loss)
+- Identify your Resistance level (for Take Profit)  
+- Calculate: RR = (Resistance - Current_Price) / (Current_Price - Support)
+
+**IF YOUR SIGNAL IS SHORT:**
+- Identify your Support level (for Take Profit)
+- Identify your Resistance level (for Stop Loss)
+- Calculate: RR = (Current_Price - Support) / (Resistance - Current_Price)
+
+**EXECUTE THE CALCULATION INTERNALLY** and return the result in your JSON response.
+
+🚨 **MANDATORY JSON FIELDS - YOUR ANALYSIS WILL BE REJECTED IF MISSING:**
+- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // The RR ratio you calculated using the formulas above
+- "rr_reasoning": "Support at X, Resistance at Y, using [LONG/SHORT] formula"  // Brief explanation of your calculation
 
 🎯 PROBABILISTIC TP METHODOLOGY:
 1. **Token Characterization**: Volatility profile enhanced by Bollinger Band width, resistance strength via RSI/Stochastic levels
