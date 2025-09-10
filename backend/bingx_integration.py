@@ -92,8 +92,11 @@ class BingXAuthenticator:
         """Generate authentication headers for BingX API requests"""
         timestamp = str(int(time.time() * 1000))
         
-        # Create signature string
-        sign_string = f"{method}{path}{params}{timestamp}"
+        # Create signature string according to BingX documentation
+        # Format: METHOD + PATH + QUERY_STRING + TIMESTAMP + BODY
+        sign_string = f"{method.upper()}{path}{params}{timestamp}"
+        
+        # Generate HMAC-SHA256 signature
         signature = hmac.new(
             self.secret_key.encode('utf-8'),
             sign_string.encode('utf-8'),
