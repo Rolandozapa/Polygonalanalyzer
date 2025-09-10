@@ -347,6 +347,12 @@ DECISION OUTPUT FORMAT (JSON):
 - Explain WHY each level is significant (bounces, volume, indicator confluence)
 - Ensure your support is BELOW and resistance is ABOVE current price
 
+🚨 **MANDATORY JSON FIELDS - YOUR ANALYSIS WILL BE REJECTED IF MISSING:**
+- "ia2_technical_levels" MUST be included in your JSON response
+- "support_level" and "resistance_level" MUST be specific numerical price values
+- "support_reasoning" and "resistance_reasoning" MUST explain your technical analysis
+- These fields are REQUIRED for risk-reward calculation - DO NOT OMIT THEM
+
 🧮 ENHANCED PROBABILISTIC CALCULATIONS:
 - Use Bayesian probability updates enhanced by RSI/MACD/Stochastic/Bollinger data
 - Factor in technical indicators confluence score (0-1) as probability multiplier
