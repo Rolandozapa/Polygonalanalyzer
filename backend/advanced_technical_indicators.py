@@ -1496,6 +1496,13 @@ class AdvancedTechnicalIndicators:
         ema_analysis['confluence_factors'] = confluence_factors
         
         return ema_analysis
+    
+    def get_latest_indicators(self, df: pd.DataFrame) -> TechnicalIndicators:
+        """
+        Extrait les indicateurs les plus récents du DataFrame calculé
+        Alias pour get_current_indicators pour compatibilité multi-timeframe
+        """
+        return self.get_current_indicators(df)
 
     def get_multi_timeframe_indicators(self, df: pd.DataFrame) -> Dict[str, TechnicalIndicators]:
         """
