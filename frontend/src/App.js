@@ -1104,6 +1104,405 @@ const TradingDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'bingx' && (
+          <div className="space-y-6">
+            {/* BingX Status Header */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">BingX Live Trading</h2>
+                    <p className="text-slate-600">Real-time trading execution on BingX Futures</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={fetchBingxData}
+                      disabled={bingxLoading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {bingxLoading ? 'Loading...' : 'Refresh'}
+                    </button>
+                    <button
+                      onClick={triggerBingxEmergencyStop}
+                      disabled={bingxLoading}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      Emergency Stop
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Connection Status */}
+                  <div className="text-center">
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      bingxStatus?.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {bingxStatus?.status === 'success' ? '🟢 Connected' : '🔴 Disconnected'}
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">API Status</p>
+                  </div>
+                  
+                  {/* Account Balance */}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-slate-900">
+                      ${bingxBalance?.balance?.toFixed(2) || '0.00'}
+                    </div>
+                    <p className="text-sm text-slate-600">Account Balance</p>
+                  </div>
+                  
+                  {/* Active Positions Count */}
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {bingxPositions?.length || 0}
+                    </div>
+                    <p className="text-sm text-slate-600">Active Positions</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BingX Positions */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-slate-900">Open Positions</h3>
+              </div>
+              <div className="p-6">
+                {bingxPositions?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">📊</div>
+                    <p className="text-slate-600">No open positions</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {bingxPositions?.map((position, index) => (
+                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-semibold text-lg">{position.symbol}</h4>
+                          <div className="flex space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                              position.side === 'LONG' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                              {position.side}
+                            </span>
+                            <button
+                              onClick={() => closeBingxPosition(position.symbol, position.side)}
+                              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                            >
+                              Close
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div>
+                            <p className="text-sm text-slate-600">Entry Price</p>
+                            <p className="font-semibold">${position.entry_price?.toFixed(4)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600">Mark Price</p>
+                            <p className="font-semibold">${position.mark_price?.toFixed(4)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600">Size</p>
+                            <p className="font-semibold">{position.size}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-slate-600">P&L</p>
+                            <p className={`font-semibold ${
+                              position.unrealized_pnl >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              ${position.unrealized_pnl?.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Manual Trading */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-slate-900">Manual Trade Execution</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Symbol</label>
+                      <input
+                        type="text"
+                        id="bingx-symbol"
+                        placeholder="e.g. BTC-USDT"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Side</label>
+                      <select
+                        id="bingx-side"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="LONG">LONG</option>
+                        <option value="SHORT">SHORT</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Quantity</label>
+                      <input
+                        type="number"
+                        id="bingx-quantity"
+                        placeholder="0.01"
+                        step="0.001"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Leverage</label>
+                      <input
+                        type="number"
+                        id="bingx-leverage"
+                        placeholder="5"
+                        min="1"
+                        max="20"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Stop Loss (Optional)</label>
+                      <input
+                        type="number"
+                        id="bingx-stop-loss"
+                        placeholder="Auto-calculated if empty"
+                        step="0.0001"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Take Profit (Optional)</label>
+                      <input
+                        type="number"
+                        id="bingx-take-profit"
+                        placeholder="Auto-calculated if empty"
+                        step="0.0001"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <button
+                    onClick={() => {
+                      const symbol = document.getElementById('bingx-symbol')?.value;
+                      const side = document.getElementById('bingx-side')?.value;
+                      const quantity = parseFloat(document.getElementById('bingx-quantity')?.value);
+                      const leverage = parseInt(document.getElementById('bingx-leverage')?.value) || 5;
+                      const stopLoss = parseFloat(document.getElementById('bingx-stop-loss')?.value) || null;
+                      const takeProfit = parseFloat(document.getElementById('bingx-take-profit')?.value) || null;
+                      
+                      if (symbol && side && quantity) {
+                        executeBingxTrade({
+                          symbol,
+                          side,
+                          quantity,
+                          leverage,
+                          stop_loss: stopLoss,
+                          take_profit: takeProfit
+                        });
+                      } else {
+                        alert('Please fill in required fields: Symbol, Side, and Quantity');
+                      }
+                    }}
+                    disabled={bingxLoading}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                  >
+                    {bingxLoading ? 'Executing...' : 'Execute Trade'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Risk Configuration */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-slate-900">Risk Management Configuration</h3>
+              </div>
+              <div className="p-6">
+                {bingxRiskConfig && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Max Position Size (%)</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.max_position_size * 100}
+                          step="1"
+                          min="1"
+                          max="20"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-max-position"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Max Total Exposure (%)</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.max_total_exposure * 100}
+                          step="5"
+                          min="10"
+                          max="80"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-max-exposure"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Max Leverage</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.max_leverage}
+                          step="1"
+                          min="1"
+                          max="20"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-max-leverage"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Stop Loss (%)</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.stop_loss_percentage * 100}
+                          step="0.5"
+                          min="1"
+                          max="10"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-stop-loss"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Max Drawdown (%)</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.max_drawdown * 100}
+                          step="1"
+                          min="5"
+                          max="30"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-max-drawdown"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Daily Loss Limit (%)</label>
+                        <input
+                          type="number"
+                          defaultValue={bingxRiskConfig.daily_loss_limit * 100}
+                          step="1"
+                          min="2"
+                          max="15"
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          id="risk-daily-loss"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-6">
+                  <button
+                    onClick={() => {
+                      const maxPositionSize = parseFloat(document.getElementById('risk-max-position')?.value) / 100;
+                      const maxTotalExposure = parseFloat(document.getElementById('risk-max-exposure')?.value) / 100;
+                      const maxLeverage = parseInt(document.getElementById('risk-max-leverage')?.value);
+                      const stopLossPercentage = parseFloat(document.getElementById('risk-stop-loss')?.value) / 100;
+                      const maxDrawdown = parseFloat(document.getElementById('risk-max-drawdown')?.value) / 100;
+                      const dailyLossLimit = parseFloat(document.getElementById('risk-daily-loss')?.value) / 100;
+                      
+                      updateBingxRiskConfig({
+                        max_position_size: maxPositionSize,
+                        max_total_exposure: maxTotalExposure,
+                        max_leverage: maxLeverage,
+                        stop_loss_percentage: stopLossPercentage,
+                        max_drawdown: maxDrawdown,
+                        daily_loss_limit: dailyLossLimit
+                      });
+                    }}
+                    disabled={bingxLoading}
+                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+                  >
+                    {bingxLoading ? 'Updating...' : 'Update Risk Configuration'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Trading History */}
+            <div className="bg-white rounded-2xl shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-slate-900">Recent Trading History</h3>
+              </div>
+              <div className="p-6">
+                {bingxTradingHistory?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-4">📜</div>
+                    <p className="text-slate-600">No trading history</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2">Symbol</th>
+                          <th className="text-left py-2">Side</th>
+                          <th className="text-left py-2">Quantity</th>
+                          <th className="text-left py-2">Price</th>
+                          <th className="text-left py-2">Status</th>
+                          <th className="text-left py-2">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bingxTradingHistory?.map((trade, index) => (
+                          <tr key={index} className="border-b">
+                            <td className="py-2 font-medium">{trade.symbol}</td>
+                            <td className="py-2">
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                trade.side === 'BUY' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {trade.side}
+                              </span>
+                            </td>
+                            <td className="py-2">{trade.quantity}</td>
+                            <td className="py-2">${trade.price?.toFixed(4)}</td>
+                            <td className="py-2">
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                trade.status === 'FILLED' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                              }`}>
+                                {trade.status}
+                              </span>
+                            </td>
+                            <td className="py-2 text-slate-600">{new Date(trade.time).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
