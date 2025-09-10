@@ -3916,6 +3916,23 @@ The reasoning above contains detailed historical analysis including:
 🎯 CURRENT INSTITUTIONAL SIGNALS FOR FINAL DECISION:
 {f"MFI: {current_indicators.mfi:.1f} ({'🚨 EXTREME ACCUMULATION' if current_indicators.mfi_extreme_oversold else 'ACCUMULATION' if current_indicators.mfi_oversold else '🚨 EXTREME DISTRIBUTION' if current_indicators.mfi_extreme_overbought else 'DISTRIBUTION' if current_indicators.mfi_overbought else 'NEUTRAL'}) | Institution Activity: {current_indicators.institutional_activity.upper()}" if current_indicators else "Current institutional data not available"}
 {f"VWAP Position: {current_indicators.vwap_position:+.2f}% | Trend: {current_indicators.vwap_trend.upper()} {'🎯 EXTREME PRECISION LEVEL' if current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought else '🎯 HIGH PRECISION' if current_indicators.vwap_oversold or current_indicators.vwap_overbought else ''}" if current_indicators else ""}
+{f"🚀 EMA HIERARCHY: {current_indicators.trend_hierarchy.upper()} | Price vs EMAs: {current_indicators.price_vs_emas.upper()} | Cross: {current_indicators.ema_cross_signal.upper()} | Strength: {current_indicators.trend_strength_score:.0f}%" if current_indicators else ""}
+{f"📊 DYNAMIC S/R LEVELS: EMA9=${current_indicators.ema_9:.4f} | EMA21=${current_indicators.ema_21:.4f} | SMA50=${current_indicators.sma_50:.4f} | EMA200=${current_indicators.ema_200:.4f}" if current_indicators else ""}
+
+🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION (MANDATORY FOR IA2):
+1. MFI (Institutional): {f"{current_indicators.mfi:.1f} - {'ACCUMULATION' if current_indicators.mfi < 30 else 'DISTRIBUTION' if current_indicators.mfi > 70 else 'NEUTRAL'}" if current_indicators else "N/A"}
+2. VWAP (Precision): {f"{current_indicators.vwap_position:+.1f}% - {'EXTREME' if (current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought) else 'HIGH' if (current_indicators.vwap_oversold or current_indicators.vwap_overbought) else 'NEUTRAL'}" if current_indicators else "N/A"}
+3. RSI (Momentum): {f"{current_indicators.rsi_14:.1f} - {'OVERSOLD' if current_indicators.rsi_14 < 30 else 'OVERBOUGHT' if current_indicators.rsi_14 > 70 else 'NEUTRAL'}" if current_indicators else "N/A"}
+4. Multi-Timeframe: Available above
+5. Volume: {f"{current_indicators.institutional_activity.upper()}" if current_indicators else "N/A"}
+6. EMA HIERARCHY: {f"{current_indicators.trend_hierarchy.upper()} ({current_indicators.trend_strength_score:.0f}% strength)" if current_indicators else "N/A"}
+
+⚠️ CONFLUENCE EXECUTION LOGIC:
+- 6/6 GODLIKE: Execute with 90%+ confidence (maximum position size)
+- 5/6 STRONG: Execute with 85-90% confidence (standard position size)  
+- 4/6 GOOD: Execute with 80-85% confidence (reduced position size)
+- 3/6 or less: MANDATORY HOLD - Insufficient confluence
+You MUST count aligned indicators and justify your confluence score in your response.
 
 💡 IA2 MULTI-TIMEFRAME DECISION RULES:
 - Use 14-day/5-day trends to validate overall direction bias
