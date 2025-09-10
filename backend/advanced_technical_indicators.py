@@ -538,6 +538,19 @@ class AdvancedTechnicalIndicators:
             volume_ratio=last_row.get('volume_ratio', 1.0),
             obv=last_row.get('obv', 0.0),
             
+            # VWAP & Deviation Bands
+            vwap=last_row.get('vwap', 0.0),
+            vwap_upper_1std=last_row.get('vwap_upper_1std', 0.0),
+            vwap_lower_1std=last_row.get('vwap_lower_1std', 0.0),
+            vwap_upper_2std=last_row.get('vwap_upper_2std', 0.0),
+            vwap_lower_2std=last_row.get('vwap_lower_2std', 0.0),
+            vwap_position=last_row.get('vwap_position', 0.0),
+            vwap_overbought=last_row.get('vwap_overbought', False),
+            vwap_oversold=last_row.get('vwap_oversold', False),
+            vwap_extreme_overbought=last_row.get('vwap_extreme_overbought', False),
+            vwap_extreme_oversold=last_row.get('vwap_extreme_oversold', False),
+            vwap_trend=last_row.get('vwap_trend', 'neutral'),
+            
             # Composite
             trend_strength=last_row.get('trend_strength', 0.5),
             momentum_score=last_row.get('momentum_score', 0.5),
