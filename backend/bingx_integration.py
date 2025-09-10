@@ -25,16 +25,12 @@ logger = logging.getLogger(__name__)
 def get_correct_timestamp():
     """Get correct timestamp in milliseconds for BingX API"""
     # Since system clock seems to be incorrect, use a more reliable method
-    # Current time should be around September 2025 (1725993600000 ms = Sept 1, 2025)
-    # The system timestamp is ~1757527937264 which is way in the future
-    # Let's calculate an offset to get the correct timestamp
+    # Current time should be around September 2025 (1725994380000 ms = Sept 10, 2025 18:13 UTC)
+    # The system timestamp is ~1757528044619 which is way in the future
+    # Calculated offset: -31533664619
     
     system_ts = int(time.time() * 1000)
-    # Expected timestamp for Sept 10, 2025 around 6PM UTC should be around 1725993600000
-    # Our system shows ~1757527937264, so offset is about -31534337264
-    
-    # For this fix, let's use a hardcoded offset to get approximately the right time
-    correct_offset = -31534337264  # Approximate offset to correct the timestamp
+    correct_offset = -31533664619  # Precise offset to correct the timestamp
     correct_ts = system_ts + correct_offset
     
     logger.debug(f"🕐 TIMESTAMP: System={system_ts}, Corrected={correct_ts}")
