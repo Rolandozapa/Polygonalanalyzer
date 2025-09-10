@@ -606,8 +606,8 @@ class AdvancedTechnicalIndicators:
         return divergence
     
     def _calculate_composite_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Calcule indicateurs composites"""
-        # Trend Strength (0-1)
+        """Calcule indicateurs composites avec MULTI EMA/SMA CONFLUENCE! 🚀"""
+        # Trend Strength (0-1) - NOW WITH EMA/SMA HIERARCHY POWER!
         trend_signals = []
         
         # Price vs MA trend signals
@@ -631,12 +631,42 @@ class AdvancedTechnicalIndicators:
             mfi_bullish = (df['mfi_trend'] == 'bullish').astype(int)
             trend_signals.append(mfi_bullish * 1.2)  # Higher weight for MFI (institutional money detection)
         
+        # 🚀 MULTI EMA/SMA TREND HIERARCHY SIGNALS (THE CONFLUENCE BEAST!) 🚀
+        if 'trend_hierarchy' in df.columns:
+            # Convert trend hierarchy to numerical score
+            hierarchy_scores = df['trend_hierarchy'].map({
+                'strong_bull': 1.0,
+                'weak_bull': 0.75,
+                'neutral': 0.5,
+                'weak_bear': 0.25,
+                'strong_bear': 0.0
+            }).fillna(0.5)
+            trend_signals.append(hierarchy_scores * 1.3)  # HIGHEST WEIGHT - EMA hierarchy is KING!
+        
+        # EMA Golden/Death Cross signals (POWERFUL momentum shifts)
+        if 'ema_cross_signal' in df.columns:
+            golden_cross_signal = (df['ema_cross_signal'] == 'golden_cross').astype(int) * 1.0
+            death_cross_signal = (df['ema_cross_signal'] == 'death_cross').astype(int) * -1.0
+            cross_signal = golden_cross_signal + death_cross_signal + 0.5  # Convert to 0-1 scale
+            trend_signals.append(cross_signal * 1.1)  # High weight for cross signals
+        
+        # Price vs EMAs positioning (Multi-level confirmation)
+        if 'price_vs_emas' in df.columns:
+            price_ema_scores = df['price_vs_emas'].map({
+                'above_all': 1.0,     # Price above all EMAs = STRONG BULL
+                'above_fast': 0.7,    # Price above fast EMAs = MODERATE BULL
+                'below_fast': 0.3,    # Price below fast EMAs = MODERATE BEAR
+                'below_all': 0.0,     # Price below all EMAs = STRONG BEAR
+                'mixed': 0.5          # Mixed positioning = NEUTRAL
+            }).fillna(0.5)
+            trend_signals.append(price_ema_scores * 1.0)  # Strong weight for price positioning
+        
         if trend_signals:
             df['trend_strength'] = np.mean(trend_signals, axis=0)
         else:
             df['trend_strength'] = 0.5
         
-        # Momentum Score (0-1)
+        # Momentum Score (0-1) - ENHANCED WITH EMA MOMENTUM!
         momentum_signals = []
         
         if 'rsi_14' in df.columns:
@@ -663,6 +693,23 @@ class AdvancedTechnicalIndicators:
             # Convert MFI (0-100) to momentum (-1 to 1)
             mfi_momentum = (df['mfi'] - 50) / 50  # 50 = neutral, >50 = bullish, <50 = bearish
             momentum_signals.append(mfi_momentum * 1.3)  # Higher weight - institutions move first!
+        
+        # 🎯 EMA TREND MOMENTUM SIGNALS (Rate of change in trend!) 🎯
+        if 'trend_momentum' in df.columns:
+            # Convert trend momentum to numerical score
+            momentum_scores = df['trend_momentum'].map({
+                'accelerating': 0.8,   # Strong positive momentum
+                'steady': 0.0,         # Neutral momentum
+                'decelerating': -0.8,  # Strong negative momentum
+                'neutral': 0.0         # Default neutral
+            }).fillna(0.0)
+            momentum_signals.append(momentum_scores * 1.2)  # High weight for EMA momentum
+        
+        # EMA Trend Strength Score boost (Direct trend strength)
+        if 'trend_strength_score' in df.columns:
+            # Convert 0-1 trend strength to -1,1 momentum (centered at 0.5)
+            ema_trend_momentum = (df['trend_strength_score'] - 0.5) * 2  # Convert to -1,1
+            momentum_signals.append(ema_trend_momentum * 1.1)  # Strong weight for pure trend strength
         
         if momentum_signals:
             df['momentum_score'] = np.mean(momentum_signals, axis=0)
