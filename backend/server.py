@@ -3797,6 +3797,20 @@ The reasoning above contains detailed historical analysis including:
 - Support/resistance test counts and validation strength
 ⚠️ LEVERAGE THIS HISTORICAL CONTEXT in your decision - IA1 has provided tested levels, not theoretical ones.
 
+🚀 MULTI-TIMEFRAME INSTITUTIONAL ANALYSIS (Professional Trader Vision):
+{multi_tf_formatted}
+
+🎯 CURRENT INSTITUTIONAL SIGNALS FOR FINAL DECISION:
+{f"MFI: {current_indicators.mfi:.1f} ({'🚨 EXTREME ACCUMULATION' if current_indicators.mfi_extreme_oversold else 'ACCUMULATION' if current_indicators.mfi_oversold else '🚨 EXTREME DISTRIBUTION' if current_indicators.mfi_extreme_overbought else 'DISTRIBUTION' if current_indicators.mfi_overbought else 'NEUTRAL'}) | Institution Activity: {current_indicators.institutional_activity.upper()}" if current_indicators else "Current institutional data not available"}
+{f"VWAP Position: {current_indicators.vwap_position:+.2f}% | Trend: {current_indicators.vwap_trend.upper()} {'🎯 EXTREME PRECISION LEVEL' if current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought else '🎯 HIGH PRECISION' if current_indicators.vwap_oversold or current_indicators.vwap_overbought else ''}" if current_indicators else ""}
+
+💡 IA2 MULTI-TIMEFRAME DECISION RULES:
+- Use 14-day/5-day trends to validate overall direction bias
+- Use Daily/4H structure for support/resistance level precision  
+- Use 1H/5min/NOW for optimal entry/exit timing
+- CONFLICT RESOLUTION: Higher timeframes override lower ones
+- CONFLUENCE BONUS: Multi-timeframe alignment increases confidence and allows better RR
+
 CRYPTO MARKET SENTIMENT (FOR LEVERAGE CALCULATION):
 - Total Market Cap: ${market_sentiment['total_market_cap_usd']:,.0f}
 - 24h Volume: ${market_sentiment['total_volume_24h']:,.0f}
