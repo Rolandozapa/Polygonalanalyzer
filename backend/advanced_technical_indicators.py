@@ -61,6 +61,19 @@ class TechnicalIndicators:
     volume_ratio: float = 0.0  # Current volume / Average volume
     obv: float = 0.0  # On Balance Volume
     
+    # VWAP & Deviation Bands
+    vwap: float = 0.0
+    vwap_upper_1std: float = 0.0  # VWAP + 1 standard deviation
+    vwap_lower_1std: float = 0.0  # VWAP - 1 standard deviation
+    vwap_upper_2std: float = 0.0  # VWAP + 2 standard deviations
+    vwap_lower_2std: float = 0.0  # VWAP - 2 standard deviations
+    vwap_position: float = 0.0    # (Price - VWAP) / VWAP * 100 (percentage above/below VWAP)
+    vwap_overbought: bool = False  # Price > VWAP + 1 std dev
+    vwap_oversold: bool = False    # Price < VWAP - 1 std dev
+    vwap_extreme_overbought: bool = False  # Price > VWAP + 2 std dev
+    vwap_extreme_oversold: bool = False    # Price < VWAP - 2 std dev
+    vwap_trend: str = "neutral"    # "bullish", "bearish", "neutral" based on price vs VWAP
+    
     # Composite Indicators
     trend_strength: float = 0.0  # 0-1 score based on multiple indicators
     momentum_score: float = 0.0  # 0-1 score for momentum
