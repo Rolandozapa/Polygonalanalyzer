@@ -507,6 +507,12 @@ class AdvancedTechnicalIndicators:
             vwap_momentum = np.clip(df['vwap_position'] / 3.0, -1, 1)  # 3% = full momentum
             momentum_signals.append(vwap_momentum)
         
+        # MFI momentum signal (institutional money flow momentum) 🚀
+        if 'mfi' in df.columns:
+            # Convert MFI (0-100) to momentum (-1 to 1)
+            mfi_momentum = (df['mfi'] - 50) / 50  # 50 = neutral, >50 = bullish, <50 = bearish
+            momentum_signals.append(mfi_momentum * 1.3)  # Higher weight - institutions move first!
+        
         if momentum_signals:
             df['momentum_score'] = np.mean(momentum_signals, axis=0)
             df['momentum_score'] = (df['momentum_score'] + 1) / 2  # Convert to 0-1
