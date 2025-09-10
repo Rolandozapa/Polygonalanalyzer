@@ -668,6 +668,29 @@ class BingXIntegrationManager:
             logger.error(f"Error initializing BingX Integration Manager: {e}")
             raise
     
+    @staticmethod
+    def normalize_symbol(symbol: str) -> str:
+        """Convert symbol format from BTCUSDT to BTC-USDT for BingX API"""
+        if '-' in symbol:
+            return symbol  # Already in correct format
+        
+        # Handle common patterns
+        if symbol.endswith('USDT'):
+            base = symbol[:-4]  # Remove 'USDT'
+            return f"{base}-USDT"
+        elif symbol.endswith('USDC'):
+            base = symbol[:-4]  # Remove 'USDC'
+            return f"{base}-USDC"
+        elif symbol.endswith('BTC'):
+            base = symbol[:-3]  # Remove 'BTC'
+            return f"{base}-BTC"
+        elif symbol.endswith('ETH'):
+            base = symbol[:-3]  # Remove 'ETH'
+            return f"{base}-ETH"
+        
+        # Default case - assume USDT if no recognized suffix
+        return f"{symbol}-USDT"
+
     async def execute_ia2_trade(self, decision_data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute trade based on IA2 decision data"""
         try:
