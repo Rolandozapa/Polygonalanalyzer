@@ -716,7 +716,7 @@ class BingXIntegrationManager:
             
             # Calculate position parameters
             balance = await self.trading_client.get_account_balance()
-            market_price = await self.trading_client.get_market_price(symbol)
+            market_price = await self.trading_client.get_market_price(bingx_symbol)
             
             # Calculate quantity based on position size percentage
             risk_amount = balance['balance'] * (position_size / 100)
@@ -733,7 +733,7 @@ class BingXIntegrationManager:
             
             # Create trading position
             position = TradingPosition(
-                symbol=symbol,
+                symbol=bingx_symbol,  # Use normalized symbol
                 side=signal,
                 quantity=quantity,
                 stop_loss=stop_loss,
