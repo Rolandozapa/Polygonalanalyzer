@@ -1718,6 +1718,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
             vwap_extreme_overbought = indicators.vwap_extreme_overbought
             vwap_extreme_oversold = indicators.vwap_extreme_oversold
             
+            # 🚀 MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+            ema_9 = indicators.ema_9
+            ema_21 = indicators.ema_21
+            sma_50 = indicators.sma_50
+            ema_200 = indicators.ema_200
+            trend_hierarchy = indicators.trend_hierarchy
+            trend_momentum = indicators.trend_momentum
+            price_vs_emas = indicators.price_vs_emas
+            ema_cross_signal = indicators.ema_cross_signal
+            trend_strength_score = indicators.trend_strength_score
+            
             # Debug logging pour vérifier les vraies valeurs calculées AVEC MFI+VWAP
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}")
             logger.info(f"🔥 {opportunity.symbol} - MFI: {mfi:.1f} ({'EXTREME_OVERSOLD' if mfi_extreme_oversold else 'OVERSOLD' if mfi_oversold else 'EXTREME_OVERBOUGHT' if mfi_extreme_overbought else 'OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}), Institution: {institutional_activity}")
