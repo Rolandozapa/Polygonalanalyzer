@@ -23,18 +23,31 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 def get_correct_timestamp():
-    """Get correct timestamp in milliseconds for BingX API"""
-    # Since system clock seems to be incorrect, use a more reliable method
-    # Current time should be around September 2025 (1725994380000 ms = Sept 10, 2025 18:13 UTC)
-    # The system timestamp is ~1757528044619 which is way in the future
-    # Calculated offset: -31533664619
+    """Get correct timestamp in milliseconds for BingX API using server time synchronization"""
+    # Use BingX server time endpoint for proper synchronization
+    # This is the correct approach instead of trying to fix system clock
     
-    system_ts = int(time.time() * 1000)
-    correct_offset = -31533664619  # Precise offset to correct the timestamp
-    correct_ts = system_ts + correct_offset
+    import requests
     
-    logger.debug(f"🕐 TIMESTAMP: System={system_ts}, Corrected={correct_ts}")
-    return correct_ts
+    try:
+        # Get BingX server time (this endpoint doesn't require authentication)
+        response = requests.get("https://open-api.bingx.com/openApi/swap/v2/server/time", timeout=5)
+        
+        if response.status_code == 200:
+            server_data = response.json()
+            server_time = server_data.get('serverTime')
+            
+            if server_time:
+                logger.debug(f"🕐 BINGX SERVER TIME: {server_time}")
+                return int(server_time)
+        
+        # Fallback to system time if server time fails
+        logger.warning("⚠️ Failed to get BingX server time, using system time")
+        return int(time.time() * 1000)
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Error getting BingX server time: {e}, using system time")
+        return int(time.time() * 1000)
 
 class OrderSide(Enum):
     BUY = "BUY"
