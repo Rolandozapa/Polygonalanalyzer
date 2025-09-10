@@ -292,7 +292,7 @@ class BingXTradingClient:
             return False
     
     async def place_market_order(self, position: TradingPosition) -> Dict[str, Any]:
-        """Place a market order for the specified position"""
+        """Place a market order for the specified position - Fixed BingX Parameter Format"""
         try:
             # Set leverage first
             await self.set_leverage(position.symbol, position.leverage)
@@ -301,19 +301,25 @@ class BingXTradingClient:
             order_side = OrderSide.BUY.value if position.side == "LONG" else OrderSide.SELL.value
             position_side = PositionSide.LONG.value if position.side == "LONG" else PositionSide.SHORT.value
             
+            # Create order data with correct BingX parameter names
             order_data = {
                 "symbol": position.symbol,
                 "side": order_side,
                 "positionSide": position_side,
                 "type": OrderType.MARKET.value,
-                "quantity": position.quantity
+                "quantity": str(position.quantity),  # BingX might expect string format
+                "timestamp": int(time.time() * 1000)  # Add timestamp as required by BingX
             }
+            
+            logger.info(f"🚀 PLACING BINGX ORDER: {order_data}")
             
             result = await self._make_request("POST", "/openApi/swap/v2/trade/order", data=order_data)
             
             if 'data' in result:
-                order_data = result['data']
-                order_id = order_data['orderId']
+                order_response = result['data']
+                order_id = order_response['orderId']
+                
+                logger.info(f"✅ BINGX ORDER PLACED: {order_id} for {position.symbol}")
                 
                 # Track order state
                 order_state = OrderState(
@@ -336,12 +342,12 @@ class BingXTradingClient:
                 if position.stop_loss or position.take_profit:
                     await self.set_stop_orders(position, order_id)
                 
-                return order_data
+                return order_response
             else:
-                raise Exception("No order data in response")
+                raise Exception(f"No order data in BingX response: {result}")
         
         except Exception as e:
-            logger.error(f"Error placing market order: {e}")
+            logger.error(f"Error placing market order on BingX: {e}")
             raise
     
     async def set_stop_orders(self, position: TradingPosition, order_id: str):
