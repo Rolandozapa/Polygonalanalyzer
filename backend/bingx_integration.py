@@ -768,20 +768,24 @@ class BingXIntegrationManager:
             balance = await self.trading_client.get_account_balance()
             market_price = await self.trading_client.get_market_price(bingx_symbol)
             
-            # Calculate quantity based on position size percentage (position_size is already a percentage)
-            risk_amount = balance['balance'] * (position_size / 100) if position_size > 1 else balance['balance'] * position_size
+            # Calculate base risk amount from position size percentage
+            if position_size > 1:
+                risk_percentage = position_size / 100  # Convert percentage to decimal
+            else:
+                risk_percentage = position_size  # Already in decimal
+            
+            risk_amount = balance['balance'] * risk_percentage
             leverage = min(decision_data.get('leverage', 5), 10)  # Cap at 10x
             
-            # Use leverage to calculate effective position size
-            effective_amount = risk_amount * leverage
-            quantity = effective_amount / market_price
+            # Calculate quantity without leverage inflation (leverage is handled by BingX)
+            quantity = risk_amount / market_price
             
             # Ensure minimum quantity (BingX has minimum order sizes)
             if quantity < 0.001:  # Minimum 0.001 for most crypto pairs
                 quantity = 0.001
                 logger.warning(f"⚠️ Adjusted quantity to minimum: {quantity}")
             
-            logger.info(f"💰 POSITION CALCULATION: Balance=${balance['balance']:.2f}, Risk=${risk_amount:.2f}, Price=${market_price:.2f}, Qty={quantity:.6f}")
+            logger.info(f"💰 POSITION CALCULATION: Balance=${balance['balance']:.2f}, Risk%={risk_percentage*100:.2f}%, Risk$={risk_amount:.2f}, Price=${market_price:.2f}, Qty={quantity:.6f}, Leverage={leverage}x")
             
             # Set stop loss and take profit
             if signal == 'LONG':
