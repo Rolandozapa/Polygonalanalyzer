@@ -171,13 +171,36 @@ class BingXTradingClient:
         if params is None:
             params = {}
         
-        # Generate signature
-        if data:
-            params_str = json.dumps(data, separators=(',', ':'))
-        else:
-            params_str = "&".join([f"{k}={v}" for k, v in sorted(params.items())]) if params else ""
+        # Add timestamp
+        timestamp = int(time.time() * 1000)
+        params['timestamp'] = timestamp
         
-        headers = self.authenticator.generate_signature(method, endpoint, params_str)
+        # Prepare all parameters for signature
+        all_params = params.copy()
+        if data:
+            all_params.update(data)
+        
+        # Sort parameters alphabetically by key (BingX requirement)
+        sorted_params = sorted(all_params.items(), key=lambda x: x[0])
+        
+        # Create query string for signature (BingX specific format)
+        query_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
+        
+        # Generate signature using the exact BingX format
+        signature = hmac.new(
+            self.authenticator.secret_key.encode('utf-8'),
+            query_string.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Add signature to params
+        params['signature'] = signature
+        
+        # Create headers
+        headers = {
+            'X-BX-APIKEY': self.authenticator.api_key,
+            'Content-Type': 'application/json'
+        }
         
         try:
             if method == "GET":
