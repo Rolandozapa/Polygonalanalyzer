@@ -378,6 +378,12 @@ class AdvancedTechnicalIndicators:
             # Stochastic momentum
             momentum_signals.append((df['stoch_k'] - 50) / 50)
         
+        # VWAP momentum signal (position relative to VWAP)
+        if 'vwap_position' in df.columns:
+            # Normalize VWAP position to -1,1 range (clamp extreme values)
+            vwap_momentum = np.clip(df['vwap_position'] / 3.0, -1, 1)  # 3% = full momentum
+            momentum_signals.append(vwap_momentum)
+        
         if momentum_signals:
             df['momentum_score'] = np.mean(momentum_signals, axis=0)
             df['momentum_score'] = (df['momentum_score'] + 1) / 2  # Convert to 0-1
