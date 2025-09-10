@@ -274,6 +274,68 @@ class AdvancedTechnicalIndicators:
         
         return df
     
+    def _calculate_vwap_bands(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule VWAP avec bandes de déviation standard pour améliorer la précision des signaux"""
+        try:
+            # Calculate typical price (HLC/3)
+            df['typical_price'] = (df['High'] + df['Low'] + df['Close']) / 3
+            
+            # Calculate VWAP (Volume Weighted Average Price)
+            # VWAP = Sum(Typical Price * Volume) / Sum(Volume)
+            df['price_volume'] = df['typical_price'] * df['Volume']
+            df['cumulative_price_volume'] = df['price_volume'].expanding().sum()
+            df['cumulative_volume'] = df['Volume'].expanding().sum()
+            df['vwap'] = df['cumulative_price_volume'] / df['cumulative_volume']
+            
+            # Calculate rolling VWAP for better responsiveness (20-period)
+            df['vwap_20'] = (df['typical_price'] * df['Volume']).rolling(window=20).sum() / df['Volume'].rolling(window=20).sum()
+            
+            # Use the rolling VWAP as main VWAP for better signals
+            df['vwap'] = df['vwap_20'].fillna(df['vwap'])
+            
+            # Calculate standard deviation of (typical_price - vwap)
+            df['vwap_deviation'] = df['typical_price'] - df['vwap']
+            df['vwap_std'] = df['vwap_deviation'].rolling(window=20).std()
+            
+            # Calculate VWAP bands (1 and 2 standard deviations)
+            df['vwap_upper_1std'] = df['vwap'] + df['vwap_std']
+            df['vwap_lower_1std'] = df['vwap'] - df['vwap_std']
+            df['vwap_upper_2std'] = df['vwap'] + (2 * df['vwap_std'])
+            df['vwap_lower_2std'] = df['vwap'] - (2 * df['vwap_std'])
+            
+            # Calculate position relative to VWAP (percentage)
+            df['vwap_position'] = ((df['Close'] - df['vwap']) / df['vwap']) * 100
+            
+            # VWAP signals for overbought/oversold conditions
+            df['vwap_overbought'] = df['Close'] > df['vwap_upper_1std']
+            df['vwap_oversold'] = df['Close'] < df['vwap_lower_1std']
+            df['vwap_extreme_overbought'] = df['Close'] > df['vwap_upper_2std']
+            df['vwap_extreme_oversold'] = df['Close'] < df['vwap_lower_2std']
+            
+            # VWAP trend determination
+            df['vwap_trend'] = 'neutral'
+            df.loc[df['Close'] > df['vwap'] * 1.002, 'vwap_trend'] = 'bullish'  # 0.2% above VWAP
+            df.loc[df['Close'] < df['vwap'] * 0.998, 'vwap_trend'] = 'bearish'  # 0.2% below VWAP
+            
+            # Clean up temporary columns
+            df.drop(['typical_price', 'price_volume', 'cumulative_price_volume', 
+                    'cumulative_volume', 'vwap_20', 'vwap_deviation', 'vwap_std'], 
+                   axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ VWAP with standard deviation bands calculated successfully")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error calculating VWAP bands: {e}")
+            # Set default values if calculation fails
+            for col in ['vwap', 'vwap_upper_1std', 'vwap_lower_1std', 'vwap_upper_2std', 
+                       'vwap_lower_2std', 'vwap_position']:
+                df[col] = df.get('Close', 0)
+            for col in ['vwap_overbought', 'vwap_oversold', 'vwap_extreme_overbought', 'vwap_extreme_oversold']:
+                df[col] = False
+            df['vwap_trend'] = 'neutral'
+            return df
+    
     def _calculate_composite_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
         """Calcule indicateurs composites"""
         # Trend Strength (0-1)
