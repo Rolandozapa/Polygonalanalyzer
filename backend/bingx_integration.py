@@ -162,65 +162,77 @@ class BingXTradingClient:
         await self.client.aclose()
     
     async def _make_request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None) -> Dict:
-        """Make authenticated request to BingX API with rate limiting - BingX Official Format"""
+        """Make authenticated request to BingX API with rate limiting - Fixed BingX Official Format"""
         await self.rate_limiter.acquire()
         
         url = f"{self.authenticator.base_url}{endpoint}"
         
-        # Prepare ALL parameters for query string (BingX specific)
+        # Prepare ALL parameters for query string (BingX requirement - everything in query string!)
         all_params = {}
         if params:
             all_params.update(params)
         if data:
-            all_params.update(data)  # BingX puts everything in query string!
+            all_params.update(data)  # Critical: BingX puts ALL parameters in query string, not body!
         
-        # Add timestamp
+        # Add timestamp (BingX requirement)
         all_params['timestamp'] = int(time.time() * 1000)
         
-        # Sort parameters alphabetically by key (BingX requirement)
+        # Sort parameters alphabetically by key (BingX requirement for consistent signature)
         sorted_params = sorted(all_params.items(), key=lambda x: x[0])
         
         # Create query string for signature (BingX official format)
-        params_str = '&'.join([f"{k}={v}" for k, v in sorted_params])
+        query_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
         
-        # Generate signature using the exact BingX format
+        # Generate signature using the exact BingX specification format
+        # BingX signature = HMAC-SHA256(query_string, secret_key)
         signature = hmac.new(
             self.authenticator.secret_key.encode('utf-8'),
-            params_str.encode('utf-8'),
+            query_string.encode('utf-8'),
             hashlib.sha256
         ).hexdigest()
         
-        # Build final URL with signature (BingX official approach)
-        final_url = f"{url}?{params_str}&signature={signature}"
+        # Add signature to query string (BingX approach)
+        final_query_string = f"{query_string}&signature={signature}"
+        final_url = f"{url}?{final_query_string}"
         
         # Create headers (BingX official format)
         headers = {
             'X-BX-APIKEY': self.authenticator.api_key,
+            'Content-Type': 'application/json'  # Always include Content-Type
         }
         
-        # Add Content-Type only for POST requests
-        if method in ["POST", "PUT"]:
-            headers['Content-Type'] = 'application/json'
-        
         try:
-            # BingX official approach: everything in URL, empty payload
-            payload = {}
-            response = await self.client.request(method, final_url, headers=headers, json=payload)
+            # BingX critical requirement: send empty body for POST requests
+            # All parameters are in the URL query string, not in the request body
+            if method.upper() == "POST":
+                # POST request with empty body (all params in URL)
+                response = await self.client.post(final_url, headers=headers, json={})
+            elif method.upper() == "GET":
+                # GET request (no body)
+                response = await self.client.get(final_url, headers=headers)
+            else:
+                # Other methods
+                response = await self.client.request(method, final_url, headers=headers, json={})
             
             response.raise_for_status()
             result = response.json()
             
-            # Check for API errors
+            # Check for BingX API specific errors
             if result.get('code') != 0:
-                raise Exception(f"BingX API Error: {result.get('msg', 'Unknown error')}")
+                error_msg = result.get('msg', 'Unknown BingX API error')
+                logger.error(f"BingX API Error - Code: {result.get('code')}, Message: {error_msg}")
+                raise Exception(f"BingX API Error [{result.get('code')}]: {error_msg}")
             
             return result
         
         except httpx.HTTPError as e:
-            logger.error(f"HTTP error making request to {final_url}: {e}")
+            logger.error(f"HTTP error making request to {endpoint}: {e}")
+            # Log more details for debugging
+            logger.error(f"URL: {final_url}")
+            logger.error(f"Headers: {headers}")
             raise
         except Exception as e:
-            logger.error(f"Error making request to {final_url}: {e}")
+            logger.error(f"Error making request to {endpoint}: {e}")
             raise
     
     async def get_account_balance(self) -> Dict[str, Any]:
