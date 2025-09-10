@@ -86,7 +86,7 @@ def test_sophisticated_rr_system():
     print("\n🔍 TEST 3: Check API endpoints")
     try:
         # Check decisions endpoint
-        response = requests.get("https://dual-ai-trader-3.preview.emergentagent.com/api/decisions", timeout=10)
+        response = requests.get("https://smart-trade-bot-50.preview.emergentagent.com/api/decisions", timeout=10)
         if response.status_code == 200:
             data = response.json()
             decisions = data.get('decisions', [])
@@ -119,7 +119,7 @@ def test_sophisticated_rr_system():
     print("\n🔍 TEST 4: Trigger trading and check for sophisticated RR")
     try:
         # Trigger trading
-        response = requests.post("https://dual-ai-trader-3.preview.emergentagent.com/api/start-trading", 
+        response = requests.post("https://smart-trade-bot-50.preview.emergentagent.com/api/start-trading", 
                                json={}, timeout=30)
         if response.status_code == 200:
             print("   ✅ Trading triggered successfully")
