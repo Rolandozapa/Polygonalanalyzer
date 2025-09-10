@@ -162,55 +162,50 @@ class BingXTradingClient:
         await self.client.aclose()
     
     async def _make_request(self, method: str, endpoint: str, params: Dict = None, data: Dict = None) -> Dict:
-        """Make authenticated request to BingX API with rate limiting"""
+        """Make authenticated request to BingX API with rate limiting - BingX Official Format"""
         await self.rate_limiter.acquire()
         
         url = f"{self.authenticator.base_url}{endpoint}"
         
-        # Prepare parameters
-        if params is None:
-            params = {}
+        # Prepare ALL parameters for query string (BingX specific)
+        all_params = {}
+        if params:
+            all_params.update(params)
+        if data:
+            all_params.update(data)  # BingX puts everything in query string!
         
         # Add timestamp
-        timestamp = int(time.time() * 1000)
-        params['timestamp'] = timestamp
-        
-        # Prepare all parameters for signature
-        all_params = params.copy()
-        if data:
-            all_params.update(data)
+        all_params['timestamp'] = int(time.time() * 1000)
         
         # Sort parameters alphabetically by key (BingX requirement)
         sorted_params = sorted(all_params.items(), key=lambda x: x[0])
         
-        # Create query string for signature (BingX specific format)
-        query_string = '&'.join([f"{k}={v}" for k, v in sorted_params])
+        # Create query string for signature (BingX official format)
+        params_str = '&'.join([f"{k}={v}" for k, v in sorted_params])
         
         # Generate signature using the exact BingX format
         signature = hmac.new(
             self.authenticator.secret_key.encode('utf-8'),
-            query_string.encode('utf-8'),
+            params_str.encode('utf-8'),
             hashlib.sha256
         ).hexdigest()
         
-        # Add signature to params
-        params['signature'] = signature
+        # Build final URL with signature (BingX official approach)
+        final_url = f"{url}?{params_str}&signature={signature}"
         
-        # Create headers
+        # Create headers (BingX official format)
         headers = {
             'X-BX-APIKEY': self.authenticator.api_key,
-            'Content-Type': 'application/json'
         }
         
+        # Add Content-Type only for POST requests
+        if method in ["POST", "PUT"]:
+            headers['Content-Type'] = 'application/json'
+        
         try:
-            if method == "GET":
-                response = await self.client.get(url, params=params, headers=headers)
-            elif method == "POST":
-                response = await self.client.post(url, json=data, params=params, headers=headers)
-            elif method == "DELETE":
-                response = await self.client.delete(url, params=params, headers=headers)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+            # BingX official approach: everything in URL, empty payload
+            payload = {}
+            response = await self.client.request(method, final_url, headers=headers, json=payload)
             
             response.raise_for_status()
             result = response.json()
@@ -222,10 +217,10 @@ class BingXTradingClient:
             return result
         
         except httpx.HTTPError as e:
-            logger.error(f"HTTP error making request to {url}: {e}")
+            logger.error(f"HTTP error making request to {final_url}: {e}")
             raise
         except Exception as e:
-            logger.error(f"Error making request to {url}: {e}")
+            logger.error(f"Error making request to {final_url}: {e}")
             raise
     
     async def get_account_balance(self) -> Dict[str, Any]:
