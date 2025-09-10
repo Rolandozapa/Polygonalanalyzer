@@ -85,6 +85,17 @@ class TechnicalIndicators:
     money_flow_ratio: float = 1.0 # Positive/Negative money flow ratio
     institutional_activity: str = "neutral"  # "accumulation", "distribution", "neutral"
     
+    # Multi EMA/SMA Trend Hierarchy - THE MISSING PIECE 🎯
+    ema_9: float = 0.0            # Fast trend (9-period EMA)
+    ema_21: float = 0.0           # Medium trend (21-period EMA)
+    sma_50: float = 0.0           # Slow trend (50-period SMA)
+    ema_200: float = 0.0          # Long-term trend (200-period EMA)
+    trend_hierarchy: str = "neutral"  # "strong_bull", "weak_bull", "neutral", "weak_bear", "strong_bear"
+    trend_momentum: str = "neutral"   # "accelerating", "steady", "decelerating"
+    price_vs_emas: str = "mixed"      # "above_all", "above_fast", "below_fast", "below_all"
+    ema_cross_signal: str = "neutral" # "golden_cross", "death_cross", "neutral"
+    trend_strength_score: float = 0.5 # 0-1 score based on EMA hierarchy alignment
+    
     # Composite Indicators
     trend_strength: float = 0.0  # 0-1 score based on multiple indicators
     momentum_score: float = 0.0  # 0-1 score for momentum
