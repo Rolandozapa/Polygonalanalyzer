@@ -5369,21 +5369,17 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                 
             # 🎯 NOUVEAU: RR RECALCULATION WITH IA2 TECHNICAL LEVELS
             # Extract IA2's recalculated technical levels for enhanced RR calculation
-            # 🎯 IA2 TECHNICAL LEVELS EXTRACTION - Extract Claude's re-analyzed support/resistance
+            # 🎯 IA2 TECHNICAL LEVELS - USE IA1 LEVELS WITH CORRECT RR CALCULATION
             enhanced_rr_data = {}
             
             # Get IA2 signal early for RR calculation
             ia2_signal = claude_decision.get("signal", "HOLD").upper()
             
-            # NEW: Extract from ia2_technical_levels (Claude's direct analysis)
-            ia2_technical_levels = claude_decision.get("ia2_technical_levels", {})
-            if ia2_technical_levels and isinstance(ia2_technical_levels, dict):
-                ia2_support = float(ia2_technical_levels.get("support_level", 0))
-                ia2_resistance = float(ia2_technical_levels.get("resistance_level", 0))
-                
-                # Extract Claude's reasoning for the levels
-                support_reasoning = ia2_technical_levels.get("support_reasoning", "IA2 technical analysis")
-                resistance_reasoning = ia2_technical_levels.get("resistance_reasoning", "IA2 technical analysis")
+            # SIMPLIFIED: Use IA1 levels but apply correct RR formulas for IA2
+            ia1_calculated_levels = getattr(analysis, 'ia1_calculated_levels', {})
+            if ia1_calculated_levels:
+                ia2_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.97)
+                ia2_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.03)
                 
                 # 🧮 CALCULATE RR AUTOMATICALLY WITH CORRECT FORMULAS
                 current_price = opportunity.current_price
@@ -5408,36 +5404,20 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
                         else:
                             ia2_rr_ratio = 1.0  # Invalid resistance level
                 
-                # 🔒 VALIDATE LEVELS LOGIC
-                levels_valid = (ia2_support < current_price < ia2_resistance)
-                if not levels_valid:
-                    logger.warning(f"⚠️ IA2 LEVELS INVALID for {opportunity.symbol}: Support={ia2_support:.6f}, Price={current_price:.6f}, Resistance={ia2_resistance:.6f}")
+                technical_reasoning = f"Using IA1 levels: Support ${ia2_support:.6f}, Resistance ${ia2_resistance:.6f}"
                 
-                technical_reasoning = f"IA2 Support: {support_reasoning}. IA2 Resistance: {resistance_reasoning}."
-                
-                logger.info(f"🎯 IA2 TECHNICAL LEVELS {opportunity.symbol} ({ia2_signal}):")
-                logger.info(f"   📊 Support: ${ia2_support:.6f} - {support_reasoning}")
-                logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} - {resistance_reasoning}")
+                logger.info(f"🎯 IA2 RR USING IA1 LEVELS {opportunity.symbol} ({ia2_signal}):")
+                logger.info(f"   📊 Support: ${ia2_support:.6f} (from IA1)")
+                logger.info(f"   📊 Resistance: ${ia2_resistance:.6f} (from IA1)")
                 logger.info(f"   🧮 AUTO-CALCULATED RR: {ia2_rr_ratio:.2f}:1 (using {ia2_signal} formula)")
                 
             else:
-                # FALLBACK: Try old extraction method or generic levels
-                market_analysis = claude_decision.get("market_analysis", {})
-                recalculated_levels = market_analysis.get("recalculated_technical_levels", {})
-                
-                if recalculated_levels:
-                    ia2_support = recalculated_levels.get("ia2_support_level")
-                    ia2_resistance = recalculated_levels.get("ia2_resistance_level") 
-                    ia2_rr_ratio = recalculated_levels.get("ia2_calculated_rr")
-                    technical_reasoning = recalculated_levels.get("technical_reasoning", "")
-                    logger.info(f"🔄 FALLBACK: Using old market_analysis format for {opportunity.symbol}")
-                else:
-                    # Generic fallback
-                    ia2_support = opportunity.current_price * 0.97
-                    ia2_resistance = opportunity.current_price * 1.03
-                    ia2_rr_ratio = 1.0
-                    technical_reasoning = "Generic fallback levels - IA2 analysis not available"
-                    logger.warning(f"⚠️ IA2 LEVELS MISSING for {opportunity.symbol} - using generic fallback")
+                # Generic fallback if no IA1 levels
+                ia2_support = opportunity.current_price * 0.97
+                ia2_resistance = opportunity.current_price * 1.03
+                ia2_rr_ratio = 1.0
+                technical_reasoning = "Generic fallback levels - no IA1 data available"
+                logger.warning(f"⚠️ NO IA1 LEVELS for {opportunity.symbol} - using generic fallback")
             
             # Continue with existing validation logic
             if ia2_support and ia2_resistance and ia2_rr_ratio:
