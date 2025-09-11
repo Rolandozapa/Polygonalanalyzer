@@ -1418,25 +1418,25 @@ class AdvancedTechnicalIndicators:
         strength_multiplier = indicators.trend_strength_score
         regime_score = 0.5 + (regime_score - 0.5) * strength_multiplier
         
-        # === 5. CLASSIFY MARKET REGIME ===
+        # === 6. CLASSIFY MARKET REGIME (ADJUSTED THRESHOLDS) ===
         regime_analysis['regime_strength'] = abs(regime_score - 0.5) * 2  # Convert to 0-1
         
-        if regime_score >= 0.8:
+        if regime_score >= 0.75:  # Lowered from 0.8
             regime_analysis['market_regime'] = 'strong_buy'
             regime_analysis['regime_bias'] = 'bullish'
             regime_analysis['suggested_strategy'] = 'buy_dips'
             regime_analysis['directional_filter'] = 'long_only'
-        elif regime_score >= 0.65:
+        elif regime_score >= 0.58:  # Lowered from 0.65
             regime_analysis['market_regime'] = 'buy'
             regime_analysis['regime_bias'] = 'bullish'
             regime_analysis['suggested_strategy'] = 'long_bias'
             regime_analysis['directional_filter'] = 'long_preferred'
-        elif regime_score <= 0.2:
+        elif regime_score <= 0.25:  # Lowered from 0.2
             regime_analysis['market_regime'] = 'strong_sell'
             regime_analysis['regime_bias'] = 'bearish'
             regime_analysis['suggested_strategy'] = 'sell_rallies'
             regime_analysis['directional_filter'] = 'short_only'
-        elif regime_score <= 0.35:
+        elif regime_score <= 0.42:  # Lowered from 0.35
             regime_analysis['market_regime'] = 'sell'
             regime_analysis['regime_bias'] = 'bearish'
             regime_analysis['suggested_strategy'] = 'short_bias'
