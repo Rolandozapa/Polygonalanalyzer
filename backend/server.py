@@ -48,6 +48,7 @@ from bingx_official_engine import bingx_official_engine, BingXOrderSide, BingXOr
 from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+from intelligent_ohlcv_fetcher import intelligent_ohlcv_fetcher, OHLCVMetadata, HighFrequencyData, EnhancedSupportResistance, DynamicRiskReward
 from bingx_integration import bingx_manager, TradingPosition
 from advanced_trading_strategies import advanced_strategy_manager, PositionDirection
 from active_position_manager import ActivePositionManager, TradeExecutionMode
