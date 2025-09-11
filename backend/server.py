@@ -8307,7 +8307,8 @@ async def force_ia1_analysis(request: dict):
         logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
         
         # Get the opportunity
-        opportunities = await orchestrator.get_all_opportunities()
+        from advanced_market_aggregator import advanced_market_aggregator
+        opportunities = advanced_market_aggregator.get_current_opportunities()
         target_opportunity = None
         
         for opp in opportunities:
