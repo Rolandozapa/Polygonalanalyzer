@@ -344,7 +344,7 @@ class IA2RRCalculationTestSuite:
         logger.info("\n🔍 TEST 5: RR Calculation Accuracy Test")
         
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test_result("RR Calculation Accuracy", False, 
                                    "Database connection not available")
                 return
