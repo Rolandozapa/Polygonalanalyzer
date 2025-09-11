@@ -1,5 +1,754 @@
 #!/usr/bin/env python3
 """
+IA2 RR Calculation Fix Comprehensive Testing Suite
+Focus: Final comprehensive test of the IA2 RR calculation fix after implementing proper f-string conditional logic
+
+TESTING REQUIREMENTS FROM REVIEW REQUEST:
+1. Technical Indicators Access Fix: Verify "string indices must be integers, not 'str'" error is resolved using getattr() pattern
+2. IA2 Decision Completion: Confirm IA2 can complete decision-making without crashing 
+3. Simple RR Formula Implementation: Validate IA2 decisions contain "calculated_rr" and "rr_reasoning" fields using simple S/R formula
+4. RR Calculation Accuracy: For LONG: RR = (TP-Entry)/(Entry-SL), For SHORT: RR = (Entry-TP)/(SL-Entry) 
+5. Session ID Verification: Confirm new session_id "ia2_claude_simplified_rr_v2" is working
+6. End-to-End Validation: Full IA1 → IA2 pipeline with working RR calculations
+
+SUCCESS CRITERIA:
+- No "string indices" errors in backend logs
+- IA2 decisions successfully created and stored
+- "calculated_rr" field populated with valid numbers
+- "rr_reasoning" field contains S/R level explanations
+- Simple RR formula consistently applied across LONG/SHORT signals
+"""
+
+import asyncio
+import json
+import logging
+import os
+import sys
+import time
+import requests
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional
+from motor.motor_asyncio import AsyncIOMotorClient
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class IA2RRCalculationTestSuite:
+    """Comprehensive test suite for IA2 RR calculation fix"""
+    
+    def __init__(self):
+        # Get backend URL from frontend env
+        try:
+            with open('/app/frontend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('REACT_APP_BACKEND_URL='):
+                        backend_url = line.split('=')[1].strip()
+                        break
+                else:
+                    backend_url = "http://localhost:8001"
+        except Exception:
+            backend_url = "http://localhost:8001"
+        
+        self.api_url = f"{backend_url}/api"
+        logger.info(f"Testing IA2 RR Calculation Fix at: {self.api_url}")
+        
+        # MongoDB connection for direct database analysis
+        self.mongo_client = None
+        self.db = None
+        self._setup_database_connection()
+        
+        # Test results
+        self.test_results = []
+        
+        # Test symbols for IA2 testing
+        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT', 'XRPUSDT']
+        
+    def _setup_database_connection(self):
+        """Setup MongoDB connection for direct database analysis"""
+        try:
+            # Read MongoDB URL from backend env
+            with open('/app/backend/.env', 'r') as f:
+                for line in f:
+                    if line.startswith('MONGO_URL='):
+                        mongo_url = line.split('=')[1].strip().strip('"')
+                        break
+                else:
+                    mongo_url = "mongodb://localhost:27017"
+            
+            self.mongo_client = AsyncIOMotorClient(mongo_url)
+            self.db = self.mongo_client['myapp']
+            logger.info(f"✅ Database connection established: {mongo_url}")
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to setup database connection: {e}")
+            self.mongo_client = None
+            self.db = None
+    
+    def log_test_result(self, test_name: str, success: bool, details: str = ""):
+        """Log test result"""
+        status = "✅ PASS" if success else "❌ FAIL"
+        logger.info(f"{status}: {test_name}")
+        if details:
+            logger.info(f"   Details: {details}")
+        
+        self.test_results.append({
+            'test': test_name,
+            'success': success,
+            'details': details,
+            'timestamp': datetime.now().isoformat()
+        })
+    
+    async def test_1_session_id_verification(self):
+        """Test 1: Verify new session_id 'ia2_claude_simplified_rr_v2' is working"""
+        logger.info("\n🔍 TEST 1: Session ID Verification")
+        
+        try:
+            # Check server.py for the correct session ID
+            server_py_path = '/app/backend/server.py'
+            if os.path.exists(server_py_path):
+                with open(server_py_path, 'r') as f:
+                    content = f.read()
+                    
+                    if 'ia2_claude_simplified_rr_v2' in content:
+                        # Find the exact line with session_id
+                        lines = content.split('\n')
+                        session_line = None
+                        for i, line in enumerate(lines):
+                            if 'session_id=' in line and 'ia2_claude_simplified_rr_v2' in line:
+                                session_line = f"Line {i+1}: {line.strip()}"
+                                break
+                        
+                        if session_line:
+                            self.log_test_result("Session ID Verification", True, 
+                                               f"New session ID 'ia2_claude_simplified_rr_v2' found in server.py: {session_line}")
+                        else:
+                            self.log_test_result("Session ID Verification", False, 
+                                               "Session ID found in file but not in session_id parameter")
+                    else:
+                        self.log_test_result("Session ID Verification", False, 
+                                           "New session ID 'ia2_claude_simplified_rr_v2' not found in server.py")
+            else:
+                self.log_test_result("Session ID Verification", False, 
+                                   "server.py file not found")
+                
+        except Exception as e:
+            self.log_test_result("Session ID Verification", False, f"Exception: {str(e)}")
+    
+    async def test_2_technical_indicators_access_fix(self):
+        """Test 2: Verify technical indicators access fix - no 'string indices' errors"""
+        logger.info("\n🔍 TEST 2: Technical Indicators Access Fix")
+        
+        try:
+            # Check recent backend logs for string indices errors
+            log_files = [
+                '/var/log/supervisor/backend.out.log',
+                '/var/log/supervisor/backend.err.log'
+            ]
+            
+            string_indices_errors = []
+            total_log_lines = 0
+            
+            for log_file in log_files:
+                if os.path.exists(log_file):
+                    try:
+                        # Read last 1000 lines to check for recent errors
+                        with open(log_file, 'r') as f:
+                            lines = f.readlines()
+                            recent_lines = lines[-1000:] if len(lines) > 1000 else lines
+                            total_log_lines += len(recent_lines)
+                            
+                            for i, line in enumerate(recent_lines):
+                                if 'string indices must be integers' in line.lower():
+                                    string_indices_errors.append({
+                                        'file': log_file,
+                                        'line_num': len(lines) - len(recent_lines) + i + 1,
+                                        'content': line.strip()
+                                    })
+                    except Exception as e:
+                        logger.warning(f"Could not read {log_file}: {e}")
+            
+            logger.info(f"   📊 Analyzed {total_log_lines} recent log lines from backend logs")
+            
+            if string_indices_errors:
+                error_details = f"Found {len(string_indices_errors)} 'string indices' errors in recent logs"
+                for error in string_indices_errors[:3]:  # Show first 3 errors
+                    error_details += f"\n      {error['file']}:{error['line_num']} - {error['content'][:100]}..."
+                
+                self.log_test_result("Technical Indicators Access Fix", False, error_details)
+            else:
+                self.log_test_result("Technical Indicators Access Fix", True, 
+                                   f"No 'string indices must be integers' errors found in {total_log_lines} recent log lines")
+                
+        except Exception as e:
+            self.log_test_result("Technical Indicators Access Fix", False, f"Exception: {str(e)}")
+    
+    async def test_3_ia2_decision_completion(self):
+        """Test 3: Confirm IA2 can complete decision-making without crashing"""
+        logger.info("\n🔍 TEST 3: IA2 Decision Completion Test")
+        
+        try:
+            # Trigger IA2 decision creation by calling the opportunities endpoint
+            logger.info("   🚀 Triggering IA2 decision creation via opportunities endpoint...")
+            
+            # First get opportunities to trigger IA1 analysis
+            opportunities_response = requests.get(f"{self.api_url}/opportunities", timeout=120)
+            
+            if opportunities_response.status_code == 200:
+                opportunities = opportunities_response.json()
+                logger.info(f"   📊 Retrieved {len(opportunities)} opportunities")
+                
+                # Wait a bit for IA1 analysis to complete
+                await asyncio.sleep(10)
+                
+                # Get IA1 analyses
+                analyses_response = requests.get(f"{self.api_url}/analyses", timeout=60)
+                
+                if analyses_response.status_code == 200:
+                    analyses = analyses_response.json()
+                    logger.info(f"   📊 Found {len(analyses)} IA1 analyses")
+                    
+                    # Look for high-confidence analyses that should trigger IA2
+                    high_confidence_analyses = [a for a in analyses if a.get('confidence', 0) >= 0.7]
+                    logger.info(f"   📊 Found {len(high_confidence_analyses)} high-confidence analyses (≥70%)")
+                    
+                    if high_confidence_analyses:
+                        # Wait for IA2 decisions to be created
+                        await asyncio.sleep(15)
+                        
+                        # Check for new IA2 decisions
+                        decisions_response = requests.get(f"{self.api_url}/decisions", timeout=60)
+                        
+                        if decisions_response.status_code == 200:
+                            decisions = decisions_response.json()
+                            logger.info(f"   📊 Found {len(decisions)} IA2 decisions")
+                            
+                            # Check for recent decisions (last 10 minutes)
+                            recent_time = datetime.now() - timedelta(minutes=10)
+                            recent_decisions = []
+                            
+                            for decision in decisions:
+                                try:
+                                    decision_time = datetime.fromisoformat(decision.get('timestamp', '').replace('Z', '+00:00'))
+                                    if decision_time > recent_time:
+                                        recent_decisions.append(decision)
+                                except:
+                                    pass
+                            
+                            if recent_decisions:
+                                self.log_test_result("IA2 Decision Completion", True, 
+                                                   f"IA2 successfully created {len(recent_decisions)} recent decisions without crashing")
+                            else:
+                                self.log_test_result("IA2 Decision Completion", False, 
+                                                   f"No recent IA2 decisions found despite {len(high_confidence_analyses)} high-confidence IA1 analyses")
+                        else:
+                            self.log_test_result("IA2 Decision Completion", False, 
+                                               f"Failed to retrieve decisions: HTTP {decisions_response.status_code}")
+                    else:
+                        self.log_test_result("IA2 Decision Completion", False, 
+                                           "No high-confidence IA1 analyses found to trigger IA2")
+                else:
+                    self.log_test_result("IA2 Decision Completion", False, 
+                                       f"Failed to retrieve analyses: HTTP {analyses_response.status_code}")
+            else:
+                self.log_test_result("IA2 Decision Completion", False, 
+                                   f"Failed to retrieve opportunities: HTTP {opportunities_response.status_code}")
+                
+        except Exception as e:
+            self.log_test_result("IA2 Decision Completion", False, f"Exception: {str(e)}")
+    
+    async def test_4_simple_rr_formula_implementation(self):
+        """Test 4: Validate IA2 decisions contain 'calculated_rr' and 'rr_reasoning' fields"""
+        logger.info("\n🔍 TEST 4: Simple RR Formula Implementation Test")
+        
+        try:
+            if not self.db:
+                self.log_test_result("Simple RR Formula Implementation", False, 
+                                   "Database connection not available")
+                return
+            
+            # Query recent IA2 decisions from database
+            decisions_collection = self.db['trading_decisions']
+            
+            # Get recent decisions (last 24 hours)
+            recent_time = datetime.now() - timedelta(hours=24)
+            
+            cursor = decisions_collection.find({
+                'timestamp': {'$gte': recent_time}
+            }).sort('timestamp', -1).limit(20)
+            
+            decisions = await cursor.to_list(length=20)
+            logger.info(f"   📊 Analyzing {len(decisions)} recent IA2 decisions from database")
+            
+            if not decisions:
+                self.log_test_result("Simple RR Formula Implementation", False, 
+                                   "No recent IA2 decisions found in database")
+                return
+            
+            # Analyze decisions for calculated_rr and rr_reasoning fields
+            decisions_with_calculated_rr = 0
+            decisions_with_rr_reasoning = 0
+            valid_rr_values = 0
+            rr_reasoning_examples = []
+            
+            for decision in decisions:
+                # Check for calculated_rr field
+                if 'calculated_rr' in decision:
+                    decisions_with_calculated_rr += 1
+                    
+                    # Validate RR value
+                    rr_value = decision['calculated_rr']
+                    if isinstance(rr_value, (int, float)) and rr_value > 0:
+                        valid_rr_values += 1
+                
+                # Check for rr_reasoning field
+                if 'rr_reasoning' in decision:
+                    decisions_with_rr_reasoning += 1
+                    rr_reasoning = decision['rr_reasoning']
+                    
+                    # Check if reasoning contains S/R level explanations
+                    if any(keyword in str(rr_reasoning).lower() for keyword in ['support', 'resistance', 'formula', 'long', 'short']):
+                        rr_reasoning_examples.append({
+                            'symbol': decision.get('symbol', 'Unknown'),
+                            'signal': decision.get('signal', 'Unknown'),
+                            'calculated_rr': decision.get('calculated_rr', 'N/A'),
+                            'rr_reasoning': str(rr_reasoning)[:200] + "..." if len(str(rr_reasoning)) > 200 else str(rr_reasoning)
+                        })
+            
+            logger.info(f"   📊 Analysis Results:")
+            logger.info(f"      - Decisions with calculated_rr: {decisions_with_calculated_rr}/{len(decisions)}")
+            logger.info(f"      - Decisions with rr_reasoning: {decisions_with_rr_reasoning}/{len(decisions)}")
+            logger.info(f"      - Valid RR values: {valid_rr_values}/{decisions_with_calculated_rr}")
+            
+            # Show examples of RR reasoning
+            if rr_reasoning_examples:
+                logger.info(f"   📊 RR Reasoning Examples:")
+                for i, example in enumerate(rr_reasoning_examples[:3]):
+                    logger.info(f"      Example {i+1}: {example['symbol']} {example['signal']} (RR: {example['calculated_rr']})")
+                    logger.info(f"         Reasoning: {example['rr_reasoning']}")
+            
+            # Determine success
+            if decisions_with_calculated_rr > 0 and decisions_with_rr_reasoning > 0:
+                success_rate = min(decisions_with_calculated_rr, decisions_with_rr_reasoning) / len(decisions)
+                self.log_test_result("Simple RR Formula Implementation", True, 
+                                   f"RR fields found: calculated_rr in {decisions_with_calculated_rr} decisions, rr_reasoning in {decisions_with_rr_reasoning} decisions ({success_rate:.1%} success rate)")
+            else:
+                self.log_test_result("Simple RR Formula Implementation", False, 
+                                   f"RR fields missing: calculated_rr in {decisions_with_calculated_rr} decisions, rr_reasoning in {decisions_with_rr_reasoning} decisions")
+                
+        except Exception as e:
+            self.log_test_result("Simple RR Formula Implementation", False, f"Exception: {str(e)}")
+    
+    async def test_5_rr_calculation_accuracy(self):
+        """Test 5: Validate RR calculation accuracy using simple S/R formula"""
+        logger.info("\n🔍 TEST 5: RR Calculation Accuracy Test")
+        
+        try:
+            if not self.db:
+                self.log_test_result("RR Calculation Accuracy", False, 
+                                   "Database connection not available")
+                return
+            
+            # Query recent IA2 decisions with calculated_rr field
+            decisions_collection = self.db['trading_decisions']
+            
+            cursor = decisions_collection.find({
+                'calculated_rr': {'$exists': True, '$ne': None},
+                'timestamp': {'$gte': datetime.now() - timedelta(hours=24)}
+            }).sort('timestamp', -1).limit(10)
+            
+            decisions = await cursor.to_list(length=10)
+            logger.info(f"   📊 Analyzing {len(decisions)} recent decisions with calculated_rr field")
+            
+            if not decisions:
+                self.log_test_result("RR Calculation Accuracy", False, 
+                                   "No recent decisions with calculated_rr field found")
+                return
+            
+            accurate_calculations = 0
+            calculation_examples = []
+            
+            for decision in decisions:
+                try:
+                    signal = decision.get('signal', '').upper()
+                    entry_price = decision.get('entry_price', 0)
+                    stop_loss = decision.get('stop_loss', 0)
+                    take_profit = decision.get('take_profit_1', decision.get('take_profit', 0))
+                    calculated_rr = decision.get('calculated_rr', 0)
+                    
+                    if entry_price > 0 and stop_loss > 0 and take_profit > 0 and calculated_rr > 0:
+                        # Calculate expected RR using simple S/R formula
+                        if signal == 'LONG':
+                            # LONG: RR = (TP-Entry)/(Entry-SL)
+                            expected_rr = (take_profit - entry_price) / (entry_price - stop_loss)
+                        elif signal == 'SHORT':
+                            # SHORT: RR = (Entry-TP)/(SL-Entry)
+                            expected_rr = (entry_price - take_profit) / (stop_loss - entry_price)
+                        else:
+                            continue
+                        
+                        # Check if calculated RR is close to expected (within 10% tolerance)
+                        tolerance = 0.1
+                        if abs(calculated_rr - expected_rr) / expected_rr <= tolerance:
+                            accurate_calculations += 1
+                        
+                        calculation_examples.append({
+                            'symbol': decision.get('symbol', 'Unknown'),
+                            'signal': signal,
+                            'entry': entry_price,
+                            'sl': stop_loss,
+                            'tp': take_profit,
+                            'calculated_rr': calculated_rr,
+                            'expected_rr': expected_rr,
+                            'accurate': abs(calculated_rr - expected_rr) / expected_rr <= tolerance
+                        })
+                        
+                except Exception as e:
+                    logger.debug(f"Error analyzing decision: {e}")
+                    continue
+            
+            logger.info(f"   📊 RR Calculation Analysis:")
+            for i, example in enumerate(calculation_examples[:5]):
+                accuracy_icon = "✅" if example['accurate'] else "❌"
+                logger.info(f"      {accuracy_icon} {example['symbol']} {example['signal']}: Entry={example['entry']:.4f}, SL={example['sl']:.4f}, TP={example['tp']:.4f}")
+                logger.info(f"         Calculated RR: {example['calculated_rr']:.2f}, Expected RR: {example['expected_rr']:.2f}")
+            
+            if calculation_examples:
+                accuracy_rate = accurate_calculations / len(calculation_examples)
+                if accuracy_rate >= 0.8:  # 80% accuracy threshold
+                    self.log_test_result("RR Calculation Accuracy", True, 
+                                       f"RR calculations accurate: {accurate_calculations}/{len(calculation_examples)} ({accuracy_rate:.1%})")
+                else:
+                    self.log_test_result("RR Calculation Accuracy", False, 
+                                       f"RR calculations inaccurate: {accurate_calculations}/{len(calculation_examples)} ({accuracy_rate:.1%})")
+            else:
+                self.log_test_result("RR Calculation Accuracy", False, 
+                                   "No valid decisions found for RR calculation accuracy testing")
+                
+        except Exception as e:
+            self.log_test_result("RR Calculation Accuracy", False, f"Exception: {str(e)}")
+    
+    async def test_6_end_to_end_validation(self):
+        """Test 6: Full IA1 → IA2 pipeline with working RR calculations"""
+        logger.info("\n🔍 TEST 6: End-to-End IA1 → IA2 Pipeline Validation")
+        
+        try:
+            # Step 1: Trigger the full pipeline
+            logger.info("   🚀 Step 1: Triggering full IA1 → IA2 pipeline...")
+            
+            opportunities_response = requests.get(f"{self.api_url}/opportunities", timeout=120)
+            
+            if opportunities_response.status_code != 200:
+                self.log_test_result("End-to-End Pipeline Validation", False, 
+                                   f"Failed to get opportunities: HTTP {opportunities_response.status_code}")
+                return
+            
+            opportunities = opportunities_response.json()
+            logger.info(f"   📊 Step 1 Complete: Retrieved {len(opportunities)} opportunities")
+            
+            # Step 2: Wait for IA1 analyses
+            await asyncio.sleep(15)
+            
+            analyses_response = requests.get(f"{self.api_url}/analyses", timeout=60)
+            
+            if analyses_response.status_code != 200:
+                self.log_test_result("End-to-End Pipeline Validation", False, 
+                                   f"Failed to get analyses: HTTP {analyses_response.status_code}")
+                return
+            
+            analyses = analyses_response.json()
+            high_confidence_analyses = [a for a in analyses if a.get('confidence', 0) >= 0.7]
+            logger.info(f"   📊 Step 2 Complete: Found {len(analyses)} IA1 analyses, {len(high_confidence_analyses)} high-confidence")
+            
+            # Step 3: Wait for IA2 decisions
+            await asyncio.sleep(20)
+            
+            decisions_response = requests.get(f"{self.api_url}/decisions", timeout=60)
+            
+            if decisions_response.status_code != 200:
+                self.log_test_result("End-to-End Pipeline Validation", False, 
+                                   f"Failed to get decisions: HTTP {decisions_response.status_code}")
+                return
+            
+            decisions = decisions_response.json()
+            
+            # Step 4: Analyze recent decisions for RR fields
+            recent_time = datetime.now() - timedelta(minutes=15)
+            recent_decisions = []
+            
+            for decision in decisions:
+                try:
+                    decision_time = datetime.fromisoformat(decision.get('timestamp', '').replace('Z', '+00:00'))
+                    if decision_time > recent_time:
+                        recent_decisions.append(decision)
+                except:
+                    pass
+            
+            logger.info(f"   📊 Step 3 Complete: Found {len(decisions)} total IA2 decisions, {len(recent_decisions)} recent")
+            
+            # Step 5: Validate RR calculations in recent decisions
+            decisions_with_rr = 0
+            valid_rr_calculations = 0
+            
+            for decision in recent_decisions:
+                if 'calculated_rr' in decision and 'rr_reasoning' in decision:
+                    decisions_with_rr += 1
+                    
+                    # Check if RR value is valid
+                    rr_value = decision.get('calculated_rr')
+                    if isinstance(rr_value, (int, float)) and rr_value > 0:
+                        valid_rr_calculations += 1
+            
+            logger.info(f"   📊 Step 4 Complete: {decisions_with_rr} decisions with RR fields, {valid_rr_calculations} with valid RR values")
+            
+            # Determine success
+            pipeline_success = (
+                len(opportunities) > 0 and
+                len(analyses) > 0 and
+                len(decisions) > 0 and
+                decisions_with_rr > 0
+            )
+            
+            if pipeline_success:
+                self.log_test_result("End-to-End Pipeline Validation", True, 
+                                   f"Full pipeline working: {len(opportunities)} opportunities → {len(analyses)} IA1 analyses → {len(decisions)} IA2 decisions → {decisions_with_rr} with RR calculations")
+            else:
+                self.log_test_result("End-to-End Pipeline Validation", False, 
+                                   f"Pipeline broken: {len(opportunities)} opportunities → {len(analyses)} IA1 analyses → {len(decisions)} IA2 decisions → {decisions_with_rr} with RR calculations")
+                
+        except Exception as e:
+            self.log_test_result("End-to-End Pipeline Validation", False, f"Exception: {str(e)}")
+    
+    async def test_7_backend_logs_analysis(self):
+        """Test 7: Analyze backend logs for IA2 execution patterns and errors"""
+        logger.info("\n🔍 TEST 7: Backend Logs Analysis")
+        
+        try:
+            log_files = [
+                '/var/log/supervisor/backend.out.log',
+                '/var/log/supervisor/backend.err.log'
+            ]
+            
+            ia2_execution_attempts = 0
+            ia2_execution_successes = 0
+            ia2_execution_errors = 0
+            rr_calculation_logs = 0
+            technical_indicator_errors = 0
+            
+            error_patterns = []
+            success_patterns = []
+            
+            for log_file in log_files:
+                if os.path.exists(log_file):
+                    try:
+                        with open(log_file, 'r') as f:
+                            lines = f.readlines()
+                            recent_lines = lines[-2000:] if len(lines) > 2000 else lines
+                            
+                            for line in recent_lines:
+                                line_lower = line.lower()
+                                
+                                # Count IA2 execution attempts
+                                if 'ia2' in line_lower and any(keyword in line_lower for keyword in ['make_decision', 'decision', 'executing']):
+                                    ia2_execution_attempts += 1
+                                
+                                # Count IA2 successes
+                                if 'ia2' in line_lower and any(keyword in line_lower for keyword in ['decision created', 'success', 'completed']):
+                                    ia2_execution_successes += 1
+                                    success_patterns.append(line.strip()[:150])
+                                
+                                # Count IA2 errors
+                                if 'ia2' in line_lower and any(keyword in line_lower for keyword in ['error', 'exception', 'failed']):
+                                    ia2_execution_errors += 1
+                                    error_patterns.append(line.strip()[:150])
+                                
+                                # Count RR calculation logs
+                                if any(keyword in line_lower for keyword in ['calculated_rr', 'rr_reasoning', 'risk-reward', 'support', 'resistance']):
+                                    rr_calculation_logs += 1
+                                
+                                # Count technical indicator errors
+                                if 'string indices must be integers' in line_lower:
+                                    technical_indicator_errors += 1
+                                    error_patterns.append(line.strip()[:150])
+                    
+                    except Exception as e:
+                        logger.warning(f"Could not read {log_file}: {e}")
+            
+            logger.info(f"   📊 Backend Logs Analysis Results:")
+            logger.info(f"      - IA2 execution attempts: {ia2_execution_attempts}")
+            logger.info(f"      - IA2 execution successes: {ia2_execution_successes}")
+            logger.info(f"      - IA2 execution errors: {ia2_execution_errors}")
+            logger.info(f"      - RR calculation logs: {rr_calculation_logs}")
+            logger.info(f"      - Technical indicator errors: {technical_indicator_errors}")
+            
+            # Show recent error patterns
+            if error_patterns:
+                logger.info(f"   📊 Recent Error Patterns:")
+                for i, error in enumerate(error_patterns[-3:]):
+                    logger.info(f"      Error {i+1}: {error}")
+            
+            # Show recent success patterns
+            if success_patterns:
+                logger.info(f"   📊 Recent Success Patterns:")
+                for i, success in enumerate(success_patterns[-3:]):
+                    logger.info(f"      Success {i+1}: {success}")
+            
+            # Determine success
+            logs_healthy = (
+                technical_indicator_errors == 0 and
+                (ia2_execution_errors == 0 or ia2_execution_successes > ia2_execution_errors) and
+                rr_calculation_logs > 0
+            )
+            
+            if logs_healthy:
+                self.log_test_result("Backend Logs Analysis", True, 
+                                   f"Logs healthy: {technical_indicator_errors} tech errors, {ia2_execution_successes} IA2 successes, {rr_calculation_logs} RR logs")
+            else:
+                self.log_test_result("Backend Logs Analysis", False, 
+                                   f"Logs show issues: {technical_indicator_errors} tech errors, {ia2_execution_errors} IA2 errors, {rr_calculation_logs} RR logs")
+                
+        except Exception as e:
+            self.log_test_result("Backend Logs Analysis", False, f"Exception: {str(e)}")
+    
+    async def run_comprehensive_tests(self):
+        """Run all IA2 RR calculation fix tests"""
+        logger.info("🚀 Starting IA2 RR Calculation Fix Comprehensive Test Suite")
+        logger.info("=" * 80)
+        logger.info("📋 IA2 RR CALCULATION FIX COMPREHENSIVE TESTING")
+        logger.info("🎯 Testing: Technical indicators fix, IA2 completion, RR formula, calculation accuracy, session ID, end-to-end pipeline")
+        logger.info("🎯 Expected: IA2 working with calculated_rr and rr_reasoning fields using simple S/R formula")
+        logger.info("=" * 80)
+        
+        # Run all tests in sequence
+        await self.test_1_session_id_verification()
+        await self.test_2_technical_indicators_access_fix()
+        await self.test_3_ia2_decision_completion()
+        await self.test_4_simple_rr_formula_implementation()
+        await self.test_5_rr_calculation_accuracy()
+        await self.test_6_end_to_end_validation()
+        await self.test_7_backend_logs_analysis()
+        
+        # Summary
+        logger.info("\n" + "=" * 80)
+        logger.info("📊 IA2 RR CALCULATION FIX TEST SUMMARY")
+        logger.info("=" * 80)
+        
+        passed_tests = sum(1 for result in self.test_results if result['success'])
+        total_tests = len(self.test_results)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            logger.info(f"{status}: {result['test']}")
+            if result['details']:
+                logger.info(f"   {result['details']}")
+                
+        logger.info(f"\n🎯 OVERALL RESULT: {passed_tests}/{total_tests} tests passed")
+        
+        # Final verdict based on review requirements
+        logger.info("\n" + "=" * 80)
+        logger.info("📋 REVIEW REQUIREMENTS VERIFICATION")
+        logger.info("=" * 80)
+        
+        requirements_status = {}
+        
+        for result in self.test_results:
+            if "Session ID" in result['test']:
+                requirements_status['session_id'] = result['success']
+            elif "Technical Indicators" in result['test']:
+                requirements_status['technical_indicators'] = result['success']
+            elif "Decision Completion" in result['test']:
+                requirements_status['ia2_completion'] = result['success']
+            elif "Simple RR Formula" in result['test']:
+                requirements_status['rr_fields'] = result['success']
+            elif "RR Calculation Accuracy" in result['test']:
+                requirements_status['rr_accuracy'] = result['success']
+            elif "End-to-End" in result['test']:
+                requirements_status['end_to_end'] = result['success']
+        
+        logger.info("📝 SUCCESS CRITERIA VERIFICATION:")
+        
+        criteria_met = []
+        criteria_failed = []
+        
+        if requirements_status.get('session_id', False):
+            criteria_met.append("✅ Session ID 'ia2_claude_simplified_rr_v2' working")
+        else:
+            criteria_failed.append("❌ Session ID verification failed")
+        
+        if requirements_status.get('technical_indicators', False):
+            criteria_met.append("✅ No 'string indices' errors in backend logs")
+        else:
+            criteria_failed.append("❌ Technical indicators access errors present")
+        
+        if requirements_status.get('ia2_completion', False):
+            criteria_met.append("✅ IA2 decisions successfully created and stored")
+        else:
+            criteria_failed.append("❌ IA2 decision creation failing")
+        
+        if requirements_status.get('rr_fields', False):
+            criteria_met.append("✅ 'calculated_rr' and 'rr_reasoning' fields populated")
+        else:
+            criteria_failed.append("❌ RR calculation fields missing")
+        
+        if requirements_status.get('rr_accuracy', False):
+            criteria_met.append("✅ Simple RR formula consistently applied")
+        else:
+            criteria_failed.append("❌ RR calculation accuracy issues")
+        
+        if requirements_status.get('end_to_end', False):
+            criteria_met.append("✅ Full IA1 → IA2 pipeline with working RR calculations")
+        else:
+            criteria_failed.append("❌ End-to-end pipeline issues")
+        
+        for criterion in criteria_met:
+            logger.info(f"   {criterion}")
+        
+        for criterion in criteria_failed:
+            logger.info(f"   {criterion}")
+        
+        # Final verdict
+        success_rate = len(criteria_met) / (len(criteria_met) + len(criteria_failed))
+        
+        logger.info(f"\n🏆 FINAL RESULT: {len(criteria_met)}/{len(criteria_met) + len(criteria_failed)} success criteria met ({success_rate:.1%})")
+        
+        if len(criteria_failed) == 0:
+            logger.info("\n🎉 VERDICT: IA2 RR CALCULATION FIX IS FULLY WORKING!")
+            logger.info("✅ All review requirements satisfied")
+            logger.info("✅ Technical indicators access fixed")
+            logger.info("✅ IA2 decision completion working")
+            logger.info("✅ Simple RR formula implemented with calculated_rr and rr_reasoning fields")
+            logger.info("✅ RR calculation accuracy validated")
+            logger.info("✅ End-to-end pipeline operational")
+        elif len(criteria_failed) <= 1:
+            logger.info("\n⚠️ VERDICT: IA2 RR CALCULATION FIX IS MOSTLY WORKING")
+            logger.info("🔍 Minor issues may need attention for complete functionality")
+        elif len(criteria_failed) <= 3:
+            logger.info("\n⚠️ VERDICT: IA2 RR CALCULATION FIX IS PARTIALLY WORKING")
+            logger.info("🔧 Several components need implementation or debugging")
+        else:
+            logger.info("\n❌ VERDICT: IA2 RR CALCULATION FIX IS NOT WORKING")
+            logger.info("🚨 Major implementation gaps preventing IA2 RR calculation functionality")
+        
+        # Close database connection
+        if self.mongo_client:
+            self.mongo_client.close()
+        
+        return passed_tests, total_tests
+
+async def main():
+    """Main test execution"""
+    test_suite = IA2RRCalculationTestSuite()
+    passed, total = await test_suite.run_comprehensive_tests()
+    
+    # Exit with appropriate code
+    if passed == total:
+        sys.exit(0)  # All tests passed
+    else:
+        sys.exit(1)  # Some tests failed
+
+if __name__ == "__main__":
+    asyncio.run(main())
+"""
 IA2 RR Calculation Fix Testing Suite
 Focus: Test IA2 RR calculation fix after resolving CPU issues
 
