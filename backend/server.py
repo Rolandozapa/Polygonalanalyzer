@@ -11298,8 +11298,8 @@ async def ultra_professional_trading_loop():
     
     while orchestrator.is_running:
         try:
-            # 🚨 CIRCUIT BREAKER - Vérifier CPU avant démarrage du cycle (import optimized)
-            cpu_usage = psutil.cpu_percent(interval=1)
+            # 🚨 CIRCUIT BREAKER - Vérifier CPU avant démarrage du cycle (non-blocking CPU check)
+            cpu_usage = psutil.cpu_percent()  # Non-blocking version - CPU optimized
             if cpu_usage > 80.0:
                 logger.warning(f"🚨 HIGH CPU DETECTED ({cpu_usage:.1f}%) - Skipping cycle to prevent overload")
                 await asyncio.sleep(300)  # Wait 5 minutes
