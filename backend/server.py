@@ -11410,10 +11410,9 @@ async def startup_event():
         # 🔧 ORCHESTRATOR INIT AVEC PROTECTIONS CPU
         logger.info("🚀 Initializing orchestrator with CPU protections...")
         
-        # Vérifier CPU avant initialisation
+        # Vérifier CPU avant initialisation (non-blocking CPU check)
         try:
-            import psutil
-            cpu_usage = psutil.cpu_percent(interval=1)
+            cpu_usage = psutil.cpu_percent()  # Non-blocking version - CPU optimized
             if cpu_usage > 50.0:
                 logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Skipping orchestrator init")
                 return
