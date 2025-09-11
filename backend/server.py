@@ -2268,6 +2268,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
             )
             
+            # 🌍 RÉCUPÉRATION DU MARKET CAP 24H POUR BONUS/MALUS
+            market_cap_change_24h = 0.0
+            try:
+                global_market_data = await global_crypto_market_analyzer.get_global_market_data()
+                if global_market_data:
+                    market_cap_change_24h = global_market_data.market_cap_change_24h
+                    logger.info(f"🌍 Global Market Cap 24h: {market_cap_change_24h:+.2f}%")
+                else:
+                    logger.warning("⚠️ No global market data available for Market Cap 24h bonus/malus")
+            except Exception as e:
+                logger.warning(f"Error getting Market Cap 24h for bonus/malus: {e}")
+            
             # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL IA1
             # Appliquer bonus/malus de marché et token-spécifiques au score IA1
             logger.info(f"🎯 APPLYING PROFESSIONAL SCORING TO IA1 {opportunity.symbol}")
@@ -2279,7 +2291,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 'fg': 50,  # Fear & Greed placeholder (à connecter si disponible)
                 'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap else 0.05,  # Ratio vol/cap
                 'rsi_extreme': max(0, rsi - 70) if rsi > 70 else max(0, 30 - rsi) if rsi < 30 else 0,  # RSI extremes
-                'volatility': opportunity.volatility or 0.05  # Volatilité générale
+                'volatility': opportunity.volatility or 0.05,  # Volatilité générale
+                'mcap_24h': market_cap_change_24h  # 🚨 NOUVELLE VARIABLE CRITIQUE: Market Cap 24h pour bonus/malus
             }
             
             # Définir les fonctions de normalisation pour IA1
