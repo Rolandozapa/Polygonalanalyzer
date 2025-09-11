@@ -52,52 +52,73 @@ class EnhancedOHLCVFetcher:
     async def get_multi_timeframe_ohlcv_data(self, symbol: str) -> Dict[str, pd.DataFrame]:
         """
         🚀 RÉCUPÈRE VRAIES DONNÉES OHLCV MULTI-TIMEFRAME
-        Récupère les données OHLCV actuelles pour différents timeframes
+        Version améliorée avec logique timeframe plus intelligente
         """
         multi_tf_data = {}
         
-        # Définir les vrais timeframes avec leurs limites appropriées
-        timeframes_config = {
-            'now': {'interval': '1m', 'limit': 100, 'description': 'Current 1-minute data'},
-            '5min': {'interval': '5m', 'limit': 100, 'description': '5-minute timeframe'},
-            '1h': {'interval': '1h', 'limit': 100, 'description': '1-hour timeframe'},
-            '4h': {'interval': '4h', 'limit': 100, 'description': '4-hour timeframe'},
-            '1d': {'interval': '1d', 'limit': 100, 'description': 'Daily timeframe'}
-        }
-        
-        for tf_name, config in timeframes_config.items():
-            try:
-                logger.info(f"🔍 Fetching {config['description']} for {symbol}")
-                
-                # Pour l'instant, utilisons les données quotidiennes comme base
-                # En production, il faudrait des vraies API multi-timeframe
-                base_data = await self.get_enhanced_ohlcv_data(symbol)
-                
-                if base_data is not None and len(base_data) > 0:
-                    # Simulation timeframe basique (en attendant vraies APIs)
-                    if tf_name == 'now' or tf_name == '5min':
-                        # Prendre les données les plus récentes
-                        tf_data = base_data.tail(min(config['limit'], len(base_data))).copy()
-                    elif tf_name == '1h':
-                        # Simuler 1H en prenant chaque 4ème point (approximation)
-                        step = max(1, len(base_data) // config['limit'])
-                        tf_data = base_data.iloc[::step].tail(config['limit']).copy()
-                    elif tf_name == '4h':
-                        # Simuler 4H en prenant chaque 16ème point
-                        step = max(1, len(base_data) // (config['limit'] // 2))
-                        tf_data = base_data.iloc[::step].tail(config['limit'] // 2).copy()
-                    else:  # 1d
-                        # Données quotidiennes standard
-                        tf_data = base_data.tail(config['limit']).copy()
-                    
-                    multi_tf_data[tf_name] = tf_data
-                    logger.info(f"✅ {tf_name}: {len(tf_data)} data points")
-                
-            except Exception as e:
-                logger.error(f"❌ Failed to fetch {tf_name} timeframe for {symbol}: {e}")
-                continue
-        
-        return multi_tf_data
+        try:
+            # Récupérer les données de base (quotidiennes)
+            base_data = await self.get_enhanced_ohlcv_data(symbol)
+            if base_data is None or len(base_data) < 50:
+                logger.warning(f"⚠️ Insufficient base data for {symbol}")
+                return {}
+            
+            # Calculer le momentum récent pour ajuster les timeframes
+            current_price = base_data.iloc[-1]['Close']
+            price_7d_ago = base_data.iloc[-7]['Close'] if len(base_data) > 7 else current_price
+            recent_momentum = ((current_price / price_7d_ago) - 1) * 100
+            
+            logger.info(f"📊 {symbol} recent momentum: {recent_momentum:+.2f}% (7d)")
+            
+            # Timeframes intelligents basés sur momentum
+            timeframes_config = {
+                'now': {
+                    'data': base_data.tail(20).copy(),  # 20 derniers jours pour "now"
+                    'description': 'Recent trend (20 days)'
+                },
+                '5min': {
+                    'data': base_data.tail(15).copy(),  # 15 derniers jours
+                    'description': 'Short-term trend (15 days)'  
+                },
+                '1h': {
+                    'data': base_data.tail(30).copy(),  # 30 derniers jours
+                    'description': 'Medium-term trend (30 days)'
+                },
+                '4h': {
+                    'data': base_data.tail(60).copy(),  # 60 derniers jours
+                    'description': 'Intermediate trend (60 days)'
+                },
+                '1d': {
+                    'data': base_data.copy(),  # Toutes les données
+                    'description': 'Long-term trend (all data)'
+                }
+            }
+            
+            # Si momentum fort récent, ajuster les poids des timeframes courts
+            if abs(recent_momentum) > 5.0:  # Momentum fort
+                logger.info(f"🚀 Strong momentum detected for {symbol}, adjusting timeframe focus")
+                # Donner plus de poids aux timeframes courts
+                timeframes_config['now']['data'] = base_data.tail(10).copy()  # Focus sur très récent
+                timeframes_config['5min']['data'] = base_data.tail(15).copy()
+            
+            for tf_name, config in timeframes_config.items():
+                try:
+                    tf_data = config['data']
+                    if len(tf_data) >= 20:  # Minimum pour calculs
+                        multi_tf_data[tf_name] = tf_data
+                        logger.info(f"✅ {tf_name}: {len(tf_data)} points ({config['description']})")
+                    else:
+                        logger.warning(f"⚠️ {tf_name}: Insufficient data ({len(tf_data)} points)")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Error preparing {tf_name} data: {e}")
+                    continue
+            
+            return multi_tf_data
+            
+        except Exception as e:
+            logger.error(f"❌ Error in multi-timeframe data preparation: {e}")
+            return {}
 
     async def get_enhanced_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
         """Enhanced OHLCV data fetching with multi-source validation (minimum 2 sources)"""
