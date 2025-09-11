@@ -262,7 +262,7 @@ class IA2RRCalculationTestSuite:
         logger.info("\n🔍 TEST 4: Simple RR Formula Implementation Test")
         
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test_result("Simple RR Formula Implementation", False, 
                                    "Database connection not available")
                 return
