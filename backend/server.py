@@ -3959,9 +3959,14 @@ The scientific indicators below provide mathematical precision - you add context
             else:
                 logger.info(f"✅ RR VALIDATION {opportunity.symbol}: IA1 RR {ia1_rr:.2f} ↔ Composite RR {composite_rr_data['composite_rr']:.2f} ({rr_validation_status})")
             
+            # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO POUR IA2
+            global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
+            
             # Create comprehensive prompt for Claude with market sentiment and leverage logic
             prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
+
+{global_market_context}
 
 Symbol: {opportunity.symbol}
 Current Price: ${opportunity.current_price:.6f}
