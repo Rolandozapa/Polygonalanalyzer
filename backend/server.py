@@ -11353,8 +11353,8 @@ async def websocket_endpoint(websocket: WebSocket):
         # Keep connection alive and send updates
         while True:
             try:
-                # Send periodic updates every 30 seconds
-                await asyncio.sleep(30)
+                # Send periodic updates every 60 seconds (CPU optimized - reduced from 30s)
+                await asyncio.sleep(60)
                 
                 # Get current system status
                 opportunities_count = await db.market_opportunities.count_documents({})
