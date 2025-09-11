@@ -7200,7 +7200,7 @@ class UltraProfessionalTradingOrchestrator:
                 return True
                 
             else:
-                # Aucune des deux voies satisfaite
+                # Aucune des trois voies satisfaite
                 reasons = []
                 if not strong_signal_with_confidence:
                     if ia1_signal == 'hold':
@@ -7211,7 +7211,11 @@ class UltraProfessionalTradingOrchestrator:
                 if not excellent_rr:
                     reasons.append(f"RR {risk_reward_ratio:.2f}:1 < 2.0")
                 
-                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Aucune voie satisfaite | {' ET '.join(reasons)}")
+                if not exceptional_technical_sentiment:
+                    if ia1_signal != 'hold':
+                        reasons.append(f"Sentiment technique {confidence:.1%} < 95% (pas d'override)")
+                
+                logger.info(f"🛑 IA2 SKIP - {analysis.symbol}: Aucune des 3 voies satisfaite | {' ET '.join(reasons)}")
                 return False
             
         except Exception as e:
