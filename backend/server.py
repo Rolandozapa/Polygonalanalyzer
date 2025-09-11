@@ -2302,17 +2302,19 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 'fg': lambda x: ((50.0 - x) / 50.0) * -1.0,  # Approche contrarian F&G
                 'volcap': lambda x: self.tanh_norm((x - 0.02) * 25, s=5),  # Optimal vers 0.02
                 'rsi_extreme': lambda x: self.tanh_norm(x / 20, s=1),  # Récompenser RSI extremes pour reversals
-                'volatility': lambda x: -self.tanh_norm((x - 0.08) * 10, s=2)  # Pénaliser volatilité > 8%
+                'volatility': lambda x: -self.tanh_norm((x - 0.08) * 10, s=2),  # Pénaliser volatilité > 8%
+                'mcap_24h': lambda x: self._calculate_mcap_bonus_malus(x, ia1_signal)  # 🚨 BONUS/MALUS Market Cap 24h
             }
             
             # Poids des facteurs pour IA1 (total = 1.0)
             weights = {
-                'var_cap': 0.25,      # 25% - Volatilité prix très important pour IA1
-                'var_vol': 0.20,      # 20% - Volume change crucial
-                'fg': 0.05,           # 5% - Sentiment moins important pour technique
-                'volcap': 0.20,       # 20% - Liquidité critique pour technique
-                'rsi_extreme': 0.15,  # 15% - RSI extremes pour signaux retournement
-                'volatility': 0.15    # 15% - Volatilité générale
+                'var_cap': 0.22,       # 22% - Volatilité prix très important pour IA1
+                'var_vol': 0.18,       # 18% - Volume change crucial
+                'fg': 0.05,            # 5% - Sentiment moins important pour technique
+                'volcap': 0.18,        # 18% - Liquidité critique pour technique
+                'rsi_extreme': 0.15,   # 15% - RSI extremes pour signaux retournement
+                'volatility': 0.12,    # 12% - Volatilité générale
+                'mcap_24h': 0.10       # 🚨 10% - MARKET CAP 24H BONUS/MALUS (crucial pour timing)
             }
             
             # Calculer le multiplicateur market cap
