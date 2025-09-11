@@ -8296,6 +8296,44 @@ async def run_backtest(request: Dict[str, Any]):
         logger.error(f"Backtest error: {e}")
         raise HTTPException(status_code=500, detail=f"Backtest failed: {str(e)}")
 
+@api_router.get("/scout-status")
+async def get_scout_status():
+    """Get scout system status and cycle information"""
+    try:
+        return {
+            "scout_running": orchestrator.is_running if orchestrator else False,
+            "cycle_count": orchestrator.cycle_count if orchestrator else 0,
+            "last_cycle": orchestrator.last_cycle_time.isoformat() if orchestrator and hasattr(orchestrator, 'last_cycle_time') else None,
+            "trending_symbols": orchestrator.scout.trending_symbols if orchestrator and hasattr(orchestrator, 'scout') else [],
+            "next_cycle": "Every 4 hours",
+            "system_initialized": orchestrator._initialized if orchestrator else False
+        }
+    except Exception as e:
+        return {"error": str(e), "scout_running": False}
+
+@api_router.post("/start-scout")
+async def start_scout_cycle():
+    """Force start the trading scout cycle"""
+    try:
+        if not orchestrator:
+            return {"success": False, "error": "Orchestrator not initialized"}
+        
+        logger.info("🚀 MANUALLY STARTING SCOUT CYCLE")
+        
+        # Initialize if needed
+        if not orchestrator._initialized:
+            await orchestrator.initialize()
+        
+        # Start the trading system
+        result = await orchestrator.start()
+        
+        logger.info(f"✅ Scout cycle start result: {result}")
+        return {"success": True, "message": "Scout cycle started", "result": result}
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to start scout cycle: {e}")
+        return {"success": False, "error": str(e)}
+
 @api_router.post("/force-ia1-analysis")
 async def force_ia1_analysis(request: dict):
     """Force IA1 analysis for a specific symbol (bypass pattern filters)"""
