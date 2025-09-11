@@ -7181,6 +7181,8 @@ class UltraProfessionalTradingOrchestrator:
             excellent_rr = risk_reward_ratio >= 2.0
             
             # 🚀 VOIE 3: OVERRIDE - Sentiment technique exceptionnel >95% (NOUVEAU)
+            # Cette voie permet de bypasser les critères standard quand le sentiment technique est exceptionnel
+            # Cas d'usage: ARKMUSDT avec sentiment LONG excellent mais RR faible à cause de niveaux S/R serrés
             exceptional_technical_sentiment = (
                 ia1_signal in ['long', 'short'] and 
                 confidence >= 0.95  # Sentiment technique exceptionnel
