@@ -343,30 +343,35 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **REDUCE** position size when trading against moderate regimes (buy regime + short signal)
 - **MAXIMUM** position size when trading WITH strong regimes
 
-**IA2 RISK-REWARD CALCULATION INSTRUCTIONS**:
-Based on your technical analysis of the market data, you must calculate the Risk-Reward ratio using these EXACT formulas WITH EMA/SMA DYNAMIC LEVELS:
+🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS WITH REALISTIC LEVELS**:
+Based on your technical analysis and MARKET VOLATILITY, you must calculate realistic Risk-Reward ratios using these EXACT formulas:
+
+**FIRST - ASSESS MARKET VOLATILITY:**
+- **LOW VOLATILITY** assets (<2% daily): TP targets 2-4%, SL 1-2%
+- **MEDIUM VOLATILITY** assets (2-6% daily): TP targets 4-8%, SL 2-4% 
+- **HIGH VOLATILITY** assets (>6% daily): TP targets 8-15%, SL 4-8%
 
 **IF YOUR SIGNAL IS LONG:**
-- Identify your Support level (for Stop Loss) - PREFER EMA21 or SMA50 support over static levels
-- Identify your Resistance level (for Take Profit) - CONSIDER EMA200 or key EMA confluence levels
+- Identify REALISTIC Support level (for Stop Loss) - PREFER EMA21 or VWAP support, but ensure it's AT LEAST 2-4% away
+- Identify REALISTIC Resistance level (for Take Profit) - PREFER next major EMA/SMA level, but ensure it's AT LEAST 3-8% away based on volatility
 - Calculate: RR = (Resistance - Current_Price) / (Current_Price - Support)
 
 **IF YOUR SIGNAL IS SHORT:**
-- Identify your Support level (for Take Profit) - PREFER EMA21 or SMA50 support over static levels
-- Identify your Resistance level (for Stop Loss) - CONSIDER EMA200 or key EMA confluence levels
+- Identify REALISTIC Support level (for Take Profit) - AT LEAST 3-8% away based on volatility
+- Identify REALISTIC Resistance level (for Stop Loss) - AT LEAST 2-4% away
 - Calculate: RR = (Current_Price - Support) / (Resistance - Current_Price)
 
-**EMA/SMA ENHANCED S/R SELECTION PRIORITY**:
-1. **EMA9**: Ultra-fast S/R for scalping entries
-2. **EMA21**: Primary S/R for swing trades
-3. **SMA50**: Institutional level - HIGHEST PRIORITY for major S/R
-4. **EMA200**: Major trend S/R - Ultimate support/resistance
+**🚨 REALISTIC LEVEL REQUIREMENTS:**
+- **NEVER** use levels closer than daily volatility
+- **ALWAYS** ensure TP is at least 1.5x daily volatility away
+- **ALWAYS** ensure SL is at least 0.5x daily volatility away
+- **ACCOUNT FOR LEVERAGE**: With 3-5x leverage, levels must be proportionally wider
 
 **EXECUTE THE CALCULATION INTERNALLY** and return the result in your JSON response.
 
-**MANDATORY JSON FIELDS - YOUR ANALYSIS WILL BE REJECTED IF MISSING:**
-- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // The RR ratio you calculated using the formulas above
-- "rr_reasoning": "Support at X (EMA21), Resistance at Y (SMA50), using [LONG/SHORT] formula"  // Brief explanation of your calculation
+🚨 **MANDATORY JSON FIELDS WITH REALISTIC CALCULATIONS:**
+- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // Must be >0.8 and based on realistic levels
+- "rr_reasoning": "Support at X (distance Y%), Resistance at Z (distance W%), using [LONG/SHORT] formula, considering daily volatility V%"
 
 **6-INDICATOR CONFLUENCE VALIDATION FOR IA2**:
 You must validate IA1's confluence matrix before executing:
