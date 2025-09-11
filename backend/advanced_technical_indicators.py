@@ -1398,7 +1398,23 @@ class AdvancedTechnicalIndicators:
             regime_score -= 0.15
             regime_factors.append("Price below all EMAs (institutional resistance)")
         
-        # === 4. TREND STRENGTH MULTIPLIER ===
+        # === 4. RECENT MOMENTUM OVERRIDE ===
+        # Strong recent performance can override neutral EMA positioning
+        # This captures emerging trends not yet reflected in slower EMAs
+        if hasattr(indicators, 'recent_momentum'):
+            recent_performance = getattr(indicators, 'recent_momentum', 0)
+        else:
+            # Calculate recent momentum as proxy (price vs EMA9 + EMA21)
+            if indicators.ema_9 > 0 and indicators.ema_21 > 0:
+                price_vs_fast_emas = (current_price / ((indicators.ema_9 + indicators.ema_21) / 2) - 1) * 100
+                if price_vs_fast_emas > 3.0:  # More than 3% above fast EMAs
+                    regime_score += 0.15
+                    regime_factors.append(f"Strong recent momentum (+{price_vs_fast_emas:.1f}% vs fast EMAs)")
+                elif price_vs_fast_emas < -3.0:
+                    regime_score -= 0.15
+                    regime_factors.append(f"Weak recent momentum ({price_vs_fast_emas:.1f}% vs fast EMAs)")
+        
+        # === 5. TREND STRENGTH MULTIPLIER ===
         strength_multiplier = indicators.trend_strength_score
         regime_score = 0.5 + (regime_score - 0.5) * strength_multiplier
         
