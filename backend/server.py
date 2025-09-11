@@ -494,8 +494,8 @@ DECISION OUTPUT FORMAT (JSON):
     "reasoning": "GODLIKE 6/6 confluence: Perfect EMA hierarchy (Price > EMA9 > EMA21 > SMA50 > EMA200) + Golden Cross momentum + MFI accumulation (18) + VWAP precision entry (-2.1%) + RSI oversold recovery (32) + multi-timeframe alignment. The EMA hierarchy shows 94% trend strength with accelerating momentum. This is a textbook institutional accumulation setup with perfect technical structure.",
     "risk_level": "LOW",
     "strategy_type": "PROBABILISTIC_OPTIMAL_ENHANCED", 
-    "calculated_rr": 2.40,
-    "rr_reasoning": "Support at 1.2350 (EMA21), Resistance at 1.3200 (SMA50), using LONG formula: (1.3200-1.2600)/(1.2600-1.2350) = 2.40",
+    "calculated_rr": 3.20,
+    "rr_reasoning": "Using INTELLIGENT system: Final optimized RR 3.20:1 selected via micro_excellent_rr_high_confidence. Micro RR (5m): 3.20:1 using micro S/R 1.2350/1.3200, confidence 0.92. Intraday: 2.85:1, Daily: 2.40:1. Source: binance high-frequency data.",
     "technical_indicators_analysis": {
         "ema_hierarchy_analysis": {
             "trend_direction": "strong_bull",
