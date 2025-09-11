@@ -96,8 +96,8 @@ class IA2RRAnalysisReport:
         
         # Get recent IA2 decisions with all relevant fields
         query = '''db.trading_decisions.find({
-            ia2_reasoning: {$exists: true},
-            timestamp: {$gte: ISODate("2025-09-10T00:00:00.000Z")}
+            ia2_reasoning: {\\$exists: true},
+            timestamp: {\\$gte: ISODate("2025-09-10T00:00:00.000Z")}
         }, {
             symbol: 1,
             signal: 1,
