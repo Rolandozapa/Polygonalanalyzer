@@ -3802,13 +3802,24 @@ class UltraProfessionalIA2DecisionAgent:
             historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
             
             if historical_data is not None and len(historical_data) > 50:
-                # Calculate multi-timeframe indicators for IA2 intelligence
-                opportunity_df = pd.DataFrame(historical_data)
+                # Calculate REAL multi-timeframe indicators for IA2 intelligence
                 from advanced_technical_indicators import advanced_technical_indicators
-                multi_tf_indicators = advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
-                multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+                
+                logger.info(f"🚀 IA2: Fetching REAL multi-timeframe data for {opportunity.symbol}")
+                multi_tf_indicators = await advanced_technical_indicators.get_multi_timeframe_indicators_real(opportunity.symbol)
+                
+                if multi_tf_indicators:
+                    multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+                    logger.info(f"✅ IA2: Real multi-timeframe data loaded for {opportunity.symbol}")
+                else:
+                    # Fallback to old method if needed
+                    logger.warning(f"⚠️ IA2: Using fallback multi-timeframe for {opportunity.symbol}")
+                    opportunity_df = pd.DataFrame(historical_data)
+                    multi_tf_indicators = advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
+                    multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
                 
                 # Get current indicators too
+                opportunity_df = pd.DataFrame(historical_data)
                 current_indicators = advanced_technical_indicators.get_latest_indicators(
                     advanced_technical_indicators.calculate_all_indicators(opportunity_df)
                 )
