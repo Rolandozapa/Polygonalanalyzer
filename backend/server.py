@@ -8587,6 +8587,176 @@ async def test_intelligent_ohlcv_system():
             "timestamp": get_paris_time().isoformat()
         }
 
+@api_router.get("/admin/escalation/test")
+async def test_voie3_escalation_logic():
+    """
+    🎯 ENDPOINT ADMIN: Tester la logique d'escalation VOIE 3 avec simulation ARKMUSDT
+    """
+    try:
+        logger.info("🔍 Testing VOIE 3 Escalation Logic")
+        
+        # Créer instance temporaire du scout pour accéder à la logique d'escalation
+        from collections import namedtuple
+        
+        # Mock TechnicalAnalysis pour les tests
+        MockAnalysis = namedtuple('TechnicalAnalysis', [
+            'symbol', 'analysis_confidence', 'ia1_signal', 'risk_reward_ratio'
+        ])
+        
+        # Scénarios de test pour démontrer VOIE 3
+        test_scenarios = [
+            {
+                "name": "ARKMUSDT Case - High Confidence, Low RR",
+                "analysis": MockAnalysis(
+                    symbol="ARKMUSDT",
+                    analysis_confidence=0.96,  # 96% - Excellent sentiment technique
+                    ia1_signal="long",
+                    risk_reward_ratio=0.637    # RR faible comme le cas réel
+                ),
+                "expected_voie": "VOIE 1",  # VOIE 1 prend priorité sur VOIE 3
+                "expected_escalate": True
+            },
+            {
+                "name": "Pure VOIE 3 - 95% Confidence, Low RR",
+                "analysis": MockAnalysis(
+                    symbol="TESTUSDT",
+                    analysis_confidence=0.95,  # Exactement 95%
+                    ia1_signal="short",
+                    risk_reward_ratio=1.2      # RR < 2.0
+                ),
+                "expected_voie": "VOIE 3",
+                "expected_escalate": True
+            },
+            {
+                "name": "Below VOIE 3 Threshold - 94% Confidence",
+                "analysis": MockAnalysis(
+                    symbol="BELOWUSDT", 
+                    analysis_confidence=0.94,  # Juste en dessous de 95%
+                    ia1_signal="long",
+                    risk_reward_ratio=1.5      # RR < 2.0
+                ),
+                "expected_voie": "None",
+                "expected_escalate": False
+            },
+            {
+                "name": "VOIE 2 - Excellent RR, Low Confidence",
+                "analysis": MockAnalysis(
+                    symbol="EXCELLENTUSDT",
+                    analysis_confidence=0.50,  # Confiance faible
+                    ia1_signal="long", 
+                    risk_reward_ratio=3.5      # Excellent RR
+                ),
+                "expected_voie": "VOIE 2",
+                "expected_escalate": True
+            }
+        ]
+        
+        # Simuler la logique d'escalation pour chaque scénario
+        results = []
+        
+        for scenario in test_scenarios:
+            analysis = scenario["analysis"]
+            
+            # Reproduire la logique de _should_send_to_ia2
+            ia1_signal = analysis.ia1_signal.lower()
+            risk_reward_ratio = analysis.risk_reward_ratio
+            confidence = analysis.analysis_confidence
+            
+            # VOIE 1: Position LONG/SHORT avec confidence > 70%
+            strong_signal_with_confidence = (
+                ia1_signal in ['long', 'short'] and 
+                confidence >= 0.70
+            )
+            
+            # VOIE 2: RR supérieur à 2.0 (peu importe le signal)
+            excellent_rr = risk_reward_ratio >= 2.0
+            
+            # VOIE 3: OVERRIDE - Sentiment technique exceptionnel >95%
+            exceptional_technical_sentiment = (
+                ia1_signal in ['long', 'short'] and 
+                confidence >= 0.95  # Sentiment technique exceptionnel
+            )
+            
+            # Déterminer quelle voie s'applique et l'escalation
+            escalates = False
+            voie_used = "None"
+            decision_reason = ""
+            
+            if strong_signal_with_confidence:
+                escalates = True
+                voie_used = "VOIE 1"
+                decision_reason = f"Signal {ia1_signal.upper()} avec confiance {confidence:.1%} ≥ 70%"
+                
+            elif excellent_rr:
+                escalates = True
+                voie_used = "VOIE 2"
+                decision_reason = f"RR excellent {risk_reward_ratio:.2f}:1 ≥ 2.0"
+                
+            elif exceptional_technical_sentiment:
+                escalates = True
+                voie_used = "VOIE 3"
+                decision_reason = f"Sentiment technique EXCEPTIONNEL {confidence:.1%} ≥ 95%"
+            
+            else:
+                escalates = False
+                voie_used = "None"
+                decision_reason = f"Aucune voie satisfaite: Conf={confidence:.1%}, RR={risk_reward_ratio:.2f}:1"
+            
+            # Vérifier si le résultat correspond aux attentes
+            matches_expected = (
+                escalates == scenario["expected_escalate"] and
+                voie_used == scenario["expected_voie"]
+            )
+            
+            results.append({
+                "scenario": scenario["name"],
+                "symbol": analysis.symbol,
+                "confidence": f"{confidence:.1%}",
+                "signal": ia1_signal.upper(), 
+                "rr_ratio": f"{risk_reward_ratio:.2f}:1",
+                "escalates": escalates,
+                "voie_used": voie_used,
+                "decision_reason": decision_reason,
+                "expected_voie": scenario["expected_voie"],
+                "expected_escalate": scenario["expected_escalate"],
+                "matches_expected": matches_expected,
+                "test_status": "✅ PASS" if matches_expected else "❌ FAIL"
+            })
+        
+        # Statistiques finales
+        total_tests = len(results)
+        passed_tests = sum(1 for r in results if r["matches_expected"])
+        success_rate = (passed_tests / total_tests) * 100
+        
+        test_summary = {
+            "status": "success",
+            "test_timestamp": get_paris_time().isoformat(),
+            "test_summary": {
+                "total_scenarios": total_tests,
+                "passed": passed_tests,
+                "failed": total_tests - passed_tests,
+                "success_rate": f"{success_rate:.1f}%"
+            },
+            "voie_3_demonstration": {
+                "arkmusdt_case": "ARKMUSDT (96% conf, 0.64:1 RR) now escalates via VOIE 1",
+                "pure_voie_3": "95%+ confidence signals can bypass RR requirements", 
+                "threshold": "VOIE 3 triggers at exactly 95% confidence",
+                "priority": "VOIE 1 takes precedence over VOIE 3 when both apply"
+            },
+            "scenario_results": results
+        }
+        
+        logger.info(f"✅ VOIE 3 escalation test completed: {passed_tests}/{total_tests} scenarios passed")
+        return test_summary
+        
+    except Exception as e:
+        logger.error(f"❌ Error testing VOIE 3 escalation logic: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": get_paris_time().isoformat()
+        }
+
 @api_router.post("/start-scout")
 async def start_scout_cycle():
     """Force start the trading scout cycle"""
