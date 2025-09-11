@@ -343,35 +343,26 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **REDUCE** position size when trading against moderate regimes (buy regime + short signal)
 - **MAXIMUM** position size when trading WITH strong regimes
 
-🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS WITH REALISTIC LEVELS**:
-Based on your technical analysis and MARKET VOLATILITY, you must calculate realistic Risk-Reward ratios using these EXACT formulas:
-
-**FIRST - ASSESS MARKET VOLATILITY:**
-- **LOW VOLATILITY** assets (<2% daily): TP targets 2-4%, SL 1-2%
-- **MEDIUM VOLATILITY** assets (2-6% daily): TP targets 4-8%, SL 2-4% 
-- **HIGH VOLATILITY** assets (>6% daily): TP targets 8-15%, SL 4-8%
+🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS - SIMPLE SUPPORT/RESISTANCE FORMULA**:
+Use the same simple RR calculation as IA1 based on support and resistance levels:
 
 **IF YOUR SIGNAL IS LONG:**
-- Identify REALISTIC Support level (for Stop Loss) - PREFER EMA21 or VWAP support, but ensure it's AT LEAST 2-4% away
-- Identify REALISTIC Resistance level (for Take Profit) - PREFER next major EMA/SMA level, but ensure it's AT LEAST 3-8% away based on volatility
-- Calculate: RR = (Resistance - Current_Price) / (Current_Price - Support)
+- Identify Support level for Stop Loss (from technical analysis)  
+- Identify Resistance level for Take Profit (from technical analysis)
+- Calculate: RR = (Take_Profit_Price - Current_Price) / (Current_Price - Stop_Loss_Price)
+- Formula: RR = Reward / Risk = (TP - Entry) / (Entry - SL)
 
 **IF YOUR SIGNAL IS SHORT:**
-- Identify REALISTIC Support level (for Take Profit) - AT LEAST 3-8% away based on volatility
-- Identify REALISTIC Resistance level (for Stop Loss) - AT LEAST 2-4% away
-- Calculate: RR = (Current_Price - Support) / (Resistance - Current_Price)
-
-**🚨 REALISTIC LEVEL REQUIREMENTS:**
-- **NEVER** use levels closer than daily volatility
-- **ALWAYS** ensure TP is at least 1.5x daily volatility away
-- **ALWAYS** ensure SL is at least 0.5x daily volatility away
-- **ACCOUNT FOR LEVERAGE**: With 3-5x leverage, levels must be proportionally wider
+- Identify Resistance level for Stop Loss (from technical analysis)
+- Identify Support level for Take Profit (from technical analysis)  
+- Calculate: RR = (Current_Price - Take_Profit_Price) / (Stop_Loss_Price - Current_Price)
+- Formula: RR = Reward / Risk = (Entry - TP) / (SL - Entry)
 
 **EXECUTE THE CALCULATION INTERNALLY** and return the result in your JSON response.
 
-🚨 **MANDATORY JSON FIELDS WITH REALISTIC CALCULATIONS:**
-- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // Must be >0.8 and based on realistic levels
-- "rr_reasoning": "Support at X (distance Y%), Resistance at Z (distance W%), using [LONG/SHORT] formula, considering daily volatility V%"
+🚨 **MANDATORY JSON FIELDS:**
+- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // Simple S/R based calculation
+- "rr_reasoning": "Support at X, Resistance at Y, using [LONG/SHORT] formula: RR calculation details"
 
 **6-INDICATOR CONFLUENCE VALIDATION FOR IA2**:
 You must validate IA1's confluence matrix before executing:
