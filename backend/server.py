@@ -446,32 +446,32 @@ DECISION OUTPUT FORMAT (JSON):
         },
         "probabilistic_distribution": {
             "tp1": {
-                "percentage": 0.4,  // Distance from entry (adaptive based on EMA levels)
-                "probability": 0.85,  // Probability enhanced by EMA support confirmation
-                "allocation": 45,  // % of position to close
-                "expected_contribution": 0.153,
-                "reasoning": "High probability level at EMA9 dynamic resistance, confirmed by hierarchy"
+                "percentage": 0.8,  // Increased from 0.4 - based on 4% daily volatility minimum
+                "probability": 0.85,  // Probability enhanced by realistic level placement
+                "allocation": 40,  // % of position to close
+                "expected_contribution": 0.272,
+                "reasoning": "Realistic TP1 level based on daily volatility, EMA confluence confirmed"
             },
             "tp2": {
-                "percentage": 0.8,  // Adjusted based on EMA21 target levels
+                "percentage": 1.6,  // Increased from 0.8 - based on weekly volatility patterns
                 "probability": 0.72,
-                "allocation": 30,
-                "expected_contribution": 0.173,
-                "reasoning": "EMA21 confluence level with MACD confirmation"
+                "allocation": 35,
+                "expected_contribution": 0.403,
+                "reasoning": "EMA21 confluence level with MACD confirmation, accounts for leverage"
             },
             "tp3": {
-                "percentage": 1.4,  // Extended target using SMA50 institutional level
+                "percentage": 2.8,  // Increased from 1.4 - realistic intermediate target
                 "probability": 0.58,
                 "allocation": 20,
-                "expected_contribution": 0.162,
-                "reasoning": "SMA50 institutional resistance, major S/R level"
+                "expected_contribution": 0.325,
+                "reasoning": "SMA50 institutional resistance, realistic distance for volatility"
             },
             "tp4": {
-                "percentage": 2.2,  // Ultimate target at EMA200 major trend level
+                "percentage": 4.5,  // Increased from 2.2 - ultimate target based on volatility
                 "probability": 0.32,
                 "allocation": 5,
-                "expected_contribution": 0.035,
-                "reasoning": "EMA200 major trend resistance, low probability extreme target"
+                "expected_contribution": 0.072,
+                "reasoning": "EMA200 major trend resistance, volatility-adjusted extreme target"
             }
         },
         "optimization_metrics": {
