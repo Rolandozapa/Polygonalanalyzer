@@ -214,8 +214,8 @@ class IA2RRAnalysisReport:
         
         # Get older IA2 decisions (before the fix)
         query = '''db.trading_decisions.find({
-            ia2_reasoning: {$exists: true},
-            timestamp: {$lt: ISODate("2025-09-10T00:00:00.000Z")}
+            ia2_reasoning: {\\$exists: true},
+            timestamp: {\\$lt: ISODate("2025-09-10T00:00:00.000Z")}
         }, {
             symbol: 1,
             calculated_rr: 1,
