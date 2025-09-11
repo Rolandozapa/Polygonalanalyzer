@@ -8296,6 +8296,50 @@ async def run_backtest(request: Dict[str, Any]):
         logger.error(f"Backtest error: {e}")
         raise HTTPException(status_code=500, detail=f"Backtest failed: {str(e)}")
 
+@api_router.post("/force-ia1-analysis")
+async def force_ia1_analysis(request: dict):
+    """Force IA1 analysis for a specific symbol (bypass pattern filters)"""
+    try:
+        symbol = request.get("symbol")
+        if not symbol:
+            return {"success": False, "error": "Symbol required"}
+        
+        logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
+        
+        # Get the opportunity
+        opportunities = await orchestrator.get_all_opportunities()
+        target_opportunity = None
+        
+        for opp in opportunities:
+            if opp.symbol == symbol:
+                target_opportunity = opp
+                break
+        
+        if not target_opportunity:
+            return {"success": False, "error": f"Symbol {symbol} not found in opportunities"}
+        
+        # Force IA1 analysis (bypass pattern filter)
+        analysis = await orchestrator.ia1_analyst.make_ia1_analysis(target_opportunity, force_analysis=True)
+        
+        if analysis:
+            logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
+            return {
+                "success": True, 
+                "message": f"IA1 analysis completed for {symbol}",
+                "analysis": {
+                    "symbol": analysis.symbol,
+                    "confidence": analysis.analysis_confidence,
+                    "recommendation": analysis.ia1_signal.value,
+                    "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
+                }
+            }
+        else:
+            return {"success": False, "error": f"IA1 analysis failed for {symbol}"}
+            
+    except Exception as e:
+        logger.error(f"❌ Force IA1 analysis error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
