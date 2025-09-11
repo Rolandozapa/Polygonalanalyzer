@@ -49,6 +49,7 @@ from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 from intelligent_ohlcv_fetcher import intelligent_ohlcv_fetcher, OHLCVMetadata, HighFrequencyData, EnhancedSupportResistance, DynamicRiskReward
+from global_crypto_market_analyzer import global_crypto_market_analyzer, GlobalMarketData, MarketRegime, MarketSentiment
 from bingx_integration import bingx_manager, TradingPosition
 from advanced_trading_strategies import advanced_strategy_manager, PositionDirection
 from active_position_manager import ActivePositionManager, TradeExecutionMode
