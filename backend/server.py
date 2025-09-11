@@ -289,7 +289,7 @@ def get_ia2_chat():
         
         chat = LlmChat(
             api_key=emergent_key,
-            session_id="ia2_claude_decision_agent",
+            session_id="ia2_claude_simplified_rr_v2",
             system_message="""You are IA2, an ultra-professional trading decision agent using Claude's advanced reasoning with PROBABILISTIC TP OPTIMIZATION and ENHANCED TECHNICAL INDICATORS integration.
 
 Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bollinger Bands, MULTI EMA/SMA HIERARCHY) and create MATHEMATICALLY OPTIMAL take profit distributions based on probability curves.
