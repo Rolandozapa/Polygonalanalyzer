@@ -62,20 +62,20 @@ class IA2RRAnalysisReport:
         logger.info("🔍 ANALYZING IA2 DECISIONS OVERVIEW")
         
         # Get total IA2 decisions
-        query = 'db.trading_decisions.find({ia2_reasoning: {$exists: true}}).count()'
+        query = 'db.trading_decisions.find({ia2_reasoning: {\\$exists: true}}).count()'
         total_ia2 = self.run_mongo_query(query)
         
         # Get recent IA2 decisions (last 7 days)
         seven_days_ago = (datetime.now() - timedelta(days=7)).isoformat()
-        query = f'db.trading_decisions.find({{ia2_reasoning: {{$exists: true}}, timestamp: {{$gte: ISODate("{seven_days_ago}")}}}}).count()'
+        query = f'db.trading_decisions.find({{ia2_reasoning: {{\\$exists: true}}, timestamp: {{\\$gte: ISODate("{seven_days_ago}")}}}}).count()'
         recent_ia2 = self.run_mongo_query(query)
         
         # Get IA2 decisions with calculated_rr field
-        query = 'db.trading_decisions.find({ia2_reasoning: {$exists: true}, calculated_rr: {$exists: true}}).count()'
+        query = 'db.trading_decisions.find({ia2_reasoning: {\\$exists: true}, calculated_rr: {\\$exists: true}}).count()'
         with_calculated_rr = self.run_mongo_query(query)
         
         # Get IA2 decisions with rr_reasoning field
-        query = 'db.trading_decisions.find({ia2_reasoning: {$exists: true}, rr_reasoning: {$exists: true}}).count()'
+        query = 'db.trading_decisions.find({ia2_reasoning: {\\$exists: true}, rr_reasoning: {\\$exists: true}}).count()'
         with_rr_reasoning = self.run_mongo_query(query)
         
         self.analysis_results['overview'] = {
