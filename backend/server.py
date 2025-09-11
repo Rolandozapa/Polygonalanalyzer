@@ -11298,8 +11298,7 @@ async def ultra_professional_trading_loop():
     
     while orchestrator.is_running:
         try:
-            # 🚨 CIRCUIT BREAKER - Vérifier CPU avant démarrage du cycle
-            import psutil
+            # 🚨 CIRCUIT BREAKER - Vérifier CPU avant démarrage du cycle (import optimized)
             cpu_usage = psutil.cpu_percent(interval=1)
             if cpu_usage > 80.0:
                 logger.warning(f"🚨 HIGH CPU DETECTED ({cpu_usage:.1f}%) - Skipping cycle to prevent overload")
