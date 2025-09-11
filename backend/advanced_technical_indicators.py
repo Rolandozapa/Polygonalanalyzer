@@ -1624,6 +1624,56 @@ class AdvancedTechnicalIndicators:
         """
         return self.get_current_indicators(df)
 
+    async def get_multi_timeframe_indicators_real(self, symbol: str) -> Dict[str, TechnicalIndicators]:
+        """
+        🚀 VRAIS INDICATEURS MULTI-TIMEFRAME - DONNÉES OHLCV ACTUELLES
+        Récupère et analyse les données de DIFFÉRENTS timeframes au moment de la requête
+        """
+        multi_tf_indicators = {}
+        
+        try:
+            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+            
+            # Récupérer les vraies données multi-timeframe
+            logger.info(f"🔍 MULTI-TIMEFRAME REAL DATA: Fetching actual OHLCV for {symbol}")
+            multi_tf_data = await enhanced_ohlcv_fetcher.get_multi_timeframe_ohlcv_data(symbol)
+            
+            if not multi_tf_data:
+                logger.warning(f"⚠️ No multi-timeframe data available for {symbol}")
+                return {}
+            
+            # Calculer les indicateurs pour chaque timeframe
+            for tf_name, tf_data in multi_tf_data.items():
+                try:
+                    if len(tf_data) < 50:  # Minimum pour calculer les indicateurs
+                        logger.warning(f"⚠️ {tf_name}: Not enough data ({len(tf_data)} points)")
+                        continue
+                    
+                    # Calculer tous les indicateurs pour ce timeframe
+                    logger.info(f"🔧 Calculating indicators for {tf_name} ({len(tf_data)} points)")
+                    tf_df_with_indicators = self.calculate_all_indicators(tf_data.copy())
+                    
+                    if len(tf_df_with_indicators) > 0:
+                        # Extraire les dernières valeurs (plus récentes)
+                        tf_indicators = self.get_latest_indicators(tf_df_with_indicators)
+                        multi_tf_indicators[tf_name] = tf_indicators
+                        
+                        # Log détaillé pour debug
+                        logger.info(f"✅ {tf_name}: RSI={tf_indicators.rsi_14:.1f}, "
+                                  f"Trend={tf_indicators.trend_hierarchy}, "
+                                  f"EMA9=${tf_indicators.ema_9:.6f}")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error calculating {tf_name} indicators: {e}")
+                    continue
+            
+            logger.info(f"🎯 MULTI-TIMEFRAME REAL SUCCESS: {len(multi_tf_indicators)} timeframes calculated")
+            return multi_tf_indicators
+            
+        except Exception as e:
+            logger.error(f"❌ Error in real multi-timeframe calculation: {e}")
+            return {}
+
     def get_multi_timeframe_indicators(self, df: pd.DataFrame) -> Dict[str, TechnicalIndicators]:
         """
         🚀 RÉVOLUTION MULTI-TIMEFRAME: Calcule tous les indicateurs sur TOUS les timeframes
