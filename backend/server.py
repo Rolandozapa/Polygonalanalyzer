@@ -7165,7 +7165,7 @@ class UltraProfessionalTradingOrchestrator:
                 logger.warning(f"❌ IA2 REJECT - {analysis.symbol}: Confiance IA1 trop faible ({analysis.analysis_confidence:.2%})")
                 return False
             
-            # 🎯 NOUVELLE LOGIQUE CONDITIONNELLE: 2 voies vers IA2
+            # 🎯 NOUVELLE LOGIQUE CONDITIONNELLE: 3 voies vers IA2
             
             ia1_signal = getattr(analysis, 'ia1_signal', 'hold').lower()
             risk_reward_ratio = getattr(analysis, 'risk_reward_ratio', 1.0)
@@ -7180,13 +7180,23 @@ class UltraProfessionalTradingOrchestrator:
             # VOIE 2: RR supérieur à 2.0 (peu importe le signal)
             excellent_rr = risk_reward_ratio >= 2.0
             
-            # 📊 DÉCISION: Au moins UNE des deux voies doit être satisfaite
+            # 🚀 VOIE 3: OVERRIDE - Sentiment technique exceptionnel >95% (NOUVEAU)
+            exceptional_technical_sentiment = (
+                ia1_signal in ['long', 'short'] and 
+                confidence >= 0.95  # Sentiment technique exceptionnel
+            )
+            
+            # 📊 DÉCISION: Au moins UNE des trois voies doit être satisfaite
             if strong_signal_with_confidence:
                 logger.info(f"✅ IA2 ACCEPTED (VOIE 1) - {analysis.symbol}: Signal {ia1_signal.upper()} avec confiance {confidence:.1%} ≥ 70% | RR={risk_reward_ratio:.2f}:1")
                 return True
                 
             elif excellent_rr:
                 logger.info(f"✅ IA2 ACCEPTED (VOIE 2) - {analysis.symbol}: RR excellent {risk_reward_ratio:.2f}:1 ≥ 2.0 | Signal={ia1_signal.upper()}, Confiance={confidence:.1%}")
+                return True
+                
+            elif exceptional_technical_sentiment:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 3 - OVERRIDE) - {analysis.symbol}: Sentiment technique EXCEPTIONNEL {confidence:.1%} ≥ 95% pour signal {ia1_signal.upper()} | RR={risk_reward_ratio:.2f}:1 - BYPASS des critères standard")
                 return True
                 
             else:
