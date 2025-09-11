@@ -3770,12 +3770,13 @@ class UltraProfessionalIA2DecisionAgent:
             if historical_data is not None and len(historical_data) > 50:
                 # Calculate multi-timeframe indicators for IA2 intelligence
                 opportunity_df = pd.DataFrame(historical_data)
-                multi_tf_indicators = self.market_aggregator.advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
-                multi_tf_formatted = self.market_aggregator.advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+                from advanced_technical_indicators import advanced_technical_indicators
+                multi_tf_indicators = advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
+                multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
                 
                 # Get current indicators too
-                current_indicators = self.market_aggregator.advanced_technical_indicators.get_latest_indicators(
-                    self.market_aggregator.advanced_technical_indicators.calculate_all_indicators(opportunity_df)
+                current_indicators = advanced_technical_indicators.get_latest_indicators(
+                    advanced_technical_indicators.calculate_all_indicators(opportunity_df)
                 )
                 
                 logger.info(f"🎯 IA2 MULTI-TIMEFRAME DATA: {len(multi_tf_indicators)} timeframes available for {opportunity.symbol}")
