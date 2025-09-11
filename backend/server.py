@@ -4048,6 +4048,9 @@ The reasoning above contains detailed historical analysis including:
     if current_indicators is not None else ""
 }
 
+HIGH-FREQUENCY DATA INTEGRATION:
+{hf_data_info}
+
 🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION (MANDATORY FOR IA2):
 1. MFI (Institutional): {f"{getattr(current_indicators, 'mfi', 50):.1f} - {'ACCUMULATION' if getattr(current_indicators, 'mfi', 50) < 30 else 'DISTRIBUTION' if getattr(current_indicators, 'mfi', 50) > 70 else 'NEUTRAL'}" if current_indicators is not None else "N/A"}
 2. VWAP (Precision): {f"{getattr(current_indicators, 'vwap_position', 0):+.1f}% - {'EXTREME' if (getattr(current_indicators, 'vwap_extreme_oversold', False) or getattr(current_indicators, 'vwap_extreme_overbought', False)) else 'HIGH' if (getattr(current_indicators, 'vwap_oversold', False) or getattr(current_indicators, 'vwap_overbought', False)) else 'NEUTRAL'}" if current_indicators is not None else "N/A"}
