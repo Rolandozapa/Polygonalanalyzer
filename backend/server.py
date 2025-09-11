@@ -8443,6 +8443,134 @@ async def get_scout_status():
     except Exception as e:
         return {"error": str(e), "scout_running": False}
 
+@api_router.get("/admin/scout/status")
+async def get_scout_status():
+    """
+    🎯 ENDPOINT ADMIN: Vérifier le statut du scout automatique
+    """
+    try:
+        return {
+            "status": "success",
+            "scout_status": {
+                "is_running": orchestrator.is_running,
+                "current_cycle": orchestrator.current_cycle,
+                "last_run": orchestrator.last_run.isoformat() if orchestrator.last_run else None,
+                "next_run": orchestrator.next_run.isoformat() if orchestrator.next_run else None,
+                "processed_count": orchestrator.processed_count,
+                "error_count": orchestrator.error_count,
+                "last_error": orchestrator.last_error
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting scout status: {e}")
+        return {"status": "error", "error": str(e)}
+
+@api_router.get("/admin/ohlcv/test")
+async def test_intelligent_ohlcv_system():
+    """
+    🎯 ENDPOINT ADMIN: Tester le système OHLCV intelligent
+    """
+    try:
+        logger.info("🔍 Testing Intelligent OHLCV System")
+        
+        # Test avec un symbole populaire
+        test_symbol = "BTCUSDT"
+        
+        # 1. Simuler métadonnées IA1 (Binance utilisé)
+        mock_historical_data = pd.DataFrame({
+            'Open': [45000, 45100, 45200, 44900, 45300],
+            'High': [45500, 45600, 45700, 45400, 45800],
+            'Low': [44800, 44900, 45000, 44700, 45100],
+            'Close': [45100, 45200, 45300, 45000, 45400],
+            'Volume': [1000, 1100, 1200, 900, 1300]
+        }, index=pd.date_range('2025-01-01', periods=5, freq='D'))
+        
+        # Créer métadonnées
+        metadata = await intelligent_ohlcv_fetcher.get_ohlcv_metadata_from_existing_data(
+            existing_data=mock_historical_data,
+            primary_source="binance"
+        )
+        
+        # 2. Tester complétion haute fréquence  
+        logger.info("   Testing high-frequency completion...")
+        hf_data = await intelligent_ohlcv_fetcher.complete_ohlcv_data(
+            symbol=test_symbol,
+            existing_metadata=metadata,
+            target_timeframe='5m',
+            hours_back=6
+        )
+        
+        # 3. Tester S/R enhanced si données disponibles
+        enhanced_sr = None
+        dynamic_rr = None
+        
+        if hf_data:
+            logger.info("   Testing enhanced S/R calculation...")
+            enhanced_sr = await intelligent_ohlcv_fetcher.calculate_enhanced_sr_levels(
+                symbol=test_symbol,
+                hf_data=hf_data,
+                daily_support=44000.0,
+                daily_resistance=47000.0
+            )
+            
+            # 4. Tester RR dynamique
+            if enhanced_sr:
+                logger.info("   Testing dynamic RR calculation...")
+                dynamic_rr = await intelligent_ohlcv_fetcher.calculate_dynamic_risk_reward(
+                    symbol=test_symbol,
+                    signal_type="LONG",
+                    entry_price=45400.0,
+                    enhanced_sr_levels=enhanced_sr
+                )
+        
+        # 5. Construire réponse de test
+        test_results = {
+            "status": "success",
+            "test_timestamp": get_paris_time().isoformat(),
+            "test_symbol": test_symbol,
+            "metadata": {
+                "primary_source": metadata.primary_source,
+                "primary_data_quality": metadata.primary_data_quality,
+                "data_count": metadata.primary_data_count,
+                "preferred_completion_sources": metadata.preferred_completion_sources[:3]
+            } if metadata else None,
+            "high_frequency_data": {
+                "available": hf_data is not None,
+                "source": hf_data.source if hf_data else None,
+                "timeframe": hf_data.timeframe if hf_data else None,
+                "data_points": hf_data.data_count if hf_data else 0,
+                "quality_score": hf_data.quality_score if hf_data else 0.0
+            },
+            "enhanced_sr": {
+                "available": enhanced_sr is not None,
+                "daily_support": enhanced_sr.daily_support if enhanced_sr else None,
+                "daily_resistance": enhanced_sr.daily_resistance if enhanced_sr else None,
+                "micro_support": enhanced_sr.micro_support if enhanced_sr else None,
+                "micro_resistance": enhanced_sr.micro_resistance if enhanced_sr else None,
+                "confidence_micro": enhanced_sr.confidence_micro if enhanced_sr else None
+            },
+            "dynamic_rr": {
+                "available": dynamic_rr is not None,
+                "rr_micro": dynamic_rr.rr_micro if dynamic_rr else None,
+                "rr_intraday": dynamic_rr.rr_intraday if dynamic_rr else None,
+                "rr_daily": dynamic_rr.rr_daily if dynamic_rr else None,
+                "rr_final": dynamic_rr.rr_final if dynamic_rr else None,
+                "selection_logic": dynamic_rr.rr_selection_logic if dynamic_rr else None,
+                "confidence_score": dynamic_rr.confidence_score if dynamic_rr else None
+            }
+        }
+        
+        logger.info(f"✅ Intelligent OHLCV test completed successfully")
+        return test_results
+        
+    except Exception as e:
+        logger.error(f"❌ Error testing intelligent OHLCV system: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": get_paris_time().isoformat()
+        }
+
 @api_router.post("/start-scout")
 async def start_scout_cycle():
     """Force start the trading scout cycle"""
