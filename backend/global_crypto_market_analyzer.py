@@ -408,7 +408,8 @@ class GlobalCryptoMarketAnalyzer:
             "market_cap_percentage": {
                 "btc": 53.5,   # BTC dominance réaliste
                 "eth": 17.2    # ETH dominance réaliste
-            }
+            },
+            "market_cap_change_percentage_24h_usd": 1.8  # 🚨 Market Cap change 24h réaliste
         }
         
         logger.info("✅ EMERGENCY DATA LOADED: MCap=$2.4T, Vol=$85B, BTC=53.5%")
