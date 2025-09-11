@@ -3764,11 +3764,8 @@ class UltraProfessionalIA2DecisionAgent:
             
             # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
             # Get historical data for multi-timeframe analysis
-            historical_data = await self.market_aggregator.get_ohlcv_data(
-                opportunity.symbol, 
-                limit=300,  # Assez pour multi-timeframe
-                interval='1m'
-            )
+            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+            historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
             
             if historical_data is not None and len(historical_data) > 50:
                 # Calculate multi-timeframe indicators for IA2 intelligence
