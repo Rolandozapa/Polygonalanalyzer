@@ -3965,10 +3965,22 @@ The reasoning above contains detailed historical analysis including:
 {multi_tf_formatted}
 
 🎯 CURRENT INSTITUTIONAL SIGNALS FOR FINAL DECISION:
-{f"MFI: {current_indicators.mfi:.1f} ({'🚨 EXTREME ACCUMULATION' if current_indicators.mfi_extreme_oversold else 'ACCUMULATION' if current_indicators.mfi_oversold else '🚨 EXTREME DISTRIBUTION' if current_indicators.mfi_extreme_overbought else 'DISTRIBUTION' if current_indicators.mfi_overbought else 'NEUTRAL'}) | Institution Activity: {current_indicators.institutional_activity.upper()}" if current_indicators else "Current institutional data not available"}
-{f"VWAP Position: {current_indicators.vwap_position:+.2f}% | Trend: {current_indicators.vwap_trend.upper()} {'🎯 EXTREME PRECISION LEVEL' if current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought else '🎯 HIGH PRECISION' if current_indicators.vwap_oversold or current_indicators.vwap_overbought else ''}" if current_indicators else ""}
-{f"🚀 EMA HIERARCHY: {current_indicators.trend_hierarchy.upper()} | Price vs EMAs: {current_indicators.price_vs_emas.upper()} | Cross: {current_indicators.ema_cross_signal.upper()} | Strength: {current_indicators.trend_strength_score:.0f}%" if current_indicators else ""}
-{f"📊 DYNAMIC S/R LEVELS: EMA9=${current_indicators.ema_9:.4f} | EMA21=${current_indicators.ema_21:.4f} | SMA50=${current_indicators.sma_50:.4f} | EMA200=${current_indicators.ema_200:.4f}" if current_indicators else ""}
+{
+    f"MFI: {current_indicators.mfi:.1f} ({'🚨 EXTREME ACCUMULATION' if current_indicators.mfi_extreme_oversold else 'ACCUMULATION' if current_indicators.mfi_oversold else '🚨 EXTREME DISTRIBUTION' if current_indicators.mfi_extreme_overbought else 'DISTRIBUTION' if current_indicators.mfi_overbought else 'NEUTRAL'}) | Institution Activity: {current_indicators.institutional_activity.upper()}"
+    if current_indicators else "Current institutional data not available"
+}
+{
+    f"VWAP Position: {current_indicators.vwap_position:+.2f}% | Trend: {current_indicators.vwap_trend.upper()} {'🎯 EXTREME PRECISION LEVEL' if current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought else '🎯 HIGH PRECISION' if current_indicators.vwap_oversold or current_indicators.vwap_overbought else ''}"
+    if current_indicators else ""
+}
+{
+    f"🚀 EMA HIERARCHY: {current_indicators.trend_hierarchy.upper()} | Price vs EMAs: {current_indicators.price_vs_emas.upper()} | Cross: {current_indicators.ema_cross_signal.upper()} | Strength: {current_indicators.trend_strength_score:.0f}%"
+    if current_indicators else ""
+}
+{
+    f"📊 DYNAMIC S/R LEVELS: EMA9=${current_indicators.ema_9:.4f} | EMA21=${current_indicators.ema_21:.4f} | SMA50=${current_indicators.sma_50:.4f} | EMA200=${current_indicators.ema_200:.4f}"
+    if current_indicators else ""
+}
 
 🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION (MANDATORY FOR IA2):
 1. MFI (Institutional): {f"{current_indicators.mfi:.1f} - {'ACCUMULATION' if current_indicators.mfi < 30 else 'DISTRIBUTION' if current_indicators.mfi > 70 else 'NEUTRAL'}" if current_indicators else "N/A"}
