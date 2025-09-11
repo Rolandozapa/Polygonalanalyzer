@@ -3983,12 +3983,12 @@ The reasoning above contains detailed historical analysis including:
 }
 
 🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION (MANDATORY FOR IA2):
-1. MFI (Institutional): {f"{current_indicators.mfi:.1f} - {'ACCUMULATION' if current_indicators.mfi < 30 else 'DISTRIBUTION' if current_indicators.mfi > 70 else 'NEUTRAL'}" if current_indicators else "N/A"}
-2. VWAP (Precision): {f"{current_indicators.vwap_position:+.1f}% - {'EXTREME' if (current_indicators.vwap_extreme_oversold or current_indicators.vwap_extreme_overbought) else 'HIGH' if (current_indicators.vwap_oversold or current_indicators.vwap_overbought) else 'NEUTRAL'}" if current_indicators else "N/A"}
-3. RSI (Momentum): {f"{current_indicators.rsi_14:.1f} - {'OVERSOLD' if current_indicators.rsi_14 < 30 else 'OVERBOUGHT' if current_indicators.rsi_14 > 70 else 'NEUTRAL'}" if current_indicators else "N/A"}
+1. MFI (Institutional): {f"{getattr(current_indicators, 'mfi', 50):.1f} - {'ACCUMULATION' if getattr(current_indicators, 'mfi', 50) < 30 else 'DISTRIBUTION' if getattr(current_indicators, 'mfi', 50) > 70 else 'NEUTRAL'}" if current_indicators is not None else "N/A"}
+2. VWAP (Precision): {f"{getattr(current_indicators, 'vwap_position', 0):+.1f}% - {'EXTREME' if (getattr(current_indicators, 'vwap_extreme_oversold', False) or getattr(current_indicators, 'vwap_extreme_overbought', False)) else 'HIGH' if (getattr(current_indicators, 'vwap_oversold', False) or getattr(current_indicators, 'vwap_overbought', False)) else 'NEUTRAL'}" if current_indicators is not None else "N/A"}
+3. RSI (Momentum): {f"{getattr(current_indicators, 'rsi_14', 50):.1f} - {'OVERSOLD' if getattr(current_indicators, 'rsi_14', 50) < 30 else 'OVERBOUGHT' if getattr(current_indicators, 'rsi_14', 50) > 70 else 'NEUTRAL'}" if current_indicators is not None else "N/A"}
 4. Multi-Timeframe: Available above
-5. Volume: {f"{current_indicators.institutional_activity.upper()}" if current_indicators else "N/A"}
-6. EMA HIERARCHY: {f"{current_indicators.trend_hierarchy.upper()} ({current_indicators.trend_strength_score:.0f}% strength)" if current_indicators else "N/A"}
+5. Volume: {f"{getattr(current_indicators, 'institutional_activity', 'neutral').upper()}" if current_indicators is not None else "N/A"}
+6. EMA HIERARCHY: {f"{getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()} ({getattr(current_indicators, 'trend_strength_score', 0):.0f}% strength)" if current_indicators is not None else "N/A"}
 
 ⚠️ CONFLUENCE EXECUTION LOGIC:
 - 6/6 GODLIKE: Execute with 90%+ confidence (maximum position size)
