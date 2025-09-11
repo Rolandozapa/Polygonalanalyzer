@@ -254,7 +254,8 @@
 ## test_plan:
   current_focus:
     - "Simplify IA2 RR Calculation to Match IA1 Support/Resistance Formula"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Simplify IA2 RR Calculation to Match IA1 Support/Resistance Formula"
   test_all: false
   test_priority: "high_first"
 
