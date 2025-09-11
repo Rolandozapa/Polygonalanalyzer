@@ -82,16 +82,13 @@ class TrendingAutoUpdater:
         
         while self.is_running:
             try:
-                # 🚨 PROTECTION CPU - Vérifier la charge avant l'update
-                try:
-                    import psutil
+                # 🚨 PROTECTION CPU - Vérifier la charge avant l'update (import optimized)
+                if PSUTIL_AVAILABLE:
                     cpu_usage = psutil.cpu_percent(interval=1)
                     if cpu_usage > 70.0:
                         logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Skipping trending update")
                         await asyncio.sleep(3600)  # Wait 1 hour
                         continue
-                except ImportError:
-                    pass  # Si psutil pas disponible, continuer normalement
                 
                 logger.info("🔍 Starting trending update cycle...")
                 await self.update_trending_list()
