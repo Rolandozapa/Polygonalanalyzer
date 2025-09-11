@@ -3810,6 +3810,72 @@ class UltraProfessionalIA2DecisionAgent:
             from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
             historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
             
+            # 🎯 NOUVEAU: INTELLIGENT OHLCV COMPLETION AVEC DIVERSIFICATION DE SOURCES
+            enhanced_sr_levels = None
+            dynamic_rr_data = None
+            hf_data_info = "No high-frequency data"
+            
+            if historical_data is not None and len(historical_data) > 50:
+                try:
+                    # 1. Créer métadonnées depuis données existantes (utilisées par IA1)
+                    existing_metadata = await intelligent_ohlcv_fetcher.get_ohlcv_metadata_from_existing_data(
+                        existing_data=pd.DataFrame(historical_data),
+                        primary_source="enhanced_ohlcv_fetcher"  # Source utilisée par IA1
+                    )
+                    
+                    # 2. Compléter avec données haute fréquence (source différente)
+                    logger.info(f"🎯 IA2: Starting intelligent OHLCV completion for {opportunity.symbol}")
+                    hf_data = await intelligent_ohlcv_fetcher.complete_ohlcv_data(
+                        symbol=opportunity.symbol,
+                        existing_metadata=existing_metadata,
+                        target_timeframe='5m',  # Haute précision 5 minutes
+                        hours_back=24  # Dernières 24h pour S/R précis
+                    )
+                    
+                    if hf_data:
+                        logger.info(f"✅ IA2: High-frequency completion successful from {hf_data.source}")
+                        
+                        # 3. Calculer niveaux S/R daily basiques depuis données historiques
+                        df_historical = pd.DataFrame(historical_data)
+                        daily_support = df_historical['Low'].tail(30).min()  # Support 30j
+                        daily_resistance = df_historical['High'].tail(30).max()  # Résistance 30j
+                        
+                        # 4. Calculer Enhanced S/R avec haute précision
+                        enhanced_sr_levels = await intelligent_ohlcv_fetcher.calculate_enhanced_sr_levels(
+                            symbol=opportunity.symbol,
+                            hf_data=hf_data,
+                            daily_support=daily_support,
+                            daily_resistance=daily_resistance
+                        )
+                        
+                        # 5. Calculer RR dynamique avec différents timeframes
+                        entry_price = df_historical['Close'].iloc[-1]
+                        signal_type = analysis.signal if hasattr(analysis, 'signal') else "HOLD"
+                        
+                        dynamic_rr_data = await intelligent_ohlcv_fetcher.calculate_dynamic_risk_reward(
+                            symbol=opportunity.symbol,
+                            signal_type=signal_type,
+                            entry_price=entry_price,
+                            enhanced_sr_levels=enhanced_sr_levels
+                        )
+                        
+                        hf_data_info = f"""🎯 HIGH-FREQUENCY DATA INTEGRATION SUCCESS:
+- Source: {hf_data.source} ({hf_data.timeframe})
+- Quality: {hf_data.quality_score:.2f}/1.0
+- Data points: {hf_data.data_count}
+- Enhanced S/R levels calculated with {enhanced_sr_levels.confidence_micro:.2f} micro confidence
+- Dynamic RR: {dynamic_rr_data.rr_final:.2f}:1 ({dynamic_rr_data.rr_selection_logic})"""
+                        
+                        logger.info(f"🔥 IA2 ENHANCED: {opportunity.symbol} - RR {dynamic_rr_data.rr_final:.2f}:1 via {hf_data.source}")
+                        
+                    else:
+                        logger.warning(f"⚠️ IA2: High-frequency completion failed for {opportunity.symbol}")
+                        hf_data_info = "High-frequency completion failed, using daily data only"
+                        
+                except Exception as e:
+                    logger.error(f"❌ IA2: Error in intelligent OHLCV completion: {e}")
+                    hf_data_info = f"OHLCV completion error: {str(e)}"
+            
             if historical_data is not None and len(historical_data) > 50:
                 # Use SCIENTIFIC approach: Quality OHLCV data for precise calculations
                 from advanced_technical_indicators import advanced_technical_indicators
