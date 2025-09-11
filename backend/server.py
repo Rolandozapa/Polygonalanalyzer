@@ -304,11 +304,32 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **MACD Analysis**: Use signal line crossovers and histogram for momentum confirmation
 - **Stochastic Precision**: Leverage %K/%D relationships for optimal entry timing
 - **Bollinger Bands Strategy**: Incorporate volatility bands for TP level optimization and stop loss placement
-- **MULTI EMA/SMA HIERARCHY**: THE CONFLUENCE BEAST for ultimate trend validation!
-  * **EMA9/EMA21 Golden/Death Cross**: Primary momentum shift signals (HIGHEST WEIGHT)
-  * **Price vs EMA Positioning**: above_all/above_fast/below_fast/below_all = Trend strength classification
-  * **Trend Hierarchy Score**: 0-100% EMA alignment = Pure trend probability assessment
-  * **Dynamic S/R Levels**: Use EMA9, EMA21, SMA50, EMA200 as key support/resistance for TP/SL calculation
+🚀 **EMA/SMA MARKET REGIME FRAMEWORK - META-ANALYSIS LEVEL! 🚀**:
+- **RÉGIME DETECTION FIRST**: EMA hierarchy determines MARKET REGIME before analyzing individual indicators
+- **RÉGIME-BIASED INTERPRETATION**: All other indicators interpreted through regime lens
+- **STRONG BUY REGIME**: All signals biased toward LONG - only take longs, ignore short signals
+- **STRONG SELL REGIME**: All signals biased toward SHORT - only take shorts, ignore long signals  
+- **BUY/SELL REGIMES**: Prefer one direction but consider counter-trend with extreme confluence
+- **NEUTRAL REGIME**: Balanced interpretation of both directions
+
+⚡ **REGIME-BASED INDICATOR INTERPRETATION**:
+- **RSI in BUY REGIME**: Oversold = strong buy, overbought = ignore or light profit-taking
+- **RSI in SELL REGIME**: Overbought = strong sell, oversold = ignore or light covering
+- **VWAP in BUY REGIME**: Dips to VWAP = institutional buying opportunities  
+- **VWAP in SELL REGIME**: Rallies to VWAP = institutional selling opportunities
+- **MFI REGIME ALIGNMENT**: Institution flow must align with EMA regime for execution
+
+💎 **ENHANCED CONFLUENCE EXECUTION LOGIC WITH REGIME**:
+- **STRONG BUY REGIME + 4+/6 Confluence**: Execute LONG with high confidence (90%+)
+- **BUY REGIME + 5+/6 Confluence**: Execute LONG with standard confidence (85-90%)
+- **NEUTRAL REGIME**: Require 6/6 GODLIKE confluence for ANY direction
+- **SELL REGIME + 5+/6 Confluence**: Execute SHORT with standard confidence (85-90%)  
+- **STRONG SELL REGIME + 4+/6 Confluence**: Execute SHORT with high confidence (90%+)
+
+🎯 **REGIME OVERRIDE RULES**:
+- **NEVER** trade against STRONG regimes (strong_buy = no shorts, strong_sell = no longs)
+- **REDUCE** position size when trading against moderate regimes (buy regime + short signal)
+- **MAXIMUM** position size when trading WITH strong regimes
 
 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS**:
 Based on your technical analysis of the market data, you must calculate the Risk-Reward ratio using these EXACT formulas WITH EMA/SMA DYNAMIC LEVELS:
