@@ -3596,6 +3596,66 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 'note_final': note_base,  # Fallback to base score
                 'error': str(e)
             }
+    
+    def _calculate_mcap_bonus_malus(self, market_cap_change_24h: float, ia1_signal: str) -> float:
+        """
+        🚨 CALCUL BONUS/MALUS Market Cap 24h pour confiance IA1
+        
+        LOGIQUE:
+        - Market Cap monte (+) → Position SHORT pénalisée (contre-tendance)
+        - Market Cap baisse (-) → Position LONG pénalisée (contre-tendance)
+        - Position avec la tendance = bonus
+        - Position contre la tendance = malus
+        
+        Args:
+            market_cap_change_24h: Variation Market Cap 24h (%)
+            ia1_signal: Signal IA1 ("long", "short", "hold")
+            
+        Returns:
+            Score normalisé -1.0 à +1.0
+        """
+        try:
+            # Neutraliser si signal HOLD ou données manquantes
+            if ia1_signal.lower() == 'hold' or abs(market_cap_change_24h) < 0.1:
+                return 0.0
+            
+            # Facteur d'intensité basé sur l'ampleur de la variation Market Cap
+            # Plus la variation est forte, plus le bonus/malus est important
+            intensity_factor = min(abs(market_cap_change_24h) / 5.0, 1.0)  # Cap à 5% pour max intensity
+            
+            # LOGIQUE PRINCIPALE: Alignement signal vs Market Cap momentum
+            if ia1_signal.lower() == 'long':
+                # Position LONG
+                if market_cap_change_24h > 0:
+                    # Market Cap monte → BONUS pour LONG (avec la tendance)
+                    bonus_score = self.tanh_norm(market_cap_change_24h * 2, s=1) * intensity_factor
+                    logger.info(f"🟢 LONG + Market Cap +{market_cap_change_24h:.2f}% → BONUS {bonus_score:+.3f}")
+                    return bonus_score
+                else:
+                    # Market Cap baisse → MALUS pour LONG (contre la tendance)
+                    malus_score = -self.tanh_norm(abs(market_cap_change_24h) * 2, s=1) * intensity_factor
+                    logger.info(f"🔴 LONG + Market Cap {market_cap_change_24h:.2f}% → MALUS {malus_score:+.3f}")
+                    return malus_score
+                    
+            elif ia1_signal.lower() == 'short':
+                # Position SHORT
+                if market_cap_change_24h < 0:
+                    # Market Cap baisse → BONUS pour SHORT (avec la tendance)
+                    bonus_score = self.tanh_norm(abs(market_cap_change_24h) * 2, s=1) * intensity_factor
+                    logger.info(f"🟢 SHORT + Market Cap {market_cap_change_24h:.2f}% → BONUS {bonus_score:+.3f}")
+                    return bonus_score
+                else:
+                    # Market Cap monte → MALUS pour SHORT (contre la tendance)
+                    malus_score = -self.tanh_norm(market_cap_change_24h * 2, s=1) * intensity_factor
+                    logger.info(f"🔴 SHORT + Market Cap +{market_cap_change_24h:.2f}% → MALUS {malus_score:+.3f}")
+                    return malus_score
+            
+            # Cas par défaut (ne devrait pas arriver)
+            return 0.0
+            
+        except Exception as e:
+            logger.error(f"Error calculating Market Cap bonus/malus: {e}")
+            return 0.0
 
 class UltraProfessionalIA2DecisionAgent:
     def __init__(self, active_position_manager=None):
