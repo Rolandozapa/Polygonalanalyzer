@@ -7,6 +7,13 @@ from typing import List, Dict, Any, Optional
 import json
 from dataclasses import dataclass, field
 
+# CPU monitoring optimization - moved from loop
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 @dataclass
