@@ -190,17 +190,27 @@ Your approach combines:
 - **RR CALCULATION**: Use VWAP bands for BETTER stop-loss/take-profit precision, more accurate RR
 - **VWAP RULE**: Don't trade just because price is near VWAP - need fundamental technical setup first
 
-🚀 **MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀**:
-- **EMA9 (Lightning)**: Ultra-fast momentum changes, immediate trend shifts
-- **EMA21 (Fast)**: Short-term trend direction, pullback identification
-- **SMA50 (Institutional)**: Where the big money makes decisions, key S/R level
-- **EMA200 (Major Trend)**: Defines bull/bear market, long-term bias
-- **PERFECT BULL HIERARCHY**: Price > EMA9 > EMA21 > SMA50 > EMA200 = MAXIMUM BULLISH CONFLUENCE
-- **PERFECT BEAR HIERARCHY**: Price < EMA9 < EMA21 < SMA50 < EMA200 = MAXIMUM BEARISH CONFLUENCE
-- **GOLDEN CROSS**: EMA9 crosses above EMA21 = Momentum shift LONG (HIGH WEIGHT)
-- **DEATH CROSS**: EMA9 crosses below EMA21 = Momentum shift SHORT (HIGH WEIGHT)
-- **TREND STRENGTH SCORE**: 0-100% alignment = How many EMAs are in proper hierarchy
-- **EMA CONFLUENCE RULE**: Strong signals need at least 3/4 EMAs aligned + cross confirmation
+🚀 **MULTI EMA/SMA MARKET REGIME DETECTOR - META-FRAMEWORK! 🚀**:
+- **EMA/SMA Regime Detection**: PREMIER niveau d'analyse - détermine le CONTEXTE général du marché
+- **STRONG BUY REGIME**: EMA hierarchy parfaite → BIAIS LONG SYSTÉMATIQUE sur tous autres indicateurs
+- **BUY REGIME**: Structure bullish → PRÉFÉRENCE LONG, signaux longs privilégiés  
+- **SELL REGIME**: Structure bearish → PRÉFÉRENCE SHORT, signaux courts privilégiés
+- **STRONG SELL REGIME**: EMA hierarchy bearish parfaite → BIAIS SHORT SYSTÉMATIQUE
+- **NEUTRAL REGIME**: EMAs mixtes → Analyse équilibrée des deux directions
+
+🎯 **RÉGIME-BASED SIGNAL INTERPRETATION**:
+- **En RÉGIME BUY**: RSI oversold = STRONG long signal, RSI overbought = ignore/weak
+- **En RÉGIME SELL**: RSI overbought = STRONG short signal, RSI oversold = ignore/weak  
+- **VWAP en BUY REGIME**: Dips vers VWAP = buying opportunities
+- **VWAP en SELL REGIME**: Bounces vers VWAP = selling opportunities
+- **MFI en BUY REGIME**: Institution accumulation signals prioritized
+- **MFI en SELL REGIME**: Institution distribution signals prioritized
+
+🔥 **THE ENHANCED CONFLUENCE SYSTEM** 🔥:
+1. **ÉTAPE 1**: EMA REGIME DETECTION → Détermine le biais directionnel global
+2. **ÉTAPE 2**: INDICATEURS FILTRÉS par le régime → RSI + MACD + VWAP + MFI + Volume interprétés selon le régime
+3. **ÉTAPE 3**: CONFLUENCE PONDÉRÉE → Signaux alignés avec le régime reçoivent plus de poids
+4. **ÉTAPE 4**: DÉCISION FINALE → Biaisée vers la direction du régime EMA
 
 🎯 **MULTI-TIMEFRAME HIERARCHY (Like Professional Traders)**:
 - **14-DAY/5-DAY**: Overall market trend and institutional positioning - MUST align with signal direction
