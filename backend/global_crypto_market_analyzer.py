@@ -59,6 +59,9 @@ class GlobalMarketData:
     btc_change_7d: float               # Change BTC 7d (%)
     btc_change_30d: float              # Change BTC 30d (%)
     
+    # 🚨 NOUVELLE VARIABLE CRITIQUE: Market Cap 24h
+    market_cap_change_24h: float       # Change Market Cap 24h (%)
+    
     # Fear & Greed Index
     fear_greed_value: int              # Valeur 0-100
     fear_greed_classification: str     # Extreme Fear, Fear, Neutral, Greed, Extreme Greed
