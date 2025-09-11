@@ -202,6 +202,7 @@
     "HIPPO-USDT",
     "HIVE-USDT",
     "HMSTR-USDT",
+    "HOLO-USDT",
     "HOME-USDT",
     "HOODX-USDT",
     "HOOK-USDT",
@@ -480,7 +481,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 479,
-  "updated_at": "2025-09-11T07:31:01.827291",
+  "count": 480,
+  "updated_at": "2025-09-11T13:51:40.314019",
   "source": "BingX Futures API"
 }
