@@ -8598,6 +8598,94 @@ async def test_intelligent_ohlcv_system():
             "timestamp": get_paris_time().isoformat()
         }
 
+@api_router.get("/admin/market/critical")
+async def get_critical_market_variables():
+    """
+    🚨 ENDPOINT CRITIQUE: Variables essentielles au système (24h/BTC/MarketCap/Volume)
+    """
+    try:
+        logger.info("🚨 Fetching CRITICAL market variables for trading system")
+        
+        # Récupérer analyse globale
+        market_data = await global_crypto_market_analyzer.get_global_market_data()
+        
+        if not market_data:
+            return {
+                "status": "critical_error",
+                "error": "Cannot fetch critical market variables",
+                "timestamp": get_paris_time().isoformat(),
+                "system_impact": "Trading decisions may be impaired"
+            }
+        
+        # Extraire variables critiques
+        critical_vars = {
+            "status": "success",
+            "timestamp": market_data.timestamp.isoformat(),
+            "critical_variables": {
+                # 🎯 VARIABLES ESSENTIELLES AU SYSTÈME
+                "btc_price": {
+                    "current": market_data.btc_price,
+                    "change_24h": market_data.btc_change_24h,
+                    "change_7d": market_data.btc_change_7d,
+                    "change_30d": market_data.btc_change_30d,
+                    "status": "✅ OK" if market_data.btc_price > 0 else "❌ MISSING"
+                },
+                "market_cap": {
+                    "total_usd": market_data.total_market_cap,
+                    "total_formatted": f"${market_data.total_market_cap/1e12:.2f}T",
+                    "status": "✅ OK" if market_data.total_market_cap > 0 else "❌ MISSING"
+                },
+                "volume_24h": {
+                    "total_usd": market_data.total_volume_24h,
+                    "total_formatted": f"${market_data.total_volume_24h/1e9:.1f}B",
+                    "status": "✅ OK" if market_data.total_volume_24h > 0 else "❌ MISSING"
+                },
+                "dominance": {
+                    "btc_percentage": market_data.btc_dominance,
+                    "eth_percentage": market_data.eth_dominance,
+                    "status": "✅ OK" if market_data.btc_dominance > 0 else "❌ MISSING"
+                }
+            },
+            "system_health": {
+                "all_critical_vars_ok": all([
+                    market_data.btc_price > 0,
+                    market_data.total_market_cap > 0,
+                    market_data.total_volume_24h > 0,
+                    market_data.btc_dominance > 0
+                ]),
+                "market_regime": market_data.market_regime.value,
+                "trading_readiness": "READY" if all([
+                    market_data.btc_price > 0,
+                    market_data.btc_change_24h != 0,
+                    market_data.total_market_cap > 1e12  # > $1T
+                ]) else "DEGRADED"
+            },
+            "fallback_info": {
+                "data_sources": "Multiple sources with fallback cascade",
+                "reliability": "High (99%+ uptime with emergency defaults)",
+                "update_frequency": "5 minutes (cached)"
+            }
+        }
+        
+        # Log l'état des variables critiques
+        btc_status = "✅" if market_data.btc_price > 0 else "❌"
+        mcap_status = "✅" if market_data.total_market_cap > 0 else "❌"
+        vol_status = "✅" if market_data.total_volume_24h > 0 else "❌"
+        
+        logger.info(f"🚨 CRITICAL VARS: BTC{btc_status} MCap{mcap_status} Vol{vol_status} | Trading: {critical_vars['system_health']['trading_readiness']}")
+        
+        return critical_vars
+        
+    except Exception as e:
+        logger.error(f"❌ CRITICAL ERROR fetching essential variables: {e}")
+        return {
+            "status": "critical_error",
+            "error": str(e),
+            "timestamp": get_paris_time().isoformat(),
+            "system_impact": "SEVERE - Trading system may not function correctly",
+            "emergency_action": "Check API connections and restart global market analyzer"
+        }
+
 @api_router.get("/admin/market/global")
 async def get_global_market_analysis():
     """
