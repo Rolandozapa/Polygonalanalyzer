@@ -320,7 +320,8 @@ class AdvancedTechnicalIndicators:
             df['trend_strength_score'] = 0.5
             
             for i in range(len(df)):
-                if i < 200:  # Need enough data for EMA200
+                # Need enough data for EMA200 - use dynamic check
+                if i < min(200, len(df) * 0.8):  # Use 80% of data or 200, whichever is smaller
                     continue
                     
                 price = df['Close'].iloc[i]
