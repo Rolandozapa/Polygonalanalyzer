@@ -344,26 +344,25 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **REDUCE** position size when trading against moderate regimes (buy regime + short signal)
 - **MAXIMUM** position size when trading WITH strong regimes
 
-🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS - SIMPLE SUPPORT/RESISTANCE FORMULA**:
-Use the same simple RR calculation as IA1 based on support and resistance levels:
+🎯 **IA2 RISK-REWARD CALCULATION INSTRUCTIONS - DYNAMIC MULTI-TIMEFRAME FORMULA**:
 
-**IF YOUR SIGNAL IS LONG:**
-- Identify Support level for Stop Loss (from technical analysis)  
-- Identify Resistance level for Take Profit (from technical analysis)
-- Calculate: RR = (Take_Profit_Price - Current_Price) / (Current_Price - Stop_Loss_Price)
-- Formula: RR = Reward / Risk = (TP - Entry) / (Entry - SL)
+**INTELLIGENT RR SYSTEM ACTIVATED:**
+Dynamic RR analysis available with high-frequency data integration.
 
-**IF YOUR SIGNAL IS SHORT:**
-- Identify Resistance level for Stop Loss (from technical analysis)
-- Identify Support level for Take Profit (from technical analysis)  
-- Calculate: RR = (Current_Price - Take_Profit_Price) / (Stop_Loss_Price - Current_Price)
-- Formula: RR = Reward / Risk = (Entry - TP) / (SL - Entry)
+**CALCULATION INSTRUCTIONS:**
+IF intelligent RR system activated (high-frequency data present):
+- MANDATORY: Use the "FINAL OPTIMIZED RR" value provided as your calculated_rr  
+- Include micro/intraday/daily breakdown in your rr_reasoning
+- Reference the specific S/R levels used (micro/intraday/daily)
 
-**EXECUTE THE CALCULATION INTERNALLY** and return the result in your JSON response.
+IF fallback required (no high-frequency data):
+- Use simple support/resistance formula as backup:
+- **LONG**: RR = (Take_Profit_Price - Current_Price) / (Current_Price - Stop_Loss_Price)  
+- **SHORT**: RR = (Current_Price - Take_Profit_Price) / (Stop_Loss_Price - Current_Price)
 
 🚨 **MANDATORY JSON FIELDS:**
-- "calculated_rr": [YOUR_CALCULATED_NUMBER]  // Simple S/R based calculation
-- "rr_reasoning": "Support at X, Resistance at Y, using [LONG/SHORT] formula: RR calculation details"
+- "calculated_rr": [FINAL_OPTIMIZED_RR or SIMPLE_CALCULATION]  
+- "rr_reasoning": "Using [INTELLIGENT/FALLBACK] system: [DETAILED_EXPLANATION]"
 
 **6-INDICATOR CONFLUENCE VALIDATION FOR IA2**:
 You must validate IA1's confluence matrix before executing:
