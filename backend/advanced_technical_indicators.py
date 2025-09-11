@@ -1335,6 +1335,109 @@ class AdvancedTechnicalIndicators:
         
         return combo_signals
     
+    def detect_ema_market_regime(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🎯 DÉTECTION RÉGIME MARCHÉ EMA/SMA - META-INDICATEUR POUR BIAIS DIRECTIONNEL
+        Cette méthode détermine le RÉGIME GLOBAL (buy/sell) qui doit influencer toute l'analyse IA
+        """
+        regime_analysis = {
+            'market_regime': 'neutral',
+            'regime_strength': 0.5,
+            'regime_bias': 'none',
+            'regime_confidence': 0.5,
+            'directional_filter': 'both',  # 'long_only', 'short_only', 'both'
+            'regime_factors': [],
+            'regime_warnings': [],
+            'suggested_strategy': 'neutral'
+        }
+        
+        regime_factors = []
+        regime_score = 0.5  # Start neutral
+        
+        # === 1. TREND HIERARCHY REGIME ===
+        if indicators.trend_hierarchy == 'strong_bull':
+            regime_score += 0.3
+            regime_factors.append("Perfect bullish EMA hierarchy")
+            regime_analysis['directional_filter'] = 'long_preferred'
+        elif indicators.trend_hierarchy == 'weak_bull':
+            regime_score += 0.15
+            regime_factors.append("Moderate bullish EMA structure")
+            regime_analysis['directional_filter'] = 'long_bias'
+        elif indicators.trend_hierarchy == 'strong_bear':
+            regime_score -= 0.3
+            regime_factors.append("Perfect bearish EMA hierarchy")
+            regime_analysis['directional_filter'] = 'short_preferred'
+        elif indicators.trend_hierarchy == 'weak_bear':
+            regime_score -= 0.15
+            regime_factors.append("Moderate bearish EMA structure")
+            regime_analysis['directional_filter'] = 'short_bias'
+        
+        # === 2. GOLDEN/DEATH CROSS MOMENTUM REGIME ===
+        if indicators.ema_cross_signal == 'golden_cross':
+            regime_score += 0.2
+            regime_factors.append("Golden Cross momentum shift")
+            if regime_analysis['directional_filter'] == 'both':
+                regime_analysis['directional_filter'] = 'long_momentum'
+        elif indicators.ema_cross_signal == 'death_cross':
+            regime_score -= 0.2
+            regime_factors.append("Death Cross momentum shift")
+            if regime_analysis['directional_filter'] == 'both':
+                regime_analysis['directional_filter'] = 'short_momentum'
+        
+        # === 3. PRICE POSITIONING REGIME ===
+        if indicators.price_vs_emas == 'above_all':
+            regime_score += 0.15
+            regime_factors.append("Price above all EMAs (institutional support)")
+        elif indicators.price_vs_emas == 'above_fast':
+            regime_score += 0.1
+            regime_factors.append("Price above fast EMAs (short-term support)")
+        elif indicators.price_vs_emas == 'below_fast':
+            regime_score -= 0.1
+            regime_factors.append("Price below fast EMAs (short-term resistance)")
+        elif indicators.price_vs_emas == 'below_all':
+            regime_score -= 0.15
+            regime_factors.append("Price below all EMAs (institutional resistance)")
+        
+        # === 4. TREND STRENGTH MULTIPLIER ===
+        strength_multiplier = indicators.trend_strength_score
+        regime_score = 0.5 + (regime_score - 0.5) * strength_multiplier
+        
+        # === 5. CLASSIFY MARKET REGIME ===
+        regime_analysis['regime_strength'] = abs(regime_score - 0.5) * 2  # Convert to 0-1
+        
+        if regime_score >= 0.8:
+            regime_analysis['market_regime'] = 'strong_buy'
+            regime_analysis['regime_bias'] = 'bullish'
+            regime_analysis['suggested_strategy'] = 'buy_dips'
+            regime_analysis['directional_filter'] = 'long_only'
+        elif regime_score >= 0.65:
+            regime_analysis['market_regime'] = 'buy'
+            regime_analysis['regime_bias'] = 'bullish'
+            regime_analysis['suggested_strategy'] = 'long_bias'
+            regime_analysis['directional_filter'] = 'long_preferred'
+        elif regime_score <= 0.2:
+            regime_analysis['market_regime'] = 'strong_sell'
+            regime_analysis['regime_bias'] = 'bearish'
+            regime_analysis['suggested_strategy'] = 'sell_rallies'
+            regime_analysis['directional_filter'] = 'short_only'
+        elif regime_score <= 0.35:
+            regime_analysis['market_regime'] = 'sell'
+            regime_analysis['regime_bias'] = 'bearish'
+            regime_analysis['suggested_strategy'] = 'short_bias'
+            regime_analysis['directional_filter'] = 'short_preferred'
+        else:
+            regime_analysis['market_regime'] = 'neutral'
+            regime_analysis['regime_bias'] = 'mixed'
+            regime_analysis['suggested_strategy'] = 'wait'
+            regime_analysis['directional_filter'] = 'both'
+        
+        # === 6. CONFIDENCE BASED ON CLARITY ===
+        regime_analysis['regime_confidence'] = min(0.95, regime_analysis['regime_strength'] + 0.3)
+        
+        regime_analysis['regime_factors'] = regime_factors
+        
+        return regime_analysis
+
     def get_ema_sma_trend_analysis(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
         """
         🎯 ANALYSE COMPLÈTE EMA/SMA TREND HIERARCHY - CONFLUENCE MATRIX FINAL PIECE! 🎯
