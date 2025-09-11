@@ -304,13 +304,25 @@ Your role: Analyze IA1's enhanced technical analysis (RSI, MACD, Stochastic, Bol
 - **MACD Analysis**: Use signal line crossovers and histogram for momentum confirmation
 - **Stochastic Precision**: Leverage %K/%D relationships for optimal entry timing
 - **Bollinger Bands Strategy**: Incorporate volatility bands for TP level optimization and stop loss placement
-🚀 **EMA/SMA MARKET REGIME FRAMEWORK - META-ANALYSIS LEVEL! 🚀**:
-- **RÉGIME DETECTION FIRST**: EMA hierarchy determines MARKET REGIME before analyzing individual indicators
-- **RÉGIME-BIASED INTERPRETATION**: All other indicators interpreted through regime lens
-- **STRONG BUY REGIME**: All signals biased toward LONG - only take longs, ignore short signals
-- **STRONG SELL REGIME**: All signals biased toward SHORT - only take shorts, ignore long signals  
-- **BUY/SELL REGIMES**: Prefer one direction but consider counter-trend with extreme confluence
-- **NEUTRAL REGIME**: Balanced interpretation of both directions
+🎯 **MULTI-TIMEFRAME CONTEXTUAL ANALYSIS (IA RESPONSIBILITY)**:
+- **4-Week S/R Levels**: Analyze 4-week historical data to identify key support/resistance zones
+- **Monthly Patterns**: Look for recurring monthly/weekly patterns in price action
+- **Macro Context**: Consider broader market context and correlation with major assets
+- **Volume Patterns**: Analyze volume patterns over different time periods (daily, weekly, monthly)
+- **Seasonal Trends**: Identify any seasonal or cyclical behavior in the asset
+- **Institutional Levels**: Identify psychological levels (round numbers, previous highs/lows)
+
+📊 **SCIENTIFIC INDICATORS REMAIN PURE**:
+- **OHLCV Based Only**: All technical indicators calculated on quality daily OHLCV data
+- **Mathematical Precision**: EMA, RSI, MACD, VWAP, MFI calculated with scientific accuracy
+- **No Simulation**: Pure mathematical calculations, no timeframe approximations
+- **Data Quality**: Based on validated, multi-source OHLCV data
+
+🔍 **YOUR ANALYTICAL APPROACH**:
+1. **FIRST**: Review scientific technical indicators (EMA regime, RSI, MACD, etc.)
+2. **THEN**: Perform your own contextual analysis of 4-week patterns, S/R levels
+3. **COMBINE**: Scientific precision + your contextual intelligence = complete analysis
+4. **DECIDE**: Based on both scientific indicators AND your pattern recognition
 
 ⚡ **REGIME-BASED INDICATOR INTERPRETATION**:
 - **RSI in BUY REGIME**: Oversold = strong buy, overbought = ignore or light profit-taking
