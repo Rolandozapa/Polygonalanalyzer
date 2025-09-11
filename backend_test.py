@@ -1,36 +1,31 @@
 #!/usr/bin/env python3
 """
-BingX Integration Comprehensive Testing Suite
-Focus: Complete BingX API integration system testing as requested in review
+GLOBAL CRYPTO MARKET ANALYZER INTEGRATION TESTING SUITE
+Focus: Complete testing of the new Global Crypto Market Analyzer integration
 
-TESTING REQUIREMENTS:
-1. BingX API Connectivity: Test /api/bingx/status endpoint to verify API connection
-2. Account Balance: Test /api/bingx/balance to ensure balance retrieval works
-3. BingX Integration Manager: Verify bingx_manager initialization and core functionality 
-4. API Endpoints Testing: Test all 15 new BingX endpoints for proper responses
-5. Risk Management: Test risk configuration and validation systems
-6. IA2 Integration: Verify that IA2 can execute trades via BingX integration
-7. Error Handling: Test error scenarios and ensure system doesn't crash
+TESTING REQUIREMENTS FROM REVIEW REQUEST:
+1. Module Loading: Verify that the global_crypto_market_analyzer module is properly imported and accessible
+2. Global Market Data Fetching: Test the CoinGecko and Fear & Greed API integrations
+3. Market Regime Detection: Validate the automatic bull/bear/neutral market regime detection
+4. Sentiment Analysis: Test Fear & Greed index integration and sentiment classification
+5. IA1/IA2 Context Integration: Verify that global market context is properly injected into IA1 and IA2 prompts
+6. Admin Endpoints: Test the new `/admin/market/global` endpoint for monitoring
+7. Cache System: Verify that market data is cached appropriately (5-minute cache)
+8. Error Handling: Test fallback behavior when APIs are unavailable
 
-SPECIFIC ENDPOINTS TO TEST:
-- GET /api/bingx/status (system status)
-- GET /api/bingx/balance (account balance) 
-- GET /api/bingx/positions (positions)
-- GET /api/bingx/risk-config (risk configuration)
-- GET /api/bingx/trading-history (trading history)
-- POST /api/bingx/execute-ia2 (IA2 trade execution - use mock data)
+EXPECTED SYSTEM CAPABILITIES:
+- Real-time global crypto market conditions (market cap, volume, BTC dominance)
+- Fear & Greed index sentiment analysis
+- Bull/Bear market regime detection
+- Trading recommendations based on market conditions
+- Enhanced IA context with macro market awareness
 
-API CREDENTIALS: 
-- API Key: HZCsTzoH1DYjGYi3jmeAeRYA6hIVb9vySpPnJx7FaE6p9eDVU23qobsCAyX7JbMJj57QgY60l3BhfhA5ag
-- Secret Key: ynNfVmYYSPmlP1roNGa5L8VeUokXMF94XH9VNf7pBXocIgMWxBlnarX3Uy13ftf9zQfI5jzrvMXQiA0qGQ
-- IP Whitelist: 34.107.197.154
-
-CRITICAL VALIDATION:
-- Verify API authentication works with provided credentials
-- Test that BingX integration doesn't break existing IA2 functionality
-- Ensure risk management prevents dangerous trades
-- Validate that all endpoints return proper JSON responses
-- Check that error handling works gracefully
+TESTING APPROACH:
+- Call the global market analyzer functions directly
+- Test the admin endpoint `/admin/market/global`
+- Verify IA1/IA2 prompts now include global market context
+- Check that market regime influences trading decisions
+- Validate cache behavior and API rate limiting
 """
 
 import asyncio
