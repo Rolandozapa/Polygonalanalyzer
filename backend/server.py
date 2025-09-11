@@ -8598,6 +8598,72 @@ async def test_intelligent_ohlcv_system():
             "timestamp": get_paris_time().isoformat()
         }
 
+@api_router.get("/admin/market/global")
+async def get_global_market_analysis():
+    """
+    🎯 ENDPOINT ADMIN: Obtenir l'analyse globale du marché crypto
+    """
+    try:
+        logger.info("🌍 Fetching global crypto market analysis")
+        
+        # Récupérer analyse complète du marché
+        market_data = await global_crypto_market_analyzer.get_global_market_data()
+        
+        if not market_data:
+            return {
+                "status": "error",
+                "error": "Unable to fetch global market data",
+                "timestamp": get_paris_time().isoformat()
+            }
+        
+        # Obtenir contexte formaté pour les IAs
+        ia_context = await global_crypto_market_analyzer.get_market_context_for_ias()
+        
+        # Construire réponse détaillée
+        response_data = {
+            "status": "success",
+            "timestamp": market_data.timestamp.isoformat(),
+            "market_overview": {
+                "total_market_cap": market_data.total_market_cap,
+                "total_volume_24h": market_data.total_volume_24h,
+                "btc_dominance": market_data.btc_dominance,
+                "eth_dominance": market_data.eth_dominance,
+                "btc_price": market_data.btc_price,
+                "btc_change_24h": market_data.btc_change_24h,
+                "btc_change_7d": market_data.btc_change_7d,
+                "btc_change_30d": market_data.btc_change_30d
+            },
+            "sentiment_analysis": {
+                "fear_greed_value": market_data.fear_greed_value,
+                "fear_greed_classification": market_data.fear_greed_classification,
+                "market_regime": market_data.market_regime.value,
+                "market_sentiment": market_data.market_sentiment.value,
+                "volatility_regime": market_data.volatility_regime,
+                "liquidity_condition": market_data.liquidity_condition
+            },
+            "scores": {
+                "bull_bear_score": market_data.bull_bear_score,
+                "market_health_score": market_data.market_health_score,
+                "opportunity_score": market_data.opportunity_score
+            },
+            "trading_intelligence": {
+                "market_context_summary": market_data.market_context_summary,
+                "trading_recommendations": market_data.trading_recommendations,
+                "ia_formatted_context": ia_context
+            }
+        }
+        
+        logger.info(f"✅ Global market analysis: {market_data.market_regime.value}, {market_data.market_sentiment.value}")
+        return response_data
+        
+    except Exception as e:
+        logger.error(f"❌ Error fetching global market analysis: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "timestamp": get_paris_time().isoformat()
+        }
+
 @api_router.get("/admin/escalation/test")
 async def test_voie3_escalation_logic():
     """
