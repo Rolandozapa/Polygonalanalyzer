@@ -24,7 +24,7 @@ class IA1ScoringValidationTest:
     """Validation test for IA1 Enhanced Scoring System"""
     
     def __init__(self):
-        self.api_url = "https://bingx-fusion.preview.emergentagent.com/api"
+        self.api_url = "https://dual-ai-trader-4.preview.emergentagent.com/api"
         logger.info(f"Validating IA1 Enhanced Scoring System at: {self.api_url}")
         
         # Test results

@@ -17,7 +17,7 @@ def analyze_technical_indicators():
     """Analyze current technical indicators in IA1 analyses"""
     
     # Get backend URL
-    api_url = "https://bingx-fusion.preview.emergentagent.com/api"
+    api_url = "https://dual-ai-trader-4.preview.emergentagent.com/api"
     
     logger.info("🔍 FOCUSED TECHNICAL INDICATORS ANALYSIS")
     logger.info("=" * 60)
