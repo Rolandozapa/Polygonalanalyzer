@@ -26,10 +26,10 @@ const TradingDashboard = () => {
   const [bingxRiskConfig, setBingxRiskConfig] = useState(null);
   const [bingxLoading, setBingxLoading] = useState(false);
 
-  // WebSocket connection
+  // Optimized polling - Reduced from 5s to 15s to prevent CPU overload
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000); // Refresh every 5 seconds
+    const interval = setInterval(fetchData, 15000); // Refresh every 15 seconds (CPU optimized)
     return () => clearInterval(interval);
   }, []);
 
