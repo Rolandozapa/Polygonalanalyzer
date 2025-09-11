@@ -8633,6 +8633,7 @@ async def get_critical_market_variables():
                 "market_cap": {
                     "total_usd": market_data.total_market_cap,
                     "total_formatted": f"${market_data.total_market_cap/1e12:.2f}T",
+                    "change_24h": market_data.market_cap_change_24h,
                     "status": "✅ OK" if market_data.total_market_cap > 0 else "❌ MISSING"
                 },
                 "volume_24h": {
