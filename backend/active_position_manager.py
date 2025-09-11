@@ -101,9 +101,9 @@ class ActivePositionManager:
         self.max_account_risk = 0.10  # 10% max account risk
         self.default_leverage = 3.0
         
-        # Monitoring
+        # Monitoring - CPU optimized (increased from 5s to 15s)
         self.monitoring_active = False
-        self.update_interval = 5.0  # 5 seconds
+        self.update_interval = 15.0  # 15 seconds (CPU optimized)
         
         logger.info(f"Active Position Manager initialized in {execution_mode} mode")
     
