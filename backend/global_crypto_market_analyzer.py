@@ -190,6 +190,11 @@ class GlobalCryptoMarketAnalyzer:
                 market_regime, market_sentiment, opportunity_score, volatility_regime
             )
             
+            # Calculer le changement Market Cap 24h
+            market_cap_change_24h = await self._calculate_market_cap_change_24h(
+                coingecko_data, btc_historical_data
+            )
+            
             # Construire objet final
             global_market_data = GlobalMarketData(
                 timestamp=datetime.now(timezone.utc),
@@ -201,6 +206,7 @@ class GlobalCryptoMarketAnalyzer:
                 btc_change_24h=btc_historical_data.get("price_change_percentage_24h", 0),
                 btc_change_7d=btc_historical_data.get("price_change_percentage_7d", 0),
                 btc_change_30d=btc_historical_data.get("price_change_percentage_30d", 0),
+                market_cap_change_24h=market_cap_change_24h,  # 🚨 NOUVELLE VARIABLE CRITIQUE
                 fear_greed_value=fear_greed_data.get("value", 50),
                 fear_greed_classification=fear_greed_data.get("value_classification", "Neutral"),
                 market_regime=market_regime,
