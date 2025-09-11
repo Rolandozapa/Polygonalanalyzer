@@ -147,7 +147,20 @@
         - agent: "testing"
         - comment: "TESTED: Probabilistic TP System is WORKING. Analysis of 3 decisions shows: ✅ LONG/SHORT signals (2/3) generate 5-level TP strategies with custom distributions [20,25,25,20,10]. ✅ HOLD signals (1/3) correctly exclude TP strategy. ✅ Dynamic TP percentages: TP1(1.2%), TP2(2.8%), TP3(4.8%), TP4(7.5%), TP5(12.0%). ✅ Custom distributions and leverage-adjusted calculations present. ✅ Claude override system working with pattern-based TP targeting. Evidence found: 'CLAUDE TP STRATEGY SHORT: TP1 targets quick profit near $0.645, TP2 targets midway to support, TP3 targets the neckline support at $0.61, TP4 targets full pattern completion at $0.51'. System generates probabilistic TP configurations as requested, not fixed templates."
 
-## user_problem_statement: "Intégrer le bot de trading avec l'API BingX pour l'exécution des trades en temps réel"
+## user_problem_statement: "Fix IA2 RR calculation to use simple support/resistance formula like IA1"
+
+## backend:
+  - task: "Simplify IA2 RR Calculation to Match IA1 Support/Resistance Formula"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "IMPLEMENTED: Simplified IA2 RR calculation to use the same support/resistance formula as IA1 instead of complex volatility-based approach. Updated IA2 prompt section to use simple formulas: LONG RR = (TP-Entry)/(Entry-SL), SHORT RR = (Entry-TP)/(SL-Entry). Removed complex volatility assessment requirements and realistic level distance requirements. This should resolve the persistent 'calculated_rr: null' issues and provide consistent RR calculations between IA1 and IA2."
 
 ## backend:
   - task: "Implement BingX API Integration System"
