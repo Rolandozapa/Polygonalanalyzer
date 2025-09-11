@@ -1076,7 +1076,7 @@ SCORE BULL/BEAR: {bull_bear_score:+.1f}/100 {'(Momentum BULLISH)' if bull_bear_s
 🌍 **GLOBAL CRYPTO MARKET CONTEXT** (Updated: {market_data.timestamp.strftime('%Y-%m-%d %H:%M UTC')}):
 
 📊 **MARKET OVERVIEW:**
-• Total Market Cap: ${market_data.total_market_cap/1e12:.2f}T (+/- indication needed)
+• Total Market Cap: ${market_data.total_market_cap/1e12:.2f}T ({market_data.market_cap_change_24h:+.2f}% 24h)
 • 24h Volume: ${market_data.total_volume_24h/1e9:.1f}B
 • BTC Dominance: {market_data.btc_dominance:.1f}% | ETH: {market_data.eth_dominance:.1f}%
 • BTC: ${market_data.btc_price:,.0f} ({market_data.btc_change_24h:+.1f}% 24h, {market_data.btc_change_7d:+.1f}% 7d)
