@@ -1831,8 +1831,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Create ultra professional analysis prompt
             market_cap_str = f"${opportunity.market_cap:,.0f}" if opportunity.market_cap else "N/A"
             
+            # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO
+            global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
+            
             prompt = f"""
             ADVANCED TECHNICAL ANALYSIS WITH CHARTIST PATTERNS - {opportunity.symbol}
+            
+            {global_market_context}
             
             MARKET DATA:
             Price: ${opportunity.current_price:,.2f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
