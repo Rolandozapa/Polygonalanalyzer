@@ -968,6 +968,90 @@ SCORE BULL/BEAR: {bull_bear_score:+.1f}/100 {'(Momentum BULLISH)' if bull_bear_s
             logger.error(f"Error generating trading recommendations: {e}")
             return ["Recommandations indisponibles - Analyser manuellement le contexte de marché"]
     
+    async def _calculate_market_cap_change_24h(self, 
+                                         coingecko_data: Dict, 
+                                         btc_data: Dict) -> float:
+        """
+        🚨 CALCUL MARKET CAP CHANGE 24H - Variable critique essentielle
+        
+        Méthodes utilisées (par ordre de priorité):
+        1. Données directes CoinGecko si disponibles
+        2. Estimation basée sur Bitcoin (corrélation ~0.85)
+        3. Fallback via calcul composite BTC + ETH + dominances
+        """
+        try:
+            logger.info("🧮 Calculating Market Cap 24h change...")
+            
+            # 1. MÉTHODE DIRECTE: CoinGecko market cap change (si disponible)
+            if coingecko_data and "market_cap_change_percentage_24h_usd" in coingecko_data:
+                direct_change = coingecko_data["market_cap_change_percentage_24h_usd"]
+                if isinstance(direct_change, (int, float)) and -50 <= direct_change <= 50:
+                    logger.info(f"✅ Direct Market Cap 24h: {direct_change:+.2f}% (CoinGecko)")
+                    return direct_change
+            
+            # 2. MÉTHODE ESTIMATION BITCOIN: Market cap total suit BTC avec facteur
+            if btc_data and "price_change_percentage_24h" in btc_data:
+                btc_change_24h = btc_data["price_change_percentage_24h"]
+                btc_dominance = coingecko_data.get("market_cap_percentage", {}).get("btc", 54)
+                
+                if isinstance(btc_change_24h, (int, float)):
+                    # Factor basé sur dominance BTC et corrélation historique
+                    # Plus la dominance BTC est élevée, plus le market cap total suit BTC
+                    dominance_factor = btc_dominance / 100  # 0.54 pour 54% dominance
+                    correlation_factor = 0.85  # Corrélation historique BTC/Total Market Cap
+                    
+                    estimated_mcap_change = btc_change_24h * dominance_factor * correlation_factor
+                    
+                    logger.info(f"✅ Estimated Market Cap 24h: {estimated_mcap_change:+.2f}% (BTC-based)")
+                    logger.info(f"   BTC change: {btc_change_24h:+.2f}%, BTC dominance: {btc_dominance:.1f}%")
+                    
+                    return estimated_mcap_change
+            
+            # 3. MÉTHODE COMPOSITE: Calcul basé sur moyennes de marché
+            try:
+                # Utiliser des données de fallback Binance pour estimer
+                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+                    # Récupérer données BTC et ETH pour estimation composite
+                    btc_ticker_url = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
+                    eth_ticker_url = "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT"
+                    
+                    btc_response = await session.get(btc_ticker_url)
+                    eth_response = await session.get(eth_ticker_url)
+                    
+                    if btc_response.status == 200 and eth_response.status == 200:
+                        btc_binance = await btc_response.json()
+                        eth_binance = await eth_response.json()
+                        
+                        btc_change = float(btc_binance.get('priceChangePercent', 0))
+                        eth_change = float(eth_binance.get('priceChangePercent', 0))
+                        
+                        # Dominances
+                        btc_dom = coingecko_data.get("market_cap_percentage", {}).get("btc", 54)
+                        eth_dom = coingecko_data.get("market_cap_percentage", {}).get("eth", 17)
+                        
+                        # Calcul composite pondéré
+                        composite_change = (
+                            (btc_change * btc_dom / 100) + 
+                            (eth_change * eth_dom / 100) +
+                            (btc_change * 0.3)  # Influence générale BTC sur altcoins
+                        )
+                        
+                        logger.info(f"✅ Composite Market Cap 24h: {composite_change:+.2f}% (BTC+ETH weighted)")
+                        logger.info(f"   BTC: {btc_change:+.2f}% ({btc_dom:.1f}%), ETH: {eth_change:+.2f}% ({eth_dom:.1f}%)")
+                        
+                        return composite_change
+            
+            except Exception as e:
+                logger.warning(f"Composite calculation failed: {e}")
+            
+            # 4. FALLBACK FINAL: Valeur neutre réaliste
+            logger.warning("⚠️ All Market Cap 24h calculation methods failed, using neutral fallback")
+            return 0.0  # Marché stable par défaut
+            
+        except Exception as e:
+            logger.error(f"Error calculating Market Cap 24h change: {e}")
+            return 0.0
+
     def _is_cache_valid(self, cache_key: str) -> bool:
         """Vérifier si le cache est encore valide"""
         if cache_key not in self.cache:
