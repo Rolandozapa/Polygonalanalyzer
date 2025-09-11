@@ -3814,27 +3814,27 @@ class UltraProfessionalIA2DecisionAgent:
             historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
             
             if historical_data is not None and len(historical_data) > 50:
-                # Calculate REAL multi-timeframe indicators for IA2 intelligence
+                # Use SCIENTIFIC approach: Quality OHLCV data for precise calculations
                 from advanced_technical_indicators import advanced_technical_indicators
                 
-                logger.info(f"🚀 IA2: Fetching REAL multi-timeframe data for {opportunity.symbol}")
-                multi_tf_indicators = await advanced_technical_indicators.get_multi_timeframe_indicators_real(opportunity.symbol)
-                
-                if multi_tf_indicators:
-                    multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
-                    logger.info(f"✅ IA2: Real multi-timeframe data loaded for {opportunity.symbol}")
-                else:
-                    # Fallback to old method if needed
-                    logger.warning(f"⚠️ IA2: Using fallback multi-timeframe for {opportunity.symbol}")
-                    opportunity_df = pd.DataFrame(historical_data)
-                    multi_tf_indicators = advanced_technical_indicators.get_multi_timeframe_indicators(opportunity_df)
-                    multi_tf_formatted = advanced_technical_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
-                
-                # Get current indicators too
+                logger.info(f"🔬 IA2: Using scientific indicators for {opportunity.symbol}")
                 opportunity_df = pd.DataFrame(historical_data)
-                current_indicators = advanced_technical_indicators.get_latest_indicators(
-                    advanced_technical_indicators.calculate_all_indicators(opportunity_df)
-                )
+                
+                # Get scientific indicators (quality OHLCV-based calculations)
+                current_indicators = advanced_technical_indicators.get_scientific_indicators(opportunity_df)
+                
+                # For contextual analysis, provide the IA with raw data for pattern recognition
+                multi_tf_formatted = f"""
+CONTEXTUAL DATA FOR YOUR ANALYSIS:
+- Total OHLCV periods: {len(historical_data)} days
+- Price range: ${min(row['Close'] for row in historical_data):.6f} - ${max(row['Close'] for row in historical_data):.6f}
+- Recent 7-day range: ${min(row['Close'] for row in historical_data[-7:]):.6f} - ${max(row['Close'] for row in historical_data[-7:]):.6f}  
+- Recent 30-day range: ${min(row['Close'] for row in historical_data[-30:]):.6f} - ${max(row['Close'] for row in historical_data[-30:]):.6f}
+
+INSTRUCTION: Analyze the above data for 4-week S/R levels, monthly patterns, and contextual insights.
+The scientific indicators below provide mathematical precision - you add contextual intelligence."""
+                
+                logger.info(f"✅ IA2: Scientific indicators + contextual data prepared for {opportunity.symbol}")
                 
                 logger.info(f"🎯 IA2 SCIENTIFIC DATA: {len(historical_data)} OHLCV periods available for {opportunity.symbol}")
             else:
