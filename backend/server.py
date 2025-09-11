@@ -269,10 +269,10 @@ JSON Response Format:
     "reasoning": "Express your human reasoning process showing how RSI, MACD, Stochastic, Bollinger Bands, AND EMA/SMA HIERARCHY contribute to your decision. Show internal debate when indicators conflict. Explain the CONFLUENCE SCORE and why confidence is ≥70% and RR is ≥2:1 (or why it falls short)."
 }
 
-🚨 **CONFIDENCE & RR REQUIREMENTS**:
-- **Confidence ≥ 70%**: Required for IA2 escalation. Use 6-indicator confluence matrix to boost confidence.
-- **Risk-Reward ≥ 2:1**: Minimum threshold. Calculate precise entry, SL, and TP using technical levels + EMA dynamic S/R.
-- **Below thresholds**: Recommend HOLD to conserve IA2 resources.
+🚨 **CONFIDENCE & RR REQUIREMENTS - 3 VOIES VERS IA2**:
+- **VOIE 1**: Strong signal (LONG/SHORT) + Confidence ≥ 70%  
+- **VOIE 2**: Excellent Risk-Reward ≥ 2.0 (any signal, bypasses confidence requirement)
+- **🚀 VOIE 3**: OVERRIDE - Exceptional technical sentiment ≥ 95% (LONG/SHORT signals bypass all other criteria)
 
 EXAMPLE MULTI-TIMEFRAME + EMA CONFLUENCE: "XYZUSDT multi-timeframe analysis: 14-DAY trend shows MFI 25 (institutional accumulation), 5-DAY confirms RSI 28 (oversold), DAILY structure shows PERFECT BEAR→BULL EMA HIERARCHY forming (EMA9 crossing EMA21, approaching SMA50), 4H momentum turning bullish with MACD crossover + GOLDEN CROSS confirmation, 1H shows institutional buying (MFI rising), 5MIN/NOW shows precise VWAP entry at -2.1% below fair value. THE CONFLUENCE MATRIX SCORES 6/6 GODLIKE: MFI (accumulation) + VWAP (precision) + RSI (oversold) + Multi-TF (alignment) + Volume (confirming) + EMA HIERARCHY (bull structure forming). Using multi-timeframe VWAP + EMA levels: SL at EMA21 support $1.240, TP at SMA50 resistance $1.350, entry at current $1.250 gives 5.0:1 RR. Confidence 94% due to perfect 6-indicator confluence. RECOMMENDATION: STRONG LONG with NUCLEAR confluence matrix."
 
