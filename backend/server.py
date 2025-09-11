@@ -3836,7 +3836,7 @@ class UltraProfessionalIA2DecisionAgent:
                     advanced_technical_indicators.calculate_all_indicators(opportunity_df)
                 )
                 
-                logger.info(f"🎯 IA2 MULTI-TIMEFRAME DATA: {len(multi_tf_indicators)} timeframes available for {opportunity.symbol}")
+                logger.info(f"🎯 IA2 SCIENTIFIC DATA: {len(historical_data)} OHLCV periods available for {opportunity.symbol}")
             else:
                 logger.warning(f"⚠️ IA2: Limited data for {opportunity.symbol}, using single-timeframe analysis")
                 multi_tf_formatted = "⚠️ Multi-timeframe data limited"
