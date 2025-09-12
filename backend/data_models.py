@@ -79,6 +79,7 @@ class TechnicalAnalysis(BaseModel):
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    ia1_position_id: Optional[str] = None  # 🆕 Reference to IA1 analysis position_id
     symbol: str
     signal: SignalType
     confidence: float
