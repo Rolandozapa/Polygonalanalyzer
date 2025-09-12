@@ -7502,6 +7502,130 @@ class UltraProfessionalOrchestrator:
 # Initialize the global orchestrator
 orchestrator = UltraProfessionalOrchestrator()
 
+# 🔥 ORCHESTRATOR INITIALIZATION - RECONSTRUCTED FOR PIPELINE FUNCTIONALITY
+class UltraProfessionalOrchestrator:
+    """
+    Ultra Professional Trading Orchestrator
+    Manages the complete IA1 → IA2 pipeline with intelligent decision making
+    """
+    
+    def __init__(self):
+        self.scout = UltraProfessionalCryptoScout()
+        self.ia1 = UltraProfessionalIA1TechnicalAnalyst()
+        self.ia2 = UltraProfessionalIA2DecisionAgent()
+        self._initialized = False
+        self.is_running = False
+        self.cycle_count = 0
+        
+        logger.info("🚀 UltraProfessionalOrchestrator initialized")
+    
+    async def initialize(self):
+        """Initialize the orchestrator and all components"""
+        try:
+            logger.info("🔄 Initializing orchestrator components...")
+            
+            # Initialize scout trending system
+            await self.scout.initialize_trending_system()
+            
+            self._initialized = True
+            logger.info("✅ Orchestrator initialized successfully")
+            
+        except Exception as e:
+            logger.error(f"❌ Orchestrator initialization failed: {e}")
+            raise
+    
+    async def start(self):
+        """Start the trading system"""
+        if not self._initialized:
+            await self.initialize()
+        
+        self.is_running = True
+        logger.info("✅ Trading system started")
+        return {"status": "started", "components": ["scout", "ia1", "ia2"]}
+    
+    async def stop(self):
+        """Stop the trading system"""
+        self.is_running = False
+        logger.info("🛑 Trading system stopped")
+        return {"status": "stopped"}
+    
+    async def run_trading_cycle(self):
+        """Run a complete trading cycle"""
+        try:
+            logger.info("🚀 Running trading cycle...")
+            
+            # Step 1: Scan opportunities
+            opportunities = await self.scout.scan_opportunities()
+            logger.info(f"📊 Found {len(opportunities)} opportunities")
+            
+            # Step 2: Analyze with IA1
+            analyses_count = 0
+            for opportunity in opportunities[:10]:  # Limit to prevent overload
+                try:
+                    analysis = await self.ia1.analyze_opportunity(opportunity)
+                    if analysis:
+                        analyses_count += 1
+                        
+                        # Step 3: Check if should escalate to IA2
+                        if self._should_send_to_ia2(analysis, opportunity):
+                            logger.info(f"🎯 Escalating {opportunity.symbol} to IA2")
+                            
+                            # Get performance stats
+                            perf_stats = advanced_market_aggregator.get_performance_stats()
+                            
+                            # Step 4: IA2 decision
+                            decision = await self.ia2.make_decision(opportunity, analysis, perf_stats)
+                            if decision:
+                                logger.info(f"✅ IA2 decision: {decision.signal} for {opportunity.symbol}")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Error processing {opportunity.symbol}: {e}")
+                    continue
+            
+            self.cycle_count += 1
+            logger.info(f"✅ Trading cycle completed: {analyses_count} analyses")
+            return analyses_count
+            
+        except Exception as e:
+            logger.error(f"❌ Trading cycle error: {e}")
+            return 0
+    
+    def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
+        """
+        Determine if IA1 analysis should be sent to IA2
+        Implements the 3 VOIES escalation logic
+        """
+        try:
+            ia1_signal = analysis.ia1_signal.lower()
+            confidence = analysis.analysis_confidence
+            rr_ratio = analysis.risk_reward_ratio
+            
+            # VOIE 1: Strong signal with confidence >= 70%
+            if ia1_signal in ['long', 'short'] and confidence >= 0.70:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 1): {opportunity.symbol} - {ia1_signal} {confidence:.1%}")
+                return True
+            
+            # VOIE 2: Excellent RR >= 2.0 regardless of signal
+            if rr_ratio >= 2.0:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 2): {opportunity.symbol} - RR {rr_ratio:.2f}:1")
+                return True
+            
+            # VOIE 3: Exceptional technical sentiment >= 95% (override)
+            if ia1_signal in ['long', 'short'] and confidence >= 0.95:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 3 - OVERRIDE): {opportunity.symbol} - Exceptional sentiment {confidence:.1%}")
+                return True
+            
+            # Not eligible for IA2
+            logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal} {confidence:.1%}, RR {rr_ratio:.2f}:1")
+            return False
+            
+        except Exception as e:
+            logger.error(f"❌ Error in _should_send_to_ia2: {e}")
+            return False
+
+# Initialize the global orchestrator
+orchestrator = UltraProfessionalOrchestrator()
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
