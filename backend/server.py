@@ -5203,9 +5203,33 @@ async def get_analyses(limit: int = 50):
         async for doc in cursor:
             # Convert MongoDB document to JSON-serializable format
             doc.pop('_id', None)  # Remove ObjectId
+            
+            # 🔧 CRITICAL FIX: Ensure patterns_detected is always an array for frontend
+            if 'patterns_detected' in doc:
+                patterns = doc['patterns_detected']
+                if isinstance(patterns, str):
+                    # If it's a string that looks like an array, parse it
+                    if patterns.startswith('[') and patterns.endswith(']'):
+                        try:
+                            import ast
+                            doc['patterns_detected'] = ast.literal_eval(patterns)
+                            logger.debug(f"✅ Fixed patterns_detected string to array for {doc.get('symbol', 'unknown')}")
+                        except Exception as parse_error:
+                            logger.warning(f"⚠️ Failed to parse patterns_detected: {parse_error}")
+                            doc['patterns_detected'] = [patterns]  # Wrap in array as fallback
+                    else:
+                        # Single pattern string, wrap in array
+                        doc['patterns_detected'] = [patterns]
+                elif patterns is None or not isinstance(patterns, list):
+                    # Handle None or other types
+                    doc['patterns_detected'] = []
+            else:
+                # Add empty array if missing
+                doc['patterns_detected'] = []
+            
             analyses.append(doc)
         
-        logger.info(f"🧠 Returning {len(analyses)} IA1 analyses")
+        logger.info(f"🧠 Returning {len(analyses)} IA1 analyses (patterns_detected fixed)")
         return {
             "success": True,
             "analyses": analyses,
