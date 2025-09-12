@@ -102,7 +102,7 @@ class TrendingAutoUpdater:
                 
                 logger.info("🔍 Starting trending update cycle...")
                 await self.update_trending_list()
-                logger.info(f"⏰ Next trending update in 6 hours")
+                logger.info(f"⏰ Next trending update in 4 hours")
                 await asyncio.sleep(self.update_interval)
                 
             except asyncio.CancelledError:
