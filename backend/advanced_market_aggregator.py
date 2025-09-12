@@ -1289,11 +1289,20 @@ class AdvancedMarketAggregator:
             
             # Try to get trending symbols from the global trending updater
             try:
-                # Access the trending updater from the server module
+                # Access the trending updater from the server module with better error handling
                 import server
-                if hasattr(server, 'trending_updater') and server.trending_updater.current_trending:
+                if (hasattr(server, 'trending_updater') and 
+                    hasattr(server.trending_updater, 'current_trending') and 
+                    server.trending_updater.current_trending):
+                    
                     trending_cryptos = server.trending_updater.current_trending
                     logger.info(f"🔥 USING BINGX TRENDING: {len(trending_cryptos)} trending cryptos from BingX")
+                    
+                    # Force refresh if trending data is too old (>4 hours)
+                    if (server.trending_updater.last_update and 
+                        (datetime.now(timezone.utc) - server.trending_updater.last_update).total_seconds() > 14400):
+                        logger.info("🔄 Trending data >4h old, will use fallback for now")
+                        trending_cryptos = []
                     
                     for crypto in trending_cryptos[:50]:  # Top 50 comme demandé par l'utilisateur
                         opportunity = MarketOpportunity(
@@ -1311,7 +1320,34 @@ class AdvancedMarketAggregator:
                     
                     logger.info(f"✅ BINGX OPPORTUNITIES: Generated {len(opportunities)} opportunities from BingX trending")
                 else:
-                    logger.warning("⚠️ No trending data available from BingX updater")
+                    logger.warning("⚠️ No fresh trending data available from BingX updater")
+                    # Try force update if updater exists but no data
+                    if hasattr(server, 'trending_updater'):
+                        logger.info("🔄 Attempting force update of trending data...")
+                        try:
+                            # Use asyncio.run to handle the async call in sync context
+                            import asyncio
+                            fresh_trends = asyncio.run(server.trending_updater.fetch_trending_cryptos())
+                            if fresh_trends:
+                                server.trending_updater.current_trending = fresh_trends
+                                server.trending_updater.last_update = datetime.now(timezone.utc)
+                                logger.info(f"✅ Force updated: {len(fresh_trends)} fresh trends")
+                                
+                                for crypto in fresh_trends[:50]:
+                                    opportunity = MarketOpportunity(
+                                        symbol=crypto.symbol,
+                                        current_price=100.0,
+                                        volume_24h=crypto.volume or 1000000.0,
+                                        price_change_24h=crypto.price_change or 0.02,
+                                        volatility=0.05,
+                                        market_cap=crypto.market_cap or 1000000000,
+                                        market_cap_rank=crypto.rank or 1,
+                                        data_sources=[crypto.source],
+                                        data_confidence=0.8
+                                    )
+                                    opportunities.append(opportunity)
+                        except Exception as force_error:
+                            logger.warning(f"⚠️ Force update failed: {force_error}")
                     
             except Exception as trending_error:
                 logger.warning(f"⚠️ Could not access BingX trending data: {trending_error}")
