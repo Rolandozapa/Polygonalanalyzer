@@ -148,8 +148,8 @@ class TrendingAutoUpdater:
             
             final_trending = list(unique_cryptos.values())
             
-            # Trier par price change puis volume
-            final_trending.sort(key=lambda x: (x.price_change or 0, x.volume or 0), reverse=True)
+            # Trier par volume d'abord (indicateur de vraie activité) puis price change
+            final_trending.sort(key=lambda x: (x.volume or 0, abs(x.price_change or 0)), reverse=True)
             
             logger.info(f"✅ BingX TOTAL: {len(final_trending)} unique trending cryptos retrieved")
             return final_trending[:50]  # Top 50
