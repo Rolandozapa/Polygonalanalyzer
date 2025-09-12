@@ -4132,7 +4132,7 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
             logger.info(f"🧠 IA2: Sending enhanced strategic prompt to Claude for {symbol}")
             
             # Enhanced strategic prompt for detailed IA2 decisions
-            strategic_prompt = f"""You are IA2, the strategic trading decision maker. Based on IA1's technical analysis, make a comprehensive strategic decision.
+            strategic_prompt = f"""You are IA2, the strategic trading decision maker. Based on IA1's comprehensive technical analysis, make a strategic decision.
 
 📊 MARKET CONTEXT:
 - Symbol: {symbol}
@@ -4141,31 +4141,59 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 - IA1 Confidence: {ia1_confidence:.1%}
 - Risk-Reward Ratio: {rr_ratio:.2f}:1
 
-📈 TECHNICAL ANALYSIS (IA1):
+📈 BASIC TECHNICAL INDICATORS:
 - RSI: {analysis.rsi:.1f}
 - MACD Signal: {analysis.macd_signal:.6f}
+- Stochastic %K: {analysis.stochastic:.1f}
+- Stochastic %D: {analysis.stochastic_d:.1f}
 - Bollinger Position: {analysis.bollinger_position:.2f}
 - Support Levels: {analysis.support_levels}
 - Resistance Levels: {analysis.resistance_levels}
 
+🔥 ADVANCED INSTITUTIONAL INDICATORS:
+- MFI (Money Flow): {analysis.mfi_value:.1f} ({analysis.mfi_signal})
+- Institution Activity: {analysis.mfi_institution}
+- VWAP Price: ${analysis.vwap_price:.2f}
+- VWAP Position: {analysis.vwap_position:.1f}% ({analysis.vwap_signal})
+- VWAP Trend: {analysis.vwap_trend}
+
+🚀 EMA/SMA TREND HIERARCHY:
+- EMA Hierarchy: {analysis.ema_hierarchy}
+- Price vs EMAs: {analysis.ema_position}
+- EMA Cross Signal: {analysis.ema_cross_signal}
+- EMA Strength: {analysis.ema_strength:.1f}%
+
+⚡ MULTI-TIMEFRAME ANALYSIS:
+- Dominant Timeframe: {analysis.multi_timeframe_dominant}
+- Decisive Pattern: {analysis.multi_timeframe_pattern}
+- Hierarchy Confidence: {analysis.multi_timeframe_confidence:.1%}
+
+🎯 PATTERNS & SENTIMENT:
+- Detected Patterns: {analysis.patterns_detected}
+- Market Sentiment: {analysis.market_sentiment}
+- Fibonacci Level: {analysis.fibonacci_level:.3f} ({analysis.fibonacci_nearest_level})
+- Fibonacci Trend: {analysis.fibonacci_trend_direction}
+
 💡 STRATEGIC DECISION FRAMEWORK:
-Analyze institutional behavior, market regime, and provide detailed strategic reasoning considering:
-1. Market structure and momentum
-2. Risk management and position sizing
-3. Entry/exit strategy optimization
-4. Market timing and confluence factors
+Analyze all indicators considering:
+1. Institutional money flow vs retail sentiment
+2. Multi-timeframe confluence and hierarchy
+3. VWAP institutional behavior
+4. EMA trend strength and momentum
+5. Support/resistance confluence
+6. Risk management and position sizing
 
 RESPONSE FORMAT (JSON):
 {{
     "signal": "long" or "short" or "hold",
     "confidence": 0.XX (0.50 to 0.99),
-    "strategic_reasoning": "Detailed 2-3 sentence strategic analysis explaining institutional perspective, market timing, and decision rationale",
+    "reasoning": "Detailed strategic analysis in 2-3 sentences explaining institutional perspective, multi-timeframe analysis, and confluence factors",
     "risk_level": "low" or "medium" or "high",
     "position_size_recommendation": X.X (0.5 to 8.0 percent),
-    "market_regime_assessment": "bullish/bearish/neutral with confluence factors",
+    "market_regime_assessment": "bullish/bearish/neutral with confluence analysis",
     "execution_priority": "immediate/wait_for_confluence/avoid",
     "calculated_rr": X.XX,
-    "rr_reasoning": "Explanation of risk-reward calculation based on support/resistance levels"
+    "rr_reasoning": "RR calculation with support/resistance analysis"
 }}
 
 CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
