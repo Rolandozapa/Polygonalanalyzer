@@ -73,8 +73,11 @@ async def test_direct_ia2_execution():
         # Try to trigger IA2 decision making
         logger.info("🎯 Calling IA2 make_decision method...")
         
+        # Create perf_stats as required by make_decision
+        perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
+        
         try:
-            decision = await orchestrator.ia2.make_decision(analysis, opportunity)
+            decision = await orchestrator.ia2.make_decision(opportunity, analysis, perf_stats)
             logger.info(f"✅ IA2 decision completed: {decision.signal if decision else 'None'}")
             return True
             
