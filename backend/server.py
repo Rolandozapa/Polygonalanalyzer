@@ -4293,7 +4293,7 @@ The reasoning above contains detailed historical analysis including:
 }
 {
     f"EMA HIERARCHY: {getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()} | Price vs EMAs: {getattr(current_indicators, 'price_vs_emas', 'mixed').upper()}"
-    if current_indicators is not None else ""
+    if current_indicators is not None else "EMA hierarchy data not available"
 }
 {
     f"📊 DYNAMIC S/R LEVELS: EMA9=${getattr(current_indicators, 'ema_9', 0):.4f} | EMA21=${getattr(current_indicators, 'ema_21', 0):.4f} | SMA50=${getattr(current_indicators, 'sma_50', 0):.4f} | EMA200=${getattr(current_indicators, 'ema_200', 0):.4f}"
