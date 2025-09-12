@@ -9067,6 +9067,28 @@ async def force_ia1_analysis(request: dict):
         logger.error(f"❌ Force IA1 analysis error: {e}")
         return {"success": False, "error": str(e)}
 
+@api_router.post("/run-ia1-cycle")
+async def run_ia1_cycle():
+    """Run a quick IA1 analysis cycle on current opportunities"""
+    try:
+        logger.info("🚀 RUNNING QUICK IA1 CYCLE")
+        
+        if not orchestrator or not orchestrator._initialized:
+            return {"success": False, "error": "Orchestrator not initialized"}
+        
+        # Run a single trading cycle
+        opportunities_processed = await orchestrator.run_trading_cycle()
+        
+        return {
+            "success": True, 
+            "message": "IA1 cycle completed",
+            "opportunities_processed": opportunities_processed
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ IA1 cycle error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
