@@ -122,9 +122,9 @@ class IA1ToIA2EscalationTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_ia1_rr_formula_validation(self):
-        """Test 1: Validate IA1 RR Formula Implementation"""
-        logger.info("\n🔍 TEST 1: IA1 RR Formula Validation Test")
+    async def test_1_escalation_criteria_validation(self):
+        """Test 1: Validate IA1 to IA2 Escalation Criteria (3 Voies System)"""
+        logger.info("\n🔍 TEST 1: IA1 to IA2 Escalation Criteria Validation Test")
         
         try:
             # Test RR formula implementation with known values
