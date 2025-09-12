@@ -1,43 +1,28 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE IA1→IA2 PIPELINE DEMONSTRATION RUN TEST SUITE
-Focus: Test the completely repaired dual AI trading system to demonstrate full functionality
+BINGX OPPORTUNITIES REFRESH COMPREHENSIVE TEST SUITE
+Focus: Force complete opportunities refresh with BingX data to resolve stale data issues
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **IA1→IA2 Pipeline Complete Flow**: 
-   - Trigger IA1 analysis for multiple symbols (BTCUSDT, ETHUSDT, SOLUSDT)
-   - Verify VOIE escalation logic (VOIE 1: confidence ≥70%, VOIE 2: RR ≥2.0, VOIE 3: confidence ≥95%)
-   - Confirm IA2 strategic decisions with enhanced prompts
+1. **Identify Real Opportunities Source**: Where do the 14 opportunities actually come from?
+2. **Force Cache Invalidation**: Clear all caches that might be preventing BingX data
+3. **Test BingX Integration**: Verify trending_auto_updater has BingX data available
+4. **Force Scout Refresh**: Make scout use new BingX opportunities instead of cached ones
 
-2. **IA2 Strategic Intelligence**:
-   - Verify IA2 generates detailed strategic reasoning
-   - Check new fields: market_regime_assessment, position_size_recommendation, execution_priority, calculated_rr, rr_reasoning
-   - Confirm IA2 can override IA1 decisions when strategic analysis indicates conflicts
+CRITICAL ISSUES TO RESOLVE:
+- Why get_current_opportunities logs don't appear (method not called?)
+- Old timestamps (11:54 and 11:20 from this morning) persist despite cache TTL=10s
+- Data sources still show ["cryptocompare", "coingecko"] instead of BingX
+- DOGEUSDT (top BingX gainer +8.87%) missing from opportunities
 
-3. **System Components Integration**:
-   - Test all API endpoints: /api/opportunities, /api/analyses, /api/decisions, /api/performance
-   - Verify orchestrator functionality and cycle management
-   - Check database storage of analyses and decisions
+TESTING APPROACH:
+- Check if scout.scan_opportunities uses advanced_market_aggregator.get_current_opportunities
+- Verify if trending_auto_updater.current_trending has BingX data
+- Force clear all caches (opportunities, market data, etc.)
+- Test multiple entry points: /api/start-scout, direct opportunity calls
+- Monitor logs to see if get_current_opportunities is actually called
 
-4. **Advanced Technical Analysis**:
-   - Confirm multi-timeframe analysis working
-   - Verify advanced indicators (RSI, MACD, MFI, VWAP, EMA hierarchy)
-   - Test pattern detection and confluence matrix
-
-5. **Performance & Stability**:
-   - Monitor CPU usage and system stability
-   - Check error handling and fallback mechanisms
-   - Verify logging quality and decision traceability
-
-EXPECTED RESULTS:
-- IA1 analyses with 70%+ confidence should escalate to IA2
-- IA2 should provide strategic decisions with detailed reasoning
-- System should demonstrate intelligent double-verification (IA1 vs IA2 decisions)
-- All endpoints should return proper data
-- No more "string indices" or "acomplete" errors
-
-RUN DEMONSTRATION:
-Show the complete flow from opportunity scanning → IA1 analysis → IA2 strategic decision → database storage. Focus on demonstrating the intelligence and strategic capabilities we just implemented.
+GOAL: Get fresh BingX trending opportunities (DOGEUSDT, ONDOUSDT with high gains) to replace the stale 4.8h old data.
 """
 
 import asyncio
