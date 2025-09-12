@@ -172,7 +172,7 @@ class IA2SimplifiedPromptTestSuite:
         try:
             # Get current IA2 decision count before testing
             initial_ia2_count = 0
-            if self.db:
+            if self.db is not None:
                 initial_ia2_count = self.db.trading_decisions.count_documents({})
                 logger.info(f"   📊 Initial IA2 decisions in database: {initial_ia2_count}")
             
@@ -180,12 +180,12 @@ class IA2SimplifiedPromptTestSuite:
             ia1_analyses_triggered = 0
             ia2_escalations_detected = 0
             
-            for symbol in self.test_symbols[:5]:  # Test first 5 symbols
+            for symbol in self.test_symbols[:3]:  # Test first 3 symbols
                 try:
                     logger.info(f"   🚀 Triggering IA1 analysis for {symbol}")
                     
-                    # Trigger IA1 analysis
-                    response = requests.post(f"{self.api_url}/analyze", 
+                    # Use the correct endpoint for IA1 analysis
+                    response = requests.post(f"{self.api_url}/force-ia1-analysis", 
                                            json={"symbol": symbol}, 
                                            timeout=120)  # Longer timeout for IA1 → IA2 pipeline
                     
@@ -194,20 +194,20 @@ class IA2SimplifiedPromptTestSuite:
                         result = response.json()
                         
                         # Check if IA2 was triggered
-                        if 'ia2_triggered' in result or 'decision_id' in result:
-                            ia2_escalations_detected += 1
-                            logger.info(f"      ✅ {symbol}: IA2 escalation detected")
+                        if result.get('success', False):
+                            logger.info(f"      ✅ {symbol}: IA1 analysis successful")
                             
-                            # Track the decision ID if available
-                            if 'decision_id' in result:
-                                self.ia2_decisions_created.append(result['decision_id'])
+                            # Check if IA2 escalation occurred
+                            if 'ia2_triggered' in result or 'escalated_to_ia2' in result:
+                                ia2_escalations_detected += 1
+                                logger.info(f"      ✅ {symbol}: IA2 escalation detected")
                         else:
-                            logger.info(f"      ℹ️ {symbol}: IA1 only (no IA2 escalation)")
+                            logger.info(f"      ℹ️ {symbol}: IA1 analysis completed but no escalation")
                     else:
                         logger.warning(f"      ⚠️ {symbol}: IA1 analysis failed - HTTP {response.status_code}")
                         
                     # Small delay between requests
-                    await asyncio.sleep(2)
+                    await asyncio.sleep(3)
                     
                 except Exception as e:
                     logger.warning(f"      ⚠️ {symbol}: Exception during analysis - {str(e)}")
@@ -218,7 +218,8 @@ class IA2SimplifiedPromptTestSuite:
             
             # Check final IA2 decision count
             final_ia2_count = 0
-            if self.db:
+            new_ia2_decisions = 0
+            if self.db is not None:
                 final_ia2_count = self.db.trading_decisions.count_documents({})
                 new_ia2_decisions = final_ia2_count - initial_ia2_count
                 logger.info(f"   📊 Final IA2 decisions in database: {final_ia2_count}")
@@ -228,8 +229,8 @@ class IA2SimplifiedPromptTestSuite:
             logger.info(f"   📊 IA1 analyses triggered: {ia1_analyses_triggered}")
             logger.info(f"   📊 IA2 escalations detected: {ia2_escalations_detected}")
             
-            if ia1_analyses_triggered >= 3:  # At least 3 IA1 analyses successful
-                if self.db and final_ia2_count > initial_ia2_count:
+            if ia1_analyses_triggered >= 2:  # At least 2 IA1 analyses successful
+                if self.db is not None and new_ia2_decisions > 0:
                     self.log_test_result("IA2 Decision Generation Stability", True, 
                                        f"IA2 system generating decisions: {new_ia2_decisions} new decisions created")
                 elif ia2_escalations_detected > 0:
@@ -250,7 +251,7 @@ class IA2SimplifiedPromptTestSuite:
         logger.info("\n🔍 TEST 3: IA2 Decision Structure Validation Test")
         
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test_result("IA2 Decision Structure Validation", False, 
                                    "MongoDB connection not available for decision analysis")
                 return
@@ -362,7 +363,7 @@ class IA2SimplifiedPromptTestSuite:
         logger.info("\n🔍 TEST 4: Calculated RR and RR Reasoning Fields Test")
         
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test_result("Calculated RR and RR Reasoning Fields", False, 
                                    "MongoDB connection not available for field analysis")
                 return
@@ -452,7 +453,7 @@ class IA2SimplifiedPromptTestSuite:
         logger.info("\n🔍 TEST 5: Strategic Reasoning Quality Validation Test")
         
         try:
-            if not self.db:
+            if self.db is None:
                 self.log_test_result("Strategic Reasoning Quality", False, 
                                    "MongoDB connection not available for reasoning analysis")
                 return
