@@ -1098,8 +1098,8 @@ class IA1RiskRewardIndependenceTestSuite:
         return passed_tests, total_tests
 
 async def main():
-    """Main function to run the comprehensive autonomous trend detection test suite"""
-    test_suite = AutonomousTrendDetectionTestSuite()
+    """Main function to run the comprehensive IA1 RR independence test suite"""
+    test_suite = IA1RiskRewardIndependenceTestSuite()
     passed_tests, total_tests = await test_suite.run_comprehensive_test_suite()
     
     # Exit with appropriate code
