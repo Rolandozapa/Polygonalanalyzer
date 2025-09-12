@@ -808,103 +808,129 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info("\n🔍 TEST 6: Backend Logs RR Calculation Analysis Test")
         
         try:
-            # Check CPU usage
-            try:
-                import psutil
-                cpu_percent = psutil.cpu_percent(interval=1)
-                memory_percent = psutil.virtual_memory().percent
-                
-                logger.info(f"   📊 System Resources:")
-                logger.info(f"      CPU Usage: {cpu_percent:.1f}%")
-                logger.info(f"      Memory Usage: {memory_percent:.1f}%")
-                
-                cpu_stable = cpu_percent < 90.0  # CPU under 90%
-                memory_stable = memory_percent < 85.0  # Memory under 85%
-                
-            except ImportError:
-                logger.info("   ⚠️ psutil not available, skipping resource monitoring")
-                cpu_stable = True
-                memory_stable = True
+            # Analyze backend logs for RR calculation details and evidence of independence
+            logger.info("   🚀 Analyzing backend logs for RR calculation patterns...")
             
-            # Test trending updater performance
-            performance_analysis = {
-                'cpu_stable': cpu_stable,
-                'memory_stable': memory_stable,
-                'trending_updater_responsive': False,
-                'pattern_detector_responsive': False,
-                'market_aggregator_responsive': False
+            log_analysis_results = {
+                'rr_calculation_entries': 0,
+                'long_rr_calculations': 0,
+                'short_rr_calculations': 0,
+                'technical_level_references': 0,
+                'confidence_correlation_evidence': 0,
+                'formula_pattern_matches': 0,
+                'independence_evidence': []
             }
             
-            # Test trending updater responsiveness
-            if self.trending_updater:
-                try:
-                    start_time = time.time()
-                    trending_info = self.trending_updater.get_trending_info()
-                    response_time = time.time() - start_time
-                    
-                    performance_analysis['trending_updater_responsive'] = response_time < 1.0
-                    logger.info(f"      Trending updater response time: {response_time:.3f}s")
-                    logger.info(f"      Trending info: {trending_info.get('trending_count', 0)} symbols, "
-                              f"auto-update: {trending_info.get('auto_update_active', False)}")
-                except Exception as e:
-                    logger.warning(f"      Trending updater test failed: {e}")
-            
-            # Test pattern detector responsiveness
-            if self.pattern_detector:
-                try:
-                    start_time = time.time()
-                    test_analysis = self.pattern_detector.analyze_trend_pattern("TESTUSDT", 2.5, 1000000)
-                    response_time = time.time() - start_time
-                    
-                    performance_analysis['pattern_detector_responsive'] = response_time < 0.1
-                    logger.info(f"      Pattern detector response time: {response_time:.3f}s")
-                except Exception as e:
-                    logger.warning(f"      Pattern detector test failed: {e}")
-            
-            # Test market aggregator responsiveness
-            if self.market_aggregator:
-                try:
-                    start_time = time.time()
-                    opportunities = self.market_aggregator.get_current_opportunities()
-                    response_time = time.time() - start_time
-                    
-                    performance_analysis['market_aggregator_responsive'] = response_time < 2.0
-                    logger.info(f"      Market aggregator response time: {response_time:.3f}s")
-                    logger.info(f"      Opportunities returned: {len(opportunities)}")
-                except Exception as e:
-                    logger.warning(f"      Market aggregator test failed: {e}")
-            
-            # Check backend logs for errors
+            # Analyze backend logs for RR calculation patterns
             error_analysis = await self._analyze_backend_logs()
             
-            # Overall stability assessment
-            stable_components = sum(1 for component, stable in performance_analysis.items() if stable)
-            total_components = len(performance_analysis)
+            # Look for specific RR calculation patterns in logs
+            rr_calculation_patterns = [
+                r'LONG RR CALCULATION.*formula',
+                r'SHORT RR CALCULATION.*formula', 
+                r'RR.*Entry.*SL.*TP',
+                r'risk_reward_ratio.*=',
+                r'support.*resistance.*RR',
+                r'technical.*levels.*RR'
+            ]
             
-            logger.info(f"   📊 Performance Analysis:")
-            for component, stable in performance_analysis.items():
-                status = "✅" if stable else "❌"
-                logger.info(f"      {status} {component.replace('_', ' ').title()}")
+            confidence_patterns = [
+                r'confidence.*RR',
+                r'RR.*confidence',
+                r'confidence.*risk.*reward'
+            ]
             
-            logger.info(f"   📊 Error Analysis:")
-            logger.info(f"      Total log entries: {error_analysis['total_entries']}")
-            logger.info(f"      Error entries: {error_analysis['error_entries']}")
-            logger.info(f"      Error rate: {error_analysis['error_rate']:.1%}")
-            logger.info(f"      Critical errors: {error_analysis['critical_errors']}")
+            independence_patterns = [
+                r'RR.*independent.*confidence',
+                r'technical.*levels.*only',
+                r'support.*resistance.*calculation'
+            ]
             
-            # Determine test result
-            if stable_components >= total_components * 0.8 and error_analysis['error_rate'] < 0.1:
-                self.log_test_result("System Performance & Stability", True, 
-                                   f"System stable: {stable_components}/{total_components} components responsive, {error_analysis['error_rate']:.1%} error rate")
-            elif stable_components >= total_components * 0.6:
-                self.log_test_result("System Performance & Stability", False, 
-                                   f"System mostly stable: {stable_components}/{total_components} components responsive, {error_analysis['error_rate']:.1%} error rate")
-            else:
-                self.log_test_result("System Performance & Stability", False, 
-                                   f"System stability issues: {stable_components}/{total_components} components responsive, {error_analysis['error_rate']:.1%} error rate")
+            try:
+                # Check recent backend logs
+                log_files = [
+                    "/var/log/supervisor/backend.out.log",
+                    "/var/log/supervisor/backend.err.log"
+                ]
+                
+                for log_file in log_files:
+                    if os.path.exists(log_file):
+                        try:
+                            result = subprocess.run(['tail', '-n', '1000', log_file], 
+                                                  capture_output=True, text=True, timeout=30)
+                            
+                            if result.returncode == 0:
+                                log_content = result.stdout
+                                lines = log_content.split('\n')
+                                
+                                for line in lines:
+                                    # Count RR calculation entries
+                                    if any(re.search(pattern, line, re.IGNORECASE) for pattern in rr_calculation_patterns):
+                                        log_analysis_results['rr_calculation_entries'] += 1
+                                        
+                                        if 'LONG RR CALCULATION' in line.upper():
+                                            log_analysis_results['long_rr_calculations'] += 1
+                                        elif 'SHORT RR CALCULATION' in line.upper():
+                                            log_analysis_results['short_rr_calculations'] += 1
+                                    
+                                    # Count technical level references
+                                    if any(keyword in line.lower() for keyword in ['support', 'resistance', 'fibonacci', 'ema', 'sma']):
+                                        log_analysis_results['technical_level_references'] += 1
+                                    
+                                    # Look for confidence correlation evidence
+                                    if any(re.search(pattern, line, re.IGNORECASE) for pattern in confidence_patterns):
+                                        log_analysis_results['confidence_correlation_evidence'] += 1
+                                    
+                                    # Look for independence evidence
+                                    if any(re.search(pattern, line, re.IGNORECASE) for pattern in independence_patterns):
+                                        log_analysis_results['independence_evidence'].append(line.strip())
+                                    
+                                    # Look for formula pattern matches
+                                    if re.search(r'\(.*-.*\).*\/.*\(.*-.*\)', line):
+                                        log_analysis_results['formula_pattern_matches'] += 1
+                                        
+                        except Exception as e:
+                            logger.warning(f"   ⚠️ Could not analyze {log_file}: {e}")
+                
+                logger.info(f"   📊 Backend Logs RR Analysis:")
+                logger.info(f"      RR calculation entries: {log_analysis_results['rr_calculation_entries']}")
+                logger.info(f"      LONG RR calculations: {log_analysis_results['long_rr_calculations']}")
+                logger.info(f"      SHORT RR calculations: {log_analysis_results['short_rr_calculations']}")
+                logger.info(f"      Technical level references: {log_analysis_results['technical_level_references']}")
+                logger.info(f"      Formula pattern matches: {log_analysis_results['formula_pattern_matches']}")
+                logger.info(f"      Confidence correlation evidence: {log_analysis_results['confidence_correlation_evidence']}")
+                logger.info(f"      Independence evidence entries: {len(log_analysis_results['independence_evidence'])}")
+                
+                # Show some independence evidence if found
+                if log_analysis_results['independence_evidence']:
+                    logger.info(f"   📋 Independence Evidence Examples:")
+                    for i, evidence in enumerate(log_analysis_results['independence_evidence'][:3]):
+                        logger.info(f"      {i+1}. {evidence[:100]}...")
+                
+                # Determine test result based on log analysis
+                has_rr_calculations = log_analysis_results['rr_calculation_entries'] > 0
+                has_formula_evidence = log_analysis_results['formula_pattern_matches'] > 0
+                has_technical_basis = log_analysis_results['technical_level_references'] > log_analysis_results['rr_calculation_entries']
+                low_confidence_correlation = log_analysis_results['confidence_correlation_evidence'] <= log_analysis_results['rr_calculation_entries'] * 0.1
+                
+                evidence_score = sum([has_rr_calculations, has_formula_evidence, has_technical_basis, low_confidence_correlation])
+                
+                if evidence_score >= 3:
+                    self.log_test_result("Backend Logs RR Calculation Analysis", True, 
+                                       f"Logs show RR independence evidence: {evidence_score}/4 indicators positive")
+                elif evidence_score >= 2:
+                    self.log_test_result("Backend Logs RR Calculation Analysis", False, 
+                                       f"Partial log evidence: {evidence_score}/4 indicators positive")
+                else:
+                    self.log_test_result("Backend Logs RR Calculation Analysis", False, 
+                                       f"Limited log evidence: {evidence_score}/4 indicators positive")
+                
+            except Exception as log_error:
+                logger.error(f"   ❌ Log analysis error: {log_error}")
+                self.log_test_result("Backend Logs RR Calculation Analysis", False, f"Log analysis error: {str(log_error)}")
                 
         except Exception as e:
-            self.log_test_result("System Performance & Stability", False, f"Exception: {str(e)}")
+            self.log_test_result("Backend Logs RR Calculation Analysis", False, f"Exception: {str(e)}")
     
     async def _analyze_backend_logs(self):
         """Analyze backend logs for error patterns and quality"""
