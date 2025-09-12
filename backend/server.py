@@ -4498,7 +4498,7 @@ async def force_ia1_analysis(request: dict):
                 "analysis": {
                     "symbol": analysis.symbol,
                     "confidence": analysis.analysis_confidence,
-                    "recommendation": analysis.ia1_signal.value,
+                    "recommendation": analysis.ia1_signal,
                     "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
                 }
             }
