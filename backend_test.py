@@ -1,33 +1,46 @@
 #!/usr/bin/env python3
 """
-IA1 RISK-REWARD CALCULATION INDEPENDENCE TEST SUITE
-Focus: Test IA1 RR calculation independence from confidence level
+IA1 TO IA2 ESCALATION SYSTEM TEST SUITE
+Focus: Test IA1 to IA2 Escalation System - COMPREHENSIVE VALIDATION
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **RR Calculation Independence**: Verify that IA1's Risk-Reward ratio calculation is completely independent of the confidence level
-2. **Consistent RR Values**: Test that identical market conditions produce identical RR ratios regardless of IA1's confidence
-3. **Technical Analysis Based**: Confirm RR calculation uses only technical levels (support/resistance) not confidence percentages
-4. **Formula Validation**: Verify LONG and SHORT RR formulas are correctly implemented as specified:
-   - LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)
-   - SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)
+1. **Escalation Logic Validation**: Test the 3 voies escalation system:
+   - VOIE 1: LONG/SHORT signals with confidence ≥ 70%
+   - VOIE 2: Risk-Reward ratio ≥ 2.0 (any signal)  
+   - VOIE 3: LONG/SHORT signals with confidence ≥ 95% (override)
+
+2. **End-to-End Escalation Flow**: Verify complete pipeline from IA1 → IA2 → Decision storage
+
+3. **Database Integration**: Check that IA2 decisions are properly saved when escalation occurs
 
 SPECIFIC TESTING SCENARIOS:
-1. Test multiple IA1 analyses for the same symbol with varying confidence levels (70%, 85%, 95%)
-2. Verify that stop-loss and take-profit levels are based on technical analysis, not confidence
-3. Check that RR ratios are consistent for the same technical setup regardless of confidence
-4. Validate that fallback levels (when no technical levels available) are fixed percentages
-5. Test both LONG and SHORT scenarios with different confidence levels
+1. **API Endpoint Testing**:
+   - Test /api/run-ia1-cycle for automatic escalation
+   - Check escalation response fields: escalated_to_ia2, ia2_decision
+   - Verify /api/decisions shows new IA2 decisions after escalation
+
+2. **Escalation Criteria Validation**:
+   - Test analyses with confidence 70%+ and LONG/SHORT signals → VOIE 1
+   - Test analyses with RR ≥ 2.0 regardless of signal → VOIE 2  
+   - Test analyses with confidence 95%+ and LONG/SHORT signals → VOIE 3
+
+3. **Error Resolution Check**:
+   - Verify fixed "advanced_market_aggregator" import error
+   - Check that IA2 escalation completes without errors
+   - Validate performance stats are properly retrieved
 
 ENDPOINTS TO TEST:
-- POST /api/force-ia1-analysis with different symbols
-- GET /api/analyses to verify stored RR calculations
-- Monitor logs for RR calculation details and technical level explanations
+- POST /api/run-ia1-cycle for automatic escalation testing
+- GET /api/decisions to verify IA2 decisions are stored
+- GET /api/analyses to check IA1 analyses with escalation flags
+- Monitor logs for escalation flow and error resolution
 
 SUCCESS CRITERIA:
-- RR calculation shows no correlation with confidence levels
-- Technical stop-loss/take-profit levels are consistent
-- Formula implementation matches specified equations
-- No evidence of confidence-based adjustments to RR values
+✅ _should_send_to_ia2 function correctly identifies eligible analyses
+✅ Escalation occurs for analyses meeting any of the 3 voies criteria
+✅ IA2 make_decision method executes successfully after escalation
+✅ New IA2 decisions appear in database after successful escalation
+✅ No more "cannot access local variable" errors in escalation flow
 """
 
 import asyncio
