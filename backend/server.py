@@ -4059,7 +4059,7 @@ class UltraProfessionalIA2DecisionAgent:
                             symbol=opportunity.symbol,
                             signal_type=signal_type,
                             entry_price=entry_price,
-                            enhanced_sr_levels=enhanced_sr_levels
+                            enhanced_sr=enhanced_sr_levels
                         )
                         
                         hf_data_info = f"""🎯 HIGH-FREQUENCY DATA INTEGRATION SUCCESS:
