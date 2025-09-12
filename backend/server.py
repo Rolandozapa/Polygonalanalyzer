@@ -7912,9 +7912,18 @@ class UltraProfessionalOrchestrator:
         try:
             logger.info("🚀 Running trading cycle...")
             
-            # Step 1: Scan opportunities
-            opportunities = await self.scout.scan_opportunities()
-            logger.info(f"📊 Found {len(opportunities)} opportunities")
+            # 🔥 CRITICAL FIX: Use market aggregator instead of scout scan for real BingX data
+            from advanced_market_aggregator import advanced_market_aggregator
+            
+            # Step 1: Get real opportunities from market aggregator (not fallback data)
+            opportunities = advanced_market_aggregator.get_current_opportunities()
+            logger.info(f"📊 Found {len(opportunities)} real opportunities from BingX")
+            
+            if not opportunities:
+                logger.warning("⚠️ No opportunities from market aggregator, trying scout scan as fallback...")
+                # Fallback: try scout scan
+                opportunities = await self.scout.scan_opportunities()
+                logger.info(f"📊 Fallback: Found {len(opportunities)} opportunities from scout scan")
             
             # 🔥 CRITICAL FIX: Save opportunities to database for API access
             if opportunities:
@@ -7939,10 +7948,19 @@ class UltraProfessionalOrchestrator:
                 except Exception as e:
                     logger.error(f"❌ Failed to save opportunities to database: {e}")
             
-            # Step 2: Analyze with IA1
+            # Step 2: Analyze with IA1 - Focus on best opportunities first
             analyses_count = 0
             for opportunity in opportunities[:10]:  # Limit to prevent overload
                 try:
+                    # Skip fallback opportunities with no real data
+                    if (opportunity.price_change_24h == 0.0 and 
+                        opportunity.volume_24h == 1000000.0 and 
+                        'bingx_fallback' in opportunity.data_sources):
+                        logger.debug(f"⏭️ Skipping fallback opportunity: {opportunity.symbol}")
+                        continue
+                    
+                    logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
+                    
                     analysis = await self.ia1.analyze_opportunity(opportunity)
                     if analysis:
                         analyses_count += 1
@@ -7958,6 +7976,12 @@ class UltraProfessionalOrchestrator:
                             decision = await self.ia2.make_decision(opportunity, analysis, perf_stats)
                             if decision:
                                 logger.info(f"✅ IA2 decision: {decision.signal} for {opportunity.symbol}")
+                        else:
+                            logger.info(f"❌ {opportunity.symbol} not escalated to IA2")
+                            
+                except Exception as e:
+                    logger.error(f"❌ Error analyzing {opportunity.symbol}: {e}")
+                    continue
                         
                 except Exception as e:
                     logger.error(f"❌ Error processing {opportunity.symbol}: {e}")
