@@ -1,29 +1,43 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE IA2 SIMPLIFIED PROMPT TESTING SUITE
-Focus: Test the newly simplified IA2 prompt and decision-making system after major code deletion
+COMPREHENSIVE IA1→IA2 PIPELINE DEMONSTRATION RUN TEST SUITE
+Focus: Test the completely repaired dual AI trading system to demonstrate full functionality
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **IA2 Error Resolution**: Verify no more "string indices must be integers, not str" errors in IA2 execution
-2. **IA2 Decision Generation**: Confirm IA2 successfully generates strategic decisions without crashing
-3. **Strategic Reasoning Quality**: Validate that IA2 produces meaningful strategic analysis despite simplified prompt
-4. **RR Calculation Fields**: Check if simplified IA2 generates proper calculated_rr and rr_reasoning fields
-5. **End-to-End Pipeline**: Test complete IA1 → IA2 pipeline with the new simplified implementation
+1. **IA1→IA2 Pipeline Complete Flow**: 
+   - Trigger IA1 analysis for multiple symbols (BTCUSDT, ETHUSDT, SOLUSDT)
+   - Verify VOIE escalation logic (VOIE 1: confidence ≥70%, VOIE 2: RR ≥2.0, VOIE 3: confidence ≥95%)
+   - Confirm IA2 strategic decisions with enhanced prompts
 
-TESTING APPROACH:
-- Trigger IA1 analysis with high confidence (>70%) or high RR (>2.0) to force IA2 execution
-- Monitor backend logs for any "string indices" errors during IA2 processing
-- Examine generated IA2 decisions in MongoDB to verify proper structure and reasoning
-- Test both VOIE 1 (confidence ≥70%) and VOIE 2 (RR ≥2.0) escalation paths
-- Verify IA2 produces LONG/SHORT/HOLD decisions with proper reasoning
+2. **IA2 Strategic Intelligence**:
+   - Verify IA2 generates detailed strategic reasoning
+   - Check new fields: market_regime_assessment, position_size_recommendation, execution_priority, calculated_rr, rr_reasoning
+   - Confirm IA2 can override IA1 decisions when strategic analysis indicates conflicts
 
-FOCUS AREAS:
-- IA2 technical stability (no crashes)
-- Decision quality and strategic reasoning
-- Proper field generation (calculated_rr, rr_reasoning)
-- Integration with Active Position Manager and BingX execution
+3. **System Components Integration**:
+   - Test all API endpoints: /api/opportunities, /api/analyses, /api/decisions, /api/performance
+   - Verify orchestrator functionality and cycle management
+   - Check database storage of analyses and decisions
 
-This is the most critical test - the entire IA2 system functionality depends on this simplified implementation working correctly after the major code deletion.
+4. **Advanced Technical Analysis**:
+   - Confirm multi-timeframe analysis working
+   - Verify advanced indicators (RSI, MACD, MFI, VWAP, EMA hierarchy)
+   - Test pattern detection and confluence matrix
+
+5. **Performance & Stability**:
+   - Monitor CPU usage and system stability
+   - Check error handling and fallback mechanisms
+   - Verify logging quality and decision traceability
+
+EXPECTED RESULTS:
+- IA1 analyses with 70%+ confidence should escalate to IA2
+- IA2 should provide strategic decisions with detailed reasoning
+- System should demonstrate intelligent double-verification (IA1 vs IA2 decisions)
+- All endpoints should return proper data
+- No more "string indices" or "acomplete" errors
+
+RUN DEMONSTRATION:
+Show the complete flow from opportunity scanning → IA1 analysis → IA2 strategic decision → database storage. Focus on demonstrating the intelligence and strategic capabilities we just implemented.
 """
 
 import asyncio
