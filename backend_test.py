@@ -1,31 +1,37 @@
 #!/usr/bin/env python3
 """
-GLOBAL CRYPTO MARKET ANALYZER INTEGRATION TESTING SUITE
-Focus: Complete testing of the new Global Crypto Market Analyzer integration
+COMPREHENSIVE PERFORMANCE TEST SUITE AFTER CPU OPTIMIZATIONS
+Focus: Complete backend performance validation after implementing major CPU optimizations
 
 TESTING REQUIREMENTS FROM REVIEW REQUEST:
-1. Module Loading: Verify that the global_crypto_market_analyzer module is properly imported and accessible
-2. Global Market Data Fetching: Test the CoinGecko and Fear & Greed API integrations
-3. Market Regime Detection: Validate the automatic bull/bear/neutral market regime detection
-4. Sentiment Analysis: Test Fear & Greed index integration and sentiment classification
-5. IA1/IA2 Context Integration: Verify that global market context is properly injected into IA1 and IA2 prompts
-6. Admin Endpoints: Test the new `/admin/market/global` endpoint for monitoring
-7. Cache System: Verify that market data is cached appropriately (5-minute cache)
-8. Error Handling: Test fallback behavior when APIs are unavailable
+1. **PERFORMANCE VALIDATION**: Verify CPU stays low during API operations
+2. **CORE API FUNCTIONALITY**: Test all main endpoints respond correctly  
+3. **TRADING SYSTEM**: Verify IA1/IA2 analysis and decision pipeline
+4. **DATABASE OPERATIONS**: Confirm MongoDB operations are efficient
+5. **WEBSOCKET CONNECTIONS**: Test real-time updates work with optimized timing
+6. **BINGX INTEGRATION**: Verify trading integration still functional
+7. **SYSTEM STABILITY**: Ensure optimizations don't break existing features
 
-EXPECTED SYSTEM CAPABILITIES:
-- Real-time global crypto market conditions (market cap, volume, BTC dominance)
-- Fear & Greed index sentiment analysis
-- Bull/Bear market regime detection
-- Trading recommendations based on market conditions
-- Enhanced IA context with macro market awareness
+CPU OPTIMIZATIONS IMPLEMENTED:
+- Frontend polling: 5s → 15s  
+- ThreadPoolExecutor: 20 → 6 workers
+- Backend loops: 30s → 60s WebSocket, 5s → 15s position monitoring  
+- CRITICAL FIX: psutil.cpu_percent(interval=1) → psutil.cpu_percent() (non-blocking)
 
-TESTING APPROACH:
-- Call the global market analyzer functions directly
-- Test the admin endpoint `/admin/market/global`
-- Verify IA1/IA2 prompts now include global market context
-- Check that market regime influences trading decisions
-- Validate cache behavior and API rate limiting
+CURRENT STATUS:
+- CPU usage improved from 97-100% to 11.7% (72% reduction)
+- All services running (backend, frontend, mongodb, code-server)
+- Dashboard shows: 50 opportunities, 30 IA2 decisions, system active
+
+EXPECTED RESULTS: 
+All functionality working with significantly improved CPU performance (target: <20% CPU usage)
+
+SPECIFIC TESTS NEEDED:
+- GET /api/opportunities, /api/analyses, /api/decisions, /api/performance
+- POST /api/trading/start-cycle (if available)
+- WebSocket connections /api/ws
+- BingX endpoints /api/bingx/status, /api/bingx/balance
+- Monitor CPU during intensive operations
 """
 
 import asyncio
