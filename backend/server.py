@@ -9565,6 +9565,14 @@ async def force_voie3_processing():
                     except:
                         perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
                     
+                    # Get position tracking for this analysis
+                    pos_tracking_doc = await db.position_tracking.find_one({"position_id": analysis.position_id})
+                    if not pos_tracking_doc:
+                        logger.warning(f"⚠️ Position tracking not found for {analysis.position_id}, creating one")
+                        pos_tracking = await create_position_tracking(analysis)
+                    else:
+                        pos_tracking = PositionTracking(**pos_tracking_doc)
+                    
                     # Force IA2 decision
                     decision = await orchestrator.ia2.make_decision(opportunity, analysis, perf_stats)
                     
