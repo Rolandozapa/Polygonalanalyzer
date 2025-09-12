@@ -5310,29 +5310,22 @@ async def get_execution_mode():
         return {"success": False, "error": str(e), "mode": "SIMULATION"}
 
 @app.post("/api/run-ia1-cycle")
-async def force_ia1_cycle(symbol: str = "BTCUSDT"):
-    """Force run IA1 analysis cycle for a specific symbol"""
+async def force_ia1_cycle():
+    """Force run IA1 analysis cycle - analyzes the latest scout selection"""
     try:
-        logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
+        logger.info(f"🚀 FORCING IA1 ANALYSIS on latest scout selection")
         
-        # Get opportunities from the orchestrator's scout
+        # Get opportunities from the orchestrator's scout - ANALYZE LATEST SCOUT SELECTION
         opportunities = orchestrator.scout.market_aggregator.get_current_opportunities()
-        target_opportunity = None
         
-        for opp in opportunities:
-            if opp.symbol == symbol:
-                target_opportunity = opp
-                break
+        if not opportunities:
+            return {"success": False, "error": "No opportunities available from scout"}
+            
+        # 🎯 USE FIRST OPPORTUNITY FROM SCOUT (latest/best)
+        target_opportunity = opportunities[0]
+        symbol = target_opportunity.symbol
         
-        if not target_opportunity:
-            # Create a fallback opportunity
-            target_opportunity = MarketOpportunity(
-                symbol=symbol,
-                current_price=100.0,
-                volume_24h=1000000.0,
-                price_change_24h=0.02,
-                volatility=0.05
-            )
+        logger.info(f"🎯 IA1 analyzing scout selection: {symbol} (price: {target_opportunity.current_price}, volume: {target_opportunity.volume_24h:,.0f})")
         
         # Force IA1 analysis (bypass pattern filter)
         analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
