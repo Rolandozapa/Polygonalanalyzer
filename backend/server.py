@@ -4008,104 +4008,129 @@ class UltraProfessionalIA2DecisionAgent:
         try:
             logger.info(f"IA2 making ultra professional MULTI-TIMEFRAME decision for {opportunity.symbol}")
             
-            # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
-            # Get historical data for multi-timeframe analysis
-            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
-            historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
+            # 🛡️ ROBUSTNESS WRAPPER: Ensure IA2 never crashes the system
+            return await self._make_decision_internal(opportunity, analysis, perf_stats)
             
-            # 🎯 NOUVEAU: INTELLIGENT OHLCV COMPLETION AVEC DIVERSIFICATION DE SOURCES
-            enhanced_sr_levels = None
-            dynamic_rr_data = None
-            hf_data_info = "No high-frequency data"
+        except Exception as ia2_error:
+            logger.error(f"❌ IA2 CRITICAL ERROR for {opportunity.symbol}: {ia2_error}")
+            logger.error(f"❌ IA2 Error type: {type(ia2_error).__name__}")
             
-            if historical_data is not None and len(historical_data) > 50:
-                try:
-                    # 1. Créer métadonnées depuis données existantes (utilisées par IA1)
-                    existing_metadata = await intelligent_ohlcv_fetcher.get_ohlcv_metadata_from_existing_data(
-                        existing_data=pd.DataFrame(historical_data),
-                        primary_source="enhanced_ohlcv_fetcher"  # Source utilisée par IA1
-                    )
+            # Return safe fallback decision instead of crashing
+            fallback_decision = TradingDecision(
+                symbol=opportunity.symbol,
+                signal="HOLD",  # Safe fallback
+                confidence=0.5,  # Neutral confidence
+                entry_price=opportunity.current_price,
+                stop_loss_price=opportunity.current_price * 0.98,  # 2% SL
+                take_profit_price=opportunity.current_price * 1.02,  # 2% TP
+                position_size=1.0,  # Minimal size
+                reasoning=f"IA2 FALLBACK: Technical error prevented full analysis. Error: {str(ia2_error)[:100]}...",
+                risk_reward_ratio=1.0
+            )
+            
+            logger.info(f"🛡️ IA2 FALLBACK: Returning safe HOLD decision for {opportunity.symbol}")
+            return fallback_decision
+
+    async def _make_decision_internal(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
+        """Internal method containing the original make_decision logic"""
+        # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
+        # Get historical data for multi-timeframe analysis
+        from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+        historical_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(opportunity.symbol)
+        
+        # 🎯 NOUVEAU: INTELLIGENT OHLCV COMPLETION AVEC DIVERSIFICATION DE SOURCES
+        enhanced_sr_levels = None
+        dynamic_rr_data = None
+        hf_data_info = "No high-frequency data"
+        
+        if historical_data is not None and len(historical_data) > 50:
+            try:
+                # 1. Créer métadonnées depuis données existantes (utilisées par IA1)
+                existing_metadata = await intelligent_ohlcv_fetcher.get_ohlcv_metadata_from_existing_data(
+                    existing_data=pd.DataFrame(historical_data),
+                    primary_source="enhanced_ohlcv_fetcher"  # Source utilisée par IA1
+                )
+                
+                # 2. Compléter avec données haute fréquence (source différente)
+                logger.info(f"🎯 IA2: Starting intelligent OHLCV completion for {opportunity.symbol}")
+                hf_data = await intelligent_ohlcv_fetcher.complete_ohlcv_data(
+                    symbol=opportunity.symbol,
+                    existing_metadata=existing_metadata,
+                    target_timeframe='5m',  # Haute précision 5 minutes
+                    hours_back=24  # Dernières 24h pour S/R précis
+                )
+                
+                if hf_data:
+                    logger.info(f"✅ IA2: High-frequency completion successful from {hf_data.source}")
                     
-                    # 2. Compléter avec données haute fréquence (source différente)
-                    logger.info(f"🎯 IA2: Starting intelligent OHLCV completion for {opportunity.symbol}")
-                    hf_data = await intelligent_ohlcv_fetcher.complete_ohlcv_data(
+                    # 3. Calculer niveaux S/R daily basiques depuis données historiques
+                    df_historical = pd.DataFrame(historical_data)
+                    daily_support = df_historical['Low'].tail(30).min()  # Support 30j
+                    daily_resistance = df_historical['High'].tail(30).max()  # Résistance 30j
+                    
+                    # 4. Calculer Enhanced S/R avec haute précision
+                    enhanced_sr_levels = await intelligent_ohlcv_fetcher.calculate_enhanced_sr_levels(
                         symbol=opportunity.symbol,
-                        existing_metadata=existing_metadata,
-                        target_timeframe='5m',  # Haute précision 5 minutes
-                        hours_back=24  # Dernières 24h pour S/R précis
+                        hf_data=hf_data,
+                        daily_support=daily_support,
+                        daily_resistance=daily_resistance
                     )
                     
-                    if hf_data:
-                        logger.info(f"✅ IA2: High-frequency completion successful from {hf_data.source}")
-                        
-                        # 3. Calculer niveaux S/R daily basiques depuis données historiques
-                        df_historical = pd.DataFrame(historical_data)
-                        daily_support = df_historical['Low'].tail(30).min()  # Support 30j
-                        daily_resistance = df_historical['High'].tail(30).max()  # Résistance 30j
-                        
-                        # 4. Calculer Enhanced S/R avec haute précision
-                        enhanced_sr_levels = await intelligent_ohlcv_fetcher.calculate_enhanced_sr_levels(
-                            symbol=opportunity.symbol,
-                            hf_data=hf_data,
-                            daily_support=daily_support,
-                            daily_resistance=daily_resistance
-                        )
-                        
-                        # 5. Calculer RR dynamique avec différents timeframes
-                        entry_price = df_historical['Close'].iloc[-1]
-                        signal_type = analysis.signal if hasattr(analysis, 'signal') else "HOLD"
-                        
-                        dynamic_rr_data = await intelligent_ohlcv_fetcher.calculate_dynamic_risk_reward(
-                            symbol=opportunity.symbol,
-                            signal_type=signal_type,
-                            entry_price=entry_price,
-                            enhanced_sr=enhanced_sr_levels
-                        )
-                        
-                        hf_data_info = f"""🎯 HIGH-FREQUENCY DATA INTEGRATION SUCCESS:
+                    # 5. Calculer RR dynamique avec différents timeframes
+                    entry_price = df_historical['Close'].iloc[-1]
+                    signal_type = analysis.signal if hasattr(analysis, 'signal') else "HOLD"
+                    
+                    dynamic_rr_data = await intelligent_ohlcv_fetcher.calculate_dynamic_risk_reward(
+                        symbol=opportunity.symbol,
+                        signal_type=signal_type,
+                        entry_price=entry_price,
+                        enhanced_sr=enhanced_sr_levels
+                    )
+                    
+                    hf_data_info = f"""🎯 HIGH-FREQUENCY DATA INTEGRATION SUCCESS:
 - Source: {hf_data.source} ({hf_data.timeframe})
 - Quality: {hf_data.quality_score:.2f}/1.0
 - Data points: {hf_data.data_count}
 - Enhanced S/R levels calculated with {enhanced_sr_levels.confidence_micro:.2f} micro confidence
 - Dynamic RR: {dynamic_rr_data.rr_final:.2f}:1 ({dynamic_rr_data.rr_selection_logic})"""
-                        
-                        logger.info(f"🔥 IA2 ENHANCED: {opportunity.symbol} - RR {dynamic_rr_data.rr_final:.2f}:1 via {hf_data.source}")
-                        
-                    else:
-                        logger.warning(f"⚠️ IA2: High-frequency completion failed for {opportunity.symbol}")
-                        hf_data_info = "High-frequency completion failed, using daily data only"
-                        
-                except Exception as e:
-                    logger.error(f"❌ IA2: Error in intelligent OHLCV completion: {e}")
-                    hf_data_info = f"OHLCV completion error: {str(e)}"
-            
-            if historical_data is not None and len(historical_data) > 50:
-                # Use SCIENTIFIC approach: Quality OHLCV data for precise calculations
-                from advanced_technical_indicators import advanced_technical_indicators
-                
-                logger.info(f"🔬 IA2: Using scientific indicators for {opportunity.symbol}")
-                opportunity_df = pd.DataFrame(historical_data)
-                
-                # Get scientific indicators (quality OHLCV-based calculations)
-                try:
-                    current_indicators = advanced_technical_indicators.get_scientific_indicators(opportunity_df)
                     
-                    # Verify current_indicators is valid TechnicalIndicators object
-                    if not hasattr(current_indicators, 'rsi'):
-                        logger.error(f"❌ IA2: Invalid current_indicators for {opportunity.symbol} - missing rsi attribute")
-                        current_indicators = None
-                    elif isinstance(current_indicators, str):
-                        logger.error(f"❌ IA2: current_indicators is string instead of object for {opportunity.symbol}: {current_indicators}")
-                        current_indicators = None
-                    else:
-                        logger.info(f"✅ IA2: Valid current_indicators obtained for {opportunity.symbol}")
-                        
-                except Exception as indicators_error:
-                    logger.error(f"❌ IA2: Error getting scientific indicators for {opportunity.symbol}: {indicators_error}")
-                    current_indicators = None
+                    logger.info(f"🔥 IA2 ENHANCED: {opportunity.symbol} - RR {dynamic_rr_data.rr_final:.2f}:1 via {hf_data.source}")
+                    
+                else:
+                    logger.warning(f"⚠️ IA2: High-frequency completion failed for {opportunity.symbol}")
+                    hf_data_info = "High-frequency completion failed, using daily data only"
+                    
+            except Exception as e:
+                logger.error(f"❌ IA2: Error in intelligent OHLCV completion: {e}")
+                hf_data_info = f"OHLCV completion error: {str(e)}"
+        
+        if historical_data is not None and len(historical_data) > 50:
+            # Use SCIENTIFIC approach: Quality OHLCV data for precise calculations
+            from advanced_technical_indicators import advanced_technical_indicators
+            
+            logger.info(f"🔬 IA2: Using scientific indicators for {opportunity.symbol}")
+            opportunity_df = pd.DataFrame(historical_data)
+            
+            # Get scientific indicators (quality OHLCV-based calculations)
+            try:
+                current_indicators = advanced_technical_indicators.get_scientific_indicators(opportunity_df)
                 
-                # For contextual analysis, provide the IA with raw data for pattern recognition
-                multi_tf_formatted = f"""
+                # Verify current_indicators is valid TechnicalIndicators object
+                if not hasattr(current_indicators, 'rsi'):
+                    logger.error(f"❌ IA2: Invalid current_indicators for {opportunity.symbol} - missing rsi attribute")
+                    current_indicators = None
+                elif isinstance(current_indicators, str):
+                    logger.error(f"❌ IA2: current_indicators is string instead of object for {opportunity.symbol}: {current_indicators}")
+                    current_indicators = None
+                else:
+                    logger.info(f"✅ IA2: Valid current_indicators obtained for {opportunity.symbol}")
+                    
+            except Exception as indicators_error:
+                logger.error(f"❌ IA2: Error getting scientific indicators for {opportunity.symbol}: {indicators_error}")
+                current_indicators = None
+            
+            # For contextual analysis, provide the IA with raw data for pattern recognition
+            multi_tf_formatted = f"""
 CONTEXTUAL DATA FOR YOUR ANALYSIS:
 - Total OHLCV periods: {len(historical_data)} days
 - Price range: ${min(row['Close'] for row in historical_data):.6f} - ${max(row['Close'] for row in historical_data):.6f}
@@ -4114,122 +4139,122 @@ CONTEXTUAL DATA FOR YOUR ANALYSIS:
 
 INSTRUCTION: Analyze the above data for 4-week S/R levels, monthly patterns, and contextual insights.
 The scientific indicators below provide mathematical precision - you add contextual intelligence."""
-                
-                logger.info(f"✅ IA2: Scientific indicators + contextual data prepared for {opportunity.symbol}")
-                
-                logger.info(f"🎯 IA2 SCIENTIFIC DATA: {len(historical_data)} OHLCV periods available for {opportunity.symbol}")
-            else:
-                logger.warning(f"⚠️ IA2: Limited data for {opportunity.symbol}, using single-timeframe analysis")
-                multi_tf_formatted = "⚠️ Multi-timeframe data limited"
-                current_indicators = None
             
-            # Check for position inversion opportunity first
-            await self._check_position_inversion(opportunity, analysis)
+            logger.info(f"✅ IA2: Scientific indicators + contextual data prepared for {opportunity.symbol}")
             
-            # Get account balance for position sizing
-            account_balance = await self._get_account_balance()
-            
-            # NEW: Get crypto market sentiment for leverage calculation
-            market_sentiment = await self._get_crypto_market_sentiment()
-            
-            # 🎯 ADVANCED RR CALCULATIONS: Composite & Neutral Analysis
-            # Extract support/resistance from IA1 analysis
-            ia1_support = getattr(analysis, 'primary_support', 
-                                analysis.support_levels[0] if analysis.support_levels else opportunity.current_price * 0.97)
-            ia1_resistance = getattr(analysis, 'primary_resistance', 
-                                   analysis.resistance_levels[0] if analysis.resistance_levels else opportunity.current_price * 1.03)
-            
-            # Calculate sophisticated RR metrics
-            try:
-                composite_rr_data = self.calculate_composite_rr(
-                    opportunity.current_price, 
-                    opportunity.volatility, 
-                    ia1_support, 
-                    ia1_resistance
-                )
-                
-                # Verify composite_rr_data is valid dictionary
-                if not isinstance(composite_rr_data, dict):
-                    logger.error(f"❌ IA2: composite_rr_data is {type(composite_rr_data)} instead of dict for {opportunity.symbol}")
-                    raise ValueError(f"composite_rr_data type error: {type(composite_rr_data)}")
-                
-                required_keys = ['composite_rr', 'bullish_rr', 'bearish_rr']
-                for key in required_keys:
-                    if key not in composite_rr_data:
-                        logger.error(f"❌ IA2: composite_rr_data missing key '{key}' for {opportunity.symbol}")
-                        raise ValueError(f"composite_rr_data missing key: {key}")
-                        
-                logger.info(f"✅ IA2: Valid composite_rr_data calculated for {opportunity.symbol}")
-                
-            except Exception as rr_error:
-                logger.error(f"❌ IA2: Error calculating composite RR for {opportunity.symbol}: {rr_error}")
-                # Fallback values
-                composite_rr_data = {
-                    'composite_rr': 1.5,
-                    'bullish_rr': 1.5,
-                    'bearish_rr': 1.5,
-                    'neutral_rr': 1.0,
-                    'directional_validity': 0,
-                    'volatility_adjusted': opportunity.volatility,
-                    'upside_target': opportunity.current_price * 1.03,
-                    'downside_target': opportunity.current_price * 0.97
-                }
-            
-            # Evaluate sophisticated risk level
-            sophisticated_risk_level = self.evaluate_sophisticated_risk_level(
-                composite_rr_data['composite_rr'], 
+            logger.info(f"🎯 IA2 SCIENTIFIC DATA: {len(historical_data)} OHLCV periods available for {opportunity.symbol}")
+        else:
+            logger.warning(f"⚠️ IA2: Limited data for {opportunity.symbol}, using single-timeframe analysis")
+            multi_tf_formatted = "⚠️ Multi-timeframe data limited"
+            current_indicators = None
+        
+        # Check for position inversion opportunity first
+        await self._check_position_inversion(opportunity, analysis)
+        
+        # Get account balance for position sizing
+        account_balance = await self._get_account_balance()
+        
+        # NEW: Get crypto market sentiment for leverage calculation
+        market_sentiment = await self._get_crypto_market_sentiment()
+        
+        # 🎯 ADVANCED RR CALCULATIONS: Composite & Neutral Analysis
+        # Extract support/resistance from IA1 analysis
+        ia1_support = getattr(analysis, 'primary_support', 
+                            analysis.support_levels[0] if analysis.support_levels else opportunity.current_price * 0.97)
+        ia1_resistance = getattr(analysis, 'primary_resistance', 
+                               analysis.resistance_levels[0] if analysis.resistance_levels else opportunity.current_price * 1.03)
+        
+        # Calculate sophisticated RR metrics
+        try:
+            composite_rr_data = self.calculate_composite_rr(
+                opportunity.current_price, 
                 opportunity.volatility, 
-                market_sentiment
+                ia1_support, 
+                ia1_resistance
             )
             
-            logger.info(f"🧠 SOPHISTICATED ANALYSIS {opportunity.symbol}:")
-            logger.info(f"   📊 Composite RR: {composite_rr_data['composite_rr']:.2f}")
-            logger.info(f"   📊 Bullish RR: {composite_rr_data['bullish_rr']:.2f}, Bearish RR: {composite_rr_data['bearish_rr']:.2f}")
-            logger.info(f"   📊 Neutral RR: {composite_rr_data['neutral_rr']:.2f}")
-            logger.info(f"   🎯 Sophisticated Risk Level: {sophisticated_risk_level}")
-            logger.info(f"   📈 Upside Target: ${composite_rr_data['upside_target']:.6f}")
-            logger.info(f"   📉 Downside Target: ${composite_rr_data['downside_target']:.6f}")
+            # Verify composite_rr_data is valid dictionary
+            if not isinstance(composite_rr_data, dict):
+                logger.error(f"❌ IA2: composite_rr_data is {type(composite_rr_data)} instead of dict for {opportunity.symbol}")
+                raise ValueError(f"composite_rr_data type error: {type(composite_rr_data)}")
             
-            # RR Validation: Compare IA1 directional RR vs Composite RR
-            ia1_rr = analysis.risk_reward_ratio
-            rr_divergence = abs(ia1_rr - composite_rr_data['composite_rr'])
-            rr_validation_status = "ALIGNED" if rr_divergence < 0.5 else "DIVERGENT"
+            required_keys = ['composite_rr', 'bullish_rr', 'bearish_rr']
+            for key in required_keys:
+                if key not in composite_rr_data:
+                    logger.error(f"❌ IA2: composite_rr_data missing key '{key}' for {opportunity.symbol}")
+                    raise ValueError(f"composite_rr_data missing key: {key}")
+                    
+            logger.info(f"✅ IA2: Valid composite_rr_data calculated for {opportunity.symbol}")
             
-            if rr_divergence > 1.0:
-                logger.warning(f"⚠️ SIGNIFICANT RR DIVERGENCE {opportunity.symbol}: IA1 RR {ia1_rr:.2f} vs Composite RR {composite_rr_data['composite_rr']:.2f}")
-            else:
-                logger.info(f"✅ RR VALIDATION {opportunity.symbol}: IA1 RR {ia1_rr:.2f} ↔ Composite RR {composite_rr_data['composite_rr']:.2f} ({rr_validation_status})")
+        except Exception as rr_error:
+            logger.error(f"❌ IA2: Error calculating composite RR for {opportunity.symbol}: {rr_error}")
+            # Fallback values
+            composite_rr_data = {
+                'composite_rr': 1.5,
+                'bullish_rr': 1.5,
+                'bearish_rr': 1.5,
+                'neutral_rr': 1.0,
+                'directional_validity': 0,
+                'volatility_adjusted': opportunity.volatility,
+                'upside_target': opportunity.current_price * 1.03,
+                'downside_target': opportunity.current_price * 0.97
+            }
+        
+        # Evaluate sophisticated risk level
+        sophisticated_risk_level = self.evaluate_sophisticated_risk_level(
+            composite_rr_data['composite_rr'], 
+            opportunity.volatility, 
+            market_sentiment
+        )
+        
+        logger.info(f"🧠 SOPHISTICATED ANALYSIS {opportunity.symbol}:")
+        logger.info(f"   📊 Composite RR: {composite_rr_data['composite_rr']:.2f}")
+        logger.info(f"   📊 Bullish RR: {composite_rr_data['bullish_rr']:.2f}, Bearish RR: {composite_rr_data['bearish_rr']:.2f}")
+        logger.info(f"   📊 Neutral RR: {composite_rr_data['neutral_rr']:.2f}")
+        logger.info(f"   🎯 Sophisticated Risk Level: {sophisticated_risk_level}")
+        logger.info(f"   📈 Upside Target: ${composite_rr_data['upside_target']:.6f}")
+        logger.info(f"   📉 Downside Target: ${composite_rr_data['downside_target']:.6f}")
+        
+        # RR Validation: Compare IA1 directional RR vs Composite RR
+        ia1_rr = analysis.risk_reward_ratio
+        rr_divergence = abs(ia1_rr - composite_rr_data['composite_rr'])
+        rr_validation_status = "ALIGNED" if rr_divergence < 0.5 else "DIVERGENT"
+        
+        if rr_divergence > 1.0:
+            logger.warning(f"⚠️ SIGNIFICANT RR DIVERGENCE {opportunity.symbol}: IA1 RR {ia1_rr:.2f} vs Composite RR {composite_rr_data['composite_rr']:.2f}")
+        else:
+            logger.info(f"✅ RR VALIDATION {opportunity.symbol}: IA1 RR {ia1_rr:.2f} ↔ Composite RR {composite_rr_data['composite_rr']:.2f} ({rr_validation_status})")
+        
+        # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO POUR IA2
+        global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
+        
+        # Create comprehensive prompt for Claude with market sentiment and leverage logic
+        try:
+            logger.info(f"🔧 IA2: Building prompt for {opportunity.symbol}...")
             
-            # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO POUR IA2
-            global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
+            # Test each variable before f-string construction
+            logger.info(f"🔧 IA2: market_sentiment type: {type(market_sentiment)}")
+            logger.info(f"🔧 IA2: composite_rr_data type: {type(composite_rr_data)}")
+            logger.info(f"🔧 IA2: current_indicators type: {type(current_indicators)}")
+            logger.info(f"🔧 IA2: sophisticated_risk_level type: {type(sophisticated_risk_level)}")
             
-            # Create comprehensive prompt for Claude with market sentiment and leverage logic
-            try:
-                logger.info(f"🔧 IA2: Building prompt for {opportunity.symbol}...")
-                
-                # Test each variable before f-string construction
-                logger.info(f"🔧 IA2: market_sentiment type: {type(market_sentiment)}")
-                logger.info(f"🔧 IA2: composite_rr_data type: {type(composite_rr_data)}")
-                logger.info(f"🔧 IA2: current_indicators type: {type(current_indicators)}")
-                logger.info(f"🔧 IA2: sophisticated_risk_level type: {type(sophisticated_risk_level)}")
-                
-                # Test small f-string parts individually
-                test_part1 = f"Symbol: {opportunity.symbol}"
-                logger.info(f"🔧 IA2: test_part1 OK")
-                
-                test_part2 = f"RR: {composite_rr_data['composite_rr']:.2f}" if isinstance(composite_rr_data, dict) else "RR: N/A"
-                logger.info(f"🔧 IA2: test_part2 OK")
-                
-                test_part3 = f"Market: {market_sentiment['market_sentiment']}" if isinstance(market_sentiment, dict) else "Market: N/A"
-                logger.info(f"🔧 IA2: test_part3 OK")
-                
-                # If we reach here, the problem is in the big f-string template
-                logger.info(f"🔧 IA2: All variables validated, building full prompt...")
-                
-            except Exception as prompt_debug:
-                logger.error(f"❌ IA2 PROMPT DEBUG ERROR for {opportunity.symbol}: {prompt_debug}")
-                return None
-            prompt = f"""
+            # Test small f-string parts individually
+            test_part1 = f"Symbol: {opportunity.symbol}"
+            logger.info(f"🔧 IA2: test_part1 OK")
+            
+            test_part2 = f"RR: {composite_rr_data['composite_rr']:.2f}" if isinstance(composite_rr_data, dict) else "RR: N/A"
+            logger.info(f"🔧 IA2: test_part2 OK")
+            
+            test_part3 = f"Market: {market_sentiment['market_sentiment']}" if isinstance(market_sentiment, dict) else "Market: N/A"
+            logger.info(f"🔧 IA2: test_part3 OK")
+            
+            # If we reach here, the problem is in the big f-string template
+            logger.info(f"🔧 IA2: All variables validated, building full prompt...")
+            
+        except Exception as prompt_debug:
+            logger.error(f"❌ IA2 PROMPT DEBUG ERROR for {opportunity.symbol}: {prompt_debug}")
+            return None
+        prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
 
 {global_market_context}
@@ -4549,305 +4574,301 @@ For HOLD signals (NO take_profit_strategy section):
 Consider current market volatility, sentiment alignment, and dynamic leverage for optimal position sizing.
 Provide your decision in the EXACT JSON format above with complete market-adaptive strategy details.
 """
+        
+        # Send to Claude for advanced decision
+        response = await self.chat.send_message(UserMessage(text=prompt))
+        
+        # Parse Claude's advanced response
+        claude_decision = await self._parse_llm_response(response)
+        
+        # Generate ultra professional decision with advanced strategy considerations
+        decision_logic = await self._evaluate_advanced_trading_decision(
+            opportunity, analysis, perf_stats, account_balance, claude_decision, 
+            composite_rr_data, sophisticated_risk_level, rr_validation_status, rr_divergence
+        )
+        
+        # 🎯 ENHANCED RR WITH SOPHISTICATED ANALYSIS: 
+        # Priority: IA2 Recalculated > Sophisticated Composite > IA1 Original
+        enhanced_rr = decision_logic.get("enhanced_rr", {})
+        
+        # Get sophisticated data from decision_logic (passed from parameters)
+        sophisticated_data = decision_logic.get("sophisticated_analysis", {})
+        final_composite_rr_data = sophisticated_data.get("composite_rr_data", {})
+        final_sophisticated_risk_level = sophisticated_data.get("risk_level", "MEDIUM")
+        final_rr_validation_status = sophisticated_data.get("rr_validation_status", "UNKNOWN")
+        final_rr_divergence = sophisticated_data.get("rr_divergence", 0.0)
+        
+        # Option 1: IA2 recalculated RR (highest priority)
+        if (enhanced_rr.get("ia2_calculated_rr") and 
+            enhanced_rr.get("final_rr_source") in ["ia2_recalculated", "ia2_recalculated_validated"]):
+            final_rr = enhanced_rr["ia2_calculated_rr"]
+            rr_source = "ia2_recalculated"
+            validation_msg = enhanced_rr.get("validation_message", "")
+            logger.info(f"🎯 USING IA2 ENHANCED RR: {opportunity.symbol} - {final_rr:.2f}:1 (improved from IA1: {analysis.risk_reward_ratio:.2f}:1)")
+            if validation_msg:
+                logger.info(f"✅ VALIDATION: {validation_msg}")
+        
+        # Option 2: Sophisticated Composite RR (second priority)
+        elif final_composite_rr_data.get('composite_rr', 0) > 0:
+            final_rr = final_composite_rr_data['composite_rr']
+            rr_source = "sophisticated_composite"
             
-            # Send to Claude for advanced decision
-            response = await self.chat.send_message(UserMessage(text=prompt))
+            # Enhanced validation with composite RR
+            if abs(final_rr - analysis.risk_reward_ratio) > 1.0:
+                logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (significant improvement from IA1: {analysis.risk_reward_ratio:.2f}:1)")
+                logger.info(f"📊 Composite Analysis: Bullish {final_composite_rr_data.get('bullish_rr', 0):.2f}, Bearish {final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral {final_composite_rr_data.get('neutral_rr', 0):.2f}")
+                logger.info(f"🎯 Risk Level: {final_sophisticated_risk_level} | Validation: {final_rr_validation_status}")
+            else:
+                logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (aligned with IA1: {analysis.risk_reward_ratio:.2f}:1)")
+        
+        # Option 3: IA1 Original RR (fallback)
+        else:
+            final_rr = analysis.risk_reward_ratio
+            rr_source = "ia1_original"
+            fallback_reason = enhanced_rr.get("validation_error", "No enhanced RR data available")
+            logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1 (Reason: {fallback_reason})")
+        
+        # Additional logging for sophisticated analysis results
+        logger.info(f"📊 SOPHISTICATED RR SUMMARY {opportunity.symbol}:")
+        logger.info(f"   🎯 Final RR: {final_rr:.2f}:1 (Source: {rr_source})")
+        logger.info(f"   📊 Risk Level: {final_sophisticated_risk_level}")
+        logger.info(f"   📊 RR Validation: {final_rr_validation_status} (divergence: {final_rr_divergence:.2f})")
+        if rr_source == "sophisticated_composite":
+            logger.info(f"   📊 Composite Components: Bull:{final_composite_rr_data.get('bullish_rr', 0):.2f}, Bear:{final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral:{final_composite_rr_data.get('neutral_rr', 0):.2f}")
+        
+        # Create advanced trading decision
+        decision = TradingDecision(
+            symbol=opportunity.symbol,
+            signal=decision_logic["signal"],
+            confidence=decision_logic["confidence"],
+            entry_price=opportunity.current_price,
+            stop_loss=decision_logic["stop_loss"],
+            take_profit_1=decision_logic["tp1"],
+            take_profit_2=decision_logic["tp2"],
+            take_profit_3=decision_logic["tp3"],
+            position_size=decision_logic["position_size"],
+            risk_reward_ratio=final_rr,  # Will be recalculated below with actual prices
+            ia1_analysis_id=analysis.id,
+            ia2_reasoning=decision_logic["reasoning"] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
+            status=TradingStatus.PENDING
+        )
+        
+        # 🎯 RECALCULATE RR WITH ACTUAL DECISION PRICES - CRITICAL FIX
+        actual_entry = opportunity.current_price
+        actual_sl = decision_logic["stop_loss"] 
+        actual_tp = decision_logic["tp1"]
+        ia2_final_signal = decision_logic["signal"].upper()
+        
+        if actual_sl != actual_entry and actual_tp != actual_entry:
+            if ia2_final_signal == "LONG":
+                # LONG: RR = (TP - Entry) / (Entry - SL)
+                if actual_entry > actual_sl:
+                    reward = actual_tp - actual_entry
+                    risk = actual_entry - actual_sl
+                    corrected_rr = reward / risk if risk > 0 else 1.0
+                else:
+                    corrected_rr = 1.0  # Invalid SL
+                    
+            elif ia2_final_signal == "SHORT":
+                # SHORT: RR = (Entry - TP) / (SL - Entry)
+                if actual_sl > actual_entry:
+                    reward = actual_entry - actual_tp
+                    risk = actual_sl - actual_entry
+                    corrected_rr = reward / risk if risk > 0 else 1.0
+                else:
+                    corrected_rr = 1.0  # Invalid SL
+            else:
+                corrected_rr = final_rr  # Keep original for HOLD
             
-            # Parse Claude's advanced response
-            claude_decision = await self._parse_llm_response(response)
+            # Update the decision with corrected RR
+            decision.risk_reward_ratio = corrected_rr
             
-            # Generate ultra professional decision with advanced strategy considerations
-            decision_logic = await self._evaluate_advanced_trading_decision(
-                opportunity, analysis, perf_stats, account_balance, claude_decision, 
-                composite_rr_data, sophisticated_risk_level, rr_validation_status, rr_divergence
+            logger.info(f"🎯 CORRECTED RR WITH ACTUAL PRICES {opportunity.symbol} ({ia2_final_signal}):")
+            logger.info(f"   💰 Entry: ${actual_entry:.6f} | SL: ${actual_sl:.6f} | TP: ${actual_tp:.6f}")
+            logger.info(f"   🧮 CORRECTED RR: {corrected_rr:.2f}:1 (was {final_rr:.2f}:1)")
+            
+        else:
+            logger.warning(f"⚠️ IDENTICAL PRICES for {opportunity.symbol} - keeping original RR {final_rr:.2f}:1")
+        
+        # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT FOR IA2
+        # Apply AI training insights to improve IA2 decision-making
+        try:
+            # Get current market context for enhancement
+            current_context = await adaptive_context_system.analyze_current_context({
+                'symbols': {opportunity.symbol: {
+                    'price_change_24h': opportunity.price_change_24h,
+                    'volatility': opportunity.volatility,
+                    'volume_ratio': getattr(opportunity, 'volume_ratio', 1.0)
+                }}
+            })
+            
+            # Apply AI enhancements to IA2 decision
+            enhanced_decision_dict = ai_performance_enhancer.enhance_ia2_decision(
+                decision.dict(), 
+                analysis.dict(),
+                current_context.current_regime.value
             )
             
-            # 🎯 ENHANCED RR WITH SOPHISTICATED ANALYSIS: 
-            # Priority: IA2 Recalculated > Sophisticated Composite > IA1 Original
-            enhanced_rr = decision_logic.get("enhanced_rr", {})
-            
-            # Get sophisticated data from decision_logic (passed from parameters)
-            sophisticated_data = decision_logic.get("sophisticated_analysis", {})
-            final_composite_rr_data = sophisticated_data.get("composite_rr_data", {})
-            final_sophisticated_risk_level = sophisticated_data.get("risk_level", "MEDIUM")
-            final_rr_validation_status = sophisticated_data.get("rr_validation_status", "UNKNOWN")
-            final_rr_divergence = sophisticated_data.get("rr_divergence", 0.0)
-            
-            # Option 1: IA2 recalculated RR (highest priority)
-            if (enhanced_rr.get("ia2_calculated_rr") and 
-                enhanced_rr.get("final_rr_source") in ["ia2_recalculated", "ia2_recalculated_validated"]):
-                final_rr = enhanced_rr["ia2_calculated_rr"]
-                rr_source = "ia2_recalculated"
-                validation_msg = enhanced_rr.get("validation_message", "")
-                logger.info(f"🎯 USING IA2 ENHANCED RR: {opportunity.symbol} - {final_rr:.2f}:1 (improved from IA1: {analysis.risk_reward_ratio:.2f}:1)")
-                if validation_msg:
-                    logger.info(f"✅ VALIDATION: {validation_msg}")
-            
-            # Option 2: Sophisticated Composite RR (second priority)
-            elif final_composite_rr_data.get('composite_rr', 0) > 0:
-                final_rr = final_composite_rr_data['composite_rr']
-                rr_source = "sophisticated_composite"
-                
-                # Enhanced validation with composite RR
-                if abs(final_rr - analysis.risk_reward_ratio) > 1.0:
-                    logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (significant improvement from IA1: {analysis.risk_reward_ratio:.2f}:1)")
-                    logger.info(f"📊 Composite Analysis: Bullish {final_composite_rr_data.get('bullish_rr', 0):.2f}, Bearish {final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral {final_composite_rr_data.get('neutral_rr', 0):.2f}")
-                    logger.info(f"🎯 Risk Level: {final_sophisticated_risk_level} | Validation: {final_rr_validation_status}")
-                else:
-                    logger.info(f"🧠 USING SOPHISTICATED RR: {opportunity.symbol} - {final_rr:.2f}:1 (aligned with IA1: {analysis.risk_reward_ratio:.2f}:1)")
-            
-            # Option 3: IA1 Original RR (fallback)
-            else:
-                final_rr = analysis.risk_reward_ratio
-                rr_source = "ia1_original"
-                fallback_reason = enhanced_rr.get("validation_error", "No enhanced RR data available")
-                logger.info(f"🔄 USING IA1 ORIGINAL RR: {opportunity.symbol} - {final_rr:.2f}:1 (Reason: {fallback_reason})")
-            
-            # Additional logging for sophisticated analysis results
-            logger.info(f"📊 SOPHISTICATED RR SUMMARY {opportunity.symbol}:")
-            logger.info(f"   🎯 Final RR: {final_rr:.2f}:1 (Source: {rr_source})")
-            logger.info(f"   📊 Risk Level: {final_sophisticated_risk_level}")
-            logger.info(f"   📊 RR Validation: {final_rr_validation_status} (divergence: {final_rr_divergence:.2f})")
-            if rr_source == "sophisticated_composite":
-                logger.info(f"   📊 Composite Components: Bull:{final_composite_rr_data.get('bullish_rr', 0):.2f}, Bear:{final_composite_rr_data.get('bearish_rr', 0):.2f}, Neutral:{final_composite_rr_data.get('neutral_rr', 0):.2f}")
-            
-            # Create advanced trading decision
-            decision = TradingDecision(
-                symbol=opportunity.symbol,
-                signal=decision_logic["signal"],
-                confidence=decision_logic["confidence"],
-                entry_price=opportunity.current_price,
-                stop_loss=decision_logic["stop_loss"],
-                take_profit_1=decision_logic["tp1"],
-                take_profit_2=decision_logic["tp2"],
-                take_profit_3=decision_logic["tp3"],
-                position_size=decision_logic["position_size"],
-                risk_reward_ratio=final_rr,  # Will be recalculated below with actual prices
-                ia1_analysis_id=analysis.id,
-                ia2_reasoning=decision_logic["reasoning"] if decision_logic["reasoning"] else "IA2 advanced analysis completed",
-                status=TradingStatus.PENDING
+            # Apply AI performance enhancement
+            enhanced_decision_dict = await self.orchestrator.ai_performance_enhancer.apply_enhancements(
+                decision.dict(),
+                analysis.dict(),
+                current_context.current_regime.value
             )
             
-            # 🎯 RECALCULATE RR WITH ACTUAL DECISION PRICES - CRITICAL FIX
-            actual_entry = opportunity.current_price
-            actual_sl = decision_logic["stop_loss"] 
-            actual_tp = decision_logic["tp1"]
-            ia2_final_signal = decision_logic["signal"].upper()
+            # Update decision with enhancements
+            if 'ai_enhancements' in enhanced_decision_dict:
+                # Create new enhanced decision
+                enhanced_decision = TradingDecision(
+                    symbol=opportunity.symbol,
+                    signal=SignalType(enhanced_decision_dict.get('signal', decision.signal.value)),
+                    confidence=enhanced_decision_dict.get('confidence', decision.confidence),
+                    entry_price=enhanced_decision_dict.get('entry_price', decision.entry_price),
+                    stop_loss=enhanced_decision_dict.get('stop_loss', decision.stop_loss),
+                    take_profit_1=enhanced_decision_dict.get('take_profit_1', decision.take_profit_1),
+                    take_profit_2=enhanced_decision_dict.get('take_profit_2', decision.take_profit_2),
+                    take_profit_3=enhanced_decision_dict.get('take_profit_3', decision.take_profit_3),
+                    position_size=enhanced_decision_dict.get('position_size', decision.position_size),
+                    risk_reward_ratio=enhanced_decision_dict.get('risk_reward_ratio', decision.risk_reward_ratio),
+                    ia1_analysis_id=analysis.id,
+                    ia2_reasoning=enhanced_decision_dict.get('ia2_reasoning', decision.ia2_reasoning),
+                    status=TradingStatus.PENDING
+                )
+                
+                decision = enhanced_decision
+                
+                # Log AI enhancements applied
+                ai_enhancements = enhanced_decision_dict['ai_enhancements']
+                enhancement_summary = ", ".join([e['type'] for e in ai_enhancements])
+                logger.info(f"🧠 AI ENHANCED IA2 for {opportunity.symbol}: {enhancement_summary}")
+                
+                # Show specific position size enhancement if applied
+                for enhancement in ai_enhancements:
+                    if enhancement['type'] == 'position_sizing':
+                        logger.info(f"📊 Position size enhanced: {enhancement['original_value']:.1%} → {enhancement['enhanced_value']:.1%} ({enhancement['reasoning']})")
+                
+        except Exception as e:
+            logger.warning(f"⚠️ AI enhancement failed for IA2 decision of {opportunity.symbol}: {e}")
+        
+        
+        # If we have a trading signal, create and execute advanced strategy with trailing stop
+        if decision.signal != SignalType.HOLD and claude_decision:
+            await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
             
-            if actual_sl != actual_entry and actual_tp != actual_entry:
-                if ia2_final_signal == "LONG":
-                    # LONG: RR = (TP - Entry) / (Entry - SL)
-                    if actual_entry > actual_sl:
-                        reward = actual_tp - actual_entry
-                        risk = actual_entry - actual_sl
-                        corrected_rr = reward / risk if risk > 0 else 1.0
-                    else:
-                        corrected_rr = 1.0  # Invalid SL
-                        
-                elif ia2_final_signal == "SHORT":
-                    # SHORT: RR = (Entry - TP) / (SL - Entry)
-                    if actual_sl > actual_entry:
-                        reward = actual_entry - actual_tp
-                        risk = actual_sl - actual_entry
-                        corrected_rr = reward / risk if risk > 0 else 1.0
-                    else:
-                        corrected_rr = 1.0  # Invalid SL
-                else:
-                    corrected_rr = final_rr  # Keep original for HOLD
-                
-                # Update the decision with corrected RR
-                decision.risk_reward_ratio = corrected_rr
-                
-                logger.info(f"🎯 CORRECTED RR WITH ACTUAL PRICES {opportunity.symbol} ({ia2_final_signal}):")
-                logger.info(f"   💰 Entry: ${actual_entry:.6f} | SL: ${actual_sl:.6f} | TP: ${actual_tp:.6f}")
-                logger.info(f"   🧮 CORRECTED RR: {corrected_rr:.2f}:1 (was {final_rr:.2f}:1)")
-                
-            else:
-                logger.warning(f"⚠️ IDENTICAL PRICES for {opportunity.symbol} - keeping original RR {final_rr:.2f}:1")
-            
-            # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT FOR IA2
-            # Apply AI training insights to improve IA2 decision-making
+            # EXECUTE LIVE TRADE through Active Position Manager
             try:
-                # Get current market context for enhancement
-                current_context = await adaptive_context_system.analyze_current_context({
-                    'symbols': {opportunity.symbol: {
-                        'price_change_24h': opportunity.price_change_24h,
-                        'volatility': opportunity.volatility,
-                        'volume_ratio': getattr(opportunity, 'volume_ratio', 1.0)
-                    }}
-                })
-                
-                # Apply AI enhancements to IA2 decision
-                enhanced_decision_dict = ai_performance_enhancer.enhance_ia2_decision(
-                    decision.dict(), 
-                    analysis.dict(),
-                    current_context.current_regime.value
-                )
-                
-                # Apply AI performance enhancement
-                enhanced_decision_dict = await self.orchestrator.ai_performance_enhancer.apply_enhancements(
-                    decision.dict(),
-                    analysis.dict(),
-                    current_context.current_regime.value
-                )
-                
-                # Update decision with enhancements
-                if 'ai_enhancements' in enhanced_decision_dict:
-                    # Create new enhanced decision
-                    enhanced_decision = TradingDecision(
-                        symbol=opportunity.symbol,
-                        signal=SignalType(enhanced_decision_dict.get('signal', decision.signal.value)),
-                        confidence=enhanced_decision_dict.get('confidence', decision.confidence),
-                        entry_price=enhanced_decision_dict.get('entry_price', decision.entry_price),
-                        stop_loss=enhanced_decision_dict.get('stop_loss', decision.stop_loss),
-                        take_profit_1=enhanced_decision_dict.get('take_profit_1', decision.take_profit_1),
-                        take_profit_2=enhanced_decision_dict.get('take_profit_2', decision.take_profit_2),
-                        take_profit_3=enhanced_decision_dict.get('take_profit_3', decision.take_profit_3),
-                        position_size=enhanced_decision_dict.get('position_size', decision.position_size),
-                        risk_reward_ratio=enhanced_decision_dict.get('risk_reward_ratio', decision.risk_reward_ratio),
-                        ia1_analysis_id=analysis.id,
-                        ia2_reasoning=enhanced_decision_dict.get('ia2_reasoning', decision.ia2_reasoning),
-                        status=TradingStatus.PENDING
-                    )
+                # Skip execution if position size is 0%
+                ia2_position_size = decision_logic["position_size"]
+                if ia2_position_size <= 0:
+                    logger.info(f"⏭️ Skipping trade execution for {decision.symbol}: Position size is 0% (IA2 determined no position)")
+                else:
+                    trade_data = {
+                        'symbol': decision.symbol,
+                        'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                        'entry_price': decision.entry_price,
+                        'stop_loss': decision.stop_loss,
+                        'confidence': decision.confidence,
+                        'risk_reward_ratio': decision.risk_reward_ratio,
+                        'position_size_percentage': ia2_position_size,  # Use exact IA2 position size
+                        'take_profit_strategy': claude_decision.get("take_profit_strategy", {}),
+                        'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 3.0)
+                    }
                     
-                    decision = enhanced_decision
+                    # Execute trade through Active Position Manager
+                    execution_result = await self.active_position_manager.execute_trade_from_ia2_decision(trade_data)
                     
-                    # Log AI enhancements applied
-                    ai_enhancements = enhanced_decision_dict['ai_enhancements']
-                    enhancement_summary = ", ".join([e['type'] for e in ai_enhancements])
-                    logger.info(f"🧠 AI ENHANCED IA2 for {opportunity.symbol}: {enhancement_summary}")
-                    
-                    # Show specific position size enhancement if applied
-                    for enhancement in ai_enhancements:
-                        if enhancement['type'] == 'position_sizing':
-                            logger.info(f"📊 Position size enhanced: {enhancement['original_value']:.1%} → {enhancement['enhanced_value']:.1%} ({enhancement['reasoning']})")
-                    
-            except Exception as e:
-                logger.warning(f"⚠️ AI enhancement failed for IA2 decision of {opportunity.symbol}: {e}")
-            
-            
-            # If we have a trading signal, create and execute advanced strategy with trailing stop
-            if decision.signal != SignalType.HOLD and claude_decision:
-                await self._create_and_execute_advanced_strategy(decision, claude_decision, analysis)
-                
-                # EXECUTE LIVE TRADE through Active Position Manager
-                try:
-                    # Skip execution if position size is 0%
-                    ia2_position_size = decision_logic["position_size"]
-                    if ia2_position_size <= 0:
-                        logger.info(f"⏭️ Skipping trade execution for {decision.symbol}: Position size is 0% (IA2 determined no position)")
+                    if execution_result.success:
+                        logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
+                        # Add execution details to decision reasoning
+                        execution_info = f" | TRADE EXECUTED: Position ID {execution_result.position_id} ({ia2_position_size:.1%} position size) | "
+                        if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
+                            decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
                     else:
-                        trade_data = {
+                        logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                    
+                    # 🎯 BINGX INTEGRATION: Execute trade on BingX if enabled
+                    try:
+                        logger.info(f"🎯 EXECUTING IA2 TRADE ON BINGX: {decision.symbol} {decision.signal}")
+                        
+                        # Prepare BingX trade data
+                        bingx_trade_data = {
                             'symbol': decision.symbol,
                             'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
+                            'confidence': decision.confidence,
+                            'position_size': ia2_position_size,  # IA2 position size percentage
                             'entry_price': decision.entry_price,
                             'stop_loss': decision.stop_loss,
-                            'confidence': decision.confidence,
-                            'risk_reward_ratio': decision.risk_reward_ratio,
-                            'position_size_percentage': ia2_position_size,  # Use exact IA2 position size
-                            'take_profit_strategy': claude_decision.get("take_profit_strategy", {}),
-                            'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 3.0)
+                            'take_profit': decision.take_profit_1,
+                            'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 5.0),
+                            'risk_reward_ratio': decision.risk_reward_ratio
                         }
                         
-                        # Execute trade through Active Position Manager
-                        execution_result = await self.active_position_manager.execute_trade_from_ia2_decision(trade_data)
+                        # Execute on BingX
+                        bingx_result = await bingx_manager.execute_ia2_trade(bingx_trade_data)
                         
-                        if execution_result.success:
-                            logger.info(f"🚀 Trade executed successfully for {decision.symbol}: Position ID {execution_result.position_id}")
-                            # Add execution details to decision reasoning
-                            execution_info = f" | TRADE EXECUTED: Position ID {execution_result.position_id} ({ia2_position_size:.1%} position size) | "
+                        if bingx_result.get('status') == 'executed':
+                            logger.info(f"✅ BINGX TRADE EXECUTED: {decision.symbol} - Order ID: {bingx_result.get('order_id')}")
+                            # Add BingX execution info to reasoning
+                            bingx_info = f" | BINGX EXECUTED: Order {bingx_result.get('order_id')} | "
                             if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
-                                decision.ia2_reasoning = (decision.ia2_reasoning + execution_info)[:1500]
+                                decision.ia2_reasoning = (decision.ia2_reasoning + bingx_info)[:1500]
+                        elif bingx_result.get('status') == 'skipped':
+                            logger.info(f"⏭️ BINGX TRADE SKIPPED: {decision.symbol} - {bingx_result.get('reason')}")
+                        elif bingx_result.get('status') == 'rejected':
+                            logger.warning(f"❌ BINGX TRADE REJECTED: {decision.symbol} - {bingx_result.get('errors')}")
                         else:
-                            logger.warning(f"⚠️ Trade execution failed for {decision.symbol}: {execution_result.error_message}")
+                            logger.error(f"❌ BINGX TRADE ERROR: {decision.symbol} - {bingx_result.get('error')}")
+                            
+                    except Exception as bingx_error:
+                        logger.error(f"❌ BINGX INTEGRATION ERROR for {decision.symbol}: {bingx_error}")
+                        # Don't fail the entire decision if BingX fails
+                        pass
                         
-                        # 🎯 BINGX INTEGRATION: Execute trade on BingX if enabled
-                        try:
-                            logger.info(f"🎯 EXECUTING IA2 TRADE ON BINGX: {decision.symbol} {decision.signal}")
-                            
-                            # Prepare BingX trade data
-                            bingx_trade_data = {
-                                'symbol': decision.symbol,
-                                'signal': decision.signal.value if hasattr(decision.signal, 'value') else str(decision.signal),
-                                'confidence': decision.confidence,
-                                'position_size': ia2_position_size,  # IA2 position size percentage
-                                'entry_price': decision.entry_price,
-                                'stop_loss': decision.stop_loss,
-                                'take_profit': decision.take_profit_1,
-                                'leverage': claude_decision.get("leverage", {}).get("calculated_leverage", 5.0),
-                                'risk_reward_ratio': decision.risk_reward_ratio
-                            }
-                            
-                            # Execute on BingX
-                            bingx_result = await bingx_manager.execute_ia2_trade(bingx_trade_data)
-                            
-                            if bingx_result.get('status') == 'executed':
-                                logger.info(f"✅ BINGX TRADE EXECUTED: {decision.symbol} - Order ID: {bingx_result.get('order_id')}")
-                                # Add BingX execution info to reasoning
-                                bingx_info = f" | BINGX EXECUTED: Order {bingx_result.get('order_id')} | "
-                                if hasattr(decision, 'ia2_reasoning') and decision.ia2_reasoning:
-                                    decision.ia2_reasoning = (decision.ia2_reasoning + bingx_info)[:1500]
-                            elif bingx_result.get('status') == 'skipped':
-                                logger.info(f"⏭️ BINGX TRADE SKIPPED: {decision.symbol} - {bingx_result.get('reason')}")
-                            elif bingx_result.get('status') == 'rejected':
-                                logger.warning(f"❌ BINGX TRADE REJECTED: {decision.symbol} - {bingx_result.get('errors')}")
-                            else:
-                                logger.error(f"❌ BINGX TRADE ERROR: {decision.symbol} - {bingx_result.get('error')}")
-                                
-                        except Exception as bingx_error:
-                            logger.error(f"❌ BINGX INTEGRATION ERROR for {decision.symbol}: {bingx_error}")
-                            # Don't fail the entire decision if BingX fails
-                            pass
-                            
-                except Exception as e:
-                    logger.error(f"❌ Error executing trade for {decision.symbol}: {e}")
-                
-                # CREATE TRAILING STOP LOSS with leverage-proportional settings
-                leverage_data = decision_logic.get("dynamic_leverage", {})
-                applied_leverage = leverage_data.get("applied_leverage", 2.0) if leverage_data else 2.0
-                
-                # Extract TP levels for trailing stop - handle both legacy and probabilistic TP formats
-                take_profit_strategy = claude_decision.get("take_profit_strategy", {})
-                tp_levels = {}
-                
-                # Check if we have new probabilistic TP format
-                if "tp_levels" in take_profit_strategy:
-                    # New probabilistic format
-                    for tp_level in take_profit_strategy["tp_levels"]:
-                        level_num = tp_level.get("level", 1)
-                        percentage_from_entry = tp_level.get("percentage_from_entry", 0)
-                        
-                        # Calculate TP price based on percentage from entry
-                        if decision.signal == SignalType.LONG:
-                            tp_price = decision.entry_price * (1 + percentage_from_entry / 100)
-                        else:  # SHORT
-                            tp_price = decision.entry_price * (1 - percentage_from_entry / 100)
-                        
-                        tp_levels[f"tp{level_num}"] = tp_price
+            except Exception as e:
+                logger.error(f"❌ Error executing trade for {decision.symbol}: {e}")
+            
+            # CREATE TRAILING STOP LOSS with leverage-proportional settings
+            leverage_data = decision_logic.get("dynamic_leverage", {})
+            applied_leverage = leverage_data.get("applied_leverage", 2.0) if leverage_data else 2.0
+            
+            # Extract TP levels for trailing stop - handle both legacy and probabilistic TP formats
+            take_profit_strategy = claude_decision.get("take_profit_strategy", {})
+            tp_levels = {}
+            
+            # Check if we have new probabilistic TP format
+            if "tp_levels" in take_profit_strategy:
+                # New probabilistic format
+                for tp_level in take_profit_strategy["tp_levels"]:
+                    level_num = tp_level.get("level", 1)
+                    percentage_from_entry = tp_level.get("percentage_from_entry", 0)
                     
-                    logger.info(f"🎯 Using probabilistic TP levels: {len(tp_levels)} levels extracted")
+                    # Calculate TP price based on percentage from entry
+                    if decision.signal == SignalType.LONG:
+                        tp_price = decision.entry_price * (1 + percentage_from_entry / 100)
+                    else:  # SHORT
+                        tp_price = decision.entry_price * (1 - percentage_from_entry / 100)
+                    
+                    tp_levels[f"tp{level_num}"] = tp_price
                 
-                else:
-                    # Legacy format fallback
-                    tp_levels = {
-                        "tp1": decision.take_profit_1,
-                        "tp2": decision.take_profit_2, 
-                        "tp3": decision.take_profit_3,
-                        "tp4": decision_logic.get("tp4", decision.take_profit_3),
-                        "tp5": decision_logic.get("tp5", decision.take_profit_3)
-                    }
-                    logger.info(f"🔄 Using legacy TP levels format")
-                
-                # Create trailing stop with leverage-proportional trailing percentage
-                trailing_stop = trailing_stop_manager.create_trailing_stop(decision, applied_leverage, tp_levels)
-                
-                logger.info(f"🎯 {decision.symbol} trading decision with {applied_leverage:.1f}x leverage and {trailing_stop.trailing_percentage:.1f}% trailing stop created")
+                logger.info(f"🎯 Using probabilistic TP levels: {len(tp_levels)} levels extracted")
             
-            return decision
+            else:
+                # Legacy format fallback
+                tp_levels = {
+                    "tp1": decision.take_profit_1,
+                    "tp2": decision.take_profit_2, 
+                    "tp3": decision.take_profit_3,
+                    "tp4": decision_logic.get("tp4", decision.take_profit_3),
+                    "tp5": decision_logic.get("tp5", decision.take_profit_3)
+                }
+                logger.info(f"🔄 Using legacy TP levels format")
             
-        except Exception as e:
-            logger.error(f"IA2 ultra decision error for {opportunity.symbol}: {e}")
-            return self._create_hold_decision(f"IA2 error: {str(e)}", 0.3, opportunity.current_price)
+            # Create trailing stop with leverage-proportional trailing percentage
+            trailing_stop = trailing_stop_manager.create_trailing_stop(decision, applied_leverage, tp_levels)
+            
+            logger.info(f"🎯 {decision.symbol} trading decision with {applied_leverage:.1f}x leverage and {trailing_stop.trailing_percentage:.1f}% trailing stop created")
+        
+        return decision
     
     async def _get_account_balance(self) -> float:
         """Get current account balance with enhanced fallback system"""
