@@ -4023,9 +4023,14 @@ class UltraProfessionalIA2DecisionAgent:
                 entry_price=opportunity.current_price,
                 stop_loss_price=opportunity.current_price * 0.98,  # 2% SL
                 take_profit_price=opportunity.current_price * 1.02,  # 2% TP
+                take_profit_2=opportunity.current_price * 1.03,  # 3% TP2
+                take_profit_3=opportunity.current_price * 1.04,  # 4% TP3
                 position_size=1.0,  # Minimal size
-                reasoning=f"IA2 FALLBACK: Technical error prevented full analysis. Error: {str(ia2_error)[:100]}...",
-                risk_reward_ratio=1.0
+                risk_reward_ratio=1.0,
+                ia1_analysis_id=getattr(analysis, 'id', 'fallback'),
+                ia2_reasoning=f"IA2 FALLBACK: Technical error prevented full analysis. Error: {str(ia2_error)[:100]}...",
+                reasoning=f"IA2 FALLBACK: System error, safe HOLD decision",  # Add this field too if needed
+                market_context="error_fallback"
             )
             
             logger.info(f"🛡️ IA2 FALLBACK: Returning safe HOLD decision for {opportunity.symbol}")
