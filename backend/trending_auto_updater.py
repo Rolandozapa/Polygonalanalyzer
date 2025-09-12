@@ -112,6 +112,175 @@ class TrendingAutoUpdater:
                 logger.error(f"Error in trending update loop: {e}")
                 await asyncio.sleep(3600)  # Retry in 1 hour on error
     
+    async def fetch_trending_cryptos(self) -> List[TrendingCrypto]:
+        """
+        🚀 Récupère les trending cryptos depuis BingX Futures API + page market
+        """
+        trending_cryptos = []
+        
+        try:
+            # 🎯 METHOD 1: BingX API pour ticker 24h (top gainers)
+            bingx_api_tickers = await self._fetch_bingx_api_data()
+            if bingx_api_tickers:
+                trending_cryptos.extend(bingx_api_tickers)
+                logger.info(f"🔥 BingX API: Found {len(bingx_api_tickers)} trending cryptos from API")
+            
+            # 🎯 METHOD 2: BingX Futures page scraping (backup)
+            if len(trending_cryptos) < 20:  # Si pas assez depuis API
+                bingx_page_data = await self._fetch_bingx_page_data()
+                if bingx_page_data:
+                    trending_cryptos.extend(bingx_page_data)
+                    logger.info(f"🔥 BingX Page: Found {len(bingx_page_data)} additional cryptos from market page")
+            
+            # 🎯 METHOD 3: Fallback avec top BingX futures
+            if len(trending_cryptos) < 10:
+                fallback_cryptos = await self._create_fallback_cryptos()
+                trending_cryptos.extend(fallback_cryptos)
+                logger.info(f"🔥 BingX Fallback: Added {len(fallback_cryptos)} top futures symbols")
+            
+            # Remove duplicates et tri par volume/price change
+            unique_cryptos = {}
+            for crypto in trending_cryptos:
+                if crypto.symbol not in unique_cryptos:
+                    unique_cryptos[crypto.symbol] = crypto
+                elif crypto.volume and (not unique_cryptos[crypto.symbol].volume or crypto.volume > unique_cryptos[crypto.symbol].volume):
+                    unique_cryptos[crypto.symbol] = crypto
+            
+            final_trending = list(unique_cryptos.values())
+            
+            # Trier par price change puis volume
+            final_trending.sort(key=lambda x: (x.price_change or 0, x.volume or 0), reverse=True)
+            
+            logger.info(f"✅ BingX TOTAL: {len(final_trending)} unique trending cryptos retrieved")
+            return final_trending[:50]  # Top 50
+            
+        except Exception as e:
+            logger.error(f"❌ Error fetching BingX trending cryptos: {e}")
+            # Emergency fallback
+            return await self._create_fallback_cryptos()
+    
+    async def _fetch_bingx_api_data(self) -> List[TrendingCrypto]:
+        """Fetch trending data from BingX API"""
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                # BingX API endpoint pour 24h ticker statistics
+                api_url = f"{self.bingx_api_base}/openApi/swap/v2/quote/ticker"
+                
+                async with session.get(api_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        if data.get('code') == 0 and 'data' in data:
+                            trending_list = []
+                            
+                            for ticker_data in data['data']:
+                                try:
+                                    symbol = ticker_data.get('symbol', '').replace('-', '')
+                                    if not symbol.endswith('USDT'):
+                                        continue
+                                    
+                                    price_change_pct = float(ticker_data.get('priceChangePercent', 0))
+                                    volume = float(ticker_data.get('volume', 0))
+                                    
+                                    # Filtrer pour trending (change > 2% ou volume élevé)
+                                    if abs(price_change_pct) > 2.0 or volume > 1000000:
+                                        crypto = TrendingCrypto(
+                                            symbol=symbol,
+                                            name=symbol.replace('USDT', ''),
+                                            price_change=price_change_pct,
+                                            volume=volume,
+                                            source="bingx_api"
+                                        )
+                                        trending_list.append(crypto)
+                                
+                                except (ValueError, KeyError) as e:
+                                    continue
+                            
+                            return trending_list
+                    else:
+                        logger.warning(f"BingX API returned status {response.status}")
+                        
+        except Exception as e:
+            logger.error(f"❌ BingX API fetch error: {e}")
+        
+        return []
+    
+    async def _fetch_bingx_page_data(self) -> List[TrendingCrypto]:
+        """Scrape BingX futures page for additional data"""
+        try:
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                async with session.get(self.bingx_futures_url) as response:
+                    if response.status == 200:
+                        content = await response.text()
+                        
+                        # Parse content for trading pairs data
+                        trending_list = []
+                        
+                        # Pattern pour capturer données trading pairs
+                        pattern = r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMBT]?)'
+                        matches = re.findall(pattern, content)
+                        
+                        for match in matches:
+                            try:
+                                symbol = f"{match[0]}USDT"
+                                price_change = float(match[1])
+                                volume_str = match[2]
+                                
+                                # Convert volume string to number
+                                volume = self._parse_volume_string(volume_str)
+                                
+                                crypto = TrendingCrypto(
+                                    symbol=symbol,
+                                    name=match[0],
+                                    price_change=price_change,
+                                    volume=volume,
+                                    source="bingx_page"
+                                )
+                                trending_list.append(crypto)
+                                
+                            except (ValueError, IndexError):
+                                continue
+                        
+                        return trending_list
+                        
+        except Exception as e:
+            logger.error(f"❌ BingX page scraping error: {e}")
+        
+        return []
+    
+    async def _create_fallback_cryptos(self) -> List[TrendingCrypto]:
+        """Create fallback trending list from top BingX futures"""
+        fallback_list = []
+        
+        for i, symbol in enumerate(self.bingx_top_futures[:30]):
+            crypto = TrendingCrypto(
+                symbol=symbol,
+                name=symbol.replace('USDT', ''),
+                rank=i + 1,
+                price_change=0.0,  # Will be updated by market data
+                volume=1000000.0,  # Mock volume
+                market_cap=1000000000.0,  # Mock market cap
+                source="bingx_fallback"
+            )
+            fallback_list.append(crypto)
+        
+        return fallback_list
+    
+    def _parse_volume_string(self, volume_str: str) -> float:
+        """Parse volume string like '1.41B', '950.32M' to float"""
+        try:
+            volume_str = volume_str.strip().upper()
+            if volume_str.endswith('B'):
+                return float(volume_str[:-1]) * 1_000_000_000
+            elif volume_str.endswith('M'):
+                return float(volume_str[:-1]) * 1_000_000
+            elif volume_str.endswith('K'):
+                return float(volume_str[:-1]) * 1_000
+            else:
+                return float(volume_str)
+        except:
+            return 0.0
+    
     async def update_trending_list(self) -> List[TrendingCrypto]:
         """Met à jour la liste des cryptos trending depuis Readdy"""
         try:
