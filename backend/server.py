@@ -7410,13 +7410,27 @@ class UltraProfessionalTradingOrchestrator:
             
             for opportunity in top_opportunities:
                 # NOUVEAU: VÉRIFICATION DÉDUPLICATION AVANT ANALYSE IA1 (économie crédits LLM)
+                # 🔧 FIX: Robuste gestion des timestamps pour éviter confusion jour/nuit après maintenance
                 symbol = opportunity.symbol
-                recent_cutoff = get_paris_time() - timedelta(hours=4)
+                
+                # Create robust timestamp filter that handles string vs datetime comparison
+                timestamp_filter = paris_time_to_timestamp_filter(hours_ago=4)
                 
                 existing_recent_analysis = await db.technical_analyses.find_one({
                     "symbol": symbol,
-                    "timestamp": {"$gte": recent_cutoff}
+                    "timestamp": timestamp_filter
                 })
+                
+                # Additional validation: manually check timestamp if found
+                if existing_recent_analysis:
+                    db_timestamp = existing_recent_analysis.get('timestamp')
+                    parsed_time = parse_timestamp_from_db(db_timestamp)
+                    time_diff = get_paris_time() - parsed_time
+                    
+                    # Double-check: if more than 4 hours passed, allow new analysis
+                    if time_diff.total_seconds() > 4 * 3600:  # 4 hours = 14400 seconds
+                        logger.info(f"🔄 IA1 TIMESTAMP FIX: {symbol} - DB timestamp too old ({time_diff}), allowing new analysis")
+                        existing_recent_analysis = None  # Force new analysis
                 
                 if existing_recent_analysis:
                     ia1_analyses_deduplicated += 1
