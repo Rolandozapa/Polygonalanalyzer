@@ -4898,6 +4898,8 @@ async def get_opportunities(limit: int = 50):
         cursor = db.market_opportunities.find().sort("timestamp", -1).limit(limit)
         opportunities = []
         async for doc in cursor:
+            # Convert MongoDB document to JSON-serializable format
+            doc.pop('_id', None)  # Remove ObjectId
             opportunities.append(doc)
         
         logger.info(f"📊 Returning {len(opportunities)} opportunities")
@@ -4917,6 +4919,8 @@ async def get_analyses(limit: int = 50):
         cursor = db.technical_analyses.find().sort("timestamp", -1).limit(limit)
         analyses = []
         async for doc in cursor:
+            # Convert MongoDB document to JSON-serializable format
+            doc.pop('_id', None)  # Remove ObjectId
             analyses.append(doc)
         
         logger.info(f"🧠 Returning {len(analyses)} IA1 analyses")
@@ -4936,6 +4940,8 @@ async def get_decisions(limit: int = 50):
         cursor = db.trading_decisions.find().sort("timestamp", -1).limit(limit)
         decisions = []
         async for doc in cursor:
+            # Convert MongoDB document to JSON-serializable format
+            doc.pop('_id', None)  # Remove ObjectId
             decisions.append(doc)
         
         logger.info(f"⚡ Returning {len(decisions)} IA2 decisions")
