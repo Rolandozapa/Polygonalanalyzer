@@ -7627,13 +7627,27 @@ class UltraProfessionalTradingOrchestrator:
                         
                         if isinstance(decision, TradingDecision) and decision.signal != "HOLD":
                             # NOUVEAU: Vérification de déduplication IA2 avant stockage (cohérence 4h)
+                            # 🔧 FIX: Robuste gestion des timestamps pour éviter confusion jour/nuit après maintenance
                             symbol = decision.symbol
-                            recent_cutoff = get_paris_time() - timedelta(hours=4)  # Cohérent avec Scout et IA1
+                            
+                            # Create robust timestamp filter
+                            timestamp_filter = paris_time_to_timestamp_filter(hours_ago=4)
                             
                             existing_recent_decision = await db.trading_decisions.find_one({
                                 "symbol": symbol,
-                                "timestamp": {"$gte": recent_cutoff}
+                                "timestamp": timestamp_filter
                             })
+                            
+                            # Additional validation: manually check timestamp if found
+                            if existing_recent_decision:
+                                db_timestamp = existing_recent_decision.get('timestamp')
+                                parsed_time = parse_timestamp_from_db(db_timestamp)
+                                time_diff = get_paris_time() - parsed_time
+                                
+                                # Double-check: if more than 4 hours passed, allow new decision
+                                if time_diff.total_seconds() > 4 * 3600:  # 4 hours = 14400 seconds
+                                    logger.info(f"🔄 IA2 TIMESTAMP FIX: {symbol} - DB timestamp too old ({time_diff}), allowing new decision")
+                                    existing_recent_decision = None  # Force new decision
                             
                             if existing_recent_decision:
                                 ia2_decisions_deduplicated += 1
