@@ -66,7 +66,7 @@ class UltraRobustMarketAggregator:
         self.logger = logging.getLogger(__name__)
         self.api_endpoints = self._initialize_ultra_robust_apis()
         self.cache = {}
-        self.cache_ttl = 300  # 5 minutes
+        self.cache_ttl = 14400  # 4 heures - cache aligné avec la fréquence du scout
         
     def _initialize_ultra_robust_apis(self) -> List[APIEndpoint]:
         """Initialize all premium + free APIs for maximum robustness"""
