@@ -282,39 +282,38 @@ class TrendingAutoUpdater:
             return 0.0
     
     async def update_trending_list(self) -> List[TrendingCrypto]:
-        """Met à jour la liste des cryptos trending depuis Readdy"""
+        """
+        🚀 Met à jour la liste des cryptos trending depuis BingX API/Page
+        NOUVELLE VERSION: Utilise BingX au lieu de Readdy pour data fraîche
+        """
         try:
-            logger.info("🔍 Fetching latest trending cryptos from Readdy...")
+            logger.info("🔍 Fetching latest trending cryptos from BingX...")
             
-            # Récupère le contenu de la page
-            page_content = await self._fetch_page_content()
-            
-            if not page_content:
-                logger.error("Failed to fetch page content")
-                return []
-            
-            # Parse les cryptos trending
-            trending_cryptos = self._parse_trending_cryptos(page_content)
+            # 🎯 Utilise la nouvelle méthode BingX
+            trending_cryptos = await self.fetch_trending_cryptos()
             
             if trending_cryptos:
                 self.current_trending = trending_cryptos
                 self.last_update = datetime.now(timezone.utc)
                 
-                symbols = [crypto.symbol for crypto in trending_cryptos]
-                logger.info(f"✅ Updated trending list: {symbols}")
+                symbols = [crypto.symbol for crypto in trending_cryptos[:10]]  # Top 10 pour log
+                logger.info(f"✅ BingX Updated trending list: {symbols}")
                 
-                # Log détaillé des trends trouvés
+                # Log détaillé des trends trouvés avec données BingX
                 for crypto in trending_cryptos[:5]:  # Top 5
-                    logger.info(f"   📈 {crypto.symbol} ({crypto.name}) - Rank #{crypto.rank}")
+                    volume_str = f", Vol: {crypto.volume/1_000_000:.1f}M" if crypto.volume else ""
+                    change_str = f", Change: {crypto.price_change:+.2f}%" if crypto.price_change else ""
+                    logger.info(f"   📈 {crypto.symbol} ({crypto.name}) - Source: {crypto.source}{change_str}{volume_str}")
                 
                 return trending_cryptos
             else:
-                logger.warning("No trending cryptos found in page content")
+                logger.warning("No trending cryptos found from BingX sources")
                 return []
                 
         except Exception as e:
-            logger.error(f"Error updating trending list: {e}")
-            return []
+            logger.error(f"Error updating BingX trending list: {e}")
+            # Emergency fallback
+            return await self._create_fallback_cryptos()
     
     async def _fetch_page_content(self) -> Optional[str]:
         """Récupère le contenu de la page Readdy avec timeout strict"""
