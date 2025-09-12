@@ -58,7 +58,7 @@ class TrendingAutoUpdater:
             "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT"
         ]
         
-        logger.info("TrendingAutoUpdater initialized - 6h update cycle")
+        logger.info("TrendingAutoUpdater initialized - 4h update cycle avec filtres avancés")
     
     async def start_auto_update(self):
         """Démarre le système d'auto-update des trends"""
