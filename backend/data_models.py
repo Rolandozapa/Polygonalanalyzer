@@ -16,6 +16,10 @@ def get_paris_time():
     """Obtenir l'heure actuelle en heure de Paris"""
     return datetime.now(PARIS_TZ)
 
+def generate_position_id():
+    """Generate unique position ID for IA1→IA2 tracking"""
+    return f"POS_{uuid.uuid4().hex[:12].upper()}"
+
 # Enums
 class SignalType(str, Enum):
     LONG = "long"
