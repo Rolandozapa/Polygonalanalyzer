@@ -391,6 +391,7 @@
     "SONIC-USDT",
     "SOON-USDT",
     "SOPH-USDT",
+    "SPARK-USDT",
     "SPK-USDT",
     "SPX-USDT",
     "SQD-USDT",
@@ -434,6 +435,7 @@
     "TURBO-USDT",
     "TUT-USDT",
     "TWT-USDT",
+    "UB-USDT",
     "UMA-USDT",
     "UNI-USDT",
     "USELESS-USDT",
@@ -482,7 +484,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 481,
-  "updated_at": "2025-09-12T08:17:04.042393",
+  "count": 483,
+  "updated_at": "2025-09-12T14:18:57.219621",
   "source": "BingX Futures API"
 }
