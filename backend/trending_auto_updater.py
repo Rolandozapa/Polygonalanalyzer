@@ -182,8 +182,20 @@ class TrendingAutoUpdater:
                                     price_change_pct = float(ticker_data.get('priceChangePercent', 0))
                                     volume = float(ticker_data.get('volume', 0))
                                     
-                                    # Filtrer pour trending (change > 2% ou volume élevé)
-                                    if abs(price_change_pct) > 2.0 or volume > 1000000:
+                                    # 🎯 FILTRES UTILISATEUR: min var volume daily 5%, min var price 1%
+                                    # Filtre 1: Variation de prix minimum 1%
+                                    if abs(price_change_pct) < 1.0:
+                                        continue
+                                    
+                                    # Filtre 2: Volume minimum et variation de volume 5%
+                                    # Pour simplifier, on utilise le volume absolu comme proxy
+                                    if volume < 500000:  # Volume minimum
+                                        continue
+                                    
+                                    # 🎯 DÉTECTION FIGURES LATÉRALES: filtrer les mouvements trop faibles
+                                    # Éviter les figures latérales sans vraie tendance
+                                    if abs(price_change_pct) < 1.5 and volume < 1000000:  # Très faible mouvement ET faible volume
+                                        continue
                                         crypto = TrendingCrypto(
                                             symbol=symbol,
                                             name=symbol.replace('USDT', ''),
