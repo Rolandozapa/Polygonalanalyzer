@@ -57,8 +57,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class IA2SimplifiedPromptTestSuite:
-    """Comprehensive test suite for IA2 simplified prompt system after major code deletion"""
+class IA1IA2PipelineDemonstrationTestSuite:
+    """Comprehensive test suite for IA1→IA2 Pipeline Demonstration Run"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -74,13 +74,13 @@ class IA2SimplifiedPromptTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing IA2 Simplified Prompt System at: {self.api_url}")
+        logger.info(f"Testing IA1→IA2 Pipeline Demonstration at: {self.api_url}")
         
         # MongoDB connection for direct database analysis
         try:
             self.mongo_client = MongoClient("mongodb://localhost:27017")
             self.db = self.mongo_client["myapp"]
-            logger.info("✅ MongoDB connection established for IA2 decision analysis")
+            logger.info("✅ MongoDB connection established for pipeline analysis")
         except Exception as e:
             logger.error(f"❌ MongoDB connection failed: {e}")
             self.mongo_client = None
@@ -89,14 +89,11 @@ class IA2SimplifiedPromptTestSuite:
         # Test results
         self.test_results = []
         
-        # Test symbols for IA1 → IA2 pipeline testing
-        self.test_symbols = [
-            "BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "XRPUSDT",
-            "DOGEUSDT", "AVAXUSDT", "DOTUSDT", "MATICUSDT", "LINKUSDT"
-        ]
+        # Test symbols for IA1 → IA2 pipeline demonstration
+        self.test_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "XRPUSDT"]
         
-        # Track IA2 decisions created during testing
-        self.ia2_decisions_created = []
+        # Track pipeline execution
+        self.pipeline_executions = []
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
@@ -112,674 +109,664 @@ class IA2SimplifiedPromptTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_backend_logs_string_indices_check(self):
-        """Test 1: Check backend logs for 'string indices must be integers, not str' errors"""
-        logger.info("\n🔍 TEST 1: Backend Logs String Indices Error Check")
+    async def test_1_api_endpoints_availability(self):
+        """Test 1: Verify all required API endpoints are available"""
+        logger.info("\n🔍 TEST 1: API Endpoints Availability Test")
+        
+        required_endpoints = [
+            {'method': 'GET', 'path': '/opportunities', 'name': 'Market Opportunities'},
+            {'method': 'GET', 'path': '/analyses', 'name': 'IA1 Analyses'},
+            {'method': 'GET', 'path': '/decisions', 'name': 'IA2 Decisions'},
+            {'method': 'GET', 'path': '/performance', 'name': 'Performance Metrics'},
+            {'method': 'POST', 'path': '/run-ia1-cycle', 'name': 'IA1 Cycle Trigger'},
+            {'method': 'POST', 'path': '/force-ia1-analysis', 'name': 'Force IA1 Analysis'}
+        ]
+        
+        endpoint_results = []
+        
+        for endpoint in required_endpoints:
+            try:
+                method = endpoint['method']
+                path = endpoint['path']
+                name = endpoint['name']
+                
+                logger.info(f"   Testing {method} {path} ({name})")
+                
+                if method == 'GET':
+                    response = requests.get(f"{self.api_url}{path}", timeout=30)
+                elif method == 'POST':
+                    if 'force-ia1-analysis' in path:
+                        response = requests.post(f"{self.api_url}{path}", 
+                                               json={"symbol": "BTCUSDT"}, timeout=30)
+                    else:
+                        response = requests.post(f"{self.api_url}{path}", json={}, timeout=30)
+                
+                if response.status_code in [200, 201]:
+                    endpoint_results.append({'endpoint': name, 'status': 'SUCCESS'})
+                    logger.info(f"      ✅ {name}: SUCCESS (HTTP {response.status_code})")
+                else:
+                    endpoint_results.append({'endpoint': name, 'status': f'HTTP_{response.status_code}'})
+                    logger.info(f"      ❌ {name}: HTTP {response.status_code}")
+                    
+            except Exception as e:
+                endpoint_results.append({'endpoint': name, 'status': 'ERROR', 'error': str(e)})
+                logger.info(f"      ❌ {name}: Exception - {str(e)}")
+        
+        successful_endpoints = len([r for r in endpoint_results if r['status'] == 'SUCCESS'])
+        total_endpoints = len(endpoint_results)
+        
+        if successful_endpoints >= total_endpoints * 0.8:  # 80% success rate
+            self.log_test_result("API Endpoints Availability", True, 
+                               f"Success rate: {successful_endpoints}/{total_endpoints}")
+        else:
+            self.log_test_result("API Endpoints Availability", False, 
+                               f"Low success rate: {successful_endpoints}/{total_endpoints}")
+    
+    async def test_2_ia1_ia2_pipeline_complete_flow(self):
+        """Test 2: IA1→IA2 Pipeline Complete Flow with VOIE Escalation Logic"""
+        logger.info("\n🔍 TEST 2: IA1→IA2 Pipeline Complete Flow Test")
         
         try:
-            # Check recent backend logs for string indices errors
+            # Get initial counts
+            initial_ia1_count = 0
+            initial_ia2_count = 0
+            if self.db is not None:
+                initial_ia1_count = self.db.technical_analyses.count_documents({})
+                initial_ia2_count = self.db.trading_decisions.count_documents({})
+                logger.info(f"   📊 Initial counts - IA1: {initial_ia1_count}, IA2: {initial_ia2_count}")
+            
+            # Trigger IA1 analysis for multiple symbols
+            pipeline_executions = []
+            
+            for symbol in self.test_symbols:
+                try:
+                    logger.info(f"   🚀 Triggering IA1→IA2 pipeline for {symbol}")
+                    
+                    response = requests.post(f"{self.api_url}/force-ia1-analysis", 
+                                           json={"symbol": symbol}, 
+                                           timeout=120)
+                    
+                    if response.status_code in [200, 201]:
+                        result = response.json()
+                        
+                        execution_data = {
+                            'symbol': symbol,
+                            'ia1_success': result.get('success', False),
+                            'ia1_confidence': result.get('confidence', 0),
+                            'ia1_rr': result.get('risk_reward_ratio', 0),
+                            'ia2_triggered': False,
+                            'voie_used': None,
+                            'decision_id': result.get('decision_id')
+                        }
+                        
+                        # Check for IA2 escalation indicators
+                        if result.get('success', False):
+                            confidence = result.get('confidence', 0)
+                            rr = result.get('risk_reward_ratio', 0)
+                            
+                            # Determine VOIE escalation path
+                            if confidence >= 0.95:
+                                execution_data['voie_used'] = 'VOIE 3'
+                                execution_data['ia2_triggered'] = True
+                            elif confidence >= 0.70:
+                                execution_data['voie_used'] = 'VOIE 1'
+                                execution_data['ia2_triggered'] = True
+                            elif rr >= 2.0:
+                                execution_data['voie_used'] = 'VOIE 2'
+                                execution_data['ia2_triggered'] = True
+                            
+                            logger.info(f"      ✅ {symbol}: IA1 success (Conf: {confidence:.1%}, RR: {rr:.1f}) - {execution_data['voie_used'] or 'No escalation'}")
+                        else:
+                            logger.info(f"      ⚠️ {symbol}: IA1 analysis failed")
+                        
+                        pipeline_executions.append(execution_data)
+                    else:
+                        logger.warning(f"      ❌ {symbol}: HTTP {response.status_code}")
+                        
+                    # Small delay between requests
+                    await asyncio.sleep(5)
+                    
+                except Exception as e:
+                    logger.warning(f"      ❌ {symbol}: Exception - {str(e)}")
+            
+            # Wait for IA2 processing
+            logger.info("   ⏳ Waiting 60 seconds for IA2 processing to complete...")
+            await asyncio.sleep(60)
+            
+            # Check final counts and analyze results
+            final_ia1_count = 0
+            final_ia2_count = 0
+            if self.db is not None:
+                final_ia1_count = self.db.technical_analyses.count_documents({})
+                final_ia2_count = self.db.trading_decisions.count_documents({})
+                
+                new_ia1_analyses = final_ia1_count - initial_ia1_count
+                new_ia2_decisions = final_ia2_count - initial_ia2_count
+                
+                logger.info(f"   📊 Final counts - IA1: {final_ia1_count} (+{new_ia1_analyses}), IA2: {final_ia2_count} (+{new_ia2_decisions})")
+            
+            # Analyze pipeline performance
+            successful_ia1 = len([e for e in pipeline_executions if e['ia1_success']])
+            expected_ia2 = len([e for e in pipeline_executions if e['ia2_triggered']])
+            
+            logger.info(f"   📊 Pipeline Analysis:")
+            logger.info(f"      Successful IA1 analyses: {successful_ia1}/{len(self.test_symbols)}")
+            logger.info(f"      Expected IA2 escalations: {expected_ia2}")
+            logger.info(f"      Actual new IA2 decisions: {new_ia2_decisions if self.db else 'N/A'}")
+            
+            # VOIE distribution
+            voie_distribution = {}
+            for execution in pipeline_executions:
+                voie = execution['voie_used']
+                if voie:
+                    voie_distribution[voie] = voie_distribution.get(voie, 0) + 1
+            
+            logger.info(f"      VOIE distribution: {voie_distribution}")
+            
+            # Determine test result
+            if successful_ia1 >= 3 and (expected_ia2 > 0 or new_ia2_decisions > 0):
+                self.log_test_result("IA1→IA2 Pipeline Complete Flow", True, 
+                                   f"Pipeline working: {successful_ia1} IA1 analyses, {expected_ia2} expected escalations, {new_ia2_decisions} new decisions")
+            elif successful_ia1 >= 2:
+                self.log_test_result("IA1→IA2 Pipeline Complete Flow", False, 
+                                   f"Partial pipeline function: {successful_ia1} IA1 analyses, limited escalations")
+            else:
+                self.log_test_result("IA1→IA2 Pipeline Complete Flow", False, 
+                                   f"Pipeline issues: {successful_ia1} IA1 analyses, {expected_ia2} escalations")
+            
+            self.pipeline_executions = pipeline_executions
+                
+        except Exception as e:
+            self.log_test_result("IA1→IA2 Pipeline Complete Flow", False, f"Exception: {str(e)}")
+    
+    async def test_3_ia2_strategic_intelligence_fields(self):
+        """Test 3: IA2 Strategic Intelligence - New Fields and Enhanced Reasoning"""
+        logger.info("\n🔍 TEST 3: IA2 Strategic Intelligence Fields Test")
+        
+        try:
+            if self.db is None:
+                self.log_test_result("IA2 Strategic Intelligence Fields", False, 
+                                   "MongoDB connection not available")
+                return
+            
+            # Get recent IA2 decisions
+            recent_decisions = list(self.db.trading_decisions.find({}).sort("timestamp", -1).limit(10))
+            
+            logger.info(f"   📊 Analyzing {len(recent_decisions)} recent IA2 decisions for strategic intelligence")
+            
+            if len(recent_decisions) == 0:
+                self.log_test_result("IA2 Strategic Intelligence Fields", False, 
+                                   "No recent IA2 decisions found")
+                return
+            
+            # Analyze strategic intelligence fields
+            strategic_analysis = {
+                'total_decisions': len(recent_decisions),
+                'has_market_regime_assessment': 0,
+                'has_position_size_recommendation': 0,
+                'has_execution_priority': 0,
+                'has_calculated_rr': 0,
+                'has_rr_reasoning': 0,
+                'has_strategic_reasoning': 0,
+                'strategic_reasoning_quality': 0,
+                'confidence_distribution': {'high': 0, 'medium': 0, 'low': 0},
+                'signal_distribution': {'LONG': 0, 'SHORT': 0, 'HOLD': 0}
+            }
+            
+            strategic_keywords = [
+                'market_regime', 'regime_assessment', 'strategic', 'confluence', 
+                'institutional', 'probability', 'optimization', 'execution_priority',
+                'position_size', 'risk_management', 'technical_indicators'
+            ]
+            
+            for decision in recent_decisions:
+                # Check for new strategic fields
+                if 'market_regime_assessment' in decision:
+                    strategic_analysis['has_market_regime_assessment'] += 1
+                if 'position_size_recommendation' in decision:
+                    strategic_analysis['has_position_size_recommendation'] += 1
+                if 'execution_priority' in decision:
+                    strategic_analysis['has_execution_priority'] += 1
+                if 'calculated_rr' in decision:
+                    strategic_analysis['has_calculated_rr'] += 1
+                if 'rr_reasoning' in decision:
+                    strategic_analysis['has_rr_reasoning'] += 1
+                
+                # Analyze reasoning quality
+                reasoning = decision.get('reasoning', '').lower()
+                if len(reasoning) > 100:
+                    strategic_analysis['has_strategic_reasoning'] += 1
+                    
+                    # Count strategic keywords
+                    keyword_count = sum(1 for keyword in strategic_keywords if keyword in reasoning)
+                    if keyword_count >= 5:
+                        strategic_analysis['strategic_reasoning_quality'] += 1
+                
+                # Confidence distribution
+                confidence = decision.get('confidence', 0)
+                if confidence >= 0.8:
+                    strategic_analysis['confidence_distribution']['high'] += 1
+                elif confidence >= 0.6:
+                    strategic_analysis['confidence_distribution']['medium'] += 1
+                else:
+                    strategic_analysis['confidence_distribution']['low'] += 1
+                
+                # Signal distribution
+                signal = decision.get('signal', 'UNKNOWN')
+                if signal in strategic_analysis['signal_distribution']:
+                    strategic_analysis['signal_distribution'][signal] += 1
+            
+            # Calculate percentages
+            total = strategic_analysis['total_decisions']
+            field_coverage = (
+                strategic_analysis['has_calculated_rr'] + 
+                strategic_analysis['has_rr_reasoning'] + 
+                strategic_analysis['has_strategic_reasoning']
+            ) / (total * 3) if total > 0 else 0
+            
+            strategic_quality = strategic_analysis['strategic_reasoning_quality'] / total if total > 0 else 0
+            
+            # Log detailed analysis
+            logger.info(f"   📊 Strategic Intelligence Analysis:")
+            logger.info(f"      Market regime assessment: {strategic_analysis['has_market_regime_assessment']}/{total}")
+            logger.info(f"      Position size recommendation: {strategic_analysis['has_position_size_recommendation']}/{total}")
+            logger.info(f"      Execution priority: {strategic_analysis['has_execution_priority']}/{total}")
+            logger.info(f"      Calculated RR: {strategic_analysis['has_calculated_rr']}/{total}")
+            logger.info(f"      RR reasoning: {strategic_analysis['has_rr_reasoning']}/{total}")
+            logger.info(f"      Strategic reasoning: {strategic_analysis['has_strategic_reasoning']}/{total}")
+            logger.info(f"      Strategic quality: {strategic_analysis['strategic_reasoning_quality']}/{total} ({strategic_quality:.1%})")
+            logger.info(f"      Confidence distribution: {strategic_analysis['confidence_distribution']}")
+            logger.info(f"      Signal distribution: {strategic_analysis['signal_distribution']}")
+            
+            # Determine test result
+            if field_coverage >= 0.7 and strategic_quality >= 0.5:
+                self.log_test_result("IA2 Strategic Intelligence Fields", True, 
+                                   f"Strategic intelligence working: {field_coverage:.1%} field coverage, {strategic_quality:.1%} quality")
+            elif field_coverage >= 0.5:
+                self.log_test_result("IA2 Strategic Intelligence Fields", False, 
+                                   f"Partial strategic intelligence: {field_coverage:.1%} field coverage, {strategic_quality:.1%} quality")
+            else:
+                self.log_test_result("IA2 Strategic Intelligence Fields", False, 
+                                   f"Limited strategic intelligence: {field_coverage:.1%} field coverage, {strategic_quality:.1%} quality")
+                
+        except Exception as e:
+            self.log_test_result("IA2 Strategic Intelligence Fields", False, f"Exception: {str(e)}")
+    
+    async def test_4_advanced_technical_analysis_integration(self):
+        """Test 4: Advanced Technical Analysis - Multi-timeframe, Indicators, Confluence Matrix"""
+        logger.info("\n🔍 TEST 4: Advanced Technical Analysis Integration Test")
+        
+        try:
+            if self.db is None:
+                self.log_test_result("Advanced Technical Analysis Integration", False, 
+                                   "MongoDB connection not available")
+                return
+            
+            # Get recent IA1 analyses
+            recent_analyses = list(self.db.technical_analyses.find({}).sort("timestamp", -1).limit(10))
+            
+            logger.info(f"   📊 Analyzing {len(recent_analyses)} recent IA1 analyses for advanced technical analysis")
+            
+            if len(recent_analyses) == 0:
+                self.log_test_result("Advanced Technical Analysis Integration", False, 
+                                   "No recent IA1 analyses found")
+                return
+            
+            # Technical indicators to check for
+            technical_indicators = {
+                'RSI': ['rsi', 'oversold', 'overbought'],
+                'MACD': ['macd', 'signal_line', 'histogram'],
+                'Stochastic': ['stochastic', '%k', '%d'],
+                'Bollinger Bands': ['bollinger', 'bands', 'squeeze'],
+                'EMA/SMA': ['ema', 'sma', 'moving_average', 'hierarchy'],
+                'MFI': ['mfi', 'money_flow', 'institutional'],
+                'VWAP': ['vwap', 'volume_weighted', 'precision'],
+                'Multi-timeframe': ['timeframe', 'daily', 'hourly', '4h', '1h'],
+                'Confluence': ['confluence', 'matrix', 'alignment'],
+                'Pattern Detection': ['pattern', 'support', 'resistance', 'trend']
+            }
+            
+            analysis_results = {
+                'total_analyses': len(recent_analyses),
+                'indicator_coverage': {indicator: 0 for indicator in technical_indicators.keys()},
+                'multi_timeframe_count': 0,
+                'confluence_matrix_count': 0,
+                'advanced_reasoning_count': 0,
+                'confidence_with_indicators': []
+            }
+            
+            for analysis in recent_analyses:
+                reasoning = analysis.get('analysis', '').lower()
+                
+                # Check for each technical indicator
+                for indicator, keywords in technical_indicators.items():
+                    if any(keyword in reasoning for keyword in keywords):
+                        analysis_results['indicator_coverage'][indicator] += 1
+                
+                # Check for multi-timeframe analysis
+                timeframe_keywords = ['daily', 'hourly', '4h', '1h', 'timeframe', 'multi-tf']
+                if sum(1 for keyword in timeframe_keywords if keyword in reasoning) >= 2:
+                    analysis_results['multi_timeframe_count'] += 1
+                
+                # Check for confluence matrix
+                confluence_keywords = ['confluence', 'matrix', 'alignment', 'godlike', 'strong', 'good']
+                if sum(1 for keyword in confluence_keywords if keyword in reasoning) >= 2:
+                    analysis_results['confluence_matrix_count'] += 1
+                
+                # Check for advanced reasoning (multiple indicators)
+                indicator_count = sum(1 for indicator, keywords in technical_indicators.items() 
+                                    if any(keyword in reasoning for keyword in keywords))
+                if indicator_count >= 5:
+                    analysis_results['advanced_reasoning_count'] += 1
+                    analysis_results['confidence_with_indicators'].append(analysis.get('analysis_confidence', 0))
+            
+            # Calculate coverage percentages
+            total = analysis_results['total_analyses']
+            indicator_coverage_avg = sum(analysis_results['indicator_coverage'].values()) / (len(technical_indicators) * total) if total > 0 else 0
+            multi_timeframe_coverage = analysis_results['multi_timeframe_count'] / total if total > 0 else 0
+            confluence_coverage = analysis_results['confluence_matrix_count'] / total if total > 0 else 0
+            advanced_reasoning_coverage = analysis_results['advanced_reasoning_count'] / total if total > 0 else 0
+            
+            # Log detailed analysis
+            logger.info(f"   📊 Advanced Technical Analysis Results:")
+            logger.info(f"      Indicator Coverage (avg): {indicator_coverage_avg:.1%}")
+            for indicator, count in analysis_results['indicator_coverage'].items():
+                coverage = count / total if total > 0 else 0
+                logger.info(f"        {indicator}: {count}/{total} ({coverage:.1%})")
+            
+            logger.info(f"      Multi-timeframe analysis: {analysis_results['multi_timeframe_count']}/{total} ({multi_timeframe_coverage:.1%})")
+            logger.info(f"      Confluence matrix usage: {analysis_results['confluence_matrix_count']}/{total} ({confluence_coverage:.1%})")
+            logger.info(f"      Advanced reasoning (5+ indicators): {analysis_results['advanced_reasoning_count']}/{total} ({advanced_reasoning_coverage:.1%})")
+            
+            if analysis_results['confidence_with_indicators']:
+                avg_confidence = sum(analysis_results['confidence_with_indicators']) / len(analysis_results['confidence_with_indicators'])
+                logger.info(f"      Average confidence with advanced indicators: {avg_confidence:.1%}")
+            
+            # Determine test result
+            if (indicator_coverage_avg >= 0.6 and multi_timeframe_coverage >= 0.4 and 
+                confluence_coverage >= 0.3 and advanced_reasoning_coverage >= 0.4):
+                self.log_test_result("Advanced Technical Analysis Integration", True, 
+                                   f"Advanced analysis working: {indicator_coverage_avg:.1%} indicators, {confluence_coverage:.1%} confluence")
+            elif indicator_coverage_avg >= 0.4 and advanced_reasoning_coverage >= 0.2:
+                self.log_test_result("Advanced Technical Analysis Integration", False, 
+                                   f"Partial advanced analysis: {indicator_coverage_avg:.1%} indicators, {advanced_reasoning_coverage:.1%} advanced reasoning")
+            else:
+                self.log_test_result("Advanced Technical Analysis Integration", False, 
+                                   f"Limited advanced analysis: {indicator_coverage_avg:.1%} indicators, {advanced_reasoning_coverage:.1%} advanced reasoning")
+                
+        except Exception as e:
+            self.log_test_result("Advanced Technical Analysis Integration", False, f"Exception: {str(e)}")
+    
+    async def test_5_system_performance_and_stability(self):
+        """Test 5: System Performance & Stability - CPU, Error Handling, Logging"""
+        logger.info("\n🔍 TEST 5: System Performance & Stability Test")
+        
+        try:
+            # Check CPU usage
+            try:
+                import psutil
+                cpu_percent = psutil.cpu_percent(interval=1)
+                memory_percent = psutil.virtual_memory().percent
+                
+                logger.info(f"   📊 System Resources:")
+                logger.info(f"      CPU Usage: {cpu_percent:.1f}%")
+                logger.info(f"      Memory Usage: {memory_percent:.1f}%")
+                
+                cpu_stable = cpu_percent < 90.0  # CPU under 90%
+                memory_stable = memory_percent < 85.0  # Memory under 85%
+                
+            except ImportError:
+                logger.info("   ⚠️ psutil not available, skipping resource monitoring")
+                cpu_stable = True
+                memory_stable = True
+            
+            # Check backend logs for errors
+            error_analysis = await self._analyze_backend_logs()
+            
+            # Check system stability indicators
+            stability_indicators = {
+                'cpu_stable': cpu_stable,
+                'memory_stable': memory_stable,
+                'low_error_rate': error_analysis['error_rate'] < 0.1,  # Less than 10% error rate
+                'no_critical_errors': error_analysis['critical_errors'] == 0,
+                'good_logging_quality': error_analysis['log_quality_score'] >= 0.7
+            }
+            
+            stable_indicators = sum(1 for indicator, stable in stability_indicators.items() if stable)
+            total_indicators = len(stability_indicators)
+            
+            logger.info(f"   📊 Stability Analysis:")
+            for indicator, stable in stability_indicators.items():
+                status = "✅" if stable else "❌"
+                logger.info(f"      {status} {indicator.replace('_', ' ').title()}")
+            
+            logger.info(f"   📊 Error Analysis:")
+            logger.info(f"      Total log entries: {error_analysis['total_entries']}")
+            logger.info(f"      Error entries: {error_analysis['error_entries']}")
+            logger.info(f"      Error rate: {error_analysis['error_rate']:.1%}")
+            logger.info(f"      Critical errors: {error_analysis['critical_errors']}")
+            logger.info(f"      Log quality score: {error_analysis['log_quality_score']:.1%}")
+            
+            # Determine test result
+            if stable_indicators >= total_indicators * 0.8:
+                self.log_test_result("System Performance & Stability", True, 
+                                   f"System stable: {stable_indicators}/{total_indicators} indicators good")
+            elif stable_indicators >= total_indicators * 0.6:
+                self.log_test_result("System Performance & Stability", False, 
+                                   f"System mostly stable: {stable_indicators}/{total_indicators} indicators good")
+            else:
+                self.log_test_result("System Performance & Stability", False, 
+                                   f"System stability issues: {stable_indicators}/{total_indicators} indicators good")
+                
+        except Exception as e:
+            self.log_test_result("System Performance & Stability", False, f"Exception: {str(e)}")
+    
+    async def _analyze_backend_logs(self):
+        """Analyze backend logs for error patterns and quality"""
+        try:
             log_files = [
                 "/var/log/supervisor/backend.out.log",
                 "/var/log/supervisor/backend.err.log"
             ]
             
-            string_indices_errors = []
-            total_log_lines = 0
+            analysis = {
+                'total_entries': 0,
+                'error_entries': 0,
+                'critical_errors': 0,
+                'error_rate': 0.0,
+                'log_quality_score': 0.0,
+                'recent_errors': []
+            }
+            
+            error_patterns = [
+                r'ERROR',
+                r'CRITICAL',
+                r'Exception',
+                r'Traceback',
+                r'string indices must be integers',
+                r'acomplete.*not found'
+            ]
+            
+            quality_indicators = [
+                r'✅',
+                r'📊',
+                r'🚀',
+                r'INFO.*IA[12]',
+                r'VOIE [123]',
+                r'confidence.*%'
+            ]
             
             for log_file in log_files:
                 try:
                     if os.path.exists(log_file):
-                        # Get last 1000 lines to check recent activity
                         result = subprocess.run(['tail', '-n', '1000', log_file], 
                                               capture_output=True, text=True, timeout=30)
                         
                         if result.returncode == 0:
                             log_content = result.stdout
-                            total_log_lines += len(log_content.split('\n'))
+                            lines = log_content.split('\n')
+                            analysis['total_entries'] += len([line for line in lines if line.strip()])
                             
-                            # Search for string indices errors
-                            error_patterns = [
-                                r"string indices must be integers, not str",
-                                r"TypeError.*string indices must be integers",
-                                r"string indices.*not str"
-                            ]
+                            # Count errors
+                            for line in lines:
+                                if any(re.search(pattern, line, re.IGNORECASE) for pattern in error_patterns):
+                                    analysis['error_entries'] += 1
+                                    if 'CRITICAL' in line.upper() or 'string indices' in line.lower():
+                                        analysis['critical_errors'] += 1
+                                    if len(analysis['recent_errors']) < 5:
+                                        analysis['recent_errors'].append(line.strip())
                             
-                            for pattern in error_patterns:
-                                matches = re.findall(pattern, log_content, re.IGNORECASE)
-                                if matches:
-                                    string_indices_errors.extend(matches)
-                                    
-                            # Also check for IA2-related errors specifically
-                            ia2_error_lines = []
-                            for line in log_content.split('\n'):
-                                if 'ia2' in line.lower() and any(pattern in line.lower() for pattern in ['string indices', 'typeerror', 'error']):
-                                    ia2_error_lines.append(line.strip())
+                            # Count quality indicators
+                            quality_count = sum(1 for line in lines 
+                                              if any(re.search(pattern, line, re.IGNORECASE) for pattern in quality_indicators))
+                            analysis['log_quality_score'] += quality_count / max(len(lines), 1)
                             
-                            if ia2_error_lines:
-                                logger.info(f"   📊 Found {len(ia2_error_lines)} IA2-related error lines in {log_file}")
-                                for error_line in ia2_error_lines[-5:]:  # Show last 5 errors
-                                    logger.info(f"      {error_line}")
-                                    
                 except Exception as e:
-                    logger.warning(f"   ⚠️ Could not read {log_file}: {e}")
+                    logger.warning(f"   ⚠️ Could not analyze {log_file}: {e}")
             
-            logger.info(f"   📊 Analyzed {total_log_lines} log lines from backend logs")
-            logger.info(f"   📊 Found {len(string_indices_errors)} 'string indices' errors")
+            # Calculate final metrics
+            if analysis['total_entries'] > 0:
+                analysis['error_rate'] = analysis['error_entries'] / analysis['total_entries']
             
-            if len(string_indices_errors) == 0:
-                self.log_test_result("Backend Logs String Indices Check", True, 
-                                   f"No 'string indices must be integers, not str' errors found in recent logs")
-            else:
-                self.log_test_result("Backend Logs String Indices Check", False, 
-                                   f"Found {len(string_indices_errors)} string indices errors in backend logs")
-                # Log the errors for debugging
-                for error in string_indices_errors[:3]:  # Show first 3 errors
-                    logger.info(f"      Error: {error}")
-                    
+            analysis['log_quality_score'] = min(analysis['log_quality_score'] / len(log_files), 1.0)
+            
+            return analysis
+            
         except Exception as e:
-            self.log_test_result("Backend Logs String Indices Check", False, f"Exception: {str(e)}")
+            logger.warning(f"Log analysis failed: {e}")
+            return {
+                'total_entries': 0,
+                'error_entries': 0,
+                'critical_errors': 0,
+                'error_rate': 0.0,
+                'log_quality_score': 0.0,
+                'recent_errors': []
+            }
     
-    async def test_2_ia2_decision_generation_stability(self):
-        """Test 2: Test IA2 Decision Generation Stability by triggering IA1 → IA2 pipeline"""
-        logger.info("\n🔍 TEST 2: IA2 Decision Generation Stability Test")
-        
-        try:
-            # Get current IA2 decision count before testing
-            initial_ia2_count = 0
-            if self.db is not None:
-                initial_ia2_count = self.db.trading_decisions.count_documents({})
-                logger.info(f"   📊 Initial IA2 decisions in database: {initial_ia2_count}")
-            
-            # Trigger IA1 analysis for multiple symbols to potentially trigger IA2
-            ia1_analyses_triggered = 0
-            ia2_escalations_detected = 0
-            
-            for symbol in self.test_symbols[:3]:  # Test first 3 symbols
-                try:
-                    logger.info(f"   🚀 Triggering IA1 analysis for {symbol}")
-                    
-                    # Use the correct endpoint for IA1 analysis
-                    response = requests.post(f"{self.api_url}/force-ia1-analysis", 
-                                           json={"symbol": symbol}, 
-                                           timeout=120)  # Longer timeout for IA1 → IA2 pipeline
-                    
-                    if response.status_code in [200, 201]:
-                        ia1_analyses_triggered += 1
-                        result = response.json()
-                        
-                        # Check if IA2 was triggered
-                        if result.get('success', False):
-                            logger.info(f"      ✅ {symbol}: IA1 analysis successful")
-                            
-                            # Check if IA2 escalation occurred
-                            if 'ia2_triggered' in result or 'escalated_to_ia2' in result:
-                                ia2_escalations_detected += 1
-                                logger.info(f"      ✅ {symbol}: IA2 escalation detected")
-                        else:
-                            logger.info(f"      ℹ️ {symbol}: IA1 analysis completed but no escalation")
-                    else:
-                        logger.warning(f"      ⚠️ {symbol}: IA1 analysis failed - HTTP {response.status_code}")
-                        
-                    # Small delay between requests
-                    await asyncio.sleep(3)
-                    
-                except Exception as e:
-                    logger.warning(f"      ⚠️ {symbol}: Exception during analysis - {str(e)}")
-            
-            # Wait a bit for IA2 processing to complete
-            logger.info("   ⏳ Waiting 30 seconds for IA2 processing to complete...")
-            await asyncio.sleep(30)
-            
-            # Check final IA2 decision count
-            final_ia2_count = 0
-            new_ia2_decisions = 0
-            if self.db is not None:
-                final_ia2_count = self.db.trading_decisions.count_documents({})
-                new_ia2_decisions = final_ia2_count - initial_ia2_count
-                logger.info(f"   📊 Final IA2 decisions in database: {final_ia2_count}")
-                logger.info(f"   📊 New IA2 decisions created: {new_ia2_decisions}")
-            
-            # Evaluate test results
-            logger.info(f"   📊 IA1 analyses triggered: {ia1_analyses_triggered}")
-            logger.info(f"   📊 IA2 escalations detected: {ia2_escalations_detected}")
-            
-            if ia1_analyses_triggered >= 2:  # At least 2 IA1 analyses successful
-                if self.db is not None and new_ia2_decisions > 0:
-                    self.log_test_result("IA2 Decision Generation Stability", True, 
-                                       f"IA2 system generating decisions: {new_ia2_decisions} new decisions created")
-                elif ia2_escalations_detected > 0:
-                    self.log_test_result("IA2 Decision Generation Stability", True, 
-                                       f"IA2 escalations detected: {ia2_escalations_detected} escalations")
-                else:
-                    self.log_test_result("IA2 Decision Generation Stability", False, 
-                                       "No IA2 escalations detected despite IA1 analyses")
-            else:
-                self.log_test_result("IA2 Decision Generation Stability", False, 
-                                   f"Insufficient IA1 analyses triggered: {ia1_analyses_triggered}")
-                
-        except Exception as e:
-            self.log_test_result("IA2 Decision Generation Stability", False, f"Exception: {str(e)}")
-    
-    async def test_3_ia2_decision_structure_validation(self):
-        """Test 3: Validate IA2 Decision Structure and Required Fields"""
-        logger.info("\n🔍 TEST 3: IA2 Decision Structure Validation Test")
+    async def test_6_database_storage_verification(self):
+        """Test 6: Database Storage of Analyses and Decisions"""
+        logger.info("\n🔍 TEST 6: Database Storage Verification Test")
         
         try:
             if self.db is None:
-                self.log_test_result("IA2 Decision Structure Validation", False, 
-                                   "MongoDB connection not available for decision analysis")
+                self.log_test_result("Database Storage Verification", False, 
+                                   "MongoDB connection not available")
                 return
             
-            # Get recent IA2 decisions (last 24 hours)
-            cutoff_time = datetime.now() - timedelta(hours=24)
+            # Check collections and recent data
+            collections_analysis = {}
             
-            recent_decisions = list(self.db.trading_decisions.find({
-                "timestamp": {"$gte": cutoff_time}
-            }).sort("timestamp", -1).limit(10))
-            
-            logger.info(f"   📊 Found {len(recent_decisions)} recent IA2 decisions for analysis")
-            
-            if len(recent_decisions) == 0:
-                self.log_test_result("IA2 Decision Structure Validation", False, 
-                                   "No recent IA2 decisions found for structure validation")
-                return
-            
-            # Analyze decision structure
-            structure_analysis = {
-                'total_decisions': len(recent_decisions),
-                'has_calculated_rr': 0,
-                'has_rr_reasoning': 0,
-                'has_signal': 0,
-                'has_confidence': 0,
-                'has_reasoning': 0,
-                'has_strategic_analysis': 0,
-                'signal_distribution': {'LONG': 0, 'SHORT': 0, 'HOLD': 0},
-                'confidence_range': {'min': 1.0, 'max': 0.0, 'avg': 0.0},
-                'decisions_with_errors': 0
+            # Technical Analyses (IA1)
+            ia1_count = self.db.technical_analyses.count_documents({})
+            recent_ia1 = self.db.technical_analyses.count_documents({
+                "timestamp": {"$gte": datetime.now() - timedelta(hours=24)}
+            })
+            collections_analysis['technical_analyses'] = {
+                'total': ia1_count,
+                'recent_24h': recent_ia1,
+                'collection_exists': True
             }
             
-            confidence_values = []
+            # Trading Decisions (IA2)
+            ia2_count = self.db.trading_decisions.count_documents({})
+            recent_ia2 = self.db.trading_decisions.count_documents({
+                "timestamp": {"$gte": datetime.now() - timedelta(hours=24)}
+            })
+            collections_analysis['trading_decisions'] = {
+                'total': ia2_count,
+                'recent_24h': recent_ia2,
+                'collection_exists': True
+            }
             
-            for decision in recent_decisions:
-                # Check for required fields
-                if 'calculated_rr' in decision:
-                    structure_analysis['has_calculated_rr'] += 1
-                if 'rr_reasoning' in decision:
-                    structure_analysis['has_rr_reasoning'] += 1
-                if 'signal' in decision:
-                    structure_analysis['has_signal'] += 1
-                    signal = decision['signal']
-                    if signal in structure_analysis['signal_distribution']:
-                        structure_analysis['signal_distribution'][signal] += 1
-                if 'confidence' in decision:
-                    structure_analysis['has_confidence'] += 1
-                    confidence = decision['confidence']
-                    confidence_values.append(confidence)
-                if 'reasoning' in decision:
-                    structure_analysis['has_reasoning'] += 1
-                    reasoning = decision['reasoning']
-                    if len(reasoning) > 100:  # Substantial reasoning
-                        structure_analysis['has_strategic_analysis'] += 1
-                
-                # Check for error indicators
-                if 'error' in str(decision).lower() or 'exception' in str(decision).lower():
-                    structure_analysis['decisions_with_errors'] += 1
+            # Market Opportunities
+            opportunities_count = self.db.market_opportunities.count_documents({})
+            recent_opportunities = self.db.market_opportunities.count_documents({
+                "timestamp": {"$gte": datetime.now() - timedelta(hours=24)}
+            })
+            collections_analysis['market_opportunities'] = {
+                'total': opportunities_count,
+                'recent_24h': recent_opportunities,
+                'collection_exists': True
+            }
             
-            # Calculate confidence statistics
-            if confidence_values:
-                structure_analysis['confidence_range']['min'] = min(confidence_values)
-                structure_analysis['confidence_range']['max'] = max(confidence_values)
-                structure_analysis['confidence_range']['avg'] = sum(confidence_values) / len(confidence_values)
+            # Performance Tracking
+            performance_count = self.db.trading_performance.count_documents({})
+            collections_analysis['trading_performance'] = {
+                'total': performance_count,
+                'recent_24h': 0,  # Performance tracking may be less frequent
+                'collection_exists': True
+            }
+            
+            # Analyze data quality
+            data_quality_analysis = {}
+            
+            # Check IA1 data quality
+            if recent_ia1 > 0:
+                sample_ia1 = list(self.db.technical_analyses.find({}).sort("timestamp", -1).limit(5))
+                required_ia1_fields = ['symbol', 'analysis', 'analysis_confidence', 'ia1_signal']
+                ia1_quality = sum(1 for analysis in sample_ia1 
+                                if all(field in analysis for field in required_ia1_fields)) / len(sample_ia1)
+                data_quality_analysis['ia1_quality'] = ia1_quality
+            else:
+                data_quality_analysis['ia1_quality'] = 0
+            
+            # Check IA2 data quality
+            if recent_ia2 > 0:
+                sample_ia2 = list(self.db.trading_decisions.find({}).sort("timestamp", -1).limit(5))
+                required_ia2_fields = ['symbol', 'signal', 'confidence', 'reasoning']
+                ia2_quality = sum(1 for decision in sample_ia2 
+                                if all(field in decision for field in required_ia2_fields)) / len(sample_ia2)
+                data_quality_analysis['ia2_quality'] = ia2_quality
+            else:
+                data_quality_analysis['ia2_quality'] = 0
             
             # Log detailed analysis
-            logger.info(f"   📊 Decision Structure Analysis:")
-            logger.info(f"      Total decisions analyzed: {structure_analysis['total_decisions']}")
-            logger.info(f"      Has calculated_rr field: {structure_analysis['has_calculated_rr']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Has rr_reasoning field: {structure_analysis['has_rr_reasoning']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Has signal field: {structure_analysis['has_signal']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Has confidence field: {structure_analysis['has_confidence']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Has reasoning field: {structure_analysis['has_reasoning']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Has strategic analysis: {structure_analysis['has_strategic_analysis']}/{structure_analysis['total_decisions']}")
-            logger.info(f"      Signal distribution: {structure_analysis['signal_distribution']}")
-            logger.info(f"      Confidence range: {structure_analysis['confidence_range']}")
-            logger.info(f"      Decisions with errors: {structure_analysis['decisions_with_errors']}")
+            logger.info(f"   📊 Database Collections Analysis:")
+            for collection, data in collections_analysis.items():
+                logger.info(f"      {collection}: {data['total']} total, {data['recent_24h']} recent (24h)")
             
-            # Evaluate structure quality
-            required_fields_score = (
-                structure_analysis['has_calculated_rr'] + 
-                structure_analysis['has_rr_reasoning'] + 
-                structure_analysis['has_signal'] + 
-                structure_analysis['has_confidence'] + 
-                structure_analysis['has_reasoning']
-            ) / (structure_analysis['total_decisions'] * 5)  # 5 required fields
+            logger.info(f"   📊 Data Quality Analysis:")
+            logger.info(f"      IA1 data quality: {data_quality_analysis['ia1_quality']:.1%}")
+            logger.info(f"      IA2 data quality: {data_quality_analysis['ia2_quality']:.1%}")
             
-            strategic_quality_score = structure_analysis['has_strategic_analysis'] / structure_analysis['total_decisions']
-            
-            logger.info(f"   📊 Required fields score: {required_fields_score:.2%}")
-            logger.info(f"   📊 Strategic quality score: {strategic_quality_score:.2%}")
+            # Calculate overall storage health
+            total_recent_data = sum(data['recent_24h'] for data in collections_analysis.values())
+            avg_data_quality = (data_quality_analysis['ia1_quality'] + data_quality_analysis['ia2_quality']) / 2
             
             # Determine test result
-            if required_fields_score >= 0.8 and strategic_quality_score >= 0.6 and structure_analysis['decisions_with_errors'] == 0:
-                self.log_test_result("IA2 Decision Structure Validation", True, 
-                                   f"IA2 decisions have proper structure: {required_fields_score:.1%} required fields, {strategic_quality_score:.1%} strategic quality")
-            elif required_fields_score >= 0.6:
-                self.log_test_result("IA2 Decision Structure Validation", False, 
-                                   f"IA2 decision structure partially valid: {required_fields_score:.1%} required fields, {structure_analysis['decisions_with_errors']} errors")
+            if total_recent_data >= 5 and avg_data_quality >= 0.7:
+                self.log_test_result("Database Storage Verification", True, 
+                                   f"Database storage working: {total_recent_data} recent entries, {avg_data_quality:.1%} quality")
+            elif total_recent_data >= 2 and avg_data_quality >= 0.5:
+                self.log_test_result("Database Storage Verification", False, 
+                                   f"Partial database storage: {total_recent_data} recent entries, {avg_data_quality:.1%} quality")
             else:
-                self.log_test_result("IA2 Decision Structure Validation", False, 
-                                   f"IA2 decision structure invalid: {required_fields_score:.1%} required fields, {structure_analysis['decisions_with_errors']} errors")
+                self.log_test_result("Database Storage Verification", False, 
+                                   f"Limited database storage: {total_recent_data} recent entries, {avg_data_quality:.1%} quality")
                 
         except Exception as e:
-            self.log_test_result("IA2 Decision Structure Validation", False, f"Exception: {str(e)}")
+            self.log_test_result("Database Storage Verification", False, f"Exception: {str(e)}")
     
-    async def test_4_calculated_rr_and_reasoning_fields(self):
-        """Test 4: Specific Test for calculated_rr and rr_reasoning Fields"""
-        logger.info("\n🔍 TEST 4: Calculated RR and RR Reasoning Fields Test")
-        
-        try:
-            if self.db is None:
-                self.log_test_result("Calculated RR and RR Reasoning Fields", False, 
-                                   "MongoDB connection not available for field analysis")
-                return
-            
-            # Get recent IA2 decisions
-            recent_decisions = list(self.db.trading_decisions.find({}).sort("timestamp", -1).limit(20))
-            
-            logger.info(f"   📊 Analyzing {len(recent_decisions)} recent IA2 decisions for RR fields")
-            
-            if len(recent_decisions) == 0:
-                self.log_test_result("Calculated RR and RR Reasoning Fields", False, 
-                                   "No IA2 decisions found for RR field analysis")
-                return
-            
-            # Analyze RR fields
-            rr_analysis = {
-                'total_decisions': len(recent_decisions),
-                'has_calculated_rr': 0,
-                'has_rr_reasoning': 0,
-                'valid_calculated_rr': 0,
-                'valid_rr_reasoning': 0,
-                'rr_values': [],
-                'reasoning_samples': []
-            }
-            
-            for decision in recent_decisions:
-                # Check calculated_rr field
-                if 'calculated_rr' in decision:
-                    rr_analysis['has_calculated_rr'] += 1
-                    calculated_rr = decision['calculated_rr']
-                    
-                    # Validate calculated_rr value
-                    if isinstance(calculated_rr, (int, float)) and calculated_rr > 0:
-                        rr_analysis['valid_calculated_rr'] += 1
-                        rr_analysis['rr_values'].append(calculated_rr)
-                
-                # Check rr_reasoning field
-                if 'rr_reasoning' in decision:
-                    rr_analysis['has_rr_reasoning'] += 1
-                    rr_reasoning = decision['rr_reasoning']
-                    
-                    # Validate rr_reasoning content
-                    if isinstance(rr_reasoning, str) and len(rr_reasoning) > 20:
-                        rr_analysis['valid_rr_reasoning'] += 1
-                        if len(rr_analysis['reasoning_samples']) < 3:
-                            rr_analysis['reasoning_samples'].append(rr_reasoning[:100] + "...")
-            
-            # Calculate statistics
-            rr_field_presence = rr_analysis['has_calculated_rr'] / rr_analysis['total_decisions']
-            reasoning_field_presence = rr_analysis['has_rr_reasoning'] / rr_analysis['total_decisions']
-            rr_validity = rr_analysis['valid_calculated_rr'] / max(rr_analysis['has_calculated_rr'], 1)
-            reasoning_validity = rr_analysis['valid_rr_reasoning'] / max(rr_analysis['has_rr_reasoning'], 1)
-            
-            # Log detailed analysis
-            logger.info(f"   📊 RR Fields Analysis:")
-            logger.info(f"      calculated_rr field present: {rr_analysis['has_calculated_rr']}/{rr_analysis['total_decisions']} ({rr_field_presence:.1%})")
-            logger.info(f"      rr_reasoning field present: {rr_analysis['has_rr_reasoning']}/{rr_analysis['total_decisions']} ({reasoning_field_presence:.1%})")
-            logger.info(f"      Valid calculated_rr values: {rr_analysis['valid_calculated_rr']}/{rr_analysis['has_calculated_rr']} ({rr_validity:.1%})")
-            logger.info(f"      Valid rr_reasoning content: {rr_analysis['valid_rr_reasoning']}/{rr_analysis['has_rr_reasoning']} ({reasoning_validity:.1%})")
-            
-            if rr_analysis['rr_values']:
-                avg_rr = sum(rr_analysis['rr_values']) / len(rr_analysis['rr_values'])
-                min_rr = min(rr_analysis['rr_values'])
-                max_rr = max(rr_analysis['rr_values'])
-                logger.info(f"      RR value range: {min_rr:.2f} - {max_rr:.2f} (avg: {avg_rr:.2f})")
-            
-            logger.info(f"   📊 Sample RR Reasoning:")
-            for i, sample in enumerate(rr_analysis['reasoning_samples'], 1):
-                logger.info(f"      Sample {i}: {sample}")
-            
-            # Determine test result
-            if rr_field_presence >= 0.8 and reasoning_field_presence >= 0.8 and rr_validity >= 0.9 and reasoning_validity >= 0.9:
-                self.log_test_result("Calculated RR and RR Reasoning Fields", True, 
-                                   f"RR fields properly implemented: {rr_field_presence:.1%} presence, {rr_validity:.1%} validity")
-            elif rr_field_presence >= 0.5 and reasoning_field_presence >= 0.5:
-                self.log_test_result("Calculated RR and RR Reasoning Fields", False, 
-                                   f"RR fields partially implemented: {rr_field_presence:.1%} presence, {rr_validity:.1%} validity")
-            else:
-                self.log_test_result("Calculated RR and RR Reasoning Fields", False, 
-                                   f"RR fields missing or invalid: {rr_field_presence:.1%} presence, {rr_validity:.1%} validity")
-                
-        except Exception as e:
-            self.log_test_result("Calculated RR and RR Reasoning Fields", False, f"Exception: {str(e)}")
-    
-    async def test_5_strategic_reasoning_quality(self):
-        """Test 5: Validate Strategic Reasoning Quality in IA2 Decisions"""
-        logger.info("\n🔍 TEST 5: Strategic Reasoning Quality Validation Test")
-        
-        try:
-            if self.db is None:
-                self.log_test_result("Strategic Reasoning Quality", False, 
-                                   "MongoDB connection not available for reasoning analysis")
-                return
-            
-            # Get recent IA2 decisions with reasoning
-            recent_decisions = list(self.db.trading_decisions.find({
-                "reasoning": {"$exists": True}
-            }).sort("timestamp", -1).limit(15))
-            
-            logger.info(f"   📊 Analyzing {len(recent_decisions)} IA2 decisions for reasoning quality")
-            
-            if len(recent_decisions) == 0:
-                self.log_test_result("Strategic Reasoning Quality", False, 
-                                   "No IA2 decisions with reasoning found for quality analysis")
-                return
-            
-            # Quality indicators to look for in reasoning
-            quality_indicators = {
-                'technical_analysis': ['rsi', 'macd', 'ema', 'sma', 'bollinger', 'stochastic', 'vwap', 'mfi'],
-                'market_context': ['market', 'trend', 'momentum', 'volatility', 'volume', 'support', 'resistance'],
-                'risk_management': ['risk', 'reward', 'stop', 'loss', 'take', 'profit', 'position', 'size'],
-                'strategic_thinking': ['confluence', 'probability', 'expected', 'value', 'optimization', 'strategy'],
-                'decision_logic': ['confidence', 'threshold', 'criteria', 'analysis', 'evaluation', 'assessment']
-            }
-            
-            reasoning_analysis = {
-                'total_decisions': len(recent_decisions),
-                'quality_scores': [],
-                'category_scores': {category: 0 for category in quality_indicators.keys()},
-                'reasoning_lengths': [],
-                'decisions_with_quality': 0
-            }
-            
-            for decision in recent_decisions:
-                reasoning = decision.get('reasoning', '').lower()
-                reasoning_length = len(reasoning)
-                reasoning_analysis['reasoning_lengths'].append(reasoning_length)
-                
-                # Calculate quality score for this decision
-                decision_quality_score = 0
-                category_hits = {category: 0 for category in quality_indicators.keys()}
-                
-                for category, indicators in quality_indicators.items():
-                    category_hit_count = sum(1 for indicator in indicators if indicator in reasoning)
-                    category_hits[category] = category_hit_count
-                    
-                    # Score: 1 point per category with at least 2 indicators
-                    if category_hit_count >= 2:
-                        decision_quality_score += 1
-                        reasoning_analysis['category_scores'][category] += 1
-                
-                reasoning_analysis['quality_scores'].append(decision_quality_score)
-                
-                # Consider decision as having quality if it scores >= 3 categories
-                if decision_quality_score >= 3:
-                    reasoning_analysis['decisions_with_quality'] += 1
-                
-                # Log sample reasoning for top quality decisions
-                if decision_quality_score >= 4 and len(reasoning_analysis['quality_scores']) <= 3:
-                    logger.info(f"   📊 High-quality reasoning sample (score: {decision_quality_score}/5):")
-                    logger.info(f"      {reasoning[:200]}...")
-            
-            # Calculate overall statistics
-            avg_quality_score = sum(reasoning_analysis['quality_scores']) / len(reasoning_analysis['quality_scores'])
-            avg_reasoning_length = sum(reasoning_analysis['reasoning_lengths']) / len(reasoning_analysis['reasoning_lengths'])
-            quality_percentage = reasoning_analysis['decisions_with_quality'] / reasoning_analysis['total_decisions']
-            
-            # Log detailed analysis
-            logger.info(f"   📊 Strategic Reasoning Quality Analysis:")
-            logger.info(f"      Average quality score: {avg_quality_score:.1f}/5.0")
-            logger.info(f"      Average reasoning length: {avg_reasoning_length:.0f} characters")
-            logger.info(f"      Decisions with quality reasoning: {reasoning_analysis['decisions_with_quality']}/{reasoning_analysis['total_decisions']} ({quality_percentage:.1%})")
-            
-            logger.info(f"   📊 Category Coverage:")
-            for category, score in reasoning_analysis['category_scores'].items():
-                coverage = score / reasoning_analysis['total_decisions']
-                logger.info(f"      {category.replace('_', ' ').title()}: {score}/{reasoning_analysis['total_decisions']} ({coverage:.1%})")
-            
-            # Determine test result
-            if avg_quality_score >= 3.0 and quality_percentage >= 0.7 and avg_reasoning_length >= 200:
-                self.log_test_result("Strategic Reasoning Quality", True, 
-                                   f"High-quality strategic reasoning: {avg_quality_score:.1f}/5.0 score, {quality_percentage:.1%} quality decisions")
-            elif avg_quality_score >= 2.0 and quality_percentage >= 0.5:
-                self.log_test_result("Strategic Reasoning Quality", False, 
-                                   f"Moderate strategic reasoning quality: {avg_quality_score:.1f}/5.0 score, {quality_percentage:.1%} quality decisions")
-            else:
-                self.log_test_result("Strategic Reasoning Quality", False, 
-                                   f"Poor strategic reasoning quality: {avg_quality_score:.1f}/5.0 score, {quality_percentage:.1%} quality decisions")
-                
-        except Exception as e:
-            self.log_test_result("Strategic Reasoning Quality", False, f"Exception: {str(e)}")
-    
-    async def test_6_voie_escalation_paths(self):
-        """Test 6: Test VOIE 1, VOIE 2, and VOIE 3 Escalation Paths"""
-        logger.info("\n🔍 TEST 6: VOIE Escalation Paths Test")
-        
-        try:
-            # Check backend logs for VOIE escalation messages
-            log_files = [
-                "/var/log/supervisor/backend.out.log",
-                "/var/log/supervisor/backend.err.log"
-            ]
-            
-            voie_patterns = {
-                'VOIE 1': [r'VOIE 1', r'confidence.*70%', r'IA2 ACCEPTED.*VOIE 1'],
-                'VOIE 2': [r'VOIE 2', r'RR.*2\.0', r'IA2 ACCEPTED.*VOIE 2'],
-                'VOIE 3': [r'VOIE 3', r'95%.*confidence', r'OVERRIDE.*Exceptional', r'IA2 ACCEPTED.*VOIE 3']
-            }
-            
-            voie_analysis = {
-                'VOIE 1': 0,
-                'VOIE 2': 0,
-                'VOIE 3': 0,
-                'total_escalations': 0,
-                'escalation_samples': []
-            }
-            
-            for log_file in log_files:
-                try:
-                    if os.path.exists(log_file):
-                        result = subprocess.run(['tail', '-n', '2000', log_file], 
-                                              capture_output=True, text=True, timeout=30)
-                        
-                        if result.returncode == 0:
-                            log_content = result.stdout
-                            
-                            # Search for VOIE patterns
-                            for voie_name, patterns in voie_patterns.items():
-                                for pattern in patterns:
-                                    matches = re.findall(pattern, log_content, re.IGNORECASE)
-                                    if matches:
-                                        voie_analysis[voie_name] += len(matches)
-                            
-                            # Look for escalation samples
-                            for line in log_content.split('\n'):
-                                if any(voie in line.upper() for voie in ['VOIE 1', 'VOIE 2', 'VOIE 3']):
-                                    if len(voie_analysis['escalation_samples']) < 5:
-                                        voie_analysis['escalation_samples'].append(line.strip())
-                                        
-                except Exception as e:
-                    logger.warning(f"   ⚠️ Could not read {log_file}: {e}")
-            
-            voie_analysis['total_escalations'] = sum([voie_analysis['VOIE 1'], voie_analysis['VOIE 2'], voie_analysis['VOIE 3']])
-            
-            # Log analysis results
-            logger.info(f"   📊 VOIE Escalation Analysis:")
-            logger.info(f"      VOIE 1 escalations (confidence ≥70%): {voie_analysis['VOIE 1']}")
-            logger.info(f"      VOIE 2 escalations (RR ≥2.0): {voie_analysis['VOIE 2']}")
-            logger.info(f"      VOIE 3 escalations (confidence ≥95%): {voie_analysis['VOIE 3']}")
-            logger.info(f"      Total escalations detected: {voie_analysis['total_escalations']}")
-            
-            if voie_analysis['escalation_samples']:
-                logger.info(f"   📊 Escalation Samples:")
-                for i, sample in enumerate(voie_analysis['escalation_samples'], 1):
-                    logger.info(f"      Sample {i}: {sample}")
-            
-            # Determine test result
-            if voie_analysis['total_escalations'] >= 3:
-                active_voies = sum(1 for voie in ['VOIE 1', 'VOIE 2', 'VOIE 3'] if voie_analysis[voie] > 0)
-                self.log_test_result("VOIE Escalation Paths", True, 
-                                   f"VOIE escalation system working: {voie_analysis['total_escalations']} escalations, {active_voies} active paths")
-            elif voie_analysis['total_escalations'] >= 1:
-                self.log_test_result("VOIE Escalation Paths", False, 
-                                   f"Limited VOIE escalation activity: {voie_analysis['total_escalations']} escalations detected")
-            else:
-                self.log_test_result("VOIE Escalation Paths", False, 
-                                   "No VOIE escalation activity detected in logs")
-                
-        except Exception as e:
-            self.log_test_result("VOIE Escalation Paths", False, f"Exception: {str(e)}")
-    
-    async def test_7_end_to_end_pipeline_integration(self):
-        """Test 7: End-to-End IA1 → IA2 Pipeline Integration Test"""
-        logger.info("\n🔍 TEST 7: End-to-End IA1 → IA2 Pipeline Integration Test")
-        
-        try:
-            # Test complete pipeline with a specific symbol
-            test_symbol = "BTCUSDT"
-            logger.info(f"   🚀 Testing complete IA1 → IA2 pipeline with {test_symbol}")
-            
-            # Step 1: Trigger IA1 analysis
-            logger.info("   📊 Step 1: Triggering IA1 analysis...")
-            ia1_response = requests.post(f"{self.api_url}/force-ia1-analysis", 
-                                       json={"symbol": test_symbol}, 
-                                       timeout=180)  # Extended timeout for full pipeline
-            
-            if ia1_response.status_code not in [200, 201]:
-                self.log_test_result("End-to-End Pipeline Integration", False, 
-                                   f"IA1 analysis failed: HTTP {ia1_response.status_code}")
-                return
-            
-            ia1_result = ia1_response.json()
-            logger.info(f"      ✅ IA1 analysis completed for {test_symbol}")
-            
-            # Step 2: Check if IA2 was triggered
-            ia2_triggered = False
-            decision_id = None
-            
-            if ia1_result.get('success', False):
-                logger.info(f"      ✅ IA1 analysis successful")
-                
-                # Check for IA2 escalation indicators
-                if 'ia2_triggered' in ia1_result or 'escalated_to_ia2' in ia1_result or 'decision_id' in ia1_result:
-                    ia2_triggered = True
-                    decision_id = ia1_result.get('decision_id')
-                    logger.info(f"      ✅ IA2 escalation triggered, decision ID: {decision_id}")
-                else:
-                    logger.info("      ℹ️ IA2 not triggered (IA1 analysis did not meet escalation criteria)")
-            else:
-                logger.info("      ⚠️ IA1 analysis completed but not successful")
-            
-            # Step 3: Wait for processing and check database
-            logger.info("   📊 Step 2: Waiting for IA2 processing...")
-            await asyncio.sleep(45)  # Wait for IA2 processing
-            
-            # Step 4: Verify IA2 decision in database
-            ia2_decision_found = False
-            if self.db is not None and decision_id:
-                decision = self.db.trading_decisions.find_one({"id": decision_id})
-                if decision:
-                    ia2_decision_found = True
-                    logger.info(f"      ✅ IA2 decision found in database")
-                    
-                    # Check decision quality
-                    has_signal = 'signal' in decision
-                    has_confidence = 'confidence' in decision
-                    has_reasoning = 'reasoning' in decision and len(decision['reasoning']) > 50
-                    has_calculated_rr = 'calculated_rr' in decision
-                    
-                    logger.info(f"         Signal: {decision.get('signal', 'N/A')}")
-                    logger.info(f"         Confidence: {decision.get('confidence', 'N/A')}")
-                    logger.info(f"         Has reasoning: {has_reasoning}")
-                    logger.info(f"         Has calculated_rr: {has_calculated_rr}")
-            
-            # Step 5: Check Active Position Manager integration
-            logger.info("   📊 Step 3: Checking Active Position Manager integration...")
-            try:
-                apm_response = requests.get(f"{self.api_url}/active-positions", timeout=30)
-                apm_integration = apm_response.status_code == 200
-                if apm_integration:
-                    logger.info(f"      ✅ Active Position Manager integration working")
-                else:
-                    logger.info(f"      ⚠️ Active Position Manager not accessible")
-            except:
-                apm_integration = False
-                logger.info(f"      ⚠️ Active Position Manager integration failed")
-            
-            # Step 6: Check BingX integration
-            logger.info("   📊 Step 4: Checking BingX integration...")
-            try:
-                bingx_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-                bingx_integration = bingx_response.status_code == 200
-                if bingx_integration:
-                    logger.info(f"      ✅ BingX integration accessible")
-                else:
-                    logger.info(f"      ⚠️ BingX integration not accessible")
-            except:
-                bingx_integration = False
-                logger.info(f"      ⚠️ BingX integration failed")
-            
-            # Evaluate overall pipeline
-            pipeline_components = {
-                'IA1 Analysis': ia1_response.status_code in [200, 201],
-                'IA2 Escalation Logic': True,  # Always present, even if not triggered
-                'IA2 Decision Generation': ia2_decision_found if ia2_triggered else True,
-                'Active Position Manager': apm_integration,
-                'BingX Integration': bingx_integration
-            }
-            
-            working_components = sum(1 for component, working in pipeline_components.items() if working)
-            total_components = len(pipeline_components)
-            
-            logger.info(f"   📊 Pipeline Component Status:")
-            for component, working in pipeline_components.items():
-                status = "✅" if working else "❌"
-                logger.info(f"      {status} {component}")
-            
-            # Determine test result
-            if working_components == total_components:
-                self.log_test_result("End-to-End Pipeline Integration", True, 
-                                   f"Complete pipeline working: {working_components}/{total_components} components functional")
-            elif working_components >= total_components * 0.8:
-                self.log_test_result("End-to-End Pipeline Integration", False, 
-                                   f"Pipeline mostly working: {working_components}/{total_components} components functional")
-            else:
-                self.log_test_result("End-to-End Pipeline Integration", False, 
-                                   f"Pipeline has issues: {working_components}/{total_components} components functional")
-                
-        except Exception as e:
-            self.log_test_result("End-to-End Pipeline Integration", False, f"Exception: {str(e)}")
-    
-    async def run_comprehensive_tests(self):
-        """Run all IA2 simplified prompt tests"""
-        logger.info("🚀 Starting IA2 Simplified Prompt Comprehensive Test Suite")
+    async def run_comprehensive_demonstration(self):
+        """Run comprehensive IA1→IA2 pipeline demonstration"""
+        logger.info("🚀 Starting IA1→IA2 Pipeline Demonstration Run")
         logger.info("=" * 80)
-        logger.info("📋 IA2 SIMPLIFIED PROMPT SYSTEM COMPREHENSIVE TESTING")
-        logger.info("🎯 Testing: String indices error resolution, decision generation, RR fields, strategic reasoning")
-        logger.info("🎯 Expected: IA2 system working correctly after major code deletion and simplification")
+        logger.info("📋 COMPREHENSIVE IA1→IA2 PIPELINE DEMONSTRATION RUN")
+        logger.info("🎯 Testing: Complete dual AI trading system functionality")
+        logger.info("🎯 Expected: Full pipeline working with VOIE escalation, strategic intelligence, advanced analysis")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_backend_logs_string_indices_check()
-        await self.test_2_ia2_decision_generation_stability()
-        await self.test_3_ia2_decision_structure_validation()
-        await self.test_4_calculated_rr_and_reasoning_fields()
-        await self.test_5_strategic_reasoning_quality()
-        await self.test_6_voie_escalation_paths()
-        await self.test_7_end_to_end_pipeline_integration()
+        await self.test_1_api_endpoints_availability()
+        await self.test_2_ia1_ia2_pipeline_complete_flow()
+        await self.test_3_ia2_strategic_intelligence_fields()
+        await self.test_4_advanced_technical_analysis_integration()
+        await self.test_5_system_performance_and_stability()
+        await self.test_6_database_storage_verification()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 IA2 SIMPLIFIED PROMPT COMPREHENSIVE TEST SUMMARY")
+        logger.info("📊 IA1→IA2 PIPELINE DEMONSTRATION COMPREHENSIVE TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -801,16 +788,18 @@ class IA2SimplifiedPromptTestSuite:
         requirements_status = {}
         
         for result in self.test_results:
-            if "String Indices" in result['test']:
-                requirements_status['IA2 Error Resolution'] = result['success']
-            elif "Decision Generation" in result['test']:
-                requirements_status['IA2 Decision Generation'] = result['success']
-            elif "Strategic Reasoning" in result['test']:
-                requirements_status['Strategic Reasoning Quality'] = result['success']
-            elif "RR and RR Reasoning" in result['test']:
-                requirements_status['RR Calculation Fields'] = result['success']
-            elif "End-to-End" in result['test']:
-                requirements_status['End-to-End Pipeline'] = result['success']
+            if "API Endpoints" in result['test']:
+                requirements_status['System Components Integration'] = result['success']
+            elif "Pipeline Complete Flow" in result['test']:
+                requirements_status['IA1→IA2 Pipeline Complete Flow'] = result['success']
+            elif "Strategic Intelligence" in result['test']:
+                requirements_status['IA2 Strategic Intelligence'] = result['success']
+            elif "Advanced Technical Analysis" in result['test']:
+                requirements_status['Advanced Technical Analysis'] = result['success']
+            elif "Performance & Stability" in result['test']:
+                requirements_status['Performance & Stability'] = result['success']
+            elif "Database Storage" in result['test']:
+                requirements_status['Database Storage & Traceability'] = result['success']
         
         logger.info("🎯 CRITICAL REQUIREMENTS STATUS:")
         for requirement, status in requirements_status.items():
@@ -824,647 +813,39 @@ class IA2SimplifiedPromptTestSuite:
         logger.info(f"\n🏆 REQUIREMENTS SATISFACTION: {requirements_met}/{total_requirements}")
         
         if requirements_met == total_requirements:
-            logger.info("\n🎉 VERDICT: IA2 SIMPLIFIED PROMPT SYSTEM IS FULLY FUNCTIONAL!")
-            logger.info("✅ String indices errors resolved")
-            logger.info("✅ IA2 decision generation working")
-            logger.info("✅ Strategic reasoning quality maintained")
-            logger.info("✅ RR calculation fields implemented")
-            logger.info("✅ End-to-end pipeline operational")
-            logger.info("✅ Major code deletion successful - simplified system working correctly")
+            logger.info("\n🎉 VERDICT: IA1→IA2 PIPELINE DEMONSTRATION FULLY SUCCESSFUL!")
+            logger.info("✅ Complete dual AI trading system working")
+            logger.info("✅ VOIE escalation logic operational")
+            logger.info("✅ IA2 strategic intelligence enhanced")
+            logger.info("✅ Advanced technical analysis integrated")
+            logger.info("✅ System performance stable")
+            logger.info("✅ Database storage and traceability working")
+            logger.info("✅ Ready for production demonstration")
         elif requirements_met >= total_requirements * 0.8:
-            logger.info("\n⚠️ VERDICT: IA2 SIMPLIFIED PROMPT SYSTEM IS MOSTLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: IA1→IA2 PIPELINE DEMONSTRATION MOSTLY SUCCESSFUL")
             logger.info("🔍 Minor issues may need attention for complete functionality")
         elif requirements_met >= total_requirements * 0.6:
-            logger.info("\n⚠️ VERDICT: IA2 SIMPLIFIED PROMPT SYSTEM IS PARTIALLY FUNCTIONAL")
+            logger.info("\n⚠️ VERDICT: IA1→IA2 PIPELINE DEMONSTRATION PARTIALLY SUCCESSFUL")
             logger.info("🔧 Several critical requirements need implementation or debugging")
         else:
-            logger.info("\n❌ VERDICT: IA2 SIMPLIFIED PROMPT SYSTEM IS NOT FUNCTIONAL")
-            logger.info("🚨 Major issues preventing IA2 system from working correctly")
-            logger.info("🚨 Simplified prompt implementation may have critical bugs")
-        
-        return passed_tests, total_tests
-
-class BingXIntegrationTestSuite:
-    """Comprehensive test suite for BingX API integration system"""
-    
-    def __init__(self):
-        # Get backend URL from frontend env
-        try:
-            with open('/app/frontend/.env', 'r') as f:
-                for line in f:
-                    if line.startswith('REACT_APP_BACKEND_URL='):
-                        backend_url = line.split('=')[1].strip()
-                        break
-                else:
-                    backend_url = "http://localhost:8001"
-        except Exception:
-            backend_url = "http://localhost:8001"
-        
-        self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing BingX Integration System at: {self.api_url}")
-        
-        # Test results
-        self.test_results = []
-        
-        # Expected BingX endpoints to test
-        self.bingx_endpoints = [
-            {'method': 'GET', 'path': '/bingx/status', 'name': 'System Status'},
-            {'method': 'GET', 'path': '/bingx/balance', 'name': 'Account Balance'},
-            {'method': 'GET', 'path': '/bingx/positions', 'name': 'Open Positions'},
-            {'method': 'GET', 'path': '/bingx/risk-config', 'name': 'Risk Configuration'},
-            {'method': 'GET', 'path': '/bingx/trading-history', 'name': 'Trading History'},
-            {'method': 'POST', 'path': '/bingx/execute-ia2', 'name': 'IA2 Trade Execution'},
-            {'method': 'GET', 'path': '/bingx/market-price', 'name': 'Market Price'},
-            {'method': 'POST', 'path': '/bingx/trade', 'name': 'Manual Trade'},
-            {'method': 'POST', 'path': '/bingx/close-position', 'name': 'Close Position'},
-            {'method': 'POST', 'path': '/bingx/close-all-positions', 'name': 'Close All Positions'},
-            {'method': 'POST', 'path': '/bingx/emergency-stop', 'name': 'Emergency Stop'},
-            {'method': 'POST', 'path': '/bingx/risk-config', 'name': 'Update Risk Config'},
-        ]
-        
-        # Mock IA2 decision data for testing
-        self.mock_ia2_decision = {
-            "symbol": "BTCUSDT",
-            "signal": "LONG",
-            "confidence": 0.85,
-            "position_size": 2.5,
-            "leverage": 5,
-            "entry_price": 45000.0,
-            "stop_loss": 43000.0,
-            "take_profit": 48000.0,
-            "reasoning": "Strong bullish momentum with RSI oversold recovery"
-        }
-        
-    def log_test_result(self, test_name: str, success: bool, details: str = ""):
-        """Log test result"""
-        status = "✅ PASS" if success else "❌ FAIL"
-        logger.info(f"{status}: {test_name}")
-        if details:
-            logger.info(f"   Details: {details}")
-        
-        self.test_results.append({
-            'test': test_name,
-            'success': success,
-            'details': details,
-            'timestamp': datetime.now().isoformat()
-        })
-    
-    async def test_1_bingx_api_connectivity(self):
-        """Test 1: BingX API Connectivity via /api/bingx/status endpoint"""
-        logger.info("\n🔍 TEST 1: BingX API Connectivity Test")
-        
-        try:
-            response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                logger.info(f"   📊 Status response: {json.dumps(data, indent=2)}")
-                
-                # Check for expected status fields
-                expected_fields = ['status', 'api_connected', 'timestamp']
-                missing_fields = [field for field in expected_fields if field not in data]
-                
-                if not missing_fields:
-                    api_connected = data.get('api_connected', False)
-                    if api_connected:
-                        self.log_test_result("BingX API Connectivity", True, f"API connected successfully: {data.get('status')}")
-                    else:
-                        self.log_test_result("BingX API Connectivity", False, f"API not connected: {data}")
-                else:
-                    self.log_test_result("BingX API Connectivity", False, f"Missing fields: {missing_fields}")
-            else:
-                self.log_test_result("BingX API Connectivity", False, f"HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test_result("BingX API Connectivity", False, f"Exception: {str(e)}")
-    
-    async def test_2_account_balance_retrieval(self):
-        """Test 2: Account Balance Retrieval via /api/bingx/balance endpoint"""
-        logger.info("\n🔍 TEST 2: Account Balance Retrieval Test")
-        
-        try:
-            response = requests.get(f"{self.api_url}/bingx/balance", timeout=30)
-            
-            if response.status_code == 200:
-                data = response.json()
-                logger.info(f"   📊 Balance response: {json.dumps(data, indent=2)}")
-                
-                # Check for expected balance fields
-                expected_fields = ['balance', 'available_balance', 'timestamp']
-                has_balance_data = any(field in data for field in expected_fields)
-                
-                if has_balance_data:
-                    balance = data.get('balance', data.get('total_balance', 0))
-                    available = data.get('available_balance', data.get('available_margin', 0))
-                    
-                    self.log_test_result("Account Balance Retrieval", True, 
-                                       f"Balance: ${balance}, Available: ${available}")
-                else:
-                    self.log_test_result("Account Balance Retrieval", False, 
-                                       f"No balance data found in response: {data}")
-            else:
-                self.log_test_result("Account Balance Retrieval", False, 
-                                   f"HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test_result("Account Balance Retrieval", False, f"Exception: {str(e)}")
-    
-    async def test_3_bingx_integration_manager(self):
-        """Test 3: BingX Integration Manager Initialization and Core Functionality"""
-        logger.info("\n🔍 TEST 3: BingX Integration Manager Test")
-        
-        try:
-            # Test system status to verify manager initialization
-            status_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-            
-            if status_response.status_code == 200:
-                status_data = status_response.json()
-                
-                # Check for manager-specific fields
-                manager_indicators = [
-                    'status', 'api_connected', 'active_positions', 'pending_orders',
-                    'emergency_stop', 'session_pnl'
-                ]
-                
-                found_indicators = [field for field in manager_indicators if field in status_data]
-                
-                if len(found_indicators) >= 3:
-                    self.log_test_result("BingX Integration Manager", True, 
-                                       f"Manager operational with {len(found_indicators)} indicators: {found_indicators}")
-                else:
-                    self.log_test_result("BingX Integration Manager", False, 
-                                       f"Insufficient manager indicators: {found_indicators}")
-            else:
-                self.log_test_result("BingX Integration Manager", False, 
-                                   f"Status endpoint failed: HTTP {status_response.status_code}")
-                
-        except Exception as e:
-            self.log_test_result("BingX Integration Manager", False, f"Exception: {str(e)}")
-    
-    async def test_4_all_bingx_endpoints(self):
-        """Test 4: Test All 15 BingX API Endpoints"""
-        logger.info("\n🔍 TEST 4: All BingX API Endpoints Test")
-        
-        endpoint_results = []
-        
-        for endpoint in self.bingx_endpoints:
-            try:
-                method = endpoint['method']
-                path = endpoint['path']
-                name = endpoint['name']
-                
-                logger.info(f"   Testing {method} {path} ({name})")
-                
-                if method == 'GET':
-                    if 'market-price' in path:
-                        # Add symbol parameter for market price endpoint
-                        response = requests.get(f"{self.api_url}{path}?symbol=BTCUSDT", timeout=30)
-                    else:
-                        response = requests.get(f"{self.api_url}{path}", timeout=30)
-                        
-                elif method == 'POST':
-                    if 'execute-ia2' in path:
-                        # Use mock IA2 decision data
-                        response = requests.post(f"{self.api_url}{path}", 
-                                               json=self.mock_ia2_decision, timeout=30)
-                    elif 'trade' in path:
-                        # Mock manual trade data
-                        trade_data = {
-                            "symbol": "BTCUSDT",
-                            "side": "LONG",
-                            "quantity": 0.001,
-                            "leverage": 5
-                        }
-                        response = requests.post(f"{self.api_url}{path}", 
-                                               json=trade_data, timeout=30)
-                    elif 'close-position' in path:
-                        # Mock close position data
-                        close_data = {
-                            "symbol": "BTCUSDT",
-                            "position_side": "LONG"
-                        }
-                        response = requests.post(f"{self.api_url}{path}", 
-                                               json=close_data, timeout=30)
-                    elif 'risk-config' in path:
-                        # Mock risk config data
-                        risk_data = {
-                            "max_position_size": 0.1,
-                            "max_leverage": 10,
-                            "stop_loss_percentage": 0.02
-                        }
-                        response = requests.post(f"{self.api_url}{path}", 
-                                               json=risk_data, timeout=30)
-                    else:
-                        # Empty POST for other endpoints
-                        response = requests.post(f"{self.api_url}{path}", json={}, timeout=30)
-                
-                # Evaluate response
-                if response.status_code in [200, 201]:
-                    try:
-                        data = response.json()
-                        endpoint_results.append({
-                            'endpoint': f"{method} {path}",
-                            'name': name,
-                            'status': 'SUCCESS',
-                            'response_size': len(str(data))
-                        })
-                        logger.info(f"      ✅ {name}: SUCCESS (HTTP {response.status_code})")
-                    except:
-                        endpoint_results.append({
-                            'endpoint': f"{method} {path}",
-                            'name': name,
-                            'status': 'SUCCESS_NO_JSON',
-                            'response_size': len(response.text)
-                        })
-                        logger.info(f"      ✅ {name}: SUCCESS - No JSON response")
-                else:
-                    endpoint_results.append({
-                        'endpoint': f"{method} {path}",
-                        'name': name,
-                        'status': f'HTTP_{response.status_code}',
-                        'response_size': len(response.text)
-                    })
-                    logger.info(f"      ❌ {name}: HTTP {response.status_code}")
-                    
-            except Exception as e:
-                endpoint_results.append({
-                    'endpoint': f"{method} {path}",
-                    'name': name,
-                    'status': 'ERROR',
-                    'error': str(e)
-                })
-                logger.info(f"      ❌ {name}: Exception - {str(e)}")
-        
-        # Evaluate overall endpoint testing
-        successful_endpoints = len([r for r in endpoint_results if r['status'] in ['SUCCESS', 'SUCCESS_NO_JSON']])
-        total_endpoints = len(endpoint_results)
-        
-        success_rate = successful_endpoints / total_endpoints if total_endpoints > 0 else 0
-        
-        if success_rate >= 0.8:  # 80% success rate
-            self.log_test_result("All BingX API Endpoints", True, 
-                               f"Success rate: {successful_endpoints}/{total_endpoints} ({success_rate:.1%})")
-        else:
-            self.log_test_result("All BingX API Endpoints", False, 
-                               f"Low success rate: {successful_endpoints}/{total_endpoints} ({success_rate:.1%})")
-        
-        # Log detailed endpoint results
-        logger.info(f"   📊 Endpoint Test Results:")
-        for result in endpoint_results:
-            status_icon = "✅" if result['status'] in ['SUCCESS', 'SUCCESS_NO_JSON'] else "❌"
-            logger.info(f"      {status_icon} {result['name']}: {result['status']}")
-    
-    async def test_5_risk_management_system(self):
-        """Test 5: Risk Management Configuration and Validation"""
-        logger.info("\n🔍 TEST 5: Risk Management System Test")
-        
-        try:
-            # Test getting risk configuration
-            get_response = requests.get(f"{self.api_url}/bingx/risk-config", timeout=30)
-            
-            if get_response.status_code == 200:
-                risk_config = get_response.json()
-                logger.info(f"   📊 Current risk config: {json.dumps(risk_config, indent=2)}")
-                
-                # Check for expected risk parameters
-                expected_params = ['max_position_size', 'max_leverage', 'stop_loss_percentage']
-                found_params = [param for param in expected_params if param in risk_config]
-                
-                if len(found_params) >= 2:
-                    # Test updating risk configuration
-                    new_risk_config = {
-                        "max_position_size": 0.05,  # 5% max position
-                        "max_leverage": 8,
-                        "stop_loss_percentage": 0.03  # 3% stop loss
-                    }
-                    
-                    post_response = requests.post(f"{self.api_url}/bingx/risk-config", 
-                                                json=new_risk_config, timeout=30)
-                    
-                    if post_response.status_code in [200, 201]:
-                        self.log_test_result("Risk Management System", True, 
-                                           f"Risk config retrieved and updated successfully")
-                    else:
-                        self.log_test_result("Risk Management System", False, 
-                                           f"Risk config update failed: HTTP {post_response.status_code}")
-                else:
-                    self.log_test_result("Risk Management System", False, 
-                                       f"Missing risk parameters: {expected_params}")
-            else:
-                self.log_test_result("Risk Management System", False, 
-                                   f"Risk config retrieval failed: HTTP {get_response.status_code}")
-                
-        except Exception as e:
-            self.log_test_result("Risk Management System", False, f"Exception: {str(e)}")
-    
-    async def test_6_ia2_integration_execution(self):
-        """Test 6: IA2 Integration - Execute Trade via BingX Integration"""
-        logger.info("\n🔍 TEST 6: IA2 Integration Trade Execution Test")
-        
-        try:
-            # Test IA2 trade execution with mock data
-            logger.info(f"   🚀 Testing IA2 trade execution with mock decision: {self.mock_ia2_decision}")
-            
-            response = requests.post(f"{self.api_url}/bingx/execute-ia2", 
-                                   json=self.mock_ia2_decision, timeout=60)
-            
-            if response.status_code in [200, 201]:
-                result = response.json()
-                logger.info(f"   📊 IA2 execution result: {json.dumps(result, indent=2)}")
-                
-                # Check execution result
-                status = result.get('status', 'unknown')
-                
-                if status in ['executed', 'skipped', 'rejected']:
-                    # All these are valid responses
-                    if status == 'executed':
-                        order_id = result.get('order_id')
-                        symbol = result.get('symbol')
-                        self.log_test_result("IA2 Integration Execution", True, 
-                                           f"Trade executed successfully: {symbol} Order ID: {order_id}")
-                    elif status == 'skipped':
-                        reason = result.get('reason', 'Unknown')
-                        self.log_test_result("IA2 Integration Execution", True, 
-                                           f"Trade skipped (valid): {reason}")
-                    elif status == 'rejected':
-                        errors = result.get('errors', [])
-                        self.log_test_result("IA2 Integration Execution", True, 
-                                           f"Trade rejected by risk management (valid): {errors}")
-                else:
-                    self.log_test_result("IA2 Integration Execution", False, 
-                                       f"Unexpected status: {status}")
-            else:
-                self.log_test_result("IA2 Integration Execution", False, 
-                                   f"HTTP {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_test_result("IA2 Integration Execution", False, f"Exception: {str(e)}")
-    
-    async def test_7_error_handling_resilience(self):
-        """Test 7: Error Handling and System Resilience"""
-        logger.info("\n🔍 TEST 7: Error Handling and System Resilience Test")
-        
-        error_test_results = []
-        
-        # Test 1: Invalid symbol
-        try:
-            response = requests.get(f"{self.api_url}/bingx/market-price?symbol=INVALIDUSDT", timeout=30)
-            if response.status_code in [400, 404, 422]:
-                error_test_results.append("✅ Invalid symbol handled correctly")
-            else:
-                error_test_results.append(f"❌ Invalid symbol: HTTP {response.status_code}")
-        except:
-            error_test_results.append("❌ Invalid symbol: Exception occurred")
-        
-        # Test 2: Invalid trade data
-        try:
-            invalid_trade = {
-                "symbol": "BTCUSDT",
-                "side": "INVALID_SIDE",
-                "quantity": -1,  # Invalid negative quantity
-                "leverage": 1000  # Invalid high leverage
-            }
-            response = requests.post(f"{self.api_url}/bingx/trade", json=invalid_trade, timeout=30)
-            if response.status_code in [400, 422]:
-                error_test_results.append("✅ Invalid trade data handled correctly")
-            else:
-                error_test_results.append(f"❌ Invalid trade data: HTTP {response.status_code}")
-        except:
-            error_test_results.append("❌ Invalid trade data: Exception occurred")
-        
-        # Test 3: Invalid IA2 decision
-        try:
-            invalid_ia2 = {
-                "symbol": "",  # Empty symbol
-                "signal": "INVALID",
-                "confidence": 2.0,  # Invalid confidence > 1
-                "position_size": -5  # Invalid negative size
-            }
-            response = requests.post(f"{self.api_url}/bingx/execute-ia2", json=invalid_ia2, timeout=30)
-            if response.status_code in [400, 422] or (response.status_code == 200 and 
-                                                     response.json().get('status') in ['rejected', 'error']):
-                error_test_results.append("✅ Invalid IA2 decision handled correctly")
-            else:
-                error_test_results.append(f"❌ Invalid IA2 decision: HTTP {response.status_code}")
-        except:
-            error_test_results.append("❌ Invalid IA2 decision: Exception occurred")
-        
-        # Test 4: System still responsive after errors
-        try:
-            response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-            if response.status_code == 200:
-                error_test_results.append("✅ System remains responsive after errors")
-            else:
-                error_test_results.append(f"❌ System unresponsive: HTTP {response.status_code}")
-        except:
-            error_test_results.append("❌ System unresponsive: Exception occurred")
-        
-        # Evaluate error handling
-        successful_error_tests = len([r for r in error_test_results if r.startswith("✅")])
-        total_error_tests = len(error_test_results)
-        
-        logger.info(f"   📊 Error Handling Test Results:")
-        for result in error_test_results:
-            logger.info(f"      {result}")
-        
-        if successful_error_tests >= 3:  # At least 3 out of 4 error tests pass
-            self.log_test_result("Error Handling Resilience", True, 
-                               f"Error handling working: {successful_error_tests}/{total_error_tests} tests passed")
-        else:
-            self.log_test_result("Error Handling Resilience", False, 
-                               f"Poor error handling: {successful_error_tests}/{total_error_tests} tests passed")
-    
-    async def test_8_api_credentials_validation(self):
-        """Test 8: API Credentials Validation"""
-        logger.info("\n🔍 TEST 8: API Credentials Validation Test")
-        
-        try:
-            # Check if credentials are properly configured
-            backend_env_path = '/app/backend/.env'
-            credentials_found = False
-            
-            if os.path.exists(backend_env_path):
-                with open(backend_env_path, 'r') as f:
-                    env_content = f.read()
-                    
-                    has_api_key = 'BINGX_API_KEY=' in env_content
-                    has_secret_key = 'BINGX_SECRET_KEY=' in env_content
-                    has_base_url = 'BINGX_BASE_URL=' in env_content
-                    
-                    if has_api_key and has_secret_key:
-                        credentials_found = True
-                        logger.info("   📊 BingX credentials found in environment")
-                        
-                        # Extract API key for validation (first 10 chars only for security)
-                        for line in env_content.split('\n'):
-                            if line.startswith('BINGX_API_KEY='):
-                                api_key_preview = line.split('=')[1][:10] + "..."
-                                logger.info(f"   📊 API Key preview: {api_key_preview}")
-                                break
-            
-            if credentials_found:
-                # Test credentials by checking API connectivity
-                status_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-                
-                if status_response.status_code == 200:
-                    status_data = status_response.json()
-                    api_connected = status_data.get('api_connected', False)
-                    
-                    if api_connected:
-                        self.log_test_result("API Credentials Validation", True, 
-                                           "Credentials configured and API connection successful")
-                    else:
-                        self.log_test_result("API Credentials Validation", False, 
-                                           "Credentials found but API connection failed")
-                else:
-                    self.log_test_result("API Credentials Validation", False, 
-                                       f"Status endpoint failed: HTTP {status_response.status_code}")
-            else:
-                self.log_test_result("API Credentials Validation", False, 
-                                   "BingX credentials not found in environment")
-                
-        except Exception as e:
-            self.log_test_result("API Credentials Validation", False, f"Exception: {str(e)}")
-    
-    async def run_comprehensive_tests(self):
-        """Run all BingX integration tests"""
-        logger.info("🚀 Starting BingX Integration Comprehensive Test Suite")
-        logger.info("=" * 80)
-        logger.info("📋 BINGX INTEGRATION SYSTEM COMPREHENSIVE TESTING")
-        logger.info("🎯 Testing: API connectivity, endpoints, risk management, IA2 integration, error handling")
-        logger.info("🎯 Expected: Complete BingX integration working with all 15 endpoints functional")
-        logger.info("=" * 80)
-        
-        # Run all tests in sequence
-        await self.test_1_bingx_api_connectivity()
-        await self.test_2_account_balance_retrieval()
-        await self.test_3_bingx_integration_manager()
-        await self.test_4_all_bingx_endpoints()
-        await self.test_5_risk_management_system()
-        await self.test_6_ia2_integration_execution()
-        await self.test_7_error_handling_resilience()
-        await self.test_8_api_credentials_validation()
-        
-        # Summary
-        logger.info("\n" + "=" * 80)
-        logger.info("📊 BINGX INTEGRATION COMPREHENSIVE TEST SUMMARY")
-        logger.info("=" * 80)
-        
-        passed_tests = sum(1 for result in self.test_results if result['success'])
-        total_tests = len(self.test_results)
-        
-        for result in self.test_results:
-            status = "✅ PASS" if result['success'] else "❌ FAIL"
-            logger.info(f"{status}: {result['test']}")
-            if result['details']:
-                logger.info(f"   {result['details']}")
-                
-        logger.info(f"\n🎯 OVERALL RESULT: {passed_tests}/{total_tests} tests passed")
-        
-        # System analysis
-        logger.info("\n" + "=" * 80)
-        logger.info("📋 BINGX INTEGRATION SYSTEM STATUS")
-        logger.info("=" * 80)
-        
-        if passed_tests == total_tests:
-            logger.info("🎉 ALL TESTS PASSED - BingX Integration System FULLY FUNCTIONAL!")
-            logger.info("✅ API connectivity working")
-            logger.info("✅ Account balance retrieval operational")
-            logger.info("✅ BingX Integration Manager initialized")
-            logger.info("✅ All 15 BingX endpoints functional")
-            logger.info("✅ Risk management system working")
-            logger.info("✅ IA2 integration executing trades")
-            logger.info("✅ Error handling resilient")
-            logger.info("✅ API credentials validated")
-        elif passed_tests >= total_tests * 0.8:
-            logger.info("⚠️ MOSTLY FUNCTIONAL - BingX integration working with minor gaps")
-            logger.info("🔍 Some components may need fine-tuning for full optimization")
-        elif passed_tests >= total_tests * 0.6:
-            logger.info("⚠️ PARTIALLY FUNCTIONAL - Core BingX features working")
-            logger.info("🔧 Some advanced features may need implementation or debugging")
-        else:
-            logger.info("❌ SYSTEM NOT FUNCTIONAL - Critical issues with BingX integration")
-            logger.info("🚨 Major implementation gaps or system errors preventing functionality")
-        
-        # Specific requirements check
-        logger.info("\n📝 BINGX INTEGRATION REQUIREMENTS VERIFICATION:")
-        
-        requirements_met = []
-        requirements_failed = []
-        
-        # Check each requirement based on test results
-        for result in self.test_results:
-            if result['success']:
-                if "API Connectivity" in result['test']:
-                    requirements_met.append("✅ BingX API connectivity verified")
-                elif "Account Balance" in result['test']:
-                    requirements_met.append("✅ Account balance retrieval working")
-                elif "Integration Manager" in result['test']:
-                    requirements_met.append("✅ BingX Integration Manager operational")
-                elif "All BingX API Endpoints" in result['test']:
-                    requirements_met.append("✅ All 15 BingX endpoints functional")
-                elif "Risk Management" in result['test']:
-                    requirements_met.append("✅ Risk management system working")
-                elif "IA2 Integration" in result['test']:
-                    requirements_met.append("✅ IA2 trade execution via BingX working")
-                elif "Error Handling" in result['test']:
-                    requirements_met.append("✅ Error handling resilient")
-                elif "API Credentials" in result['test']:
-                    requirements_met.append("✅ API credentials validated")
-            else:
-                if "API Connectivity" in result['test']:
-                    requirements_failed.append("❌ BingX API connectivity failed")
-                elif "Account Balance" in result['test']:
-                    requirements_failed.append("❌ Account balance retrieval not working")
-                elif "Integration Manager" in result['test']:
-                    requirements_failed.append("❌ BingX Integration Manager not operational")
-                elif "All BingX API Endpoints" in result['test']:
-                    requirements_failed.append("❌ BingX endpoints not fully functional")
-                elif "Risk Management" in result['test']:
-                    requirements_failed.append("❌ Risk management system not working")
-                elif "IA2 Integration" in result['test']:
-                    requirements_failed.append("❌ IA2 trade execution via BingX failed")
-                elif "Error Handling" in result['test']:
-                    requirements_failed.append("❌ Error handling not resilient")
-                elif "API Credentials" in result['test']:
-                    requirements_failed.append("❌ API credentials validation failed")
-        
-        for req in requirements_met:
-            logger.info(f"   {req}")
-        
-        for req in requirements_failed:
-            logger.info(f"   {req}")
-        
-        logger.info(f"\n🏆 FINAL RESULT: {len(requirements_met)}/{len(requirements_met) + len(requirements_failed)} requirements satisfied")
-        
-        # Final verdict
-        if len(requirements_failed) == 0:
-            logger.info("\n🎉 VERDICT: BingX Integration System is FULLY FUNCTIONAL!")
-            logger.info("✅ All integration features implemented and working correctly")
-            logger.info("✅ API connectivity, endpoints, risk management, and IA2 integration operational")
-            logger.info("✅ System ready for production trading with proper error handling")
-        elif len(requirements_failed) <= 1:
-            logger.info("\n⚠️ VERDICT: BingX Integration System is MOSTLY FUNCTIONAL")
-            logger.info("🔍 Minor issues may need attention for complete functionality")
-        elif len(requirements_failed) <= 3:
-            logger.info("\n⚠️ VERDICT: BingX Integration System is PARTIALLY FUNCTIONAL")
-            logger.info("🔧 Several components need implementation or debugging")
-        else:
-            logger.info("\n❌ VERDICT: BingX Integration System is NOT FUNCTIONAL")
-            logger.info("🚨 Major implementation gaps preventing BingX integration")
+            logger.info("\n❌ VERDICT: IA1→IA2 PIPELINE DEMONSTRATION NOT SUCCESSFUL")
+            logger.info("🚨 Major issues preventing dual AI system from working correctly")
+            logger.info("🚨 System needs significant debugging and fixes")
         
         return passed_tests, total_tests
 
 async def main():
-    """Main test execution"""
-    test_suite = IA2SimplifiedPromptTestSuite()
-    passed, total = await test_suite.run_comprehensive_tests()
+    """Main function to run the comprehensive IA1→IA2 pipeline demonstration"""
+    test_suite = IA1IA2PipelineDemonstrationTestSuite()
+    passed_tests, total_tests = await test_suite.run_comprehensive_demonstration()
     
     # Exit with appropriate code
-    if passed == total:
+    if passed_tests == total_tests:
         sys.exit(0)  # All tests passed
+    elif passed_tests >= total_tests * 0.8:
+        sys.exit(1)  # Mostly successful
     else:
-        sys.exit(1)  # Some tests failed
+        sys.exit(2)  # Major issues
 
 if __name__ == "__main__":
     asyncio.run(main())
