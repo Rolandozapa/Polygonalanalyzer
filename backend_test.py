@@ -362,9 +362,9 @@ class IA1RiskRewardIndependenceTestSuite:
         except Exception as e:
             self.log_test_result("IA1 RR Calculation Independence", False, f"Exception: {str(e)}")
     
-    async def test_3_lateral_pattern_detector_analysis(self):
-        """Test 3: Lateral Pattern Detector Multi-Criteria Analysis"""
-        logger.info("\n🔍 TEST 3: Lateral Pattern Detector Analysis Test")
+    async def test_3_technical_levels_consistency(self):
+        """Test 3: Technical Levels Based RR Calculation (Not Confidence Based)"""
+        logger.info("\n🔍 TEST 3: Technical Levels Based RR Calculation Test")
         
         try:
             if not self.pattern_detector:
