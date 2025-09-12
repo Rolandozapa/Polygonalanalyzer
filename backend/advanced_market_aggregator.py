@@ -1294,8 +1294,18 @@ class AdvancedMarketAggregator:
                 
                 # Check if we have recent trending data
                 current_time = datetime.now(timezone.utc)
-                data_is_fresh = (trending_auto_updater.last_update and 
-                               (current_time - trending_auto_updater.last_update).total_seconds() < 14400)
+                data_is_fresh = False
+                if trending_auto_updater.last_update:
+                    # Ensure last_update is a datetime object
+                    if isinstance(trending_auto_updater.last_update, datetime):
+                        last_update = trending_auto_updater.last_update
+                        if last_update.tzinfo is None:
+                            last_update = last_update.replace(tzinfo=timezone.utc)
+                        data_is_fresh = (current_time - last_update).total_seconds() < 14400
+                    elif isinstance(trending_auto_updater.last_update, (int, float)):
+                        # Convert timestamp to datetime
+                        last_update = datetime.fromtimestamp(trending_auto_updater.last_update, tz=timezone.utc)
+                        data_is_fresh = (current_time - last_update).total_seconds() < 14400
                 
                 trending_cryptos = []
                 
