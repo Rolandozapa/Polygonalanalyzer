@@ -116,6 +116,15 @@ class TradingDecision(BaseModel):
     rr_reasoning: Optional[str] = "No RR reasoning provided"
     risk_level: Optional[str] = "medium"
     strategy_type: Optional[str] = "strategic_analysis"  # For frontend Strategy field
+    # 🎯 NEW IA2 TECHNICAL LEVELS & AUTO-EXECUTION
+    ia2_entry_price: Optional[float] = 0.0
+    ia2_stop_loss: Optional[float] = 0.0
+    ia2_take_profit_1: Optional[float] = 0.0
+    ia2_take_profit_2: Optional[float] = 0.0
+    ia2_take_profit_3: Optional[float] = 0.0
+    ia2_calculated_rr: Optional[float] = 0.0
+    trade_execution_ready: Optional[bool] = False
+    auto_execution_triggered: Optional[bool] = False
     status: TradingStatus = TradingStatus.PENDING
     # BingX integration fields
     bingx_order_id: Optional[str] = None
