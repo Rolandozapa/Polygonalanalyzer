@@ -367,103 +367,158 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info("\n🔍 TEST 3: Technical Levels Based RR Calculation Test")
         
         try:
-            if not self.pattern_detector:
-                self.log_test_result("Lateral Pattern Detector Analysis", False, 
-                                   "Pattern detector module not available")
-                return
+            # Test that IA1 RR calculation is based on technical levels (support/resistance)
+            # and not influenced by confidence percentages
             
-            # Test cases for pattern detection
-            test_cases = [
-                # Strong bullish (should NOT be filtered)
-                {"symbol": "BTCUSDT", "price_change": 8.5, "volume": 5000000, "expected_lateral": False, "expected_type": self.TrendType.STRONG_BULLISH},
-                # Bullish (should NOT be filtered)
-                {"symbol": "ETHUSDT", "price_change": 3.2, "volume": 2000000, "expected_lateral": False, "expected_type": self.TrendType.BULLISH},
-                # Lateral pattern (should be filtered)
-                {"symbol": "XRPUSDT", "price_change": 0.5, "volume": 100000, "expected_lateral": True, "expected_type": self.TrendType.LATERAL},
-                # Strong bearish (should NOT be filtered)
-                {"symbol": "SOLUSDT", "price_change": -7.8, "volume": 3000000, "expected_lateral": False, "expected_type": self.TrendType.STRONG_BEARISH},
-                # Bearish (should NOT be filtered)
-                {"symbol": "ADAUSDT", "price_change": -2.5, "volume": 1500000, "expected_lateral": False, "expected_type": self.TrendType.BEARISH},
-                # Edge case: High volume but low price change (might be lateral)
-                {"symbol": "DOGEUSDT", "price_change": 0.8, "volume": 10000000, "expected_lateral": True, "expected_type": self.TrendType.LATERAL}
-            ]
-            
-            analysis_results = {
-                'total_tests': len(test_cases),
-                'correct_classifications': 0,
-                'correct_lateral_detections': 0,
-                'correct_filter_decisions': 0,
-                'trend_strength_scores': [],
-                'confidence_scores': []
+            technical_levels_results = {
+                'analyses_with_technical_levels': 0,
+                'analyses_with_fallback_levels': 0,
+                'technical_level_based_rr': 0,
+                'confidence_based_rr_detected': 0,
+                'support_resistance_consistency': 0,
+                'fallback_percentage_consistency': 0
             }
             
-            logger.info(f"   📊 Testing {len(test_cases)} pattern detection scenarios:")
+            logger.info("   🚀 Testing technical levels based RR calculation...")
             
-            for i, test_case in enumerate(test_cases):
+            # Test multiple symbols to verify technical analysis basis
+            for symbol in self.test_symbols[:2]:  # Test 2 symbols for detailed analysis
                 try:
-                    # Analyze pattern
-                    analysis = self.pattern_detector.analyze_trend_pattern(
-                        symbol=test_case['symbol'],
-                        price_change_pct=test_case['price_change'],
-                        volume=test_case['volume']
+                    logger.info(f"   📊 Analyzing technical levels for {symbol}...")
+                    
+                    # Get IA1 analysis
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=30
                     )
                     
-                    # Check classification accuracy
-                    classification_correct = analysis.trend_type == test_case['expected_type']
-                    lateral_detection_correct = analysis.is_lateral == test_case['expected_lateral']
-                    
-                    # Check filter decision
-                    should_filter = self.pattern_detector.should_filter_opportunity(analysis)
-                    filter_decision_correct = should_filter == test_case['expected_lateral']
-                    
-                    # Update results
-                    if classification_correct:
-                        analysis_results['correct_classifications'] += 1
-                    if lateral_detection_correct:
-                        analysis_results['correct_lateral_detections'] += 1
-                    if filter_decision_correct:
-                        analysis_results['correct_filter_decisions'] += 1
-                    
-                    analysis_results['trend_strength_scores'].append(analysis.trend_strength)
-                    analysis_results['confidence_scores'].append(analysis.confidence)
-                    
-                    # Log result
-                    status = "✅" if (classification_correct and lateral_detection_correct and filter_decision_correct) else "❌"
-                    logger.info(f"      {status} {test_case['symbol']}: {analysis.trend_type.value}, "
-                              f"lateral={analysis.is_lateral}, filter={should_filter}, "
-                              f"strength={analysis.trend_strength:.2f}, conf={analysis.confidence:.2f}")
-                    logger.info(f"         Reasoning: {analysis.reasoning}")
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        if analysis_data.get('success') and 'analysis' in analysis_data:
+                            analysis = analysis_data['analysis']
+                            
+                            # Extract key data
+                            confidence = analysis.get('confidence', 0)
+                            rr_ratio = analysis.get('risk_reward_ratio', 0)
+                            entry_price = analysis.get('entry_price', 0)
+                            stop_loss = analysis.get('stop_loss_price', 0)
+                            take_profit = analysis.get('take_profit_price', 0)
+                            support_levels = analysis.get('support', [])
+                            resistance_levels = analysis.get('resistance', [])
+                            signal = analysis.get('recommendation', 'hold')
+                            reasoning = analysis.get('reasoning', '')
+                            
+                            logger.info(f"      📈 {symbol} Analysis:")
+                            logger.info(f"         Confidence: {confidence:.1%}")
+                            logger.info(f"         RR Ratio: {rr_ratio:.2f}")
+                            logger.info(f"         Signal: {signal}")
+                            logger.info(f"         Entry: ${entry_price:.6f}")
+                            logger.info(f"         Stop Loss: ${stop_loss:.6f}")
+                            logger.info(f"         Take Profit: ${take_profit:.6f}")
+                            logger.info(f"         Support Levels: {len(support_levels)}")
+                            logger.info(f"         Resistance Levels: {len(resistance_levels)}")
+                            
+                            # Check if technical levels are present
+                            has_technical_levels = len(support_levels) > 0 or len(resistance_levels) > 0
+                            
+                            if has_technical_levels:
+                                technical_levels_results['analyses_with_technical_levels'] += 1
+                                
+                                # Verify RR calculation uses technical levels
+                                if signal.lower() == 'long' and entry_price > 0 and stop_loss > 0 and take_profit > 0:
+                                    expected_rr = self.rr_formulas['LONG'](entry_price, take_profit, stop_loss)
+                                    rr_matches = abs(expected_rr - rr_ratio) < 0.1  # Allow small variance
+                                    
+                                    if rr_matches:
+                                        technical_levels_results['technical_level_based_rr'] += 1
+                                        logger.info(f"         ✅ RR calculation matches LONG formula: {expected_rr:.2f} ≈ {rr_ratio:.2f}")
+                                    else:
+                                        logger.warning(f"         ⚠️ RR calculation mismatch: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}")
+                                        
+                                elif signal.lower() == 'short' and entry_price > 0 and stop_loss > 0 and take_profit > 0:
+                                    expected_rr = self.rr_formulas['SHORT'](entry_price, take_profit, stop_loss)
+                                    rr_matches = abs(expected_rr - rr_ratio) < 0.1  # Allow small variance
+                                    
+                                    if rr_matches:
+                                        technical_levels_results['technical_level_based_rr'] += 1
+                                        logger.info(f"         ✅ RR calculation matches SHORT formula: {expected_rr:.2f} ≈ {rr_ratio:.2f}")
+                                    else:
+                                        logger.warning(f"         ⚠️ RR calculation mismatch: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}")
+                                
+                                # Check if support/resistance levels are used in SL/TP calculation
+                                sl_near_support = any(abs(stop_loss - level) / level < 0.05 for level in support_levels if level > 0)
+                                tp_near_resistance = any(abs(take_profit - level) / level < 0.05 for level in resistance_levels if level > 0)
+                                
+                                if sl_near_support or tp_near_resistance:
+                                    technical_levels_results['support_resistance_consistency'] += 1
+                                    logger.info(f"         ✅ SL/TP levels align with support/resistance")
+                                else:
+                                    logger.info(f"         ⚪ SL/TP levels may use other technical analysis")
+                                    
+                            else:
+                                technical_levels_results['analyses_with_fallback_levels'] += 1
+                                logger.info(f"         ⚪ Using fallback levels (no clear support/resistance)")
+                                
+                                # Check if fallback uses fixed percentages (not confidence-based)
+                                if entry_price > 0:
+                                    sl_percentage = abs(stop_loss - entry_price) / entry_price
+                                    tp_percentage = abs(take_profit - entry_price) / entry_price
+                                    
+                                    # Common fallback percentages (2%, 3%, 5%)
+                                    common_percentages = [0.02, 0.03, 0.05, 0.1]
+                                    sl_is_standard = any(abs(sl_percentage - pct) < 0.005 for pct in common_percentages)
+                                    tp_is_standard = any(abs(tp_percentage - pct) < 0.005 for pct in common_percentages)
+                                    
+                                    if sl_is_standard or tp_is_standard:
+                                        technical_levels_results['fallback_percentage_consistency'] += 1
+                                        logger.info(f"         ✅ Fallback uses standard percentages: SL={sl_percentage:.1%}, TP={tp_percentage:.1%}")
+                                    else:
+                                        logger.info(f"         ⚪ Custom fallback percentages: SL={sl_percentage:.1%}, TP={tp_percentage:.1%}")
+                            
+                            # Check reasoning for technical analysis keywords
+                            technical_keywords = ['support', 'resistance', 'fibonacci', 'ema', 'sma', 'bollinger', 'rsi', 'macd']
+                            technical_mentions = sum(1 for keyword in technical_keywords if keyword.lower() in reasoning.lower())
+                            
+                            logger.info(f"         📊 Technical analysis keywords in reasoning: {technical_mentions}/{len(technical_keywords)}")
+                            
+                    await asyncio.sleep(2)  # Delay between requests
                     
                 except Exception as e:
-                    logger.warning(f"      ❌ {test_case['symbol']}: Analysis failed - {e}")
+                    logger.error(f"   ❌ Error analyzing {symbol}: {e}")
             
-            # Calculate performance metrics
-            classification_accuracy = analysis_results['correct_classifications'] / analysis_results['total_tests']
-            lateral_detection_accuracy = analysis_results['correct_lateral_detections'] / analysis_results['total_tests']
-            filter_accuracy = analysis_results['correct_filter_decisions'] / analysis_results['total_tests']
-            avg_trend_strength = sum(analysis_results['trend_strength_scores']) / len(analysis_results['trend_strength_scores']) if analysis_results['trend_strength_scores'] else 0
-            avg_confidence = sum(analysis_results['confidence_scores']) / len(analysis_results['confidence_scores']) if analysis_results['confidence_scores'] else 0
+            # Analyze results
+            total_analyses = technical_levels_results['analyses_with_technical_levels'] + technical_levels_results['analyses_with_fallback_levels']
             
-            logger.info(f"   📊 Pattern Detection Performance:")
-            logger.info(f"      Classification accuracy: {classification_accuracy:.1%}")
-            logger.info(f"      Lateral detection accuracy: {lateral_detection_accuracy:.1%}")
-            logger.info(f"      Filter decision accuracy: {filter_accuracy:.1%}")
-            logger.info(f"      Average trend strength: {avg_trend_strength:.2f}")
-            logger.info(f"      Average confidence: {avg_confidence:.2f}")
+            logger.info(f"   📊 Technical Levels Analysis Results:")
+            logger.info(f"      Total analyses: {total_analyses}")
+            logger.info(f"      With technical levels: {technical_levels_results['analyses_with_technical_levels']}")
+            logger.info(f"      With fallback levels: {technical_levels_results['analyses_with_fallback_levels']}")
+            logger.info(f"      Technical level based RR: {technical_levels_results['technical_level_based_rr']}")
+            logger.info(f"      Support/resistance consistency: {technical_levels_results['support_resistance_consistency']}")
+            logger.info(f"      Fallback percentage consistency: {technical_levels_results['fallback_percentage_consistency']}")
             
             # Determine test result
-            if classification_accuracy >= 0.8 and lateral_detection_accuracy >= 0.8 and filter_accuracy >= 0.8:
-                self.log_test_result("Lateral Pattern Detector Analysis", True, 
-                                   f"Pattern detection working: {classification_accuracy:.1%} classification, {filter_accuracy:.1%} filter accuracy")
-            elif classification_accuracy >= 0.6 and filter_accuracy >= 0.6:
-                self.log_test_result("Lateral Pattern Detector Analysis", False, 
-                                   f"Partial pattern detection: {classification_accuracy:.1%} classification, {filter_accuracy:.1%} filter accuracy")
+            if total_analyses > 0:
+                technical_basis_rate = (technical_levels_results['technical_level_based_rr'] + 
+                                      technical_levels_results['support_resistance_consistency'] + 
+                                      technical_levels_results['fallback_percentage_consistency']) / total_analyses
+                
+                if technical_basis_rate >= 0.8:
+                    self.log_test_result("Technical Levels Based RR Calculation", True, 
+                                       f"RR calculation based on technical analysis: {technical_basis_rate:.1%} technical basis")
+                elif technical_basis_rate >= 0.5:
+                    self.log_test_result("Technical Levels Based RR Calculation", False, 
+                                       f"Partial technical basis: {technical_basis_rate:.1%} technical basis")
+                else:
+                    self.log_test_result("Technical Levels Based RR Calculation", False, 
+                                       f"Limited technical basis: {technical_basis_rate:.1%} technical basis")
             else:
-                self.log_test_result("Lateral Pattern Detector Analysis", False, 
-                                   f"Pattern detection issues: {classification_accuracy:.1%} classification, {filter_accuracy:.1%} filter accuracy")
+                self.log_test_result("Technical Levels Based RR Calculation", False, 
+                                   "No analyses available for technical levels testing")
                 
         except Exception as e:
-            self.log_test_result("Lateral Pattern Detector Analysis", False, f"Exception: {str(e)}")
+            self.log_test_result("Technical Levels Based RR Calculation", False, f"Exception: {str(e)}")
     
     async def test_4_advanced_market_aggregator_integration(self):
         """Test 4: Advanced Market Aggregator Integration with BingX Data"""
