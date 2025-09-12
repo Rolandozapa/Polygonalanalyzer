@@ -8056,8 +8056,11 @@ class UltraProfessionalOrchestrator:
                         if self._should_send_to_ia2(analysis, opportunity):
                             logger.info(f"🎯 Escalating {opportunity.symbol} to IA2")
                             
-                            # Get performance stats
-                            perf_stats = advanced_market_aggregator.get_performance_stats()
+                            # Get performance stats with fallback
+                            try:
+                                perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
+                            except:
+                                perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
                             
                             # Step 4: IA2 decision
                             decision = await self.ia2.make_decision(opportunity, analysis, perf_stats)
