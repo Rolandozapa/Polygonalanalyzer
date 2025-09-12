@@ -9568,11 +9568,28 @@ async def force_voie3_processing():
                     # Force IA2 decision
                     decision = await orchestrator.ia2.make_decision(opportunity, analysis, perf_stats)
                     
-                    if decision and decision.signal != "HOLD":
+                    if decision:
+                        # Store decision with position_id link (même les décisions HOLD/hold)
+                        decision_dict = decision.dict()
+                        decision_dict["ia1_position_id"] = analysis.position_id
+                        
+                        await db.trading_decisions.insert_one(decision_dict)
+                        
+                        # Update position tracking
+                        await update_position_tracking_ia2(
+                            position_id=analysis.position_id,
+                            decision=decision,
+                            voie_used=3,
+                            success=True
+                        )
+                        
                         processed += 1
-                        logger.info(f"✅ VOIE 3 SUCCESS: {symbol} → IA2 decision created")
+                        if decision.signal.lower() in ['long', 'short']:
+                            logger.info(f"✅ VOIE 3 SUCCESS: {symbol} → IA2 {decision.signal.upper()} decision created")
+                        else:
+                            logger.info(f"✅ VOIE 3 HOLD: {symbol} → IA2 returned {decision.signal} (stored anyway)")
                     else:
-                        logger.warning(f"⚠️ VOIE 3 RESULT: {symbol} → IA2 returned HOLD")
+                        logger.error(f"❌ VOIE 3 ERROR: {symbol} → IA2 returned None")
                 
             except Exception as e:
                 logger.error(f"❌ VOIE 3 error for {symbol}: {e}")
