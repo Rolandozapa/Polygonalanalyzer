@@ -4160,50 +4160,6 @@ The scientific indicators below provide mathematical precision - you add context
             # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO POUR IA2
             global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
             
-            # 🔧 DEBUG: Verify all variables before f-string to fix "string indices must be integers" error
-            try:
-                logger.info(f"🔧 IA2 DEBUG: Verifying variables for {opportunity.symbol}...")
-                
-                # Verify market_sentiment structure
-                if not isinstance(market_sentiment, dict):
-                    logger.error(f"❌ IA2 DEBUG: market_sentiment is {type(market_sentiment)}, expected dict")
-                    raise ValueError(f"market_sentiment type error: {type(market_sentiment)}")
-                
-                required_keys = ['market_sentiment', 'btc_change_24h', 'sentiment_score']
-                for key in required_keys:
-                    if key not in market_sentiment:
-                        logger.error(f"❌ IA2 DEBUG: market_sentiment missing key '{key}'")
-                        raise ValueError(f"market_sentiment missing key: {key}")
-                
-                # Verify composite_rr_data structure
-                if not isinstance(composite_rr_data, dict):
-                    logger.error(f"❌ IA2 DEBUG: composite_rr_data is {type(composite_rr_data)}, expected dict")
-                    raise ValueError(f"composite_rr_data type error: {type(composite_rr_data)}")
-                
-                if 'composite_rr' not in composite_rr_data:
-                    logger.error(f"❌ IA2 DEBUG: composite_rr_data missing 'composite_rr' key")
-                    raise ValueError("composite_rr_data missing composite_rr key")
-                
-                # Verify analysis attributes
-                if not hasattr(analysis, 'rsi') or not isinstance(analysis.rsi, (int, float)):
-                    logger.error(f"❌ IA2 DEBUG: analysis.rsi is {getattr(analysis, 'rsi', 'MISSING')}")
-                    raise ValueError(f"analysis.rsi error: {getattr(analysis, 'rsi', 'MISSING')}")
-                
-                if not hasattr(analysis, 'macd_signal') or not isinstance(analysis.macd_signal, (int, float)):
-                    logger.error(f"❌ IA2 DEBUG: analysis.macd_signal is {getattr(analysis, 'macd_signal', 'MISSING')}")
-                    raise ValueError(f"analysis.macd_signal error: {getattr(analysis, 'macd_signal', 'MISSING')}")
-                
-                # Verify sophisticated_risk_level
-                if not isinstance(sophisticated_risk_level, str):
-                    logger.error(f"❌ IA2 DEBUG: sophisticated_risk_level is {type(sophisticated_risk_level)}, expected str")
-                    raise ValueError(f"sophisticated_risk_level type error: {type(sophisticated_risk_level)}")
-                
-                logger.info(f"✅ IA2 DEBUG: All variables verified successfully for {opportunity.symbol}")
-                
-            except Exception as debug_e:
-                logger.error(f"❌ IA2 DEBUG FAILED for {opportunity.symbol}: {debug_e}")
-                return None
-            
             # Create comprehensive prompt for Claude with market sentiment and leverage logic
             prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
