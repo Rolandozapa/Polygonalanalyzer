@@ -225,6 +225,9 @@ class TrendingAutoUpdater:
                                         source="bingx_api"
                                     )
                                     trending_list.append(crypto)
+                                    
+                                    # Log des cryptos acceptés avec analyse
+                                    logger.debug(f"✅ ACCEPTED {symbol}: {pattern_analysis.reasoning}")
                                 
                                 except (ValueError, KeyError) as e:
                                     continue
