@@ -1225,7 +1225,18 @@ class UltraProfessionalCryptoScout:
     async def scan_opportunities(self) -> List[MarketOpportunity]:
         """Ultra professional trend-focused market scanning with auto-updated trends"""
         try:
-            # Sync trending symbols if auto-update is enabled
+            # 🚀 CRITICAL FIX: Use BingX trending data from get_current_opportunities
+            logger.info("🔄 SCOUT: Getting fresh BingX opportunities from advanced_market_aggregator")
+            
+            # Get fresh BingX opportunities
+            bingx_opportunities = self.market_aggregator.get_current_opportunities()
+            if bingx_opportunities:
+                logger.info(f"✅ SCOUT: Got {len(bingx_opportunities)} fresh BingX opportunities")
+                return bingx_opportunities
+            else:
+                logger.warning("⚠️ SCOUT: No BingX opportunities available, falling back to traditional scan")
+            
+            # Fallback: Sync trending symbols if auto-update is enabled
             if self.auto_update_trending:
                 await self._sync_trending_symbols()
             
