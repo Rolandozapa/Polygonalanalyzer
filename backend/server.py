@@ -9249,8 +9249,8 @@ async def force_voie3_processing():
         logger.info("🚀 FORCING VOIE 3 PROCESSING - High confidence analyses to IA2")
         
         # Get all IA1 analyses with >95% confidence (VOIE 3 candidates)
-        # 🔧 FIX: Use robust timestamp filter for proper day transition handling
-        timestamp_filter = paris_time_to_timestamp_filter(hours_ago=24)
+        # 🔧 FIX: Use robust timestamp filter for proper day transition handling - extended to 48h for maintenance
+        timestamp_filter = paris_time_to_timestamp_filter(hours_ago=48)
         
         high_confidence_analyses = await db.technical_analyses.find({
             "analysis_confidence": {"$gte": 0.95},
