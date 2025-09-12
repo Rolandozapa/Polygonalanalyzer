@@ -8984,6 +8984,25 @@ async def get_global_market_analysis():
             "error": str(e),
             "timestamp": get_paris_time().isoformat()
         }
+    
+    def _determine_voie_used(self, analysis: TechnicalAnalysis) -> int:
+        """Determine which VOIE was used for IA1→IA2 escalation"""
+        try:
+            # VOIE 3: >95% confidence override
+            if analysis.analysis_confidence >= 0.95 and analysis.ia1_signal in ['long', 'short']:
+                return 3
+            
+            # VOIE 1: Confidence > 70% AND RR >= 2.0
+            if analysis.analysis_confidence > 0.7 and analysis.risk_reward_ratio >= 2.0:
+                return 1
+            
+            # VOIE 2: Alternative criteria (could be market conditions, etc.)
+            # For now, fallback to VOIE 1 logic
+            return 1
+            
+        except Exception as e:
+            logger.error(f"❌ Error determining VOIE: {e}")
+            return 1  # Default to VOIE 1
 
 @api_router.get("/admin/escalation/test")
 async def test_voie3_escalation_logic():
