@@ -127,118 +127,153 @@ class IA1ToIA2EscalationTestSuite:
         logger.info("\n🔍 TEST 1: IA1 to IA2 Escalation Criteria Validation Test")
         
         try:
-            # Test RR formula implementation with known values
-            test_cases = [
-                {
-                    "name": "LONG Scenario - Standard Case",
-                    "signal": "LONG",
-                    "entry": 100.0,
-                    "take_profit": 110.0,
-                    "stop_loss": 95.0,
-                    "expected_rr": (110.0 - 100.0) / (100.0 - 95.0),  # 10/5 = 2.0
-                    "expected_formula": "LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)"
-                },
-                {
-                    "name": "SHORT Scenario - Standard Case", 
-                    "signal": "SHORT",
-                    "entry": 100.0,
-                    "take_profit": 90.0,
-                    "stop_loss": 105.0,
-                    "expected_rr": (100.0 - 90.0) / (105.0 - 100.0),  # 10/5 = 2.0
-                    "expected_formula": "SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)"
-                },
-                {
-                    "name": "LONG Scenario - High RR Case",
-                    "signal": "LONG", 
-                    "entry": 50.0,
-                    "take_profit": 65.0,
-                    "stop_loss": 47.0,
-                    "expected_rr": (65.0 - 50.0) / (50.0 - 47.0),  # 15/3 = 5.0
-                    "expected_formula": "LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)"
-                },
-                {
-                    "name": "SHORT Scenario - High RR Case",
-                    "signal": "SHORT",
-                    "entry": 50.0,
-                    "take_profit": 35.0,
-                    "stop_loss": 53.0,
-                    "expected_rr": (50.0 - 35.0) / (53.0 - 50.0),  # 15/3 = 5.0
-                    "expected_formula": "SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)"
-                }
-            ]
-            
-            formula_validation_results = {
-                'total_tests': len(test_cases),
-                'correct_calculations': 0,
-                'formula_matches': 0,
-                'calculation_errors': []
+            # Test the 3 voies escalation system
+            escalation_test_results = {
+                'voie_1_tests': 0,
+                'voie_2_tests': 0,
+                'voie_3_tests': 0,
+                'voie_1_correct': 0,
+                'voie_2_correct': 0,
+                'voie_3_correct': 0,
+                'escalation_errors': []
             }
             
-            logger.info(f"   📊 Testing {len(test_cases)} RR formula scenarios:")
+            logger.info("   🚀 Testing 3 Voies Escalation System:")
+            logger.info("      VOIE 1: LONG/SHORT signals with confidence ≥ 70%")
+            logger.info("      VOIE 2: Risk-Reward ratio ≥ 2.0 (any signal)")
+            logger.info("      VOIE 3: LONG/SHORT signals with confidence ≥ 95% (override)")
             
-            for i, test_case in enumerate(test_cases):
+            # Test multiple symbols to trigger different escalation scenarios
+            for symbol in self.test_symbols[:3]:  # Test first 3 symbols
                 try:
-                    # Calculate using our expected formula
-                    if test_case['signal'] == 'LONG':
-                        calculated_rr = self.rr_formulas['LONG'](
-                            test_case['entry'], 
-                            test_case['take_profit'], 
-                            test_case['stop_loss']
-                        )
-                    else:  # SHORT
-                        calculated_rr = self.rr_formulas['SHORT'](
-                            test_case['entry'], 
-                            test_case['take_profit'], 
-                            test_case['stop_loss']
-                        )
+                    logger.info(f"   📊 Testing escalation criteria for {symbol}...")
                     
-                    # Check if calculation matches expected
-                    calculation_correct = abs(calculated_rr - test_case['expected_rr']) < 0.001
+                    # Run IA1 cycle to get analysis and check escalation
+                    response = requests.post(
+                        f"{self.api_url}/run-ia1-cycle",
+                        json={"symbol": symbol},
+                        timeout=60
+                    )
                     
-                    if calculation_correct:
-                        formula_validation_results['correct_calculations'] += 1
-                        formula_validation_results['formula_matches'] += 1
-                        status = "✅"
+                    if response.status_code == 200:
+                        cycle_data = response.json()
+                        
+                        if cycle_data.get('success'):
+                            # Check if analysis was created
+                            analysis = cycle_data.get('analysis', {})
+                            escalated_to_ia2 = cycle_data.get('escalated_to_ia2', False)
+                            ia2_decision = cycle_data.get('ia2_decision')
+                            
+                            confidence = analysis.get('confidence', 0)
+                            rr_ratio = analysis.get('risk_reward_ratio', 0)
+                            signal = analysis.get('recommendation', 'hold').lower()
+                            
+                            logger.info(f"      📈 {symbol} Analysis: Confidence={confidence:.1%}, RR={rr_ratio:.2f}, Signal={signal}")
+                            logger.info(f"      🎯 Escalated to IA2: {escalated_to_ia2}")
+                            
+                            # Test VOIE 1: LONG/SHORT signals with confidence ≥ 70%
+                            if signal in ['long', 'short'] and confidence >= 0.70:
+                                escalation_test_results['voie_1_tests'] += 1
+                                if escalated_to_ia2:
+                                    escalation_test_results['voie_1_correct'] += 1
+                                    logger.info(f"         ✅ VOIE 1 triggered correctly: {signal} signal, {confidence:.1%} confidence")
+                                else:
+                                    escalation_test_results['escalation_errors'].append(
+                                        f"VOIE 1 failed for {symbol}: {signal} signal, {confidence:.1%} confidence should escalate"
+                                    )
+                                    logger.warning(f"         ❌ VOIE 1 failed: Should escalate but didn't")
+                            
+                            # Test VOIE 2: Risk-Reward ratio ≥ 2.0 (any signal)
+                            if rr_ratio >= 2.0:
+                                escalation_test_results['voie_2_tests'] += 1
+                                if escalated_to_ia2:
+                                    escalation_test_results['voie_2_correct'] += 1
+                                    logger.info(f"         ✅ VOIE 2 triggered correctly: RR={rr_ratio:.2f} ≥ 2.0")
+                                else:
+                                    escalation_test_results['escalation_errors'].append(
+                                        f"VOIE 2 failed for {symbol}: RR={rr_ratio:.2f} ≥ 2.0 should escalate"
+                                    )
+                                    logger.warning(f"         ❌ VOIE 2 failed: RR={rr_ratio:.2f} should escalate")
+                            
+                            # Test VOIE 3: LONG/SHORT signals with confidence ≥ 95% (override)
+                            if signal in ['long', 'short'] and confidence >= 0.95:
+                                escalation_test_results['voie_3_tests'] += 1
+                                if escalated_to_ia2:
+                                    escalation_test_results['voie_3_correct'] += 1
+                                    logger.info(f"         ✅ VOIE 3 triggered correctly: {signal} signal, {confidence:.1%} confidence (override)")
+                                else:
+                                    escalation_test_results['escalation_errors'].append(
+                                        f"VOIE 3 failed for {symbol}: {signal} signal, {confidence:.1%} confidence should escalate (override)"
+                                    )
+                                    logger.warning(f"         ❌ VOIE 3 failed: Should escalate with override")
+                            
+                            # Check if escalation occurred when it shouldn't have
+                            should_escalate = (
+                                (signal in ['long', 'short'] and confidence >= 0.70) or  # VOIE 1
+                                (rr_ratio >= 2.0) or  # VOIE 2
+                                (signal in ['long', 'short'] and confidence >= 0.95)  # VOIE 3
+                            )
+                            
+                            if not should_escalate and escalated_to_ia2:
+                                escalation_test_results['escalation_errors'].append(
+                                    f"False escalation for {symbol}: No criteria met but escalated anyway"
+                                )
+                                logger.warning(f"         ⚠️ False escalation: No criteria met but escalated")
+                            elif should_escalate and not escalated_to_ia2:
+                                logger.warning(f"         ⚠️ Missed escalation: Criteria met but not escalated")
+                            
+                            # Check IA2 decision if escalated
+                            if escalated_to_ia2 and ia2_decision:
+                                logger.info(f"         🤖 IA2 Decision: {ia2_decision.get('signal', 'N/A')} with confidence {ia2_decision.get('confidence', 0):.1%}")
+                        else:
+                            logger.warning(f"      ❌ IA1 cycle failed for {symbol}: {cycle_data.get('error', 'Unknown error')}")
                     else:
-                        formula_validation_results['calculation_errors'].append(
-                            f"{test_case['name']}: Expected {test_case['expected_rr']:.3f}, Got {calculated_rr:.3f}"
-                        )
-                        status = "❌"
+                        logger.warning(f"      ❌ API call failed for {symbol}: HTTP {response.status_code}")
                     
-                    logger.info(f"      {status} {test_case['name']}: "
-                              f"Entry=${test_case['entry']}, TP=${test_case['take_profit']}, SL=${test_case['stop_loss']} "
-                              f"→ RR={calculated_rr:.3f} (expected: {test_case['expected_rr']:.3f})")
-                    logger.info(f"         Formula: {test_case['expected_formula']}")
+                    await asyncio.sleep(3)  # Delay between requests
                     
                 except Exception as e:
-                    formula_validation_results['calculation_errors'].append(f"{test_case['name']}: {str(e)}")
-                    logger.warning(f"      ❌ {test_case['name']}: Formula test failed - {e}")
+                    logger.error(f"   ❌ Error testing escalation for {symbol}: {e}")
+                    escalation_test_results['escalation_errors'].append(f"Exception testing {symbol}: {str(e)}")
             
-            # Calculate performance metrics
-            calculation_accuracy = formula_validation_results['correct_calculations'] / formula_validation_results['total_tests']
+            # Calculate results
+            total_voie_tests = (escalation_test_results['voie_1_tests'] + 
+                              escalation_test_results['voie_2_tests'] + 
+                              escalation_test_results['voie_3_tests'])
+            total_voie_correct = (escalation_test_results['voie_1_correct'] + 
+                                escalation_test_results['voie_2_correct'] + 
+                                escalation_test_results['voie_3_correct'])
             
-            logger.info(f"   📊 Formula Validation Performance:")
-            logger.info(f"      Calculation accuracy: {calculation_accuracy:.1%}")
-            logger.info(f"      Correct calculations: {formula_validation_results['correct_calculations']}/{formula_validation_results['total_tests']}")
+            logger.info(f"   📊 Escalation Criteria Test Results:")
+            logger.info(f"      VOIE 1 tests: {escalation_test_results['voie_1_correct']}/{escalation_test_results['voie_1_tests']}")
+            logger.info(f"      VOIE 2 tests: {escalation_test_results['voie_2_correct']}/{escalation_test_results['voie_2_tests']}")
+            logger.info(f"      VOIE 3 tests: {escalation_test_results['voie_3_correct']}/{escalation_test_results['voie_3_tests']}")
+            logger.info(f"      Total accuracy: {total_voie_correct}/{total_voie_tests}")
             
-            if formula_validation_results['calculation_errors']:
-                logger.info(f"      Calculation errors:")
-                for error in formula_validation_results['calculation_errors']:
+            if escalation_test_results['escalation_errors']:
+                logger.info(f"      Escalation errors:")
+                for error in escalation_test_results['escalation_errors']:
                     logger.info(f"        - {error}")
             
             # Determine test result
-            if calculation_accuracy >= 1.0:
-                self.log_test_result("IA1 RR Formula Validation", True, 
-                                   f"All RR formulas working correctly: {calculation_accuracy:.1%} accuracy")
-            elif calculation_accuracy >= 0.8:
-                self.log_test_result("IA1 RR Formula Validation", False, 
-                                   f"Most RR formulas working: {calculation_accuracy:.1%} accuracy, some errors found")
+            if total_voie_tests > 0:
+                accuracy = total_voie_correct / total_voie_tests
+                
+                if accuracy >= 0.9:
+                    self.log_test_result("Escalation Criteria Validation", True, 
+                                       f"3 Voies escalation system working correctly: {accuracy:.1%} accuracy ({total_voie_correct}/{total_voie_tests})")
+                elif accuracy >= 0.7:
+                    self.log_test_result("Escalation Criteria Validation", False, 
+                                       f"Most escalation criteria working: {accuracy:.1%} accuracy ({total_voie_correct}/{total_voie_tests})")
+                else:
+                    self.log_test_result("Escalation Criteria Validation", False, 
+                                       f"Escalation criteria issues: {accuracy:.1%} accuracy ({total_voie_correct}/{total_voie_tests})")
             else:
-                self.log_test_result("IA1 RR Formula Validation", False, 
-                                   f"RR formula issues: {calculation_accuracy:.1%} accuracy, multiple errors")
+                self.log_test_result("Escalation Criteria Validation", False, 
+                                   "No escalation scenarios available for testing")
                 
         except Exception as e:
-            self.log_test_result("IA1 RR Formula Validation", False, f"Exception: {str(e)}")
+            self.log_test_result("Escalation Criteria Validation", False, f"Exception: {str(e)}")
     
     async def test_2_ia1_confidence_independence(self):
         """Test 2: IA1 RR Calculation Independence from Confidence Level"""
