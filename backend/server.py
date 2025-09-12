@@ -2623,7 +2623,22 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "ia1_reasoning": reasoning,  # 🎯 SYSTÈME SIMPLIFIÉ: Reasoning IA1 direct sans Multi-RR
                 "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
                 "market_sentiment": self._determine_market_sentiment(opportunity),
-                "data_sources": opportunity.data_sources
+                "data_sources": opportunity.data_sources,
+                # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
+                "mfi_value": mfi,
+                "mfi_signal": ('extreme_overbought' if mfi_extreme_overbought else 'overbought' if mfi_overbought else 'extreme_oversold' if mfi_extreme_oversold else 'oversold' if mfi_oversold else 'neutral'),
+                "mfi_institution": institutional_activity,
+                "vwap_price": vwap,
+                "vwap_position": vwap_position,
+                "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
+                "vwap_trend": vwap_trend,
+                "ema_hierarchy": trend_hierarchy,
+                "ema_position": price_vs_emas,
+                "ema_cross_signal": ema_cross_signal,
+                "ema_strength": trend_strength_score,
+                "multi_timeframe_dominant": multi_tf_indicators.get('dominant_timeframe', 'DAILY'),
+                "multi_timeframe_pattern": multi_tf_indicators.get('decisive_pattern', 'NEUTRAL'),
+                "multi_timeframe_confidence": multi_tf_indicators.get('hierarchy_confidence', 0.5)
             })
             
             # 🎯 AJOUTER les niveaux de prix calculés par IA1 si disponibles
