@@ -9176,7 +9176,7 @@ async def force_ia1_analysis(request: dict):
             return {"success": False, "error": f"Symbol {symbol} not found in opportunities"}
         
         # Force IA1 analysis (bypass pattern filter)
-        analysis = await orchestrator.ia1_analyst.make_ia1_analysis(target_opportunity)
+        analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
         
         if analysis:
             logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
