@@ -7534,6 +7534,14 @@ class UltraProfessionalTradingOrchestrator:
                     try:
                         await db.technical_analyses.insert_one(analysis.dict())
                         logger.info(f"📁 IA1 ANALYSIS STORED: {analysis.symbol} (fresh analysis)")
+                        
+                        # 🆕 CREATE POSITION TRACKING for IA1→IA2 resilience
+                        try:
+                            tracking = await create_position_tracking(analysis)
+                            logger.info(f"📍 Position tracking created: {tracking.position_id} for {analysis.symbol} (confidence: {analysis.analysis_confidence:.1%})")
+                        except Exception as track_error:
+                            logger.error(f"❌ Failed to create position tracking for {analysis.symbol}: {track_error}")
+                            
                     except Exception as store_error:
                         logger.error(f"❌ Failed to store analysis for {analysis.symbol}: {store_error}")
                     
