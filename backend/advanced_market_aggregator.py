@@ -1358,9 +1358,20 @@ class AdvancedMarketAggregator:
                 
                 for symbol in bingx_top_futures:
                     if not any(opp.symbol == symbol for opp in opportunities):  # Avoid duplicates
+                        # Try to get real price from enhanced OHLCV fetcher as fallback
+                        real_price = 100.0  # Default fallback
+                        try:
+                            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+                            # Get latest OHLCV data to extract current price
+                            ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(symbol, days=1)
+                            if ohlcv_data is not None and not ohlcv_data.empty:
+                                real_price = float(ohlcv_data['close'].iloc[-1])  # Latest close price
+                        except Exception as e:
+                            logger.debug(f"Could not fetch real price for {symbol}: {e}")
+                        
                         opportunity = MarketOpportunity(
                             symbol=symbol,
-                            current_price=100.0,  # Mock price
+                            current_price=real_price,  # Use real price when available
                             volume_24h=1000000.0,  # Mock volume
                             price_change_24h=0.02,  # Mock 2% change
                             volatility=0.05,  # Mock 5% volatility
