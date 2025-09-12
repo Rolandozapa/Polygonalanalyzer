@@ -49,6 +49,7 @@ class MarketOpportunity(BaseModel):
 
 class TechnicalAnalysis(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    position_id: str = Field(default_factory=generate_position_id)  # 🆕 Tracking ID for IA1→IA2
     symbol: str
     rsi: float
     macd_signal: float
