@@ -9172,6 +9172,104 @@ async def force_ia2_escalation(request: dict):
         logger.error(f"❌ Force IA2 escalation error: {e}")
         return {"success": False, "error": str(e)}
 
+@api_router.post("/force-voie3-processing")
+async def force_voie3_processing():
+    """Force processing of high confidence (>95%) IA1 analyses to IA2 via VOIE 3"""
+    try:
+        logger.info("🚀 FORCING VOIE 3 PROCESSING - High confidence analyses to IA2")
+        
+        # Get all IA1 analyses with >95% confidence (VOIE 3 candidates)
+        recent_cutoff = get_paris_time() - timedelta(hours=24)  # Look in last 24h
+        
+        high_confidence_analyses = await db.technical_analyses.find({
+            "analysis_confidence": {"$gte": 0.95},
+            "ia1_signal": {"$in": ["long", "short"]},  # VOIE 3 only for trading signals
+            "timestamp": {"$gte": recent_cutoff}
+        }).to_list(20)
+        
+        if not high_confidence_analyses:
+            return {"success": False, "message": "No high confidence analyses found for VOIE 3"}
+        
+        logger.info(f"🎯 Found {len(high_confidence_analyses)} high confidence analyses for VOIE 3 processing")
+        
+        # Process each high confidence analysis through IA2
+        processed = 0
+        for analysis_data in high_confidence_analyses:
+            try:
+                symbol = analysis_data.get('symbol')
+                confidence = analysis_data.get('analysis_confidence', 0)
+                signal = analysis_data.get('ia1_signal', 'hold')
+                
+                # Check if we already have a recent IA2 decision for this symbol
+                ia2_recent_cutoff = get_paris_time() - timedelta(hours=2)  # Shorter window for IA2
+                existing_ia2 = await db.trading_decisions.find_one({
+                    "symbol": symbol,
+                    "timestamp": {"$gte": ia2_recent_cutoff}
+                })
+                
+                if existing_ia2:
+                    logger.info(f"⏭️ SKIP {symbol}: Recent IA2 decision exists")
+                    continue
+                
+                # Create opportunity and analysis objects for IA2
+                opportunity = MarketOpportunity(
+                    symbol=symbol,
+                    current_price=analysis_data.get('entry_price', 0),
+                    volume_24h=0,
+                    price_change_24h=0,
+                    volatility=0,
+                    market_cap=0
+                )
+                
+                # Create minimal TechnicalAnalysis object
+                analysis = TechnicalAnalysis(
+                    id=analysis_data.get('id', str(uuid.uuid4())),
+                    symbol=symbol,
+                    analysis_confidence=confidence,
+                    ia1_signal=signal,
+                    risk_reward_ratio=analysis_data.get('risk_reward_ratio', 1.0),
+                    ia1_reasoning=analysis_data.get('ia1_reasoning', ''),
+                    rsi=analysis_data.get('rsi', 50),
+                    macd_signal=analysis_data.get('macd_signal', 0),
+                    stochastic=analysis_data.get('stochastic', 50),
+                    bollinger_position=analysis_data.get('bollinger_position', 0),
+                    fibonacci_level=analysis_data.get('fibonacci_level', 50),
+                    support_levels=analysis_data.get('support_levels', []),
+                    resistance_levels=analysis_data.get('resistance_levels', []),
+                    patterns_detected=analysis_data.get('patterns_detected', []),
+                    entry_price=analysis_data.get('entry_price', 0),
+                    stop_loss_price=analysis_data.get('stop_loss_price', 0),
+                    take_profit_price=analysis_data.get('take_profit_price', 0)
+                )
+                
+                # Verify VOIE 3 eligibility
+                if confidence >= 0.95 and signal in ['long', 'short']:
+                    logger.info(f"🚀 VOIE 3 PROCESSING: {symbol} {signal.upper()} {confidence:.1%}")
+                    
+                    # Force IA2 decision
+                    decision = await orchestrator.ia2_analyst.make_decision(opportunity, analysis)
+                    
+                    if decision and decision.signal != "HOLD":
+                        processed += 1
+                        logger.info(f"✅ VOIE 3 SUCCESS: {symbol} → IA2 decision created")
+                    else:
+                        logger.warning(f"⚠️ VOIE 3 RESULT: {symbol} → IA2 returned HOLD")
+                
+            except Exception as e:
+                logger.error(f"❌ VOIE 3 error for {symbol}: {e}")
+                continue
+        
+        return {
+            "success": True,
+            "message": f"VOIE 3 processing completed: {processed} decisions created from {len(high_confidence_analyses)} candidates",
+            "processed": processed,
+            "candidates": len(high_confidence_analyses)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ VOIE 3 processing error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
