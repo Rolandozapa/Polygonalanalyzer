@@ -11327,8 +11327,8 @@ async def ultra_professional_trading_loop():
                 "timestamp": get_paris_time().strftime('%Y-%m-%d %H:%M:%S') + " (Heure de Paris)"
             })
             
-            # Ultra professional cycle timing - every 4 hours for comprehensive analysis
-            await asyncio.sleep(14400)  # 4 heures = 14400 secondes
+            # TEMPORARY: Reduced cycle timing for demo - every 10 minutes instead of 4 hours
+            await asyncio.sleep(600)  # 10 minutes = 600 secondes (TEMPORARY FOR DEMO)
             
         except Exception as e:
             logger.error(f"Ultra professional trending trading loop error: {e}")
