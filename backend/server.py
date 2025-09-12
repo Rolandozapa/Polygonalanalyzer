@@ -5339,29 +5339,39 @@ async def force_ia1_cycle():
     try:
         logger.info(f"🚀 FORCING IA1 ANALYSIS on latest scout selection")
         
-        # 🔧 FIX: Use direct market aggregator access instead of orchestrator.scout
-        from advanced_market_aggregator import advanced_market_aggregator
+        # 🔥 CRITICAL FIX: Use database opportunities instead of market aggregator fallback
+        # Get opportunities from database (same source as /api/opportunities endpoint)
+        cursor = db.market_opportunities.find().sort("timestamp", -1).limit(10)
+        opportunities_docs = []
+        async for doc in cursor:
+            opportunities_docs.append(doc)
         
-        # Get opportunities directly from market aggregator - ANALYZE LATEST SCOUT SELECTION
-        opportunities = advanced_market_aggregator.get_current_opportunities()
-        
-        if not opportunities:
-            logger.warning("No opportunities from market aggregator, trying orchestrator scout...")
-            # Fallback: try orchestrator scout
-            try:
-                opportunities = orchestrator.scout.market_aggregator.get_current_opportunities()
-            except Exception as scout_error:
-                logger.error(f"Scout access error: {scout_error}")
-                return {"success": False, "error": f"No opportunities available from scout: {scout_error}"}
-        
-        if not opportunities:
-            return {"success": False, "error": "No opportunities available from any source"}
+        if not opportunities_docs:
+            logger.warning("No opportunities in database, trying market aggregator...")
+            # Fallback: try market aggregator
+            from advanced_market_aggregator import advanced_market_aggregator
+            opportunities = advanced_market_aggregator.get_current_opportunities()
+            if not opportunities:
+                return {"success": False, "error": "No opportunities available from any source"}
+            target_opportunity = opportunities[0]
+        else:
+            # Convert first database opportunity to MarketOpportunity object
+            opp_doc = opportunities_docs[0]
+            target_opportunity = MarketOpportunity(
+                symbol=opp_doc.get('symbol', 'UNKNOWN'),
+                current_price=float(opp_doc.get('current_price', 100.0)),
+                volume_24h=float(opp_doc.get('volume_24h', 1000000.0)),
+                price_change_24h=float(opp_doc.get('price_change_24h', 0.0)),
+                volatility=float(opp_doc.get('volatility', 0.05)),
+                market_cap=float(opp_doc.get('market_cap', 1000000000)),
+                market_cap_rank=int(opp_doc.get('market_cap_rank', 1)),
+                data_sources=opp_doc.get('data_sources', ['database']),
+                data_confidence=float(opp_doc.get('data_confidence', 0.8)),
+                timestamp=datetime.now(timezone.utc)
+            )
             
-        # 🎯 USE FIRST OPPORTUNITY FROM SCOUT (latest/best)
-        target_opportunity = opportunities[0]
         symbol = target_opportunity.symbol
-        
-        logger.info(f"🎯 IA1 analyzing scout selection: {symbol} (price: {target_opportunity.current_price}, volume: {target_opportunity.volume_24h:,.0f})")
+        logger.info(f"🎯 IA1 analyzing REAL scout selection: {symbol} (price: {target_opportunity.price_change_24h:+.1f}%, vol: {target_opportunity.volume_24h:,.0f}, sources: {target_opportunity.data_sources})")
         
         # Force IA1 analysis (bypass pattern filter)
         analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
