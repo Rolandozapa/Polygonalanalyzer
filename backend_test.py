@@ -1432,7 +1432,7 @@ class BingXIntegrationTestSuite:
 
 async def main():
     """Main test execution"""
-    test_suite = BingXIntegrationTestSuite()
+    test_suite = IA2SimplifiedPromptTestSuite()
     passed, total = await test_suite.run_comprehensive_tests()
     
     # Exit with appropriate code
