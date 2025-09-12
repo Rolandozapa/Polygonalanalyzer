@@ -1003,11 +1003,13 @@ class TechnicalPatternDetector:
         # Triple patterns (nouveau !)
         patterns.extend(self._detect_triple_patterns(symbol, df))
         
-        # Rising/Falling Wedges (simulé - à implémenter)
+        # Rising/Falling Wedges (advanced pattern detection)
         try:
             patterns.extend(self._detect_wedge_patterns_simple(symbol, df))
-        except:
-            pass  # Si pas implémenté
+        except NotImplementedError:
+            logger.debug(f"Wedge pattern detection not yet implemented for {symbol}")
+        except Exception as e:
+            logger.warning(f"Error detecting wedge patterns for {symbol}: {e}")
         
         return patterns
     
