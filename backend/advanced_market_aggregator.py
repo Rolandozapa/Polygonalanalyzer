@@ -1280,8 +1280,9 @@ class AdvancedMarketAggregator:
             
             if (cache_key in self.cache and 
                 current_time - self.cache[cache_key].get('timestamp', 0) < self.cache_ttl):
-                logger.info(f"✅ CACHE HIT: Returning {len(self.cache[cache_key]['data'])} cached opportunities")
-                return self.cache[cache_key]['data']
+                cached_opportunities = self.cache[cache_key]['data']
+                logger.info(f"✅ CACHE HIT: Returning {len(cached_opportunities)} cached opportunities")
+                return cached_opportunities
             
             # 🚀 NEW: Get trending data from trending_auto_updater if available
             opportunities = []
