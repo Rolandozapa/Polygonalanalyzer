@@ -1,30 +1,33 @@
 #!/usr/bin/env python3
 """
-AUTONOMOUS TREND DETECTION SYSTEM COMPREHENSIVE TEST SUITE
-Focus: Test the new autonomous trend detection system with 4h frequency and advanced filters
+IA1 RISK-REWARD CALCULATION INDEPENDENCE TEST SUITE
+Focus: Test IA1 RR calculation independence from confidence level
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **Trending Auto-Updater**: Test 4h frequency (14400s), min var volume daily 5%, min var price 1%
-2. **Lateral Pattern Detector**: Test sophisticated multi-criteria analysis and TrendType classification
-3. **Advanced Market Aggregator**: Test get_current_opportunities() with BingX data and 4h cache TTL
-4. **Integration Testing**: Verify trending_auto_updater → pattern detector → market aggregator flow
-5. **Filter Validation**: Ensure only real trends pass filters (no lateral patterns)
-6. **BingX Data Source**: Verify top 50 market cap futures BingX via official API
+1. **RR Calculation Independence**: Verify that IA1's Risk-Reward ratio calculation is completely independent of the confidence level
+2. **Consistent RR Values**: Test that identical market conditions produce identical RR ratios regardless of IA1's confidence
+3. **Technical Analysis Based**: Confirm RR calculation uses only technical levels (support/resistance) not confidence percentages
+4. **Formula Validation**: Verify LONG and SHORT RR formulas are correctly implemented as specified:
+   - LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)
+   - SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)
 
-TESTING APPROACH:
-- Test trending_auto_updater.fetch_trending_cryptos() returns 50 cryptos with filters applied
-- Test lateral_pattern_detector with edge cases (low volumes, lateral prices)
-- Validate advanced_market_aggregator.get_current_opportunities() uses filtered data
-- Test complete integration: trending_auto_updater → pattern detector → market aggregator
-- Test 4h frequency and cache TTL alignment
-- Validate that only real trends pass filters (no lateral patterns)
+SPECIFIC TESTING SCENARIOS:
+1. Test multiple IA1 analyses for the same symbol with varying confidence levels (70%, 85%, 95%)
+2. Verify that stop-loss and take-profit levels are based on technical analysis, not confidence
+3. Check that RR ratios are consistent for the same technical setup regardless of confidence
+4. Validate that fallback levels (when no technical levels available) are fixed percentages
+5. Test both LONG and SHORT scenarios with different confidence levels
 
-EXPECTED RESULTS:
-- 50 cryptos max with price change ≥1% and sufficient volume
-- Effective filtering of lateral figures
-- Fresh BingX API data used
-- Stable performance with 4h frequency
-- Top 50 market cap futures correctly retrieved
+ENDPOINTS TO TEST:
+- POST /api/force-ia1-analysis with different symbols
+- GET /api/analyses to verify stored RR calculations
+- Monitor logs for RR calculation details and technical level explanations
+
+SUCCESS CRITERIA:
+- RR calculation shows no correlation with confidence levels
+- Technical stop-loss/take-profit levels are consistent
+- Formula implementation matches specified equations
+- No evidence of confidence-based adjustments to RR values
 """
 
 import asyncio
