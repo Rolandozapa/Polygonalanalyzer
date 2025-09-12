@@ -86,12 +86,21 @@ class AutonomousTrendDetectionTestSuite:
             self.trending_updater = trending_auto_updater
             self.pattern_detector = lateral_pattern_detector
             self.market_aggregator = advanced_market_aggregator
+            self.TrendType = TrendType
             logger.info("✅ Successfully imported trend detection modules")
         except Exception as e:
             logger.error(f"❌ Failed to import trend detection modules: {e}")
             self.trending_updater = None
             self.pattern_detector = None
             self.market_aggregator = None
+            # Define TrendType fallback for testing
+            class TrendType:
+                STRONG_BULLISH = "strong_bullish"
+                BULLISH = "bullish"
+                LATERAL = "lateral"
+                BEARISH = "bearish"
+                STRONG_BEARISH = "strong_bearish"
+            self.TrendType = TrendType
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
