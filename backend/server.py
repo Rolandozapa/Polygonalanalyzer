@@ -2515,22 +2515,27 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     
                     # Ajuster les niveaux selon la confidence pour générer des RR plus élevés
                     if analysis_confidence >= 0.85:  # Confidence très élevée
-                        stop_loss_adjustment = 0.5  # Stop loss plus proche
-                        tp_adjustment = 1.5  # Take profit plus éloigné
+                        # Stop loss plus serré (plus proche de l'entry), take profit plus ambitieux (plus loin)
+                        resistance_multiplier = 1.2  # Stop loss plus proche de l'entry (moins de risque)
+                        support_multiplier = 1.5  # Take profit plus loin de l'entry (plus de reward)
                     elif analysis_confidence >= 0.75:  # Confidence élevée
-                        stop_loss_adjustment = 0.7
-                        tp_adjustment = 1.3
+                        resistance_multiplier = 1.1
+                        support_multiplier = 1.3
                     else:  # Confidence normale
-                        stop_loss_adjustment = 1.0
-                        tp_adjustment = 1.0
+                        resistance_multiplier = 1.0
+                        support_multiplier = 1.0
                     
-                    stop_loss_distance = (base_resistance - opportunity.current_price) * stop_loss_adjustment
-                    tp_distance = (opportunity.current_price - base_support) * tp_adjustment
+                    # SHORT: Stop Loss AU-DESSUS de l'entry (resistance), Take Profit EN-DESSOUS (support)
+                    stop_loss_price = base_resistance * resistance_multiplier
+                    take_profit_price = base_support / support_multiplier  # Diviser pour aller plus bas
                     
-                    stop_loss_price = opportunity.current_price + stop_loss_distance
-                    take_profit_price = opportunity.current_price - tp_distance
+                    # Vérifier que les niveaux sont logiques
+                    if stop_loss_price <= opportunity.current_price:
+                        stop_loss_price = opportunity.current_price * 1.03  # +3% minimum
+                    if take_profit_price >= opportunity.current_price:
+                        take_profit_price = opportunity.current_price * 0.93  # -7% minimum
                     
-                    logger.info(f"📊 SHORT NIVEAUX AJUSTÉS {opportunity.symbol}: Confidence {analysis_confidence*100:.1f}% → SL adj {stop_loss_adjustment:.1f}x, TP adj {tp_adjustment:.1f}x")
+                    logger.info(f"📊 SHORT NIVEAUX CORRIGÉS {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} (+{((stop_loss_price/opportunity.current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} ({((take_profit_price/opportunity.current_price)-1)*100:.1f}%)")
                     
                 else:  # hold
                     # Pour HOLD, utiliser des niveaux neutres mais différents
