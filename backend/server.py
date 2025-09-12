@@ -4008,21 +4008,6 @@ class UltraProfessionalIA2DecisionAgent:
         try:
             logger.info(f"IA2 making ultra professional MULTI-TIMEFRAME decision for {opportunity.symbol}")
             
-            # 🔧 DEBUG: Verify data integrity to fix "string indices must be integers" error
-            try:
-                # Verify analysis object structure
-                if not hasattr(analysis, 'rsi'):
-                    logger.error(f"❌ IA2 DEBUG: analysis missing 'rsi' attribute for {opportunity.symbol}")
-                    return None
-                if not hasattr(analysis, 'macd_signal'):
-                    logger.error(f"❌ IA2 DEBUG: analysis missing 'macd_signal' attribute for {opportunity.symbol}")
-                    return None
-                    
-                logger.info(f"✅ IA2 DEBUG: analysis object validated for {opportunity.symbol}")
-            except Exception as debug_e:
-                logger.error(f"❌ IA2 DEBUG ERROR for {opportunity.symbol}: {debug_e}")
-                return None
-            
             # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
             # Get historical data for multi-timeframe analysis
             from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
