@@ -196,14 +196,16 @@ class TrendingAutoUpdater:
                                     # Éviter les figures latérales sans vraie tendance
                                     if abs(price_change_pct) < 1.5 and volume < 1000000:  # Très faible mouvement ET faible volume
                                         continue
-                                        crypto = TrendingCrypto(
-                                            symbol=symbol,
-                                            name=symbol.replace('USDT', ''),
-                                            price_change=price_change_pct,
-                                            volume=volume,
-                                            source="bingx_api"
-                                        )
-                                        trending_list.append(crypto)
+                                    
+                                    # Si toutes les conditions sont remplies, ajouter à la liste
+                                    crypto = TrendingCrypto(
+                                        symbol=symbol,
+                                        name=symbol.replace('USDT', ''),
+                                        price_change=price_change_pct,
+                                        volume=volume,
+                                        source="bingx_api"
+                                    )
+                                    trending_list.append(crypto)
                                 
                                 except (ValueError, KeyError) as e:
                                     continue
