@@ -5008,7 +5008,7 @@ async def get_decisions(limit: int = 50):
         logger.error(f"❌ Error getting decisions: {e}")
         return {"success": False, "error": str(e)}
 
-@api_router.get("/performance")
+@app.get("/api/performance")
 async def get_performance():
     """Get system performance stats"""
     try:
@@ -5046,7 +5046,7 @@ async def get_performance():
         logger.error(f"❌ Error getting performance: {e}")
         return {"success": False, "error": str(e)}
 
-@api_router.post("/run-ia1-cycle")
+@app.post("/api/run-ia1-cycle")
 async def force_ia1_cycle(symbol: str = "BTCUSDT"):
     """Force run IA1 analysis cycle for a specific symbol"""
     try:
