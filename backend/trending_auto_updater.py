@@ -288,7 +288,7 @@ class TrendingAutoUpdater:
         """Create fallback trending list from top BingX futures"""
         fallback_list = []
         
-        for i, symbol in enumerate(self.bingx_top_futures[:30]):
+        for i, symbol in enumerate(self.bingx_top_futures[:50]):  # Top 50 comme demandé
             crypto = TrendingCrypto(
                 symbol=symbol,
                 name=symbol.replace('USDT', ''),
