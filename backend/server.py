@@ -5112,6 +5112,28 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
         if analysis:
             logger.info(f"✅ IA1 analysis completed for {symbol}")
             
+            # 🎯 CHECK IA2 ESCALATION - The missing piece!
+            should_escalate = orchestrator._should_send_to_ia2(analysis, target_opportunity)
+            ia2_decision = None
+            
+            if should_escalate:
+                logger.info(f"🚀 ESCALATING {symbol} to IA2 strategic analysis")
+                try:
+                    # Get performance stats
+                    perf_stats = advanced_market_aggregator.get_performance_stats()
+                    
+                    # IA2 strategic decision
+                    ia2_decision = await orchestrator.ia2.make_decision(target_opportunity, analysis, perf_stats)
+                    if ia2_decision:
+                        logger.info(f"✅ IA2 strategic decision: {ia2_decision.signal} for {symbol}")
+                    else:
+                        logger.warning(f"⚠️ IA2 returned no decision for {symbol}")
+                        
+                except Exception as ia2_error:
+                    logger.error(f"❌ IA2 escalation error for {symbol}: {ia2_error}")
+            else:
+                logger.info(f"❌ IA2 NOT escalated for {symbol} - criteria not met")
+            
             # Convert analysis to dict safely (handle enums)
             try:
                 analysis_dict = analysis.dict() if hasattr(analysis, 'dict') else analysis.__dict__
@@ -5132,11 +5154,18 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
                     "status": "completed"
                 }
             
-            return {
+            # Build response with IA2 info if available
+            response_data = {
                 "success": True,
                 "message": f"IA1 analysis completed for {symbol}",
-                "analysis": analysis_dict
+                "analysis": analysis_dict,
+                "escalation": {
+                    "escalated_to_ia2": should_escalate,
+                    "ia2_decision": ia2_decision.dict() if ia2_decision and hasattr(ia2_decision, 'dict') else None
+                }
             }
+            
+            return response_data
         else:
             return {
                 "success": False,
