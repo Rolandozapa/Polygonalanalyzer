@@ -1,37 +1,29 @@
 #!/usr/bin/env python3
 """
-COMPREHENSIVE PERFORMANCE TEST SUITE AFTER CPU OPTIMIZATIONS
-Focus: Complete backend performance validation after implementing major CPU optimizations
+COMPREHENSIVE IA2 SIMPLIFIED PROMPT TESTING SUITE
+Focus: Test the newly simplified IA2 prompt and decision-making system after major code deletion
 
-TESTING REQUIREMENTS FROM REVIEW REQUEST:
-1. **PERFORMANCE VALIDATION**: Verify CPU stays low during API operations
-2. **CORE API FUNCTIONALITY**: Test all main endpoints respond correctly  
-3. **TRADING SYSTEM**: Verify IA1/IA2 analysis and decision pipeline
-4. **DATABASE OPERATIONS**: Confirm MongoDB operations are efficient
-5. **WEBSOCKET CONNECTIONS**: Test real-time updates work with optimized timing
-6. **BINGX INTEGRATION**: Verify trading integration still functional
-7. **SYSTEM STABILITY**: Ensure optimizations don't break existing features
+CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
+1. **IA2 Error Resolution**: Verify no more "string indices must be integers, not str" errors in IA2 execution
+2. **IA2 Decision Generation**: Confirm IA2 successfully generates strategic decisions without crashing
+3. **Strategic Reasoning Quality**: Validate that IA2 produces meaningful strategic analysis despite simplified prompt
+4. **RR Calculation Fields**: Check if simplified IA2 generates proper calculated_rr and rr_reasoning fields
+5. **End-to-End Pipeline**: Test complete IA1 → IA2 pipeline with the new simplified implementation
 
-CPU OPTIMIZATIONS IMPLEMENTED:
-- Frontend polling: 5s → 15s  
-- ThreadPoolExecutor: 20 → 6 workers
-- Backend loops: 30s → 60s WebSocket, 5s → 15s position monitoring  
-- CRITICAL FIX: psutil.cpu_percent(interval=1) → psutil.cpu_percent() (non-blocking)
+TESTING APPROACH:
+- Trigger IA1 analysis with high confidence (>70%) or high RR (>2.0) to force IA2 execution
+- Monitor backend logs for any "string indices" errors during IA2 processing
+- Examine generated IA2 decisions in MongoDB to verify proper structure and reasoning
+- Test both VOIE 1 (confidence ≥70%) and VOIE 2 (RR ≥2.0) escalation paths
+- Verify IA2 produces LONG/SHORT/HOLD decisions with proper reasoning
 
-CURRENT STATUS:
-- CPU usage improved from 97-100% to 11.7% (72% reduction)
-- All services running (backend, frontend, mongodb, code-server)
-- Dashboard shows: 50 opportunities, 30 IA2 decisions, system active
+FOCUS AREAS:
+- IA2 technical stability (no crashes)
+- Decision quality and strategic reasoning
+- Proper field generation (calculated_rr, rr_reasoning)
+- Integration with Active Position Manager and BingX execution
 
-EXPECTED RESULTS: 
-All functionality working with significantly improved CPU performance (target: <20% CPU usage)
-
-SPECIFIC TESTS NEEDED:
-- GET /api/opportunities, /api/analyses, /api/decisions, /api/performance
-- POST /api/trading/start-cycle (if available)
-- WebSocket connections /api/ws
-- BingX endpoints /api/bingx/status, /api/bingx/balance
-- Monitor CPU during intensive operations
+This is the most critical test - the entire IA2 system functionality depends on this simplified implementation working correctly after the major code deletion.
 """
 
 import asyncio
