@@ -58,7 +58,7 @@ def utc_to_paris(utc_dt):
 
 # Import common data models
 from data_models import (
-    MarketOpportunity, TechnicalAnalysis, TradingDecision, TradeExecutionResult,
+    MarketOpportunity, TechnicalAnalysis, TradingDecision,
     PositionTracking, TradingPerformance, generate_position_id, SignalType, TradingStatus,
     get_paris_time, PARIS_TZ
 )
