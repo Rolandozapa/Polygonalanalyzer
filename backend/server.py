@@ -4284,15 +4284,15 @@ The reasoning above contains detailed historical analysis including:
 
 🎯 CURRENT INSTITUTIONAL SIGNALS FOR FINAL DECISION:
 {
-    f"MFI: {getattr(current_indicators, 'mfi', 50):.1f} ({'🚨 EXTREME ACCUMULATION' if getattr(current_indicators, 'mfi_extreme_oversold', False) else 'ACCUMULATION' if getattr(current_indicators, 'mfi_oversold', False) else '🚨 EXTREME DISTRIBUTION' if getattr(current_indicators, 'mfi_extreme_overbought', False) else 'DISTRIBUTION' if getattr(current_indicators, 'mfi_overbought', False) else 'NEUTRAL'}) | Institution Activity: {getattr(current_indicators, 'institutional_activity', 'neutral').upper()}"
+    f"MFI: {getattr(current_indicators, 'mfi', 50):.1f} | Institution Activity: {getattr(current_indicators, 'institutional_activity', 'neutral').upper()}"
     if current_indicators is not None else "Current institutional data not available"
 }
 {
-    f"VWAP Position: {getattr(current_indicators, 'vwap_position', 0):+.2f}% | Trend: {getattr(current_indicators, 'vwap_trend', 'neutral').upper()} {'🎯 EXTREME PRECISION LEVEL' if getattr(current_indicators, 'vwap_extreme_oversold', False) or getattr(current_indicators, 'vwap_extreme_overbought', False) else '🎯 HIGH PRECISION' if getattr(current_indicators, 'vwap_oversold', False) or getattr(current_indicators, 'vwap_overbought', False) else ''}"
-    if current_indicators is not None else ""
+    f"VWAP Position: {getattr(current_indicators, 'vwap_position', 0):+.2f}% | Trend: {getattr(current_indicators, 'vwap_trend', 'neutral').upper()}"
+    if current_indicators is not None else "VWAP data not available"
 }
 {
-    f"🚀 EMA HIERARCHY: {getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()} | Price vs EMAs: {getattr(current_indicators, 'price_vs_emas', 'mixed').upper()} | Cross: {getattr(current_indicators, 'ema_cross_signal', 'neutral').upper()} | Strength: {getattr(current_indicators, 'trend_strength_score', 0):.0f}%"
+    f"EMA HIERARCHY: {getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()} | Price vs EMAs: {getattr(current_indicators, 'price_vs_emas', 'mixed').upper()}"
     if current_indicators is not None else ""
 }
 {
