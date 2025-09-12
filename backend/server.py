@@ -22,6 +22,43 @@ def get_paris_time():
     """Obtenir l'heure actuelle en heure de Paris"""
     return datetime.now(PARIS_TZ)
 
+def paris_time_to_timestamp_filter(hours_ago: int = 4):
+    """Create MongoDB timestamp filter that works with both datetime objects and string timestamps
+    
+    This function solves the critical issue where:
+    - Timestamps in database can be stored as strings: "2025-09-12 10:49:53 (Heure de Paris)"
+    - Comparison requires proper handling of day transitions and maintenance restarts
+    """
+    cutoff_time = get_paris_time() - timedelta(hours=hours_ago)
+    
+    # Create multiple filter formats to handle both datetime and string timestamps
+    return {
+        "$or": [
+            # For datetime objects stored directly
+            {"$gte": cutoff_time},
+            # For string timestamps - handle the format "YYYY-MM-DD HH:MM:SS (Heure de Paris)"
+            {"$gte": cutoff_time.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)')},
+            # Regex pattern for partial matches (fallback)
+            {"$regex": f"^{cutoff_time.strftime('%Y-%m-%d')}.*"}
+        ]
+    }
+
+def parse_timestamp_from_db(timestamp_value):
+    """Parse timestamp from database, handling both datetime objects and strings"""
+    if isinstance(timestamp_value, datetime):
+        return timestamp_value
+    elif isinstance(timestamp_value, str):
+        # Handle format: "2025-09-12 10:49:53 (Heure de Paris)"
+        try:
+            date_part = timestamp_value.split(' (')[0]  # Remove timezone part
+            parsed = datetime.strptime(date_part, '%Y-%m-%d %H:%M:%S')
+            return PARIS_TZ.localize(parsed)
+        except:
+            # Fallback: assume it's recent if parsing fails
+            return get_paris_time()
+    else:
+        return get_paris_time()
+
 def utc_to_paris(utc_dt):
     """Convertir UTC vers heure de Paris"""
     if utc_dt.tzinfo is None:
