@@ -803,9 +803,9 @@ class IA1RiskRewardIndependenceTestSuite:
         except Exception as e:
             self.log_test_result("LONG and SHORT RR Formula Verification", False, f"Exception: {str(e)}")
     
-    async def test_6_system_performance_and_stability(self):
-        """Test 6: System Performance & Stability with 4h Frequency"""
-        logger.info("\n🔍 TEST 6: System Performance & Stability Test")
+    async def test_6_backend_logs_rr_calculation_analysis(self):
+        """Test 6: Backend Logs Analysis for RR Calculation Details"""
+        logger.info("\n🔍 TEST 6: Backend Logs RR Calculation Analysis Test")
         
         try:
             # Check CPU usage
