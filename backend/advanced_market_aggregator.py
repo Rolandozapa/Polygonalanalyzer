@@ -489,7 +489,7 @@ class AdvancedMarketAggregator:
         # Rate limiting et caching
         self.request_history = defaultdict(deque)  # Track requests per API
         self.cache = {}
-        self.cache_ttl = 300  # 5 minutes cache
+        self.cache_ttl = 10  # 🔧 TEMPORARY: Reduced to 10 seconds for testing BingX integration
         
         # Performance monitoring
         self.api_performance = {}
