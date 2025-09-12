@@ -5371,6 +5371,38 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
             else:
                 logger.info(f"❌ IA2 NOT escalated for {symbol} - criteria not met")
             
+            # 💾 SAVE IA1 ANALYSIS TO DATABASE - CRITICAL MISSING PIECE!
+            try:
+                analysis_dict = analysis.dict() if hasattr(analysis, 'dict') else analysis.__dict__
+                # Convert any enum values to strings for MongoDB compatibility
+                for key, value in analysis_dict.items():
+                    if hasattr(value, 'value'):  # If it's an enum
+                        analysis_dict[key] = value.value
+                    elif hasattr(value, '__str__') and not isinstance(value, (str, int, float, bool, type(None))):
+                        analysis_dict[key] = str(value)
+                
+                await db.technical_analyses.insert_one(analysis_dict)
+                logger.info(f"💾 IA1 analysis saved to database for {symbol}")
+                
+            except Exception as save_error:
+                logger.error(f"❌ Failed to save IA1 analysis: {save_error}")
+                # Fallback: create a safe dict manually and save that
+                try:
+                    safe_analysis_dict = {
+                        "id": str(analysis.id) if hasattr(analysis, 'id') else "unknown",
+                        "symbol": str(analysis.symbol) if hasattr(analysis, 'symbol') else symbol,
+                        "analysis_confidence": float(analysis.analysis_confidence) if hasattr(analysis, 'analysis_confidence') else 0.0,
+                        "ia1_signal": str(analysis.ia1_signal) if hasattr(analysis, 'ia1_signal') else "unknown",
+                        "ia1_reasoning": str(analysis.ia1_reasoning) if hasattr(analysis, 'ia1_reasoning') else "No reasoning available",
+                        "risk_reward_ratio": float(analysis.risk_reward_ratio) if hasattr(analysis, 'risk_reward_ratio') else 0.0,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "status": "completed_with_fallback_save"
+                    }
+                    await db.technical_analyses.insert_one(safe_analysis_dict)
+                    logger.info(f"💾 IA1 analysis saved with fallback method for {symbol}")
+                except Exception as fallback_error:
+                    logger.error(f"❌ Failed to save IA1 analysis even with fallback: {fallback_error}")
+            
             # Convert analysis to dict safely (handle enums)
             try:
                 analysis_dict = analysis.dict() if hasattr(analysis, 'dict') else analysis.__dict__
