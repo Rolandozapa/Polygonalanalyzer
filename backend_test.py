@@ -226,9 +226,9 @@ class IA1RiskRewardIndependenceTestSuite:
         except Exception as e:
             self.log_test_result("IA1 RR Formula Validation", False, f"Exception: {str(e)}")
     
-    async def test_2_bingx_trending_data_fetch(self):
-        """Test 2: BingX Trending Data Fetch with Filters"""
-        logger.info("\n🔍 TEST 2: BingX Trending Data Fetch Test")
+    async def test_2_ia1_confidence_independence(self):
+        """Test 2: IA1 RR Calculation Independence from Confidence Level"""
+        logger.info("\n🔍 TEST 2: IA1 RR Calculation Independence Test")
         
         try:
             if not self.trending_updater:
