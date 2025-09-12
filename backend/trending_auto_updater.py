@@ -14,6 +14,9 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 
+# Import du détecteur de patterns latéraux
+from lateral_pattern_detector import lateral_pattern_detector, PatternAnalysis
+
 logger = logging.getLogger(__name__)
 
 @dataclass
