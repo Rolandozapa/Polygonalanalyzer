@@ -4037,6 +4037,166 @@ class UltraProfessionalIA2DecisionAgent:
             return fallback_decision
 
     async def _make_decision_internal(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis, perf_stats: Dict) -> TradingDecision:
+        """Internal IA2 decision making with simplified, robust approach"""
+        try:
+            logger.info(f"🧠 IA2 SIMPLIFIED: Starting decision for {opportunity.symbol}")
+            
+            # 🔥 SIMPLIFIED APPROACH: Essential data only, no complex f-strings
+            symbol = opportunity.symbol
+            current_price = opportunity.current_price
+            ia1_signal = analysis.ia1_signal
+            ia1_confidence = analysis.analysis_confidence
+            ia1_rr = analysis.risk_reward_ratio
+            
+            # Basic calculations for IA2
+            entry_price = current_price
+            
+            # Calculate stop loss and take profits based on IA1 signal
+            if ia1_signal.lower() == "long":
+                stop_loss = current_price * 0.97  # 3% stop loss
+                tp1 = current_price * 1.02  # 2% TP1
+                tp2 = current_price * 1.04  # 4% TP2  
+                tp3 = current_price * 1.06  # 6% TP3
+                signal = "long"
+            elif ia1_signal.lower() == "short":
+                stop_loss = current_price * 1.03  # 3% stop loss
+                tp1 = current_price * 0.98  # 2% TP1
+                tp2 = current_price * 0.96  # 4% TP2
+                tp3 = current_price * 0.94  # 6% TP3
+                signal = "short"
+            else:
+                # HOLD case
+                stop_loss = current_price * 0.98
+                tp1 = current_price * 1.01
+                tp2 = current_price * 1.02
+                tp3 = current_price * 1.03
+                signal = "hold"
+            
+            # Calculate Risk-Reward ratio
+            if signal.lower() == "long":
+                risk = abs(entry_price - stop_loss)
+                reward = abs(tp1 - entry_price)
+            elif signal.lower() == "short":
+                risk = abs(stop_loss - entry_price)
+                reward = abs(entry_price - tp1)
+            else:
+                risk = abs(entry_price - stop_loss)
+                reward = abs(tp1 - entry_price)
+                
+            rr_ratio = reward / risk if risk > 0 else 1.0
+            
+            # Simplified prompt for Claude - NO COMPLEX F-STRINGS
+            simple_prompt = f"""You are IA2, an expert crypto trading strategist. 
+
+ANALYSIS DATA:
+- Symbol: {symbol}
+- Current Price: ${current_price:.4f}
+- IA1 Signal: {ia1_signal}
+- IA1 Confidence: {ia1_confidence:.1%}
+- IA1 RR: {ia1_rr:.2f}
+
+PROPOSED TRADE:
+- Signal: {signal}
+- Entry: ${entry_price:.4f}
+- Stop Loss: ${stop_loss:.4f}
+- Take Profit 1: ${tp1:.4f}
+- Risk-Reward: {rr_ratio:.2f}:1
+
+TASK: Analyze this trade and provide your strategic decision.
+
+Your response MUST be ONLY a valid JSON object:
+{{
+    "signal": "long" or "short" or "hold",
+    "confidence": 0.XX (0.50 to 0.99),
+    "reasoning": "Your strategic analysis in 1-2 sentences",
+    "risk_level": "low" or "medium" or "high"
+}}
+
+CRITICAL: Respond ONLY with valid JSON, no other text."""
+
+            logger.info(f"🧠 IA2: Sending simplified prompt to Claude for {symbol}")
+            
+            # Send to Claude
+            response = await self.chat.acomplete(simple_prompt)
+            response_text = response.text.strip()
+            
+            logger.info(f"🧠 IA2: Raw response for {symbol}: {response_text[:100]}...")
+            
+            # Parse JSON response
+            try:
+                import json
+                decision_data = json.loads(response_text)
+                
+                # Extract Claude's decision
+                claude_signal = decision_data.get("signal", signal)
+                claude_confidence = decision_data.get("confidence", 0.75)
+                claude_reasoning = decision_data.get("reasoning", "IA2 strategic analysis")
+                claude_risk = decision_data.get("risk_level", "medium")
+                
+                logger.info(f"✅ IA2: Parsed decision for {symbol}: {claude_signal} at {claude_confidence:.1%}")
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"❌ IA2: JSON parse error for {symbol}: {e}")
+                # Fallback to calculated values
+                claude_signal = signal
+                claude_confidence = max(0.6, min(0.9, ia1_confidence * 0.8))  # Reduce IA1 confidence slightly
+                claude_reasoning = f"IA2 analysis based on IA1 {ia1_signal} signal with {ia1_confidence:.1%} confidence"
+                claude_risk = "medium"
+            
+            # Adjust TP levels based on Claude's final decision
+            if claude_signal.lower() == "long":
+                final_stop_loss = current_price * 0.97
+                final_tp1 = current_price * 1.025
+                final_tp2 = current_price * 1.045
+                final_tp3 = current_price * 1.07
+            elif claude_signal.lower() == "short":
+                final_stop_loss = current_price * 1.03
+                final_tp1 = current_price * 0.975
+                final_tp2 = current_price * 0.955
+                final_tp3 = current_price * 0.93
+            else:
+                final_stop_loss = current_price * 0.985
+                final_tp1 = current_price * 1.015
+                final_tp2 = current_price * 1.025
+                final_tp3 = current_price * 1.035
+            
+            # Recalculate RR with final values
+            if claude_signal.lower() == "long":
+                final_risk = abs(current_price - final_stop_loss)
+                final_reward = abs(final_tp1 - current_price)
+            elif claude_signal.lower() == "short":
+                final_risk = abs(final_stop_loss - current_price)
+                final_reward = abs(current_price - final_tp1)
+            else:
+                final_risk = abs(current_price - final_stop_loss)
+                final_reward = abs(final_tp1 - current_price)
+                
+            final_rr = final_reward / final_risk if final_risk > 0 else 1.0
+            
+            # Create final decision
+            decision = TradingDecision(
+                symbol=symbol,
+                signal=claude_signal,
+                confidence=claude_confidence,
+                entry_price=current_price,
+                stop_loss=final_stop_loss,
+                take_profit_1=final_tp1,
+                take_profit_2=final_tp2,
+                take_profit_3=final_tp3,
+                position_size=2.0,  # 2% position size
+                risk_reward_ratio=final_rr,
+                ia1_analysis_id=analysis.id,
+                ia2_reasoning=claude_reasoning,
+                reasoning=f"IA2 Strategic Decision: {claude_reasoning}",
+                market_context=f"ia1_confidence_{ia1_confidence:.0%}_rr_{final_rr:.1f}"
+            )
+            
+            logger.info(f"✅ IA2 SUCCESS: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%}, RR: {final_rr:.2f}:1)")
+            return decision
+            
+        except Exception as e:
+            logger.error(f"❌ IA2 INTERNAL ERROR for {opportunity.symbol}: {e}")
+            raise  # Let the wrapper handle it
         """Internal method containing the original make_decision logic"""
         # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
         # Get historical data for multi-timeframe analysis
