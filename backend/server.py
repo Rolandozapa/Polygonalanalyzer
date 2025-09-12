@@ -9246,8 +9246,14 @@ async def force_voie3_processing():
                 if confidence >= 0.95 and signal in ['long', 'short']:
                     logger.info(f"🚀 VOIE 3 PROCESSING: {symbol} {signal.upper()} {confidence:.1%}")
                     
+                    # Get perf_stats (required for make_decision)
+                    try:
+                        perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
+                    except:
+                        perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
+                    
                     # Force IA2 decision
-                    decision = await orchestrator.ia2.make_decision(opportunity, analysis)
+                    decision = await orchestrator.ia2.make_decision(opportunity, analysis, perf_stats)
                     
                     if decision and decision.signal != "HOLD":
                         processed += 1
