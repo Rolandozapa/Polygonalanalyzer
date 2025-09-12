@@ -2485,39 +2485,43 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 
                 if ia1_signal.lower() == "long":
                     # LONG: Stop Loss EN-DESSOUS, Take Profit AU-DESSUS
-                    # Calculs simples basés sur confidence pour des RR réalistes
-                    if analysis_confidence >= 0.85:  # Confidence très élevée
-                        sl_pct = 0.03  # -3% stop loss (serré)
-                        tp_pct = 0.08  # +8% take profit → RR = 8/3 = 2.67:1
-                    elif analysis_confidence >= 0.75:  # Confidence élevée
-                        sl_pct = 0.04  # -4% stop loss
-                        tp_pct = 0.08  # +8% take profit → RR = 8/4 = 2.0:1
-                    else:  # Confidence normale
-                        sl_pct = 0.05  # -5% stop loss
-                        tp_pct = 0.08  # +8% take profit → RR = 8/5 = 1.6:1
+                    # Niveaux basés sur l'analyse technique PURE, pas sur la confidence
                     
-                    stop_loss_price = opportunity.current_price * (1.0 - sl_pct)
-                    take_profit_price = opportunity.current_price * (1.0 + tp_pct)
+                    # Utiliser support/resistance calculés ou des niveaux techniques standards
+                    base_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.95)
+                    base_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.08)
                     
-                    logger.info(f"📊 LONG NIVEAUX SIMPLIFIÉS {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} (-{sl_pct*100:.1f}%), TP={take_profit_price:.6f} (+{tp_pct*100:.1f}%)")
+                    # LONG: Entry = current, SL = support, TP = resistance
+                    stop_loss_price = base_support
+                    take_profit_price = base_resistance
+                    
+                    # Vérifier que les niveaux sont logiques pour LONG
+                    if stop_loss_price >= opportunity.current_price:
+                        stop_loss_price = opportunity.current_price * 0.95  # -5% fallback
+                    if take_profit_price <= opportunity.current_price:
+                        take_profit_price = opportunity.current_price * 1.08  # +8% fallback
+                    
+                    logger.info(f"📊 LONG NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} ({((stop_loss_price/opportunity.current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} (+{((take_profit_price/opportunity.current_price)-1)*100:.1f}%)")
                     
                 elif ia1_signal.lower() == "short":
                     # SHORT: Stop Loss AU-DESSUS, Take Profit EN-DESSOUS
-                    # Calculs simples basés sur confidence pour des RR réalistes
-                    if analysis_confidence >= 0.85:  # Confidence très élevée
-                        sl_pct = 0.03  # +3% stop loss (serré)
-                        tp_pct = 0.08  # -8% take profit → RR = 8/3 = 2.67:1
-                    elif analysis_confidence >= 0.75:  # Confidence élevée
-                        sl_pct = 0.04  # +4% stop loss
-                        tp_pct = 0.08  # -8% take profit → RR = 8/4 = 2.0:1
-                    else:  # Confidence normale
-                        sl_pct = 0.05  # +5% stop loss
-                        tp_pct = 0.08  # -8% take profit → RR = 8/5 = 1.6:1
+                    # Niveaux basés sur l'analyse technique PURE, pas sur la confidence
                     
-                    stop_loss_price = opportunity.current_price * (1.0 + sl_pct)
-                    take_profit_price = opportunity.current_price * (1.0 - tp_pct)
+                    # Utiliser support/resistance calculés ou des niveaux techniques standards
+                    base_support = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.92)
+                    base_resistance = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.05)
                     
-                    logger.info(f"📊 SHORT NIVEAUX SIMPLIFIÉS {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} (+{sl_pct*100:.1f}%), TP={take_profit_price:.6f} (-{tp_pct*100:.1f}%)")
+                    # SHORT: Entry = current, SL = resistance, TP = support
+                    stop_loss_price = base_resistance
+                    take_profit_price = base_support
+                    
+                    # Vérifier que les niveaux sont logiques pour SHORT
+                    if stop_loss_price <= opportunity.current_price:
+                        stop_loss_price = opportunity.current_price * 1.05  # +5% fallback
+                    if take_profit_price >= opportunity.current_price:
+                        take_profit_price = opportunity.current_price * 0.92  # -8% fallback
+                    
+                    logger.info(f"📊 SHORT NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} (+{((stop_loss_price/opportunity.current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} ({((take_profit_price/opportunity.current_price)-1)*100:.1f}%)")
                 else:  # hold
                     # Pour HOLD, utiliser des niveaux neutres mais différents
                     stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.98)
