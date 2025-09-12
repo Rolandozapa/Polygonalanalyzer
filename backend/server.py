@@ -4087,7 +4087,22 @@ class UltraProfessionalIA2DecisionAgent:
                 opportunity_df = pd.DataFrame(historical_data)
                 
                 # Get scientific indicators (quality OHLCV-based calculations)
-                current_indicators = advanced_technical_indicators.get_scientific_indicators(opportunity_df)
+                try:
+                    current_indicators = advanced_technical_indicators.get_scientific_indicators(opportunity_df)
+                    
+                    # Verify current_indicators is valid TechnicalIndicators object
+                    if not hasattr(current_indicators, 'rsi'):
+                        logger.error(f"❌ IA2: Invalid current_indicators for {opportunity.symbol} - missing rsi attribute")
+                        current_indicators = None
+                    elif isinstance(current_indicators, str):
+                        logger.error(f"❌ IA2: current_indicators is string instead of object for {opportunity.symbol}: {current_indicators}")
+                        current_indicators = None
+                    else:
+                        logger.info(f"✅ IA2: Valid current_indicators obtained for {opportunity.symbol}")
+                        
+                except Exception as indicators_error:
+                    logger.error(f"❌ IA2: Error getting scientific indicators for {opportunity.symbol}: {indicators_error}")
+                    current_indicators = None
                 
                 # For contextual analysis, provide the IA with raw data for pattern recognition
                 multi_tf_formatted = f"""
