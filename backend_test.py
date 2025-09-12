@@ -1011,25 +1011,25 @@ class IA1RiskRewardIndependenceTestSuite:
             }
     
     async def run_comprehensive_test_suite(self):
-        """Run comprehensive autonomous trend detection system test suite"""
-        logger.info("🚀 Starting Autonomous Trend Detection System Comprehensive Test Suite")
+        """Run comprehensive IA1 RR calculation independence test suite"""
+        logger.info("🚀 Starting IA1 Risk-Reward Calculation Independence Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 AUTONOMOUS TREND DETECTION SYSTEM TEST SUITE")
-        logger.info("🎯 Testing: 4h frequency, advanced filters, BingX integration, lateral pattern detection")
-        logger.info("🎯 Expected: Complete autonomous trend detection working with real BingX data")
+        logger.info("📋 IA1 RISK-REWARD CALCULATION INDEPENDENCE TEST SUITE")
+        logger.info("🎯 Testing: RR calculation independence from confidence level")
+        logger.info("🎯 Expected: Consistent RR ratios based on technical levels, not confidence")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_trending_auto_updater_configuration()
-        await self.test_2_bingx_trending_data_fetch()
-        await self.test_3_lateral_pattern_detector_analysis()
-        await self.test_4_advanced_market_aggregator_integration()
-        await self.test_5_complete_system_integration_flow()
-        await self.test_6_system_performance_and_stability()
+        await self.test_1_ia1_rr_formula_validation()
+        await self.test_2_ia1_confidence_independence()
+        await self.test_3_technical_levels_consistency()
+        await self.test_4_database_rr_consistency_analysis()
+        await self.test_5_long_short_rr_formula_verification()
+        await self.test_6_backend_logs_rr_calculation_analysis()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 AUTONOMOUS TREND DETECTION SYSTEM COMPREHENSIVE TEST SUMMARY")
+        logger.info("📊 IA1 RISK-REWARD CALCULATION INDEPENDENCE TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
