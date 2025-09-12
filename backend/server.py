@@ -4167,7 +4167,7 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
                 decision_data = json.loads(response_text)
                 
                 # Extract Claude's enhanced strategic decision
-                claude_signal = decision_data.get("signal", signal)
+                claude_signal = decision_data.get("signal", signal).lower()  # Ensure lowercase for enum
                 claude_confidence = decision_data.get("confidence", 0.75)
                 strategic_reasoning = decision_data.get("strategic_reasoning", "IA2 strategic analysis")
                 claude_risk = decision_data.get("risk_level", "medium")
