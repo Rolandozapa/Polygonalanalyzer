@@ -4222,7 +4222,9 @@ CRITICAL: Provide comprehensive strategic analysis with precise technical levels
             response = await self.chat.send_message(UserMessage(text=strategic_prompt))
             response_text = response.strip()
             
-            logger.info(f"🧠 IA2: Raw strategic response for {symbol}: {response_text[:150]}...")
+            logger.info(f"🧠 IA2: Raw strategic response for {symbol}: {response_text[:300]}...")
+            logger.info(f"🔍 DEBUGGING: Full IA2 response for {symbol}:")
+            logger.info(f"   {response_text}")
             
             # Parse JSON response with enhanced strategic fields
             try:
