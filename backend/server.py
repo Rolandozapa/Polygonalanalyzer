@@ -4114,13 +4114,52 @@ Your response MUST be ONLY a valid JSON object:
 
 CRITICAL: Respond ONLY with valid JSON, no other text."""
 
-            logger.info(f"🧠 IA2: Sending simplified prompt to Claude for {symbol}")
+            logger.info(f"🧠 IA2: Sending enhanced strategic prompt to Claude for {symbol}")
             
-            # Send to Claude
-            response = await self.chat.acomplete(simple_prompt)
-            response_text = response.text.strip()
+            # Enhanced strategic prompt for detailed IA2 decisions
+            strategic_prompt = f"""You are IA2, the strategic trading decision maker. Based on IA1's technical analysis, make a comprehensive strategic decision.
+
+📊 MARKET CONTEXT:
+- Symbol: {symbol}
+- Current Price: ${current_price:.4f}
+- IA1 Signal: {ia1_signal.upper()}
+- IA1 Confidence: {ia1_confidence:.1%}
+- Risk-Reward Ratio: {rr_ratio:.2f}:1
+
+📈 TECHNICAL ANALYSIS (IA1):
+- RSI: {analysis.rsi:.1f}
+- MACD Signal: {analysis.macd_signal:.6f}
+- Bollinger Position: {analysis.bollinger_position:.2f}
+- Support Levels: {analysis.support_levels}
+- Resistance Levels: {analysis.resistance_levels}
+
+💡 STRATEGIC DECISION FRAMEWORK:
+Analyze institutional behavior, market regime, and provide detailed strategic reasoning considering:
+1. Market structure and momentum
+2. Risk management and position sizing
+3. Entry/exit strategy optimization
+4. Market timing and confluence factors
+
+RESPONSE FORMAT (JSON):
+{{
+    "signal": "long" or "short" or "hold",
+    "confidence": 0.XX (0.50 to 0.99),
+    "strategic_reasoning": "Detailed 2-3 sentence strategic analysis explaining institutional perspective, market timing, and decision rationale",
+    "risk_level": "low" or "medium" or "high",
+    "position_size_recommendation": X.X (0.5 to 8.0 percent),
+    "market_regime_assessment": "bullish/bearish/neutral with confluence factors",
+    "execution_priority": "immediate/wait_for_confluence/avoid",
+    "calculated_rr": X.XX,
+    "rr_reasoning": "Explanation of risk-reward calculation based on support/resistance levels"
+}}
+
+CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
+
+            # Send to Claude using correct method
+            response = await self.chat.send_message(UserMessage(text=strategic_prompt))
+            response_text = response.strip()
             
-            logger.info(f"🧠 IA2: Raw response for {symbol}: {response_text[:100]}...")
+            logger.info(f"🧠 IA2: Raw strategic response for {symbol}: {response_text[:150]}...")
             
             # Parse JSON response
             try:
