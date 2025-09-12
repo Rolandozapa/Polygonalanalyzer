@@ -5427,7 +5427,7 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
             response_data = {
                 "success": True,
                 "message": f"IA1 analysis completed for {symbol}",
-                "analysis": analysis_dict,
+                "analysis": response_analysis_dict,
                 "escalation": {
                     "escalated_to_ia2": should_escalate,
                     "ia2_decision": ia2_decision.dict() if ia2_decision and hasattr(ia2_decision, 'dict') else None
