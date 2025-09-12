@@ -4309,7 +4309,7 @@ HIGH-FREQUENCY DATA INTEGRATION:
 3. RSI (Momentum): {f"{getattr(current_indicators, 'rsi_14', 50):.1f}" if current_indicators is not None else "N/A"}
 4. Multi-Timeframe: Available above
 5. Volume: {f"{getattr(current_indicators, 'institutional_activity', 'neutral').upper()}" if current_indicators is not None else "N/A"}
-6. EMA HIERARCHY: {f"{getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()} ({getattr(current_indicators, 'trend_strength_score', 0):.0f}% strength)" if current_indicators is not None else "N/A"}
+6. EMA HIERARCHY: {f"{getattr(current_indicators, 'trend_hierarchy', 'neutral').upper()}" if current_indicators is not None else "N/A"}
 
 ⚠️ CONFLUENCE EXECUTION LOGIC:
 - 6/6 GODLIKE: Execute with 90%+ confidence (maximum position size)
