@@ -7998,7 +7998,6 @@ class UltraProfessionalOrchestrator:
             logger.info("🚀 Running trading cycle...")
             
             # 🔥 CRITICAL FIX: Use market aggregator instead of scout scan for real BingX data
-            from advanced_market_aggregator import advanced_market_aggregator
             
             # Step 1: Get real opportunities from market aggregator (not fallback data)
             opportunities = advanced_market_aggregator.get_current_opportunities()
