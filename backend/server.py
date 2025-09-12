@@ -4161,26 +4161,41 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
             
             logger.info(f"🧠 IA2: Raw strategic response for {symbol}: {response_text[:150]}...")
             
-            # Parse JSON response
+            # Parse JSON response with enhanced strategic fields
             try:
                 import json
                 decision_data = json.loads(response_text)
                 
-                # Extract Claude's decision
+                # Extract Claude's enhanced strategic decision
                 claude_signal = decision_data.get("signal", signal)
                 claude_confidence = decision_data.get("confidence", 0.75)
-                claude_reasoning = decision_data.get("reasoning", "IA2 strategic analysis")
+                strategic_reasoning = decision_data.get("strategic_reasoning", "IA2 strategic analysis")
                 claude_risk = decision_data.get("risk_level", "medium")
+                position_size_rec = decision_data.get("position_size_recommendation", 2.0)
+                market_regime = decision_data.get("market_regime_assessment", "neutral")
+                execution_priority = decision_data.get("execution_priority", "immediate")
+                calculated_rr = decision_data.get("calculated_rr", rr_ratio)
+                rr_reasoning = decision_data.get("rr_reasoning", f"IA2 R:R based on S/R levels: {calculated_rr:.2f}:1")
                 
-                logger.info(f"✅ IA2: Parsed decision for {symbol}: {claude_signal} at {claude_confidence:.1%}")
+                logger.info(f"✅ IA2 STRATEGIC: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%})")
+                logger.info(f"   📊 Market Regime: {market_regime}")
+                logger.info(f"   🎯 Position Size: {position_size_rec}%")
+                logger.info(f"   ⚡ Execution: {execution_priority}")
+                logger.info(f"   📈 Calculated RR: {calculated_rr:.2f}:1")
                 
             except json.JSONDecodeError as e:
                 logger.error(f"❌ IA2: JSON parse error for {symbol}: {e}")
-                # Fallback to calculated values
+                logger.error(f"   Raw response: {response_text[:200]}...")
+                # Enhanced fallback with strategic elements
                 claude_signal = signal
-                claude_confidence = max(0.6, min(0.9, ia1_confidence * 0.8))  # Reduce IA1 confidence slightly
-                claude_reasoning = f"IA2 analysis based on IA1 {ia1_signal} signal with {ia1_confidence:.1%} confidence"
+                claude_confidence = max(0.6, min(0.9, ia1_confidence * 0.9))
+                strategic_reasoning = f"IA2 strategic analysis: {ia1_signal.upper()} signal with {ia1_confidence:.1%} confidence. Market structure analysis indicates {ia1_signal} bias with calculated risk-reward of {rr_ratio:.2f}:1."
                 claude_risk = "medium"
+                position_size_rec = 2.0
+                market_regime = "neutral"
+                execution_priority = "immediate"
+                calculated_rr = rr_ratio
+                rr_reasoning = f"Simple S/R calculation: LONG RR = (TP-Entry)/(Entry-SL), SHORT RR = (Entry-TP)/(SL-Entry) = {rr_ratio:.2f}:1"
             
             # Adjust TP levels based on Claude's final decision
             if claude_signal.lower() == "long":
@@ -4222,12 +4237,12 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
                 take_profit_1=final_tp1,
                 take_profit_2=final_tp2,
                 take_profit_3=final_tp3,
-                position_size=2.0,  # 2% position size
+                position_size=position_size_rec,  # Use strategic recommendation
                 risk_reward_ratio=final_rr,
                 ia1_analysis_id=analysis.id,
-                ia2_reasoning=claude_reasoning,
-                reasoning=f"IA2 Strategic Decision: {claude_reasoning}",
-                market_context=f"ia1_confidence_{ia1_confidence:.0%}_rr_{final_rr:.1f}"
+                ia2_reasoning=strategic_reasoning,
+                reasoning=f"IA2 Strategic Decision: {strategic_reasoning}",
+                market_context=f"ia1_confidence_{ia1_confidence:.0%}_rr_{final_rr:.1f}_regime_{market_regime}_priority_{execution_priority}"
             )
             
             logger.info(f"✅ IA2 SUCCESS: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%}, RR: {final_rr:.2f}:1)")
