@@ -9507,6 +9507,150 @@ async def debug_timestamp_voie3():
     except Exception as e:
         return {"success": False, "error": str(e)}
 
+@api_router.get("/position-tracking/status")
+async def get_position_tracking_status():
+    """Get status of position tracking - IA1→IA2 flow resilience"""
+    try:
+        # Get recent position tracking entries
+        recent_positions = await db.position_tracking.find().sort("timestamp", -1).limit(20).to_list(20)
+        
+        # Statistics
+        total_positions = len(recent_positions)
+        pending_positions = len([p for p in recent_positions if p.get("ia2_status") == "pending"])
+        processed_positions = len([p for p in recent_positions if p.get("ia2_status") == "processed"])
+        failed_positions = len([p for p in recent_positions if p.get("ia2_status") == "failed"])
+        voie3_eligible = len([p for p in recent_positions if p.get("voie_3_eligible", False)])
+        
+        # VOIE distribution
+        voie_distribution = {}
+        for pos in recent_positions:
+            voie = pos.get("voie_used")
+            if voie:
+                voie_distribution[f"VOIE_{voie}"] = voie_distribution.get(f"VOIE_{voie}", 0) + 1
+        
+        return {
+            "success": True,
+            "status": {
+                "total_positions": total_positions,
+                "pending_ia2_processing": pending_positions,
+                "processed_by_ia2": processed_positions,
+                "failed_processing": failed_positions,
+                "voie3_eligible": voie3_eligible,
+                "voie_distribution": voie_distribution
+            },
+            "recent_positions": [
+                {
+                    "position_id": pos.get("position_id"),
+                    "symbol": pos.get("symbol"),
+                    "ia1_confidence": pos.get("ia1_confidence"),
+                    "ia1_signal": pos.get("ia1_signal"),
+                    "ia2_status": pos.get("ia2_status"),
+                    "voie_used": pos.get("voie_used"),
+                    "voie_3_eligible": pos.get("voie_3_eligible"),
+                    "timestamp": pos.get("timestamp")
+                }
+                for pos in recent_positions[:10]  # Show top 10
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Position tracking status error: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.post("/position-tracking/retry-pending")
+async def retry_pending_positions():
+    """Retry pending positions for IA2 processing - resilience recovery"""
+    try:
+        # Get pending positions that are VOIE 3 eligible
+        pending_positions = await get_pending_positions(hours_limit=48)
+        
+        if not pending_positions:
+            return {
+                "success": True,
+                "message": "No pending positions found for retry",
+                "retried": 0
+            }
+        
+        logger.info(f"🔄 RETRY PENDING: Found {len(pending_positions)} positions to retry")
+        
+        retried_count = 0
+        for pos_tracking in pending_positions:
+            try:
+                # Get the original IA1 analysis
+                analysis_doc = await db.technical_analyses.find_one({"id": pos_tracking.ia1_analysis_id})
+                if not analysis_doc:
+                    logger.warning(f"⚠️ Analysis not found for position {pos_tracking.position_id}")
+                    continue
+                
+                # Create TechnicalAnalysis object
+                analysis = TechnicalAnalysis(**analysis_doc)
+                
+                # Create opportunity (minimal for IA2)
+                opportunity = MarketOpportunity(
+                    symbol=pos_tracking.symbol,
+                    current_price=analysis.entry_price,
+                    volume_24h=0,
+                    price_change_24h=0,
+                    volatility=0.05,
+                    market_cap=0
+                )
+                
+                # Get perf_stats
+                try:
+                    perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
+                except:
+                    perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
+                
+                # Retry IA2 decision
+                decision = await orchestrator.ia2.make_decision(opportunity, analysis, perf_stats)
+                
+                if decision and decision.signal != "HOLD":
+                    # Store decision with position_id link
+                    decision_dict = decision.dict()
+                    decision_dict["ia1_position_id"] = pos_tracking.position_id
+                    
+                    await db.trading_decisions.insert_one(decision_dict)
+                    
+                    # Update position tracking
+                    await update_position_tracking_ia2(
+                        position_id=pos_tracking.position_id,
+                        decision=decision,
+                        voie_used=3 if pos_tracking.voie_3_eligible else 1,
+                        success=True
+                    )
+                    
+                    retried_count += 1
+                    logger.info(f"✅ RETRY SUCCESS: {pos_tracking.symbol} → IA2 decision created")
+                else:
+                    logger.warning(f"⚠️ RETRY HOLD: {pos_tracking.symbol} → IA2 returned HOLD")
+                
+            except Exception as retry_error:
+                logger.error(f"❌ RETRY ERROR for {pos_tracking.symbol}: {retry_error}")
+                
+                # Update tracking with failure
+                await db.position_tracking.update_one(
+                    {"position_id": pos_tracking.position_id},
+                    {
+                        "$set": {
+                            "ia2_status": "failed",
+                            "error_message": str(retry_error),
+                            "last_attempt": get_paris_time()
+                        },
+                        "$inc": {"processing_attempts": 1}
+                    }
+                )
+        
+        return {
+            "success": True,
+            "message": f"Retry completed: {retried_count} positions processed from {len(pending_positions)} candidates",
+            "retried": retried_count,
+            "candidates": len(pending_positions)
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Retry pending positions error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
