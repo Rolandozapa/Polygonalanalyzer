@@ -111,6 +111,68 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 🆕 POSITION TRACKING SYSTEM FOR IA1→IA2 RESILIENCE
+async def create_position_tracking(analysis: TechnicalAnalysis) -> PositionTracking:
+    """Create position tracking entry for IA1 analysis"""
+    tracking = PositionTracking(
+        position_id=analysis.position_id,
+        symbol=analysis.symbol,
+        ia1_analysis_id=analysis.id,
+        ia1_timestamp=get_paris_time(),
+        ia1_confidence=analysis.analysis_confidence,
+        ia1_signal=analysis.ia1_signal,
+        voie_3_eligible=(analysis.analysis_confidence >= 0.95 and analysis.ia1_signal in ['long', 'short'])
+    )
+    
+    # Store in database
+    await db.position_tracking.insert_one(tracking.dict())
+    logger.info(f"📍 Position tracking created: {tracking.position_id} for {analysis.symbol}")
+    return tracking
+
+async def update_position_tracking_ia2(position_id: str, decision: TradingDecision, voie_used: int, success: bool = True):
+    """Update position tracking when IA2 processes it"""
+    update_data = {
+        "ia2_decision_id": decision.id,
+        "ia2_timestamp": get_paris_time(),
+        "ia2_status": "processed" if success else "failed",
+        "voie_used": voie_used,
+        "last_attempt": get_paris_time()
+    }
+    
+    if not success:
+        update_data["processing_attempts"] = {"$inc": 1}
+        update_data["error_message"] = "IA2 processing failed"
+    
+    await db.position_tracking.update_one(
+        {"position_id": position_id},
+        {"$set": update_data}
+    )
+    logger.info(f"📍 Position tracking updated: {position_id} → IA2 {'success' if success else 'failed'}")
+
+async def get_pending_positions(hours_limit: int = 24) -> List[PositionTracking]:
+    """Get positions that need IA2 processing"""
+    cutoff_time = get_paris_time() - timedelta(hours=hours_limit)
+    
+    cursor = db.position_tracking.find({
+        "ia2_status": "pending",
+        "voie_3_eligible": True,
+        "ia1_timestamp": {"$gte": cutoff_time}
+    })
+    
+    pending_positions = []
+    async for doc in cursor:
+        try:
+            pending_positions.append(PositionTracking(**doc))
+        except Exception as e:
+            logger.error(f"Error parsing position tracking: {e}")
+    
+    return pending_positions
+
+async def check_position_already_processed(position_id: str) -> bool:
+    """Check if position already has IA2 decision"""
+    tracking = await db.position_tracking.find_one({"position_id": position_id})
+    return tracking is not None and tracking.get("ia2_status") == "processed"
+
 # Additional Data Models (not in common data_models.py)
 class LiveTradingPosition(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
