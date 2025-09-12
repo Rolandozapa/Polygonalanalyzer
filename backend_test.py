@@ -525,82 +525,163 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info("\n🔍 TEST 4: Database RR Consistency Analysis Test")
         
         try:
-            if not self.market_aggregator:
-                self.log_test_result("Advanced Market Aggregator Integration", False, 
-                                   "Market aggregator module not available")
+            if not self.db:
+                self.log_test_result("Database RR Consistency Analysis", False, 
+                                   "Database connection not available")
                 return
             
-            logger.info("   🚀 Testing get_current_opportunities() with BingX integration...")
+            logger.info("   🚀 Analyzing IA1 analyses in database for RR consistency...")
             
-            # Test get_current_opportunities
-            opportunities = self.market_aggregator.get_current_opportunities()
-            
-            if not opportunities:
-                self.log_test_result("Advanced Market Aggregator Integration", False, 
-                                   "No opportunities returned from market aggregator")
-                return
-            
-            # Analyze opportunities
-            integration_analysis = {
-                'total_opportunities': len(opportunities),
-                'expected_range': (10, 50),
-                'bingx_sources': len([opp for opp in opportunities if 'bingx' in str(opp.data_sources).lower()]),
-                'with_volume': len([opp for opp in opportunities if opp.volume_24h > 0]),
-                'with_price_change': len([opp for opp in opportunities if abs(opp.price_change_24h) > 0]),
-                'high_confidence': len([opp for opp in opportunities if opp.data_confidence >= 0.7]),
-                'unique_symbols': len(set(opp.symbol for opp in opportunities))
-            }
-            
-            logger.info(f"   📊 Integration Analysis:")
-            logger.info(f"      Total opportunities: {integration_analysis['total_opportunities']} (expected: {integration_analysis['expected_range'][0]}-{integration_analysis['expected_range'][1]})")
-            logger.info(f"      BingX sources: {integration_analysis['bingx_sources']}")
-            logger.info(f"      With volume data: {integration_analysis['with_volume']}")
-            logger.info(f"      With price change: {integration_analysis['with_price_change']}")
-            logger.info(f"      High confidence (≥0.7): {integration_analysis['high_confidence']}")
-            logger.info(f"      Unique symbols: {integration_analysis['unique_symbols']}")
-            
-            # Log top 10 opportunities
-            logger.info(f"   📈 Top 10 Market Opportunities:")
-            for i, opp in enumerate(opportunities[:10]):
-                sources_str = f", Sources: {opp.data_sources}" if opp.data_sources else ""
-                confidence_str = f", Conf: {opp.data_confidence:.1f}" if opp.data_confidence else ""
-                logger.info(f"      {i+1}. {opp.symbol}: ${opp.current_price:.6f}, "
-                          f"{opp.price_change_24h:+.1f}%, Vol: {opp.volume_24h/1_000_000:.1f}M{confidence_str}{sources_str}")
-            
-            # Test cache TTL alignment (check if cache is working)
-            logger.info("   🔄 Testing cache TTL alignment...")
-            start_time = time.time()
-            opportunities_2 = self.market_aggregator.get_current_opportunities()
-            cache_time = time.time() - start_time
-            
-            cache_working = cache_time < 0.1  # Should be very fast if cached
-            same_data = len(opportunities) == len(opportunities_2)  # Should be same data if cached
-            
-            logger.info(f"      Cache response time: {cache_time:.3f}s")
-            logger.info(f"      Same data returned: {same_data}")
-            logger.info(f"      Cache working: {cache_working}")
-            
-            # Determine test result
-            data_quality = (
-                integration_analysis['expected_range'][0] <= integration_analysis['total_opportunities'] <= integration_analysis['expected_range'][1] and
-                integration_analysis['unique_symbols'] == integration_analysis['total_opportunities'] and
-                integration_analysis['with_volume'] >= integration_analysis['total_opportunities'] * 0.8
-            )
-            
-            bingx_integration = integration_analysis['bingx_sources'] > 0 or integration_analysis['high_confidence'] >= integration_analysis['total_opportunities'] * 0.5
-            
-            if data_quality and bingx_integration and cache_working:
-                self.log_test_result("Advanced Market Aggregator Integration", True, 
-                                   f"Integration working: {integration_analysis['total_opportunities']} opportunities, {integration_analysis['bingx_sources']} BingX sources, cache functional")
-            elif data_quality and bingx_integration:
-                self.log_test_result("Advanced Market Aggregator Integration", False, 
-                                   f"Integration mostly working: {integration_analysis['total_opportunities']} opportunities, cache issues")
-            else:
-                self.log_test_result("Advanced Market Aggregator Integration", False, 
-                                   f"Integration issues: {integration_analysis['total_opportunities']} opportunities, {integration_analysis['bingx_sources']} BingX sources")
+            # Query recent IA1 analyses from database
+            try:
+                # Get recent IA1 analyses (last 24 hours)
+                from datetime import datetime, timedelta
+                cutoff_time = datetime.now() - timedelta(hours=24)
+                
+                cursor = self.db.technical_analyses.find({
+                    "timestamp": {"$gte": cutoff_time},
+                    "risk_reward_ratio": {"$exists": True, "$gt": 0}
+                }).sort("timestamp", -1).limit(50)
+                
+                analyses = list(cursor)
+                
+                if not analyses:
+                    # Try without time filter if no recent data
+                    cursor = self.db.technical_analyses.find({
+                        "risk_reward_ratio": {"$exists": True, "$gt": 0}
+                    }).sort("timestamp", -1).limit(20)
+                    analyses = list(cursor)
+                
+                logger.info(f"   📊 Found {len(analyses)} IA1 analyses in database")
+                
+                if len(analyses) < 5:
+                    self.log_test_result("Database RR Consistency Analysis", False, 
+                                       f"Insufficient IA1 analyses in database: {len(analyses)} found")
+                    return
+                
+                # Analyze RR consistency patterns
+                db_analysis_results = {
+                    'total_analyses': len(analyses),
+                    'confidence_ranges': {
+                        'low': [],      # 0-70%
+                        'medium': [],   # 70-85%
+                        'high': []      # 85-100%
+                    },
+                    'rr_by_confidence': {},
+                    'same_symbol_analyses': {},
+                    'formula_validation_count': 0,
+                    'formula_validation_passed': 0
+                }
+                
+                # Group analyses by confidence ranges and symbols
+                for analysis in analyses:
+                    confidence = analysis.get('analysis_confidence', 0)
+                    rr_ratio = analysis.get('risk_reward_ratio', 0)
+                    symbol = analysis.get('symbol', 'UNKNOWN')
+                    entry_price = analysis.get('entry_price', 0)
+                    stop_loss = analysis.get('stop_loss_price', 0)
+                    take_profit = analysis.get('take_profit_price', 0)
+                    signal = analysis.get('ia1_signal', 'hold')
+                    
+                    # Categorize by confidence
+                    if confidence < 0.7:
+                        db_analysis_results['confidence_ranges']['low'].append({
+                            'symbol': symbol, 'confidence': confidence, 'rr': rr_ratio,
+                            'entry': entry_price, 'sl': stop_loss, 'tp': take_profit, 'signal': signal
+                        })
+                    elif confidence < 0.85:
+                        db_analysis_results['confidence_ranges']['medium'].append({
+                            'symbol': symbol, 'confidence': confidence, 'rr': rr_ratio,
+                            'entry': entry_price, 'sl': stop_loss, 'tp': take_profit, 'signal': signal
+                        })
+                    else:
+                        db_analysis_results['confidence_ranges']['high'].append({
+                            'symbol': symbol, 'confidence': confidence, 'rr': rr_ratio,
+                            'entry': entry_price, 'sl': stop_loss, 'tp': take_profit, 'signal': signal
+                        })
+                    
+                    # Group by symbol for same-symbol analysis
+                    if symbol not in db_analysis_results['same_symbol_analyses']:
+                        db_analysis_results['same_symbol_analyses'][symbol] = []
+                    db_analysis_results['same_symbol_analyses'][symbol].append({
+                        'confidence': confidence, 'rr': rr_ratio,
+                        'entry': entry_price, 'sl': stop_loss, 'tp': take_profit, 'signal': signal
+                    })
+                    
+                    # Validate RR formula if we have all required data
+                    if entry_price > 0 and stop_loss > 0 and take_profit > 0 and signal in ['long', 'short']:
+                        db_analysis_results['formula_validation_count'] += 1
+                        
+                        if signal == 'long':
+                            expected_rr = self.rr_formulas['LONG'](entry_price, take_profit, stop_loss)
+                        else:  # short
+                            expected_rr = self.rr_formulas['SHORT'](entry_price, take_profit, stop_loss)
+                        
+                        if abs(expected_rr - rr_ratio) < 0.2:  # Allow some variance
+                            db_analysis_results['formula_validation_passed'] += 1
+                
+                # Analyze confidence vs RR correlation
+                logger.info(f"   📊 Confidence Range Analysis:")
+                for range_name, range_data in db_analysis_results['confidence_ranges'].items():
+                    if range_data:
+                        avg_confidence = sum(d['confidence'] for d in range_data) / len(range_data)
+                        avg_rr = sum(d['rr'] for d in range_data) / len(range_data)
+                        rr_variance = max(d['rr'] for d in range_data) - min(d['rr'] for d in range_data) if len(range_data) > 1 else 0
+                        
+                        logger.info(f"      {range_name.upper()} confidence ({len(range_data)} analyses): "
+                                  f"Avg confidence={avg_confidence:.1%}, Avg RR={avg_rr:.2f}, RR variance={rr_variance:.2f}")
+                
+                # Analyze same-symbol consistency
+                same_symbol_consistency = 0
+                same_symbol_total = 0
+                
+                logger.info(f"   📊 Same Symbol RR Consistency:")
+                for symbol, symbol_analyses in db_analysis_results['same_symbol_analyses'].items():
+                    if len(symbol_analyses) >= 2:
+                        same_symbol_total += 1
+                        rr_values = [a['rr'] for a in symbol_analyses]
+                        confidence_values = [a['confidence'] for a in symbol_analyses]
+                        
+                        rr_variance = max(rr_values) - min(rr_values)
+                        confidence_variance = max(confidence_values) - min(confidence_values)
+                        
+                        # If RR is consistent despite confidence variance, that's good
+                        if rr_variance <= 0.5 or confidence_variance <= 0.1:
+                            same_symbol_consistency += 1
+                            status = "✅"
+                        else:
+                            status = "⚠️"
+                        
+                        logger.info(f"      {status} {symbol} ({len(symbol_analyses)} analyses): "
+                                  f"RR variance={rr_variance:.2f}, Confidence variance={confidence_variance:.1%}")
+                
+                # Formula validation results
+                formula_accuracy = db_analysis_results['formula_validation_passed'] / db_analysis_results['formula_validation_count'] if db_analysis_results['formula_validation_count'] > 0 else 0
+                
+                logger.info(f"   📊 Database Analysis Summary:")
+                logger.info(f"      Total analyses: {db_analysis_results['total_analyses']}")
+                logger.info(f"      Formula validation: {db_analysis_results['formula_validation_passed']}/{db_analysis_results['formula_validation_count']} ({formula_accuracy:.1%})")
+                logger.info(f"      Same symbol consistency: {same_symbol_consistency}/{same_symbol_total}")
+                
+                # Determine test result
+                consistency_rate = same_symbol_consistency / same_symbol_total if same_symbol_total > 0 else 0
+                
+                if formula_accuracy >= 0.8 and consistency_rate >= 0.7:
+                    self.log_test_result("Database RR Consistency Analysis", True, 
+                                       f"Database shows RR independence: {formula_accuracy:.1%} formula accuracy, {consistency_rate:.1%} consistency")
+                elif formula_accuracy >= 0.6 and consistency_rate >= 0.5:
+                    self.log_test_result("Database RR Consistency Analysis", False, 
+                                       f"Partial RR independence: {formula_accuracy:.1%} formula accuracy, {consistency_rate:.1%} consistency")
+                else:
+                    self.log_test_result("Database RR Consistency Analysis", False, 
+                                       f"RR consistency issues: {formula_accuracy:.1%} formula accuracy, {consistency_rate:.1%} consistency")
+                
+            except Exception as db_error:
+                logger.error(f"   ❌ Database query error: {db_error}")
+                self.log_test_result("Database RR Consistency Analysis", False, f"Database error: {str(db_error)}")
                 
         except Exception as e:
-            self.log_test_result("Advanced Market Aggregator Integration", False, f"Exception: {str(e)}")
+            self.log_test_result("Database RR Consistency Analysis", False, f"Exception: {str(e)}")
     
     async def test_5_complete_system_integration_flow(self):
         """Test 5: Complete System Integration Flow (trending → pattern detector → market aggregator)"""
