@@ -683,9 +683,9 @@ class IA1RiskRewardIndependenceTestSuite:
         except Exception as e:
             self.log_test_result("Database RR Consistency Analysis", False, f"Exception: {str(e)}")
     
-    async def test_5_complete_system_integration_flow(self):
-        """Test 5: Complete System Integration Flow (trending → pattern detector → market aggregator)"""
-        logger.info("\n🔍 TEST 5: Complete System Integration Flow Test")
+    async def test_5_long_short_rr_formula_verification(self):
+        """Test 5: LONG and SHORT RR Formula Implementation Verification"""
+        logger.info("\n🔍 TEST 5: LONG and SHORT RR Formula Verification Test")
         
         try:
             if not all([self.trending_updater, self.pattern_detector, self.market_aggregator]):
