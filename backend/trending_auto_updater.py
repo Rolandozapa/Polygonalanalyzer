@@ -37,7 +37,7 @@ class TrendingAutoUpdater:
         # 🎯 BingX API endpoints for futures market data  
         self.bingx_api_base = "https://open-api.bingx.com"
         self.bingx_futures_url = "https://bingx.com/en/market/futures/usd-m-perp"
-        self.update_interval = 3600  # 1 heure (plus fréquent que 6h pour avoir data fraîche)
+        self.update_interval = 14400  # 4 heures comme demandé par l'utilisateur
         self.last_update = None
         self.current_trending = []
         self.is_running = False
