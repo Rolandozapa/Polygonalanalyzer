@@ -7728,20 +7728,38 @@ class UltraProfessionalTradingOrchestrator:
                                 continue  # Skip storing this duplicate decision
                             
                             # Store decision seulement si pas de doublon récent
-                            await db.trading_decisions.insert_one(decision.dict())
+                            
+                            # 🆕 Link IA2 decision to IA1 position_id for tracking
+                            opportunity, analysis = decisions_to_make[i]
+                            decision_dict = decision.dict()
+                            decision_dict["ia1_position_id"] = getattr(analysis, 'position_id', None)
+                            
+                            await db.trading_decisions.insert_one(decision_dict)
                             decisions_made += 1
-                            logger.info(f"📁 IA2 DECISION STORED: {symbol} (no recent duplicates)")
+                            logger.info(f"📁 IA2 DECISION STORED: {symbol} (linked to position_id: {getattr(analysis, 'position_id', 'N/A')})")
+                            
+                            # 🆕 Update position tracking for IA1→IA2 flow
+                            try:
+                                if hasattr(analysis, 'position_id') and analysis.position_id:
+                                    await update_position_tracking_ia2(
+                                        position_id=analysis.position_id,
+                                        decision=decision,
+                                        voie_used=self._determine_voie_used(analysis),
+                                        success=True
+                                    )
+                                    logger.info(f"📍 Position tracking updated: {analysis.position_id} → IA2 success")
+                            except Exception as track_error:
+                                logger.error(f"❌ Failed to update position tracking: {track_error}")
                             
                             # Broadcast decision to frontend
                             await manager.broadcast({
                                 "type": "trading_decision",
-                                "data": decision.dict(),
+                                "data": decision_dict,  # Use modified dict with position_id
                                 "ultra_professional": True,
                                 "trending_focused": True,
                                 "api_optimized": True
                             })
                             
-                            opportunity, analysis = decisions_to_make[i]
                             logger.info(f"✅ IA2 DECISION: {decision.symbol} → {decision.signal} (confidence: {decision.confidence:.2%})")
                         else:
                             decisions_failed += 1
