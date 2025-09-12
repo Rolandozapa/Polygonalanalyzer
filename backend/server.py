@@ -4140,12 +4140,40 @@ The scientific indicators below provide mathematical precision - you add context
                                    analysis.resistance_levels[0] if analysis.resistance_levels else opportunity.current_price * 1.03)
             
             # Calculate sophisticated RR metrics
-            composite_rr_data = self.calculate_composite_rr(
-                opportunity.current_price, 
-                opportunity.volatility, 
-                ia1_support, 
-                ia1_resistance
-            )
+            try:
+                composite_rr_data = self.calculate_composite_rr(
+                    opportunity.current_price, 
+                    opportunity.volatility, 
+                    ia1_support, 
+                    ia1_resistance
+                )
+                
+                # Verify composite_rr_data is valid dictionary
+                if not isinstance(composite_rr_data, dict):
+                    logger.error(f"❌ IA2: composite_rr_data is {type(composite_rr_data)} instead of dict for {opportunity.symbol}")
+                    raise ValueError(f"composite_rr_data type error: {type(composite_rr_data)}")
+                
+                required_keys = ['composite_rr', 'bullish_rr', 'bearish_rr']
+                for key in required_keys:
+                    if key not in composite_rr_data:
+                        logger.error(f"❌ IA2: composite_rr_data missing key '{key}' for {opportunity.symbol}")
+                        raise ValueError(f"composite_rr_data missing key: {key}")
+                        
+                logger.info(f"✅ IA2: Valid composite_rr_data calculated for {opportunity.symbol}")
+                
+            except Exception as rr_error:
+                logger.error(f"❌ IA2: Error calculating composite RR for {opportunity.symbol}: {rr_error}")
+                # Fallback values
+                composite_rr_data = {
+                    'composite_rr': 1.5,
+                    'bullish_rr': 1.5,
+                    'bearish_rr': 1.5,
+                    'neutral_rr': 1.0,
+                    'directional_validity': 0,
+                    'volatility_adjusted': opportunity.volatility,
+                    'upside_target': opportunity.current_price * 1.03,
+                    'downside_target': opportunity.current_price * 0.97
+                }
             
             # Evaluate sophisticated risk level
             sophisticated_risk_level = self.evaluate_sophisticated_risk_level(
