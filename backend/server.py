@@ -4018,11 +4018,11 @@ class UltraProfessionalIA2DecisionAgent:
             # Return safe fallback decision instead of crashing
             fallback_decision = TradingDecision(
                 symbol=opportunity.symbol,
-                signal="HOLD",  # Safe fallback
+                signal="hold",  # Must be lowercase
                 confidence=0.5,  # Neutral confidence
                 entry_price=opportunity.current_price,
-                stop_loss_price=opportunity.current_price * 0.98,  # 2% SL
-                take_profit_price=opportunity.current_price * 1.02,  # 2% TP
+                stop_loss=opportunity.current_price * 0.98,  # Correct field name
+                take_profit_1=opportunity.current_price * 1.02,  # Correct field name
                 take_profit_2=opportunity.current_price * 1.03,  # 3% TP2
                 take_profit_3=opportunity.current_price * 1.04,  # 4% TP3
                 position_size=1.0,  # Minimal size
