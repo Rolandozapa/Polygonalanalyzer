@@ -7980,6 +7980,7 @@ class UltraProfessionalOrchestrator:
                             logger.info(f"🎯 Escalating {opportunity.symbol} to IA2")
                             
                             # Get performance stats
+                            from advanced_market_aggregator import advanced_market_aggregator
                             perf_stats = advanced_market_aggregator.get_performance_stats()
                             
                             # Step 4: IA2 decision
