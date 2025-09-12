@@ -7793,6 +7793,29 @@ class UltraProfessionalOrchestrator:
             opportunities = await self.scout.scan_opportunities()
             logger.info(f"📊 Found {len(opportunities)} opportunities")
             
+            # 🔥 CRITICAL FIX: Save opportunities to database for API access
+            if opportunities:
+                try:
+                    # Clear old opportunities (keep only recent ones)
+                    cutoff_time = get_paris_time() - timedelta(hours=1)
+                    await db.market_opportunities.delete_many({
+                        "timestamp": {"$lt": cutoff_time}
+                    })
+                    
+                    # Save new opportunities to database
+                    opportunities_docs = []
+                    for opp in opportunities:
+                        opp_dict = opp.dict()
+                        opp_dict['timestamp'] = get_paris_time()  # Fresh timestamp
+                        opportunities_docs.append(opp_dict)
+                    
+                    if opportunities_docs:
+                        await db.market_opportunities.insert_many(opportunities_docs)
+                        logger.info(f"💾 Saved {len(opportunities_docs)} fresh opportunities to database")
+                        
+                except Exception as e:
+                    logger.error(f"❌ Failed to save opportunities to database: {e}")
+            
             # Step 2: Analyze with IA1
             analyses_count = 0
             for opportunity in opportunities[:10]:  # Limit to prevent overload
