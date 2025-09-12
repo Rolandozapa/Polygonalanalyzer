@@ -68,7 +68,7 @@ class TrendingAutoUpdater:
         
         self.is_running = True
         self.update_task = asyncio.create_task(self._update_loop())
-        logger.info("🔄 Auto-trending updater started - checking every 6 hours")
+        logger.info("🔄 Auto-trending updater started - checking every 4 hours")
         
         # 🚨 CORRECTION: Pas de premier update immédiat au startup pour éviter les blocages
         # L'update se fera lors du premier cycle de la boucle
