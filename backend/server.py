@@ -5144,20 +5144,50 @@ async def retry_pending_positions():
 # 🔥 ESSENTIAL API ENDPOINTS FOR FRONTEND FUNCTIONALITY
 @app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
-    """Get current market opportunities"""
+    """Get current market opportunities - now using fresh BingX trending data"""
     try:
-        # Get opportunities from database
-        cursor = db.market_opportunities.find().sort("timestamp", -1).limit(limit)
-        opportunities = []
-        async for doc in cursor:
-            # Convert MongoDB document to JSON-serializable format
-            doc.pop('_id', None)  # Remove ObjectId
-            opportunities.append(doc)
+        # 🚀 NEW: Get fresh opportunities from advanced market aggregator instead of stale DB data
+        fresh_opportunities = advanced_market_aggregator.get_current_opportunities()
         
-        logger.info(f"📊 Returning {len(opportunities)} opportunities")
-        return {
-            "success": True,
-            "opportunities": opportunities,
+        if fresh_opportunities:
+            # Convert to JSON-serializable format and limit results
+            opportunities = []
+            for opp in fresh_opportunities[:limit]:
+                opp_dict = {
+                    "id": opp.symbol + "_" + str(hash(opp.timestamp))[-8:],  # Generate consistent ID
+                    "symbol": opp.symbol,
+                    "current_price": opp.current_price,
+                    "volume_24h": opp.volume_24h,
+                    "price_change_24h": opp.price_change_24h,
+                    "volatility": opp.volatility,
+                    "market_cap": opp.market_cap,
+                    "market_cap_rank": opp.market_cap_rank,
+                    "data_sources": opp.data_sources,
+                    "data_confidence": opp.data_confidence,
+                    "timestamp": opp.timestamp.isoformat()
+                }
+                opportunities.append(opp_dict)
+            
+            logger.info(f"📊 Returning {len(opportunities)} FRESH BingX opportunities")
+            return {
+                "success": True,
+                "opportunities": opportunities,
+                "count": len(opportunities)
+            }
+        else:
+            # Fallback to database if no fresh opportunities available
+            logger.warning("⚠️ No fresh opportunities, falling back to database")
+            cursor = db.market_opportunities.find().sort("timestamp", -1).limit(limit)
+            opportunities = []
+            async for doc in cursor:
+                # Convert MongoDB document to JSON-serializable format
+                doc.pop('_id', None)  # Remove ObjectId
+                opportunities.append(doc)
+            
+            logger.info(f"📊 Returning {len(opportunities)} opportunities from database fallback")
+            return {
+                "success": True,
+                "opportunities": opportunities,
             "count": len(opportunities)
         }
     except Exception as e:
