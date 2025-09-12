@@ -338,7 +338,7 @@ agent_communication:
 
 ## test_plan:
   current_focus:
-    - "Test Simplified IA2 Prompt After Major Code Deletion"
+    - "Debug IA2 Response Format and New Technical Levels"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
