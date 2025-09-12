@@ -338,7 +338,7 @@ agent_communication:
 
 ## test_plan:
   current_focus:
-    - "Simplify IA2 RR Calculation to Match IA1 Support/Resistance Formula - COMPLETED"
+    - "Test Simplified IA2 Prompt After Major Code Deletion"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
