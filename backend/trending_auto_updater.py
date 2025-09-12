@@ -158,8 +158,8 @@ class TrendingAutoUpdater:
             # Trier par volume d'abord (indicateur de vraie activité) puis price change
             final_trending.sort(key=lambda x: (x.volume or 0, abs(x.price_change or 0)), reverse=True)
             
-            logger.info(f"✅ BingX TOTAL: {len(final_trending)} unique trending cryptos retrieved")
-            return final_trending[:50]  # Top 50
+            logger.info(f"✅ BingX TOTAL: {len(final_trending)} trending cryptos avec filtres avancés (volume 5%+, prix 1%+, anti-latéral)")
+            return final_trending[:50]  # Top 50 après filtrage
             
         except Exception as e:
             logger.error(f"❌ Error fetching BingX trending cryptos: {e}")
