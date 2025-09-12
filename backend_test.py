@@ -275,9 +275,9 @@ class IA1ToIA2EscalationTestSuite:
         except Exception as e:
             self.log_test_result("Escalation Criteria Validation", False, f"Exception: {str(e)}")
     
-    async def test_2_ia1_confidence_independence(self):
-        """Test 2: IA1 RR Calculation Independence from Confidence Level"""
-        logger.info("\n🔍 TEST 2: IA1 RR Calculation Independence Test")
+    async def test_2_end_to_end_escalation_flow(self):
+        """Test 2: End-to-End IA1 → IA2 → Decision Storage Flow"""
+        logger.info("\n🔍 TEST 2: End-to-End IA1 → IA2 → Decision Storage Flow Test")
         
         try:
             # Test multiple IA1 analyses for the same symbols with different confidence scenarios
