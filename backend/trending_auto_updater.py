@@ -49,13 +49,17 @@ class TrendingAutoUpdater:
             r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMBT]?)',  # Market cap pattern
         ]
         
-        # Top crypto symbols pour fallback (BingX top futures)
+        # Top crypto symbols pour fallback (BingX top 50 futures par market cap)
         self.bingx_top_futures = [
             "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT",
             "BNBUSDT", "HYPEUSDT", "SUIUSDT", "TRXUSDT", "LINKUSDT", "AVAXUSDT",
             "XLMUSDT", "PIUSDT", "CROUSDT", "MUSDT", "WLFIUSDT", "UNIUSDT",
             "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "ETCUSDT", "FILUSDT",
-            "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT"
+            "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT",
+            "ENSUSDT", "OPUSDT", "ARBUSDT", "ATOMUSDT", "ALGOUSDT", "SANDUSDT",
+            "MANAUSDT", "AXSUSDT", "THETAUSDT", "FLOWUSDT", "CHZUSDT", "XTZUSDT",
+            "EGLDUSDT", "HBARUSDT", "VETUSDT", "GRTUSDT", "COMPUSDT", "YFIUSDT",
+            "SUSHIUSDT", "BATUSDT"  # Total: 50 symbols
         ]
         
         logger.info("TrendingAutoUpdater initialized - 4h update cycle avec filtres avancés")
