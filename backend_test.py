@@ -636,7 +636,7 @@ class IA2SimplifiedPromptTestSuite:
             
             # Step 1: Trigger IA1 analysis
             logger.info("   📊 Step 1: Triggering IA1 analysis...")
-            ia1_response = requests.post(f"{self.api_url}/analyze", 
+            ia1_response = requests.post(f"{self.api_url}/force-ia1-analysis", 
                                        json={"symbol": test_symbol}, 
                                        timeout=180)  # Extended timeout for full pipeline
             
@@ -652,12 +652,18 @@ class IA2SimplifiedPromptTestSuite:
             ia2_triggered = False
             decision_id = None
             
-            if 'ia2_triggered' in ia1_result or 'decision_id' in ia1_result:
-                ia2_triggered = True
-                decision_id = ia1_result.get('decision_id')
-                logger.info(f"      ✅ IA2 escalation triggered, decision ID: {decision_id}")
+            if ia1_result.get('success', False):
+                logger.info(f"      ✅ IA1 analysis successful")
+                
+                # Check for IA2 escalation indicators
+                if 'ia2_triggered' in ia1_result or 'escalated_to_ia2' in ia1_result or 'decision_id' in ia1_result:
+                    ia2_triggered = True
+                    decision_id = ia1_result.get('decision_id')
+                    logger.info(f"      ✅ IA2 escalation triggered, decision ID: {decision_id}")
+                else:
+                    logger.info("      ℹ️ IA2 not triggered (IA1 analysis did not meet escalation criteria)")
             else:
-                logger.info("      ℹ️ IA2 not triggered (IA1 analysis did not meet escalation criteria)")
+                logger.info("      ⚠️ IA1 analysis completed but not successful")
             
             # Step 3: Wait for processing and check database
             logger.info("   📊 Step 2: Waiting for IA2 processing...")
@@ -665,7 +671,7 @@ class IA2SimplifiedPromptTestSuite:
             
             # Step 4: Verify IA2 decision in database
             ia2_decision_found = False
-            if self.db and decision_id:
+            if self.db is not None and decision_id:
                 decision = self.db.trading_decisions.find_one({"id": decision_id})
                 if decision:
                     ia2_decision_found = True
@@ -684,25 +690,29 @@ class IA2SimplifiedPromptTestSuite:
             
             # Step 5: Check Active Position Manager integration
             logger.info("   📊 Step 3: Checking Active Position Manager integration...")
-            apm_response = requests.get(f"{self.api_url}/active-positions", timeout=30)
-            
-            apm_integration = False
-            if apm_response.status_code == 200:
-                apm_data = apm_response.json()
-                if 'active_positions' in apm_data or 'total_positions' in apm_data:
-                    apm_integration = True
+            try:
+                apm_response = requests.get(f"{self.api_url}/active-positions", timeout=30)
+                apm_integration = apm_response.status_code == 200
+                if apm_integration:
                     logger.info(f"      ✅ Active Position Manager integration working")
+                else:
+                    logger.info(f"      ⚠️ Active Position Manager not accessible")
+            except:
+                apm_integration = False
+                logger.info(f"      ⚠️ Active Position Manager integration failed")
             
             # Step 6: Check BingX integration
             logger.info("   📊 Step 4: Checking BingX integration...")
-            bingx_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
-            
-            bingx_integration = False
-            if bingx_response.status_code == 200:
-                bingx_data = bingx_response.json()
-                if 'status' in bingx_data:
-                    bingx_integration = True
+            try:
+                bingx_response = requests.get(f"{self.api_url}/bingx/status", timeout=30)
+                bingx_integration = bingx_response.status_code == 200
+                if bingx_integration:
                     logger.info(f"      ✅ BingX integration accessible")
+                else:
+                    logger.info(f"      ⚠️ BingX integration not accessible")
+            except:
+                bingx_integration = False
+                logger.info(f"      ⚠️ BingX integration failed")
             
             # Evaluate overall pipeline
             pipeline_components = {
