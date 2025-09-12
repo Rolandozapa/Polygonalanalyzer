@@ -5204,6 +5204,22 @@ async def get_analyses(limit: int = 50):
             # Convert MongoDB document to JSON-serializable format
             doc.pop('_id', None)  # Remove ObjectId
             
+            # 🔧 CRITICAL FIX: Normalize timestamp format for proper sorting
+            timestamp = doc.get('timestamp', '')
+            if '+' in timestamp and not timestamp.endswith('Z'):
+                # Convert timezone-aware timestamp to UTC Z format for consistent sorting
+                try:
+                    from datetime import datetime
+                    if '+02:00' in timestamp:
+                        # Parse and convert to UTC Z format
+                        dt = datetime.fromisoformat(timestamp.replace('+02:00', ''))
+                        dt_utc = dt.replace(tzinfo=timezone.utc) - timedelta(hours=2)  # Convert to UTC
+                        doc['timestamp'] = dt_utc.isoformat().replace('+00:00', 'Z')
+                    elif '+00:00' in timestamp:
+                        doc['timestamp'] = timestamp.replace('+00:00', 'Z')
+                except Exception as ts_error:
+                    logger.warning(f"Timestamp conversion error: {ts_error}")
+            
             # 🔧 CRITICAL FIX: Ensure patterns_detected is always an array for frontend
             if 'patterns_detected' in doc:
                 patterns = doc['patterns_detected']
@@ -5229,7 +5245,10 @@ async def get_analyses(limit: int = 50):
             
             analyses.append(doc)
         
-        logger.info(f"🧠 Returning {len(analyses)} IA1 analyses (patterns_detected fixed)")
+        # 🔧 ADDITIONAL FIX: Sort again in Python to ensure proper order with normalized timestamps
+        analyses.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        logger.info(f"🧠 Returning {len(analyses)} IA1 analyses (patterns_detected fixed, timestamps normalized)")
         return {
             "success": True,
             "analyses": analyses,
