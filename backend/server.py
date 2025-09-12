@@ -5381,6 +5381,26 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
                     elif hasattr(value, '__str__') and not isinstance(value, (str, int, float, bool, type(None))):
                         analysis_dict[key] = str(value)
                 
+                # 🔧 FIX PATTERNS_DETECTED: Ensure it's always an array, not a string
+                if 'patterns_detected' in analysis_dict:
+                    patterns = analysis_dict['patterns_detected']
+                    if isinstance(patterns, str):
+                        # If it's a string that looks like an array, parse it
+                        if patterns.startswith('[') and patterns.endswith(']'):
+                            try:
+                                import ast
+                                analysis_dict['patterns_detected'] = ast.literal_eval(patterns)
+                                logger.info(f"✅ Parsed patterns_detected string to array for {symbol}")
+                            except Exception as parse_error:
+                                logger.warning(f"⚠️ Failed to parse patterns_detected: {parse_error}")
+                                analysis_dict['patterns_detected'] = [patterns]  # Wrap in array as fallback
+                        else:
+                            # Single pattern string, wrap in array
+                            analysis_dict['patterns_detected'] = [patterns]
+                    elif not isinstance(patterns, list):
+                        # Convert any other type to array
+                        analysis_dict['patterns_detected'] = [str(patterns)]
+                
                 await db.technical_analyses.insert_one(analysis_dict)
                 logger.info(f"💾 IA1 analysis saved to database for {symbol}")
                 
@@ -5395,6 +5415,7 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
                         "ia1_signal": str(analysis.ia1_signal) if hasattr(analysis, 'ia1_signal') else "unknown",
                         "ia1_reasoning": str(analysis.ia1_reasoning) if hasattr(analysis, 'ia1_reasoning') else "No reasoning available",
                         "risk_reward_ratio": float(analysis.risk_reward_ratio) if hasattr(analysis, 'risk_reward_ratio') else 0.0,
+                        "patterns_detected": [],  # Empty array as safe fallback
                         "timestamp": datetime.now(timezone.utc).isoformat(),
                         "status": "completed_with_fallback_save"
                     }
