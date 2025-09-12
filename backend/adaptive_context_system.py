@@ -502,8 +502,10 @@ class AdaptiveContextSystem:
                     if best_regime[1] > 0.4:  # Confidence threshold
                         try:
                             return MarketRegime(best_regime[0])
-                        except:
-                            pass  # Fall back to base regime
+                        except ValueError as e:
+                            logger.warning(f"Invalid market regime '{best_regime[0]}': {e}, falling back to base regime")
+                        except Exception as e:
+                            logger.error(f"Error setting market regime '{best_regime[0]}': {e}, falling back to base regime")
         
         return base_regime
     
