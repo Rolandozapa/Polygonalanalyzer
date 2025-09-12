@@ -1051,18 +1051,18 @@ class IA1RiskRewardIndependenceTestSuite:
         requirements_status = {}
         
         for result in self.test_results:
-            if "Configuration" in result['test']:
-                requirements_status['4h Frequency & Configuration'] = result['success']
-            elif "BingX Trending Data" in result['test']:
-                requirements_status['BingX Data Fetch & Filters'] = result['success']
-            elif "Lateral Pattern Detector" in result['test']:
-                requirements_status['Lateral Pattern Detection'] = result['success']
-            elif "Market Aggregator" in result['test']:
-                requirements_status['Market Aggregator Integration'] = result['success']
-            elif "Integration Flow" in result['test']:
-                requirements_status['Complete System Integration'] = result['success']
-            elif "Performance" in result['test']:
-                requirements_status['System Performance & Stability'] = result['success']
+            if "Formula Validation" in result['test']:
+                requirements_status['RR Formula Implementation'] = result['success']
+            elif "Confidence Independence" in result['test']:
+                requirements_status['RR Independence from Confidence'] = result['success']
+            elif "Technical Levels" in result['test']:
+                requirements_status['Technical Analysis Based RR'] = result['success']
+            elif "Database" in result['test']:
+                requirements_status['Historical RR Consistency'] = result['success']
+            elif "Formula Verification" in result['test']:
+                requirements_status['LONG/SHORT Formula Accuracy'] = result['success']
+            elif "Backend Logs" in result['test']:
+                requirements_status['Implementation Evidence'] = result['success']
         
         logger.info("🎯 CRITICAL REQUIREMENTS STATUS:")
         for requirement, status in requirements_status.items():
@@ -1076,24 +1076,24 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info(f"\n🏆 REQUIREMENTS SATISFACTION: {requirements_met}/{total_requirements}")
         
         if requirements_met == total_requirements:
-            logger.info("\n🎉 VERDICT: AUTONOMOUS TREND DETECTION SYSTEM FULLY FUNCTIONAL!")
-            logger.info("✅ 4h frequency configuration working")
-            logger.info("✅ BingX API integration with advanced filters operational")
-            logger.info("✅ Lateral pattern detection filtering effectively")
-            logger.info("✅ Market aggregator using filtered BingX data")
-            logger.info("✅ Complete integration flow working")
-            logger.info("✅ System performance stable")
-            logger.info("✅ Ready for production use")
+            logger.info("\n🎉 VERDICT: IA1 RR CALCULATION FULLY INDEPENDENT FROM CONFIDENCE!")
+            logger.info("✅ RR formulas correctly implemented (LONG & SHORT)")
+            logger.info("✅ RR calculation independent of confidence level")
+            logger.info("✅ Technical analysis based RR (support/resistance)")
+            logger.info("✅ Historical consistency confirmed")
+            logger.info("✅ Formula accuracy verified in live tests")
+            logger.info("✅ Implementation evidence found in logs")
+            logger.info("✅ System meets all independence requirements")
         elif requirements_met >= total_requirements * 0.8:
-            logger.info("\n⚠️ VERDICT: AUTONOMOUS TREND DETECTION SYSTEM MOSTLY FUNCTIONAL")
-            logger.info("🔍 Minor issues may need attention for complete functionality")
+            logger.info("\n⚠️ VERDICT: IA1 RR CALCULATION MOSTLY INDEPENDENT")
+            logger.info("🔍 Minor issues may need attention for complete independence")
         elif requirements_met >= total_requirements * 0.6:
-            logger.info("\n⚠️ VERDICT: AUTONOMOUS TREND DETECTION SYSTEM PARTIALLY FUNCTIONAL")
-            logger.info("🔧 Several critical requirements need implementation or debugging")
+            logger.info("\n⚠️ VERDICT: IA1 RR CALCULATION PARTIALLY INDEPENDENT")
+            logger.info("🔧 Several requirements need attention for full independence")
         else:
-            logger.info("\n❌ VERDICT: AUTONOMOUS TREND DETECTION SYSTEM NOT FUNCTIONAL")
-            logger.info("🚨 Major issues preventing autonomous trend detection from working correctly")
-            logger.info("🚨 System needs significant debugging and fixes")
+            logger.info("\n❌ VERDICT: IA1 RR CALCULATION NOT INDEPENDENT FROM CONFIDENCE")
+            logger.info("🚨 Major issues detected - RR may be influenced by confidence")
+            logger.info("🚨 System needs fixes to ensure RR independence")
         
         return passed_tests, total_tests
 
