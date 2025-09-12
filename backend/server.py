@@ -26,16 +26,13 @@ def paris_time_to_timestamp_filter(hours_ago: int = 4):
     """Create MongoDB timestamp filter that works with both datetime objects and string timestamps
     
     This function solves the critical issue where:
-    - Timestamps in database can be stored as strings: "2025-09-12 10:49:53 (Heure de Paris)"
+    - Timestamps in database can be stored as datetime objects or strings
     - Comparison requires proper handling of day transitions and maintenance restarts
     """
     cutoff_time = get_paris_time() - timedelta(hours=hours_ago)
     
-    # For string timestamps - handle the format "YYYY-MM-DD HH:MM:SS (Heure de Paris)"
-    # Use string comparison which works lexicographically for this format
-    cutoff_string = cutoff_time.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)')
-    
-    return {"$gte": cutoff_string}
+    # Return datetime object for comparison (works with ISO stored timestamps)
+    return {"$gte": cutoff_time}
 
 def parse_timestamp_from_db(timestamp_value):
     """Parse timestamp from database, handling both datetime objects and strings"""
