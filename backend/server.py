@@ -5461,8 +5461,11 @@ async def force_ia1_cycle():
             if should_escalate:
                 logger.info(f"🚀 ESCALATING {symbol} to IA2 strategic analysis")
                 try:
-                    # Get performance stats
-                    perf_stats = advanced_market_aggregator.get_performance_stats()
+                    # Get performance stats with fallback
+                    try:
+                        perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
+                    except:
+                        perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
                     
                     # IA2 strategic decision
                     ia2_decision = await orchestrator.ia2.make_decision(target_opportunity, analysis, perf_stats)
