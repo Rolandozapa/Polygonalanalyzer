@@ -1327,7 +1327,7 @@ class AdvancedMarketAggregator:
                     for crypto in trending_cryptos[:50]:  # Top 50 comme demandé par l'utilisateur
                         opportunity = MarketOpportunity(
                             symbol=crypto.symbol,
-                            current_price=100.0,  # Will be updated by market data
+                            current_price=crypto.price if hasattr(crypto, 'price') and crypto.price else 100.0,  # Use real price from BingX
                             volume_24h=crypto.volume or 1000000.0,
                             price_change_24h=crypto.price_change or 0.02,
                             volatility=abs(crypto.price_change or 0.02) / 100.0,  # Real volatility from price change
