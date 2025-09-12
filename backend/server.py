@@ -9089,6 +9089,89 @@ async def run_ia1_cycle():
         logger.error(f"❌ IA1 cycle error: {e}")
         return {"success": False, "error": str(e)}
 
+@api_router.post("/force-ia2-escalation")
+async def force_ia2_escalation(request: dict):
+    """Force escalation of an existing IA1 analysis to IA2"""
+    try:
+        symbol = request.get("symbol")
+        if not symbol:
+            return {"success": False, "error": "Symbol required"}
+        
+        logger.info(f"🚀 FORCING IA2 ESCALATION for {symbol}")
+        
+        # Get the existing IA1 analysis
+        analyses = await db.technical_analyses.find({"symbol": symbol}).to_list(10)
+        if not analyses:
+            return {"success": False, "error": f"No IA1 analysis found for {symbol}"}
+        
+        # Get the most recent analysis
+        latest_analysis = max(analyses, key=lambda x: x.get('timestamp', ''))
+        
+        # Create TechnicalAnalysis object from database data
+        analysis_data = {
+            'id': latest_analysis.get('id'),
+            'symbol': latest_analysis.get('symbol'),
+            'analysis_confidence': latest_analysis.get('analysis_confidence', 0),
+            'ia1_signal': latest_analysis.get('ia1_signal', 'hold'),
+            'risk_reward_ratio': latest_analysis.get('risk_reward_ratio', 0),
+            'ia1_reasoning': latest_analysis.get('ia1_reasoning', ''),
+            'rsi': latest_analysis.get('rsi', 50),
+            'macd_signal': latest_analysis.get('macd_signal', 0),
+            'stochastic': latest_analysis.get('stochastic', 50),
+            'bollinger_position': latest_analysis.get('bollinger_position', 0),
+            'entry_price': latest_analysis.get('entry_price', 0),
+            'stop_loss_price': latest_analysis.get('stop_loss_price', 0),
+            'take_profit_price': latest_analysis.get('take_profit_price', 0)
+        }
+        
+        # Check if this analysis should go to IA2
+        from data_models import TechnicalAnalysis, MarketOpportunity
+        analysis_obj = TechnicalAnalysis(**analysis_data)
+        
+        # Create a mock opportunity (needed for IA2)
+        opportunity = MarketOpportunity(
+            symbol=symbol,
+            current_price=latest_analysis.get('entry_price', 0),
+            volume_24h=0,
+            price_change_24h=0,
+            volatility=0,
+            market_cap=0
+        )
+        
+        # Check escalation logic
+        should_escalate = orchestrator._should_send_to_ia2(analysis_obj, opportunity)
+        
+        if should_escalate:
+            # Force IA2 decision
+            logger.info(f"✅ ESCALATING {symbol} to IA2 (confidence: {analysis_data['analysis_confidence']:.2%})")
+            decision = await orchestrator.ia2_analyst.make_decision(opportunity, analysis_obj)
+            
+            return {
+                "success": True, 
+                "message": f"IA2 escalation completed for {symbol}",
+                "analysis": {
+                    "confidence": analysis_data['analysis_confidence'],
+                    "signal": analysis_data['ia1_signal'],
+                    "rr": analysis_data['risk_reward_ratio']
+                },
+                "escalated": True
+            }
+        else:
+            return {
+                "success": False, 
+                "message": f"Analysis for {symbol} does not meet IA2 escalation criteria",
+                "analysis": {
+                    "confidence": analysis_data['analysis_confidence'],
+                    "signal": analysis_data['ia1_signal'],
+                    "rr": analysis_data['risk_reward_ratio']
+                },
+                "escalated": False
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Force IA2 escalation error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
