@@ -699,7 +699,15 @@ class AdvancedMarketAggregator:
             # Public exchanges (no API key needed)
             exchanges['bitfinex'] = ccxt.bitfinex({'enableRateLimit': True})
             exchanges['kraken'] = ccxt.kraken({'enableRateLimit': True})
-            exchanges['coinbase'] = ccxt.coinbasepro({'enableRateLimit': True})
+            # Fix: coinbasepro is now coinbase in newer ccxt versions
+            try:
+                exchanges['coinbase'] = ccxt.coinbase({'enableRateLimit': True})
+            except AttributeError:
+                # Fallback for older ccxt versions
+                try:
+                    exchanges['coinbase'] = ccxt.coinbasepro({'enableRateLimit': True})
+                except AttributeError:
+                    logger.warning("Neither coinbase nor coinbasepro available in ccxt")
             
         except Exception as e:
             logger.warning(f"Error initializing exchanges: {e}")
