@@ -64,13 +64,13 @@ class IA1RiskRewardIndependenceTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Autonomous Trend Detection System at: {self.api_url}")
+        logger.info(f"Testing IA1 Risk-Reward Calculation Independence at: {self.api_url}")
         
         # MongoDB connection for direct database analysis
         try:
             self.mongo_client = MongoClient("mongodb://localhost:27017")
             self.db = self.mongo_client["myapp"]
-            logger.info("✅ MongoDB connection established for trend analysis")
+            logger.info("✅ MongoDB connection established for IA1 analysis")
         except Exception as e:
             logger.error(f"❌ MongoDB connection failed: {e}")
             self.mongo_client = None
@@ -79,31 +79,20 @@ class IA1RiskRewardIndependenceTestSuite:
         # Test results
         self.test_results = []
         
-        # Import modules for direct testing
-        try:
-            sys.path.append('/app/backend')
-            from trending_auto_updater import trending_auto_updater
-            from lateral_pattern_detector import lateral_pattern_detector, TrendType
-            from advanced_market_aggregator import advanced_market_aggregator
-            
-            self.trending_updater = trending_auto_updater
-            self.pattern_detector = lateral_pattern_detector
-            self.market_aggregator = advanced_market_aggregator
-            self.TrendType = TrendType
-            logger.info("✅ Successfully imported trend detection modules")
-        except Exception as e:
-            logger.error(f"❌ Failed to import trend detection modules: {e}")
-            self.trending_updater = None
-            self.pattern_detector = None
-            self.market_aggregator = None
-            # Define TrendType fallback for testing
-            class TrendType:
-                STRONG_BULLISH = "strong_bullish"
-                BULLISH = "bullish"
-                LATERAL = "lateral"
-                BEARISH = "bearish"
-                STRONG_BEARISH = "strong_bearish"
-            self.TrendType = TrendType
+        # Test symbols for RR independence testing
+        self.test_symbols = [
+            "BTCUSDT",   # High volatility, strong technical levels
+            "ETHUSDT",   # Medium volatility, clear S/R levels
+            "XRPUSDT",   # Lower volatility, tight ranges
+            "SOLUSDT",   # High volatility, trending
+            "ADAUSDT"    # Medium volatility, range-bound
+        ]
+        
+        # Expected RR formula validation
+        self.rr_formulas = {
+            "LONG": lambda entry, tp, sl: (tp - entry) / (entry - sl) if (entry - sl) > 0 else 0,
+            "SHORT": lambda entry, tp, sl: (entry - tp) / (sl - entry) if (sl - entry) > 0 else 0
+        }
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
