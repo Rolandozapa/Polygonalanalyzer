@@ -4249,7 +4249,8 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
                 execution_priority=execution_priority,
                 calculated_rr=calculated_rr,
                 rr_reasoning=rr_reasoning,
-                risk_level=claude_risk
+                risk_level=claude_risk,
+                strategy_type="dual_ai_strategic_analysis"
             )
             
             logger.info(f"✅ IA2 SUCCESS: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%}, RR: {final_rr:.2f}:1)")
