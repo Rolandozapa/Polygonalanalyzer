@@ -9247,7 +9247,7 @@ async def force_voie3_processing():
                     logger.info(f"🚀 VOIE 3 PROCESSING: {symbol} {signal.upper()} {confidence:.1%}")
                     
                     # Force IA2 decision
-                    decision = await orchestrator.ia2_analyst.make_decision(opportunity, analysis)
+                    decision = await orchestrator.ia2.make_decision(opportunity, analysis)
                     
                     if decision and decision.signal != "HOLD":
                         processed += 1
