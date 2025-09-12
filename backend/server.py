@@ -9144,7 +9144,7 @@ async def force_ia2_escalation(request: dict):
         if should_escalate:
             # Force IA2 decision
             logger.info(f"✅ ESCALATING {symbol} to IA2 (confidence: {analysis_data['analysis_confidence']:.2%})")
-            decision = await orchestrator.ia2_analyst.make_decision(opportunity, analysis_obj)
+            decision = await orchestrator.ia2.make_decision(opportunity, analysis_obj)
             
             return {
                 "success": True, 
