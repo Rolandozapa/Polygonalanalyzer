@@ -31,17 +31,11 @@ def paris_time_to_timestamp_filter(hours_ago: int = 4):
     """
     cutoff_time = get_paris_time() - timedelta(hours=hours_ago)
     
-    # Create multiple filter formats to handle both datetime and string timestamps
-    return {
-        "$or": [
-            # For datetime objects stored directly
-            {"$gte": cutoff_time},
-            # For string timestamps - handle the format "YYYY-MM-DD HH:MM:SS (Heure de Paris)"
-            {"$gte": cutoff_time.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)')},
-            # Regex pattern for partial matches (fallback)
-            {"$regex": f"^{cutoff_time.strftime('%Y-%m-%d')}.*"}
-        ]
-    }
+    # For string timestamps - handle the format "YYYY-MM-DD HH:MM:SS (Heure de Paris)"
+    # Use string comparison which works lexicographically for this format
+    cutoff_string = cutoff_time.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)')
+    
+    return {"$gte": cutoff_string}
 
 def parse_timestamp_from_db(timestamp_value):
     """Parse timestamp from database, handling both datetime objects and strings"""
