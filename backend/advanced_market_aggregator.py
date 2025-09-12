@@ -1294,7 +1294,7 @@ class AdvancedMarketAggregator:
                     trending_cryptos = server.trending_updater.current_trending
                     logger.info(f"🔥 USING BINGX TRENDING: {len(trending_cryptos)} trending cryptos from BingX")
                     
-                    for crypto in trending_cryptos[:30]:  # Top 30 trending
+                    for crypto in trending_cryptos[:50]:  # Top 50 comme demandé par l'utilisateur
                         opportunity = MarketOpportunity(
                             symbol=crypto.symbol,
                             current_price=100.0,  # Will be updated by market data
