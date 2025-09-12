@@ -4197,7 +4197,7 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
         except Exception as e:
             logger.error(f"❌ IA2 INTERNAL ERROR for {opportunity.symbol}: {e}")
             raise  # Let the wrapper handle it
-        """Internal method containing the original make_decision logic"""
+
         # 🚀 RÉCUPÉRATION DES DONNÉES MULTI-TIMEFRAME POUR IA2 🚀
         # Get historical data for multi-timeframe analysis
         from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
