@@ -4194,14 +4194,29 @@ RESPONSE FORMAT (JSON):
     "confidence": 0.XX (0.50 to 0.99),
     "reasoning": "Strategic analysis in 2-3 sentences explaining your decision vs IA1's analysis, pattern assessment, institutional flow, and multi-timeframe confluence",
     "risk_level": "low" or "medium" or "high",
-    "position_size_recommendation": X.X (0.5 to 8.0 percent),
+    "position_size": X.X (0.5 to 8.0 percent of portfolio),
     "market_regime_assessment": "bullish/bearish/neutral with detailed confluence analysis",
     "execution_priority": "immediate/wait_for_confluence/avoid",
-    "calculated_rr": X.XX,
-    "rr_reasoning": "RR calculation with support/resistance analysis"
+    
+    "ia2_entry_price": XXX.XXXX (your identified optimal entry price),
+    "ia2_stop_loss": XXX.XXXX (your calculated stop loss level based on support/resistance),
+    "ia2_take_profit_1": XXX.XXXX (your primary take profit target),
+    "ia2_take_profit_2": XXX.XXXX (your secondary take profit target),
+    "ia2_take_profit_3": XXX.XXXX (your extended take profit target),
+    
+    "calculated_rr": X.XX (your calculated risk-reward ratio),
+    "rr_reasoning": "Detailed explanation of your RR calculation with specific support/resistance levels",
+    "trade_execution_ready": true/false (whether this trade meets execution criteria)
 }}
 
-CRITICAL: Provide comprehensive strategic analysis validating or challenging IA1's complete reasoning. Return valid JSON only."""
+CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
+- **LONG Signal**: Entry near current support, SL below stronger support, TP at resistance levels
+- **SHORT Signal**: Entry near current resistance, SL above stronger resistance, TP at support levels  
+- **HOLD Signal**: No specific levels needed, use conservative estimates
+- **Position Size**: Consider volatility, market regime, and confluence strength
+- **RR Calculation**: LONG RR = (TP1-Entry)/(Entry-SL), SHORT RR = (Entry-TP1)/(SL-Entry)
+
+CRITICAL: Provide comprehensive strategic analysis with precise technical levels. Return valid JSON only."""
 
             # Send to Claude using correct method
             response = await self.chat.send_message(UserMessage(text=strategic_prompt))
