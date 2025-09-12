@@ -100,6 +100,7 @@ class TradingDecision(BaseModel):
     calculated_rr: Optional[float] = 1.0
     rr_reasoning: Optional[str] = "No RR reasoning provided"
     risk_level: Optional[str] = "medium"
+    strategy_type: Optional[str] = "strategic_analysis"  # For frontend Strategy field
     status: TradingStatus = TradingStatus.PENDING
     # BingX integration fields
     bingx_order_id: Optional[str] = None
