@@ -9278,11 +9278,23 @@ async def force_voie3_processing():
                 signal = analysis_data.get('ia1_signal', 'hold')
                 
                 # Check if we already have a recent IA2 decision for this symbol
-                ia2_recent_cutoff = get_paris_time() - timedelta(hours=2)  # Shorter window for IA2
+                # 🔧 FIX: Use robust timestamp filter for IA2 deduplication
+                timestamp_filter = paris_time_to_timestamp_filter(hours_ago=2)
                 existing_ia2 = await db.trading_decisions.find_one({
                     "symbol": symbol,
-                    "timestamp": {"$gte": ia2_recent_cutoff}
+                    "timestamp": timestamp_filter
                 })
+                
+                # Additional validation: manually check timestamp if found
+                if existing_ia2:
+                    db_timestamp = existing_ia2.get('timestamp')
+                    parsed_time = parse_timestamp_from_db(db_timestamp)
+                    time_diff = get_paris_time() - parsed_time
+                    
+                    # Double-check: if more than 2 hours passed, allow new decision
+                    if time_diff.total_seconds() > 2 * 3600:  # 2 hours = 7200 seconds
+                        logger.info(f"🔄 VOIE 3 TIMESTAMP FIX: {symbol} - DB timestamp too old ({time_diff}), allowing new IA2 decision")
+                        existing_ia2 = None  # Force new decision
                 
                 if existing_ia2:
                     logger.info(f"⏭️ SKIP {symbol}: Recent IA2 decision exists")
