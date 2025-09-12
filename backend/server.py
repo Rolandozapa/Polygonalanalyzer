@@ -4889,6 +4889,148 @@ async def retry_pending_positions():
         logger.error(f"❌ Retry pending positions error: {e}")
         return {"success": False, "error": str(e)}
 
+# 🔥 ESSENTIAL API ENDPOINTS FOR FRONTEND FUNCTIONALITY
+@api_router.get("/opportunities")
+async def get_opportunities(limit: int = 50):
+    """Get current market opportunities"""
+    try:
+        # Get opportunities from database
+        cursor = db.market_opportunities.find().sort("timestamp", -1).limit(limit)
+        opportunities = []
+        async for doc in cursor:
+            opportunities.append(doc)
+        
+        logger.info(f"📊 Returning {len(opportunities)} opportunities")
+        return {
+            "success": True,
+            "opportunities": opportunities,
+            "count": len(opportunities)
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting opportunities: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/analyses")
+async def get_analyses(limit: int = 50):
+    """Get recent IA1 technical analyses"""
+    try:
+        cursor = db.technical_analyses.find().sort("timestamp", -1).limit(limit)
+        analyses = []
+        async for doc in cursor:
+            analyses.append(doc)
+        
+        logger.info(f"🧠 Returning {len(analyses)} IA1 analyses")
+        return {
+            "success": True,
+            "analyses": analyses,
+            "count": len(analyses)
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting analyses: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/decisions")
+async def get_decisions(limit: int = 50):
+    """Get recent IA2 trading decisions"""
+    try:
+        cursor = db.trading_decisions.find().sort("timestamp", -1).limit(limit)
+        decisions = []
+        async for doc in cursor:
+            decisions.append(doc)
+        
+        logger.info(f"⚡ Returning {len(decisions)} IA2 decisions")
+        return {
+            "success": True,
+            "decisions": decisions,
+            "count": len(decisions)
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting decisions: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.get("/performance")
+async def get_performance():
+    """Get system performance stats"""
+    try:
+        # Get performance stats from market aggregator
+        perf_stats = advanced_market_aggregator.get_performance_stats()
+        
+        # Get recent counts
+        opportunities_count = await db.market_opportunities.count_documents({})
+        analyses_count = await db.technical_analyses.count_documents({})
+        decisions_count = await db.trading_decisions.count_documents({})
+        
+        # CPU stats
+        cpu_usage = psutil.cpu_percent()
+        
+        performance_data = {
+            "system_stats": {
+                "opportunities_count": opportunities_count,
+                "analyses_count": analyses_count,
+                "decisions_count": decisions_count,
+                "cpu_usage": cpu_usage
+            },
+            "market_aggregator": perf_stats,
+            "orchestrator": {
+                "initialized": orchestrator._initialized,
+                "running": orchestrator.is_running,
+                "cycle_count": orchestrator.cycle_count
+            }
+        }
+        
+        return {
+            "success": True,
+            "performance": performance_data
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting performance: {e}")
+        return {"success": False, "error": str(e)}
+
+@api_router.post("/run-ia1-cycle")
+async def force_ia1_cycle(symbol: str = "BTCUSDT"):
+    """Force run IA1 analysis cycle for a specific symbol"""
+    try:
+        logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
+        
+        # Get opportunities from the orchestrator's scout
+        opportunities = orchestrator.scout.market_aggregator.get_current_opportunities()
+        target_opportunity = None
+        
+        for opp in opportunities:
+            if opp.symbol == symbol:
+                target_opportunity = opp
+                break
+        
+        if not target_opportunity:
+            # Create a fallback opportunity
+            target_opportunity = MarketOpportunity(
+                symbol=symbol,
+                current_price=100.0,
+                volume_24h=1000000.0,
+                price_change_24h=0.02,
+                volatility=0.05
+            )
+        
+        # Force IA1 analysis (bypass pattern filter)
+        analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
+        
+        if analysis:
+            logger.info(f"✅ IA1 analysis completed for {symbol}")
+            return {
+                "success": True,
+                "message": f"IA1 analysis completed for {symbol}",
+                "analysis": analysis.dict()
+            }
+        else:
+            return {
+                "success": False,
+                "error": f"Failed to generate IA1 analysis for {symbol}"
+            }
+        
+    except Exception as e:
+        logger.error(f"❌ Force IA1 analysis error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
