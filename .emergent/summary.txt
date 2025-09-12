@@ -1,112 +1,85 @@
 <analysis>
-The previous AI engineer's work primarily involved a series of iterative enhancements and critical bug fixes for a Dual AI Trading Bot. Initial efforts focused on refining IA2's Risk-Reward (RR) calculation, transitioning from a complex volatility-based approach to a simpler support/resistance logic as requested by the user. This involved significant prompt engineering and debugging of f-string formatting errors ().
+The previous AI engineer’s work began by addressing critical performance issues, stemming from high CPU usage (initially 97-100%). This involved optimizing frontend polling, reducing backend  workers, and refining  loops. A major breakthrough was fixing the  call which caused multiprocessing spawns. Despite these, an  error occasionally disrupted IA1 cycles, but the primary focus shifted to functional issues.
 
-Following the RR fix, the work expanded to integrating advanced market intelligence. This included developing an intelligent OHLCV fetcher for high-frequency data (5-minute intervals) for IA2, and a global crypto market analyzer to provide general market conditions (price, volume, market cap, fear/greed) to both IA1 and IA2, complete with fallback mechanisms for API rate limits.
-
-Crucially, the engineer implemented an override for IA1-to-IA2 escalation based on high sentiment (95%+) and a bonus/malus system for IA1 confidence, penalizing short positions during market cap increase and long positions during market cap decrease. The latest phase involved repository cleanup and optimization, followed by a user request to initiate refactoring focusing on performance issues, specifically identifying and resolving CPU-intensive loops. The AI engineer is currently in the diagnostic phase for performance.
+The engineer then implemented a robust Position ID tracking system to link IA1 analyses to IA2 decisions, enhancing traceability and resilience. A significant challenge was a persistent  bug in IA2's prompt generation, leading to fallback decisions instead of detailed strategic reasoning. Multiple attempts to pinpoint this bug led to a temporary fallback mechanism ensuring system stability. Finally, the engineer tackled IA2's display issue (decisions not appearing) by ensuring fallback decisions were correctly stored and retrieved. The trajectory concludes with a decisive move to simplify IA2's complex prompt, deleting a large section of old, problematic code, aiming for a permanent fix for the IA2 reasoning.
 </analysis>
 
 <product_requirements>
-The Ultra Professional Edition Dual AI Trading Bot is a full-stack application for automated, sophisticated trading on BingX Futures, leveraging GPT-4o (IA1) for technical analysis and Claude-3-7-Sonnet (IA2) for strategic trading. A key architectural requirement is the dual AI pipeline: IA1 analyses with >70% confidence or RR >= 2.0 feed into IA2, which requires >80% confidence for execution.
+The Ultra Professional Edition Dual AI Trading Bot is a full-stack application for automated, sophisticated trading on BingX Futures. It leverages GPT-4o (IA1) for technical analysis and Claude-3-7-Sonnet (IA2) for strategic trading, with a dual AI pipeline: IA1 analyses with >70% confidence or RR >= 2.0 feed into IA2, which requires >80% confidence for execution. The product emphasizes selective, precise trading signals using advanced indicators and robust risk management.
 
-The product aims for highly selective and precise trading signals using advanced indicators (VWAP, MFI, Multi EMA/SMA, multi-timeframe analysis) and robust risk management.
-
-Key user requests and product enhancements within this trajectory include:
-1.  **IA2 RR Calculation Simplification**: IA2's Risk-Reward (RR) calculation must use a simple support/resistance formula, consistent with IA1's logic, replacing complex volatility-based calculations.
-2.  **Intelligent OHLCV for IA2**: Implement a module for IA2 to fetch finer-meshed OHLCV data (e.g., 5-minute intervals) from a different API source than IA1, to enable more precise S/R level calculations and dynamic RR.
-3.  **Sentiment-Based IA2 Override**: Create an override mechanism where IA1 analyses with a sentiment (long/short) exceeding 95% confidence are automatically escalated to IA2, even if other RR/confidence criteria are not met.
-4.  **Global Crypto Market Conditions**: Integrate a module to fetch general crypto market conditions (e.g., 24h volume, Bitcoin dominance, market cap, fear & greed index) from external APIs (CoinGecko, CoinMarketCap, Binance fallback) and feed this context to both IA1 and IA2. Ensure critical variables like 24h market cap change are robustly fetched.
-5.  **Market Cap-based Confidence Adjustment**: Implement a bonus/malus logic in IA1's confidence calculation, penalizing short positions if the 24h market cap increases and long positions if it decreases, to align with global market momentum.
-6.  **Repository Optimization**: Clean up the codebase by removing unnecessary files and identify areas for future refactoring, particularly focusing on performance.
+Key enhancements implemented or addressed within this trajectory include:
+1.  **IA2 RR Calculation Simplification**: IA2's Risk-Reward (RR) calculation must align with IA1's simple support/resistance logic. (Implicitly addressed by refactoring).
+2.  **Intelligent OHLCV for IA2**: Module for IA2 to fetch finer-meshed OHLCV data (e.g., 5-minute) from different API sources for precise S/R. (Integrated and functional).
+3.  **Sentiment-Based IA2 Override (VOIE 3)**: IA1 analyses with >95% sentiment are escalated to IA2, overriding other criteria. (Implemented, functional, but IA2 execution bug masked its output).
+4.  **Global Crypto Market Conditions**: Module to fetch general market conditions (volume, Bitcoin dominance, market cap, fear/greed) from external APIs (CoinGecko, CoinMarketCap, Binance fallback) for both IA1 and IA2. (Implemented and functional).
+5.  **Market Cap-based Confidence Adjustment**: Bonus/malus logic in IA1's confidence based on 24h market cap change. (Implemented).
+6.  **Repository Optimization**: Clean up and identify areas for performance refactoring. (Initial cleanup done, CPU optimization completed, but ongoing refactoring for IA2 is in progress).
+7.  **Internal Position ID**: Generate a unique  to link IA1 analyses to IA2 decisions, ensuring traceability and resilience after restarts. (Implemented and functional).
 </product_requirements>
 
 <key_technical_concepts>
-- **FastAPI**: Backend API framework for the trading bot.
-- **LLMs**: GPT-4o (IA1) for analysis, Claude-3-7-Sonnet (IA2) for strategic decisions.
-- **Technical Indicators**: Multi EMA/SMA, VWAP, MFI, RSI, MACD, Stochastic, Bollinger Bands.
-- **Multi-Timeframe Analysis**: Utilizing OHLCV data across various timeframes (e.g., 1D, 4H, 5min).
-- **Prompt Engineering**: Crafting precise instructions for LLM agents.
-- **External APIs**: CoinGecko, CoinMarketCap, Binance (for global market data).
-- **Risk-Reward (RR) Calculation**: Dynamic calculations based on support/resistance and volatility.
-- **Concurrency**:  for managing asynchronous operations, especially WebSockets.
-- **Dataclasses**: Python's  for structured data models (e.g., ).
+- **FastAPI**: Backend API framework.
+- **LLMs**: GPT-4o (IA1), Claude-3-7-Sonnet (IA2) for analysis and strategy.
+- **AsyncIO**: For concurrent operations and  patterns.
+- **MongoDB**: Database for storing analyses, decisions, and position tracking.
+- **Pydantic**: Data validation and serialization for API and DB models.
+- **psutil**: Python library for system monitoring (CPU, memory).
+- **ThreadPoolExecutor**: For managing concurrent tasks.
+- **Prompt Engineering**: Crafting instructions for LLMs.
+- **Risk-Reward (RR) Calculation**: Logic for trade risk assessment.
 </key_technical_concepts>
 
 <code_architecture>
 
-- : The core FastAPI application.
-    - **Summary of importance**: Orchestrates AI analysis, trading logic, and API endpoints. Integrates LLMs (IA1, IA2) and manages the trading loop.
-    - **Changes made**:
-        - IA2 prompt updated to use simple S/R based RR calculation, removing complex volatility logic.
-        - IA2  modified to force new LLM sessions, preventing caching issues.
-        - F-string conditional logic for  access fixed using  to prevent string indices must be integers errors when data is .
-        - Integration logic added to incorporate high-frequency OHLCV data from  into IA2 decisions and prompts.
-        - Escalation logic modified to include VOIE 3: an override that pushes strategies to IA2 if IA1's sentiment (long/short) is > 95%.
-        - Integration logic added to fetch and include global market context from  into both IA1 and IA2 prompts.
-        - Logic for calculating IA1 confidence adjusted with a bonus/malus system based on 24h market cap change.
-        - New admin endpoints added: , , , .
-        - Missing  import added.
-- : Contains advanced technical indicator calculations.
-    - **Summary of importance**: Centralizes all technical indicator logic, including Multi EMA/SMA and multi-timeframe calculations.
-    - **Changes made**: (No new direct code changes were explicitly logged in this trajectory, but its  dataclass structure was verified and its  method's return type confirmed).
-- : Manages fetching OHLCV data from multiple sources.
-    - **Summary of importance**: Provides reliable and comprehensive OHLCV data, including multi-timeframe support.
-    - **Changes made**: (No new direct code changes were explicitly logged in this trajectory, but it serves as the base for the new ).
--  (NEW FILE):
-    - **Summary of importance**: Fetches finer-meshed OHLCV data (e.g., 5-minute) from potentially different API sources to complement IA1's data, providing precise intra-day context for IA2. Includes metadata on API source.
-    - **Changes made**: New file created and implemented, then integrated into .
--  (NEW FILE):
-    - **Summary of importance**: Gathers general crypto market conditions (e.g., 24h market cap, volume, Bitcoin data, Fear & Greed Index) from external APIs (CoinGecko, CoinMarketCap, Binance fallback) to provide a broader context to the AI agents.
-    - **Changes made**: New file created. Implemented logic for fetching global market data, including fallback mechanisms for API rate limits and ensuring critical variables like 24h Market Cap Change are robustly collected.
-- : Project documentation.
-    - **Summary of importance**: Provides an overview and operational details of the application.
-    - **Changes made**: Updated to reflect the optimized project structure after cleanup.
-- : Documentation for testing and problem statements.
-    - **Summary of importance**: Used by the AI engineer for tracking testing outcomes and problem statements, as well as communication with testing agents.
-    - **Changes made**: Updated repeatedly with testing outcomes, problem statements, and summaries of fixes.
--  (TEMPORARY FILE):
-    - **Summary of importance**: A temporary script created to automate the removal of unnecessary files and directories (e.g., , , log files).
-    - **Changes made**: Created, executed, and then deleted.
--  (TEMPORARY FILE):
-    - **Summary of importance**: A temporary script created to analyze the repository for optimization opportunities, such as identifying potential duplications or areas for refactoring.
-    - **Changes made**: Created, executed, and then deleted.
+- : The core FastAPI application, orchestrating AI analysis, trading logic, and API endpoints. Integrates LLMs (IA1, IA2), manages the trading loop, and now handles position tracking.
+    - **Changes Made**:
+        - Frontend polling interval changed to 15s.
+        -  max workers reduced to 6.
+        - WebSocket update loops adjusted (30s to 60s).
+        - Position monitoring loop adjusted (5s to 15s).
+        -  imports moved to top of file and  removed.
+        -  helper function adjusted for robust datetime comparison (MongoDB ISO format vs.  objects).
+        - New endpoints added: , , , .
+        - Logic for  (VOIE 3 override) confirmed correct.
+        -  corrected to .
+        -  parameter added to IA2  calls.
+        -  function added.
+        - Position tracking logic integrated into IA1 analysis saving and IA2 decision saving, including  document insertion and status updates.
+        - Fallback  object fields populated to avoid Pydantic validation errors.
+        -  import removed.
+        - Email sending logic made production-ready with environment variables.
+        -  statements and bare  blocks improved with specific logging.
+        - Debug logs for IA2 prompt removed.
+        - IA2  method wrapped in a broad  block to ensure robustness and return a fallback decision on error.
+        - The entire complex IA2 prompt generation logic (lines 4200 to 9273) has been deleted and replaced with a new, minimal IA2 prompt structure at the end of the trajectory.
+- : Defines Pydantic models for data structures.
+    - **Changes Made**:
+        -  field added to  model.
+        -  field added to  model.
+        - New  Pydantic model and associated MongoDB collection defined.
+- : Manages market data aggregation.
+    - **Changes Made**:  max workers reduced from 20 to 6.
+- : Handles trending crypto updates.
+    - **Changes Made**:  import moved to top of file and  removed.
+- : Manages active trading positions.
+    - **Changes Made**: Position monitoring  increased from 5s to 15s.
+- : Main frontend React component.
+    - **Changes Made**: Frontend data fetching  increased from 5 seconds to 15 seconds.
 </code_architecture>
 
 <pending_tasks>
 - Investigate and resolve the persistent timestamp mismatch error for non-BTC/ETH symbols during BingX trade execution.
 - Evaluate and potentially adjust Risk Management parameters to allow trades with smaller balances.
 - Address the recurring issue of the trading system reverting to SIMULATION mode.
-- Continue refactoring the codebase according to the recommendations, specifically addressing overall logic problems and coding errors leading to CPU-intensive loops.
+- Fully resolve the  error that still prevents proper IA1 cycle completion and opportunity storage.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer had completed a series of significant enhancements and optimizations, culminating in a repository cleanup. The most recent explicit user request was to initiate a comprehensive refactoring process, with a primary focus on identifying and resolving overall logic problems and coding errors like loops that tear the cpu apart.
+Immediately before this summary request, the AI engineer was focused on definitively resolving the persistent  bug within the IA2 decision-making pipeline. Despite previous attempts to pinpoint and fix specific problematic f-strings and variable accesses, the bug continued to manifest, leading to IA2 generating fallback decisions instead of detailed strategic reasoning.
 
-The AI engineer has just started this refactoring phase, which is designated as PHASE 1: DIAGNOSTIC CRITIQUE - TRAQUE AUX LOOPS INFERNALES. The current action involves actively diagnosing CPU-intensive loops. The last observed action was checking USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           1  0.7  0.0   4192  2304 ?        Ss   16:35   0:00 /bin/bash /entrypoint.sh
-root          13  3.6  0.0  35732 24576 ?        S    16:35   0:00 /opt/plugins-venv/bin/python /opt/plugins-venv/bin/e1_monitor 3f22f3b7-779b-4590-94a1-c0df527d45eb https://demobackend.emergentagent.com --interval 1
-root          15  0.0  0.0      0     0 ?        R    16:35   0:00 [sudo]
-root          18 29.9  0.0 319144 80072 ?        Sl   16:35   0:01 /opt/plugins-venv/bin/python /opt/plugins-venv/bin/uvicorn plugins.tools.agent.server:app --host 0.0.0.0 --port 8010 --workers 1 --no-access-log
-root          25  0.4  0.0  37244 25268 ?        Ss   16:35   0:00 /usr/bin/python3 /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
-root          27  5.6  0.0 102828 26496 ?        Sl   16:35   0:00 /root/.venv/bin/python /root/.venv/bin/uvicorn server:app --host 0.0.0.0 --port 8001 --workers 1 --reload
-root          29 13.4  0.0 867032 66880 ?        Sl   16:35   0:00 /usr/lib/code-server/lib/node /usr/lib/code-server --config /root/.config/code-server/config.yaml /app
-root          32  6.8  0.0 1065940 87276 ?       Sl   16:35   0:00 node /bin/yarn start
-root          35 21.2  0.0 309180 130560 ?       Rl   16:35   0:00 /usr/bin/mongod --bind_ip_all
-root          68  0.0  0.0   2324  1152 ?        S    16:35   0:00 /bin/sh -c craco start
-root          69  2.0  0.0 528212 41088 ?        Sl   16:35   0:00 /usr/bin/node /app/frontend/node_modules/.bin/craco start
-root          76  1.5  0.0  15920 10368 ?        S    16:35   0:00 /root/.venv/bin/python -c from multiprocessing.resource_tracker import main;main(4)
-root          77 13.6  0.0  47644 33792 ?        R    16:35   0:00 /root/.venv/bin/python -c from multiprocessing.spawn import spawn_main; spawn_main(tracker_fd=5, pipe_handle=7) --multiprocessing-fork
-root          78 12.3  0.0 737712 56064 ?        Rl   16:35   0:00 /usr/bin/node /app/frontend/node_modules/@craco/craco/dist/scripts/start.js
-root          93 13.5  0.0 748032 51840 ?        Sl   16:36   0:00 /usr/lib/code-server/lib/node /usr/lib/code-server/out/node/entry
-root          95  0.0  0.0   4336  2688 ?        S    16:36   0:00 /bin/bash -c mkdir -p /app/.emergent && echo "<analysis> The previous AI engineer's work primarily involved a series of iterative enhancements and critical bug fixes for a Dual AI Trading Bot. Initial efforts focused on refining IA2's Risk-Reward (RR) calculation, transitioning from a complex volatility-based approach to a simpler support/resistance logic as requested by the user. This involved significant prompt engineering and debugging of f-string formatting errors (`"string indices must be integers, not 'str'"`).  Following the RR fix, the work expanded to integrating advanced market intelligence. This included developing an "intelligent OHLCV fetcher" for high-frequency data (5-minute intervals) for IA2, and a "global crypto market analyzer" to provide general market conditions (price, volume, market cap, fear/greed) to both IA1 and IA2, complete with fallback mechanisms for API rate limits.  Crucially, the engineer implemented an override for IA1-to-IA2 escalation based on high sentiment (95%+) and a "bonus/malus" system for IA1 confidence, penalizing short positions during market cap increase and long positions during market cap decrease. The latest phase involved repository cleanup and optimization, followed by a user request to initiate refactoring focusing on performance issues, specifically identifying and resolving CPU-intensive loops. The AI engineer is currently in the diagnostic phase for performance. </analysis>  <product_requirements> The "Ultra Professional Edition" Dual AI Trading Bot is a full-stack application for automated, sophisticated trading on BingX Futures, leveraging GPT-4o (IA1) for technical analysis and Claude-3-7-Sonnet (IA2) for strategic trading. A key architectural requirement is the dual AI pipeline: IA1 analyses with >70% confidence or RR >= 2.0 feed into IA2, which requires >80% confidence for execution.  The product aims for highly selective and precise trading signals using advanced indicators (VWAP, MFI, Multi EMA/SMA, multi-timeframe analysis) and robust risk management.  Key user requests and product enhancements within this trajectory include: 1.  **IA2 RR Calculation Simplification**: IA2's Risk-Reward (RR) calculation must use a simple support/resistance formula, consistent with IA1's logic, replacing complex volatility-based calculations. 2.  **Intelligent OHLCV for IA2**: Implement a module for IA2 to fetch finer-meshed OHLCV data (e.g., 5-minute intervals) from a different API source than IA1, to enable more precise S/R level calculations and dynamic RR. 3.  **Sentiment-Based IA2 Override**: Create an override mechanism where IA1 analyses with a sentiment (long/short) exceeding 95% confidence are automatically escalated to IA2, even if other RR/confidence criteria are not met. 4.  **Global Crypto Market Conditions**: Integrate a module to fetch general crypto market conditions (e.g., 24h volume, Bitcoin dominance, market cap, fear & greed index) from external APIs (CoinGecko, CoinMarketCap, Binance fallback) and feed this context to both IA1 and IA2. Ensure critical variables like 24h market cap change are robustly fetched. 5.  **Market Cap-based Confidence Adjustment**: Implement a "bonus/malus" logic in IA1's confidence calculation, penalizing short positions if the 24h market cap increases and long positions if it decreases, to align with global market momentum. 6.  **Repository Optimization**: Clean up the codebase by removing unnecessary files and identify areas for future refactoring, particularly focusing on performance. </product_requirements>  <key_technical_concepts> - **FastAPI**: Backend API framework for the trading bot. - **LLMs**: GPT-4o (IA1) for analysis, Claude-3-7-Sonnet (IA2) for strategic decisions. - **Technical Indicators**: Multi EMA/SMA, VWAP, MFI, RSI, MACD, Stochastic, Bollinger Bands. - **Multi-Timeframe Analysis**: Utilizing OHLCV data across various timeframes (e.g., 1D, 4H, 5min). - **Prompt Engineering**: Crafting precise instructions for LLM agents. - **External APIs**: CoinGecko, CoinMarketCap, Binance (for global market data). - **Risk-Reward (RR) Calculation**: Dynamic calculations based on support/resistance and volatility. - **Concurrency**: `asyncio` for managing asynchronous operations, especially WebSockets. - **Dataclasses**: Python's `dataclasses` for structured data models (e.g., `TechnicalIndicators`). </key_technical_concepts>  <code_architecture> ``` /app/ ├── backend/ │   ├── requirements.txt │   ├── server.py │   ├── .env │   ├── market_data_service.py │   ├── advanced_market_aggregator.py │   ├── bingx_trading_engine.py │   ├── trending_auto_updater.py │   ├── technical_pattern_detector.py │   ├── bingx_official_engine.py │   ├── enhanced_ohlcv_fetcher.py │   ├── advanced_trading_strategies.py │   ├── bingx_symbol_fetcher.py │   ├── active_position_manager.py │   ├── backtesting_engine.py │   ├── ai_training_system.py │   ├── adaptive_context_system.py │   ├── data_models.py │   ├── ai_performance_enhancer.py │   ├── ai_training_optimizer.py │   ├── chartist_learning_system.py │   ├── advanced_technical_indicators.py │   ├── bingx_integration.py │   ├── intelligent_ohlcv_fetcher.py  (NEW) │   ├── global_crypto_market_analyzer.py (NEW) ├── frontend/ │   ├── package.json │   ├── tailwind.config.js │   ├── postcss.config.js │   ├── .env │   ├── public/ │   └── src/ │       ├── index.js │       ├── App.js │       ├── App.css │       ├── index.css │       ├── components/ui/ │       └── hooks/ ├── README.md ├── test_result.md ``` - `/app/backend/server.py`: The core FastAPI application.     - **Summary of importance**: Orchestrates AI analysis, trading logic, and API endpoints. Integrates LLMs (IA1, IA2) and manages the trading loop.     - **Changes made**:         - IA2 prompt updated to use simple S/R based RR calculation, removing complex volatility logic.         - IA2 `session_id` modified to force new LLM sessions, preventing caching issues.         - F-string conditional logic for `current_indicators` access fixed using `getattr()` to prevent "string indices must be integers" errors when data is `None`.         - Integration logic added to incorporate high-frequency OHLCV data from `intelligent_ohlcv_fetcher.py` into IA2 decisions and prompts.         - Escalation logic modified to include "VOIE 3": an override that pushes strategies to IA2 if IA1's sentiment (long/short) is > 95%.         - Integration logic added to fetch and include global market context from `global_crypto_market_analyzer.py` into both IA1 and IA2 prompts.         - Logic for calculating IA1 confidence adjusted with a "bonus/malus" system based on 24h market cap change.         - New admin endpoints added: `/api/admin/intelligent-ohlcv/status`, `/api/admin/simulate-voie3`, `/api/admin/global-market-data`, `/api/admin/market/critical-variables`.         - Missing `Tuple` import added. - `/app/backend/advanced_technical_indicators.py`: Contains advanced technical indicator calculations.     - **Summary of importance**: Centralizes all technical indicator logic, including Multi EMA/SMA and multi-timeframe calculations.     - **Changes made**: (No new direct code changes were explicitly logged in this trajectory, but its `TechnicalIndicators` dataclass structure was verified and its `get_scientific_indicators` method's return type confirmed). - `/app/backend/enhanced_ohlcv_fetcher.py`: Manages fetching OHLCV data from multiple sources.     - **Summary of importance**: Provides reliable and comprehensive OHLCV data, including multi-timeframe support.     - **Changes made**: (No new direct code changes were explicitly logged in this trajectory, but it serves as the base for the new `intelligent_ohlcv_fetcher.py`). - `/app/backend/intelligent_ohlcv_fetcher.py` (NEW FILE):     - **Summary of importance**: Fetches finer-meshed OHLCV data (e.g., 5-minute) from potentially different API sources to complement IA1's data, providing precise intra-day context for IA2. Includes metadata on API source.     - **Changes made**: New file created and implemented, then integrated into `server.py`. - `/app/backend/global_crypto_market_analyzer.py` (NEW FILE):     - **Summary of importance**: Gathers general crypto market conditions (e.g., 24h market cap, volume, Bitcoin data, Fear & Greed Index) from external APIs (CoinGecko, CoinMarketCap, Binance fallback) to provide a broader context to the AI agents.     - **Changes made**: New file created. Implemented logic for fetching global market data, including fallback mechanisms for API rate limits and ensuring critical variables like 24h Market Cap Change are robustly collected. - `/app/README.md`: Project documentation.     - **Summary of importance**: Provides an overview and operational details of the application.     - **Changes made**: Updated to reflect the optimized project structure after cleanup. - `/app/test_result.md`: Documentation for testing and problem statements.     - **Summary of importance**: Used by the AI engineer for tracking testing outcomes and problem statements, as well as communication with testing agents.     - **Changes made**: Updated repeatedly with testing outcomes, problem statements, and summaries of fixes. - `/app/cleanup_repo.sh` (TEMPORARY FILE):     - **Summary of importance**: A temporary script created to automate the removal of unnecessary files and directories (e.g., `__pycache__`, `node_modules/.cache`, log files).     - **Changes made**: Created, executed, and then deleted. - `/app/analyze_code.sh` (TEMPORARY FILE):     - **Summary of importance**: A temporary script created to analyze the repository for optimization opportunities, such as identifying potential duplications or areas for refactoring.     - **Changes made**: Created, executed, and then deleted. </code_architecture>  <pending_tasks> - Investigate and resolve the persistent "timestamp mismatch" error for non-BTC/ETH symbols during BingX trade execution. - Evaluate and potentially adjust Risk Management parameters to allow trades with smaller balances. - Address the recurring issue of the trading system reverting to "SIMULATION" mode. - Continue refactoring the codebase according to the recommendations, specifically addressing overall logic problems and coding errors leading to CPU-intensive loops. </pending_tasks>  <current_work> Immediately before this summary request, the AI engineer had completed a series of significant enhancements and optimizations, culminating in a repository cleanup. The most recent explicit user request was to initiate a comprehensive refactoring process, with a primary focus on identifying and resolving "overall logic problems and coding errors like loops that tear the cpu apart."  The AI engineer has just started this refactoring phase, which is designated as "PHASE 1: DIAGNOSTIC CRITIQUE - TRAQUE AUX LOOPS INFERNALES." The current action involves actively diagnosing CPU-intensive loops. The last observed action was checking `ps aux` for process CPU usage and searching `server.py` for common loop patterns (`while True`, `for...in...range`, `@app.websocket`, `asyncio.sleep`, `time.sleep`) to pinpoint potential performance bottlenecks. The user's last message was a simple "contninue", prompting the AI engineer to proceed with the detailed analysis of suspicious loops. </current_work>  <optional_next_step> Continue the detailed analysis of identified suspicious loops in `server.py` and other backend files to pinpoint and resolve CPU-intensive operations. </optional_next_step>" > /app/.emergent/summary.txt
-root         104  0.0  0.0   4192  2304 ?        S    16:36   0:00 /bin/bash -c (sudo supervisorctl stop frontend &&  find /app \( -name node_modules -o -name .git \) -prune -o -type f -exec grep -Il -E '(https://.*\.preview\.emergentagent\.com|=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})' {} + | xargs -r sed -i -E 's|https://[^.]*\.preview\.emergentagent\.com|https://tradingbot-optim.preview.emergentagent.com|g; s|=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|=tradingbot-optim|g' || true && find /var/log -type f -exec truncate -s 0 {} + 2>/dev/null || true && cd /app/frontend && yarn install && cd - && sudo supervisorctl restart frontend) 2>&1 | tee /var/log/fork_config.log
-root         106  0.0  0.0   4192  1152 ?        S    16:36   0:00 /bin/bash -c (sudo supervisorctl stop frontend &&  find /app \( -name node_modules -o -name .git \) -prune -o -type f -exec grep -Il -E '(https://.*\.preview\.emergentagent\.com|=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})' {} + | xargs -r sed -i -E 's|https://[^.]*\.preview\.emergentagent\.com|https://tradingbot-optim.preview.emergentagent.com|g; s|=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|=tradingbot-optim|g' || true && find /var/log -type f -exec truncate -s 0 {} + 2>/dev/null || true && cd /app/frontend && yarn install && cd - && sudo supervisorctl restart frontend) 2>&1 | tee /var/log/fork_config.log
-root         107  0.0  0.0   2644  1152 ?        S    16:36   0:00 tee /var/log/fork_config.log
-root         109  0.0  0.0   7808  3456 ?        S    16:36   0:00 sudo supervisorctl stop frontend
-root         127  9.6  0.0  17004  9984 ?        R    16:36   0:00 /usr/bin/python3 /usr/bin/supervisorctl stop frontend
-root         165  0.0  0.0   8580  3456 ?        R    16:36   0:00 ps aux for process CPU usage and searching  for common loop patterns (, , , , ) to pinpoint potential performance bottlenecks. The user's last message was a simple contninue, prompting the AI engineer to proceed with the detailed analysis of suspicious loops.
+To address this, the AI engineer has adopted a radical approach: simplifying the entire IA2 prompt and its generation logic. The trajectory concludes with the engineer having just **deleted a large section of the old, complex IA2 prompt code (from lines 4200 to 9273 in )** and replaced it with a new, minimal prompt structure. This action is intended to eliminate the source of the  bug once and for all, allowing for a fresh, robust implementation of IA2's strategic reasoning. The immediate next step would be to test this newly simplified IA2 implementation to confirm that it now functions correctly without the previous errors and generates proper strategic decisions.
 </current_work>
 
 <optional_next_step>
-Continue the detailed analysis of identified suspicious loops in  and other backend files to pinpoint and resolve CPU-intensive operations.
+Test the newly simplified IA2 prompt and decision-making logic to confirm the  bug is resolved and IA2 generates strategic reasoning.
 </optional_next_step>
