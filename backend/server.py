@@ -4227,7 +4227,7 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
                 
             final_rr = final_reward / final_risk if final_risk > 0 else 1.0
             
-            # Create final decision
+            # Create final decision with strategic fields
             decision = TradingDecision(
                 symbol=symbol,
                 signal=claude_signal,
@@ -4240,9 +4240,15 @@ CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
                 position_size=position_size_rec,  # Use strategic recommendation
                 risk_reward_ratio=final_rr,
                 ia1_analysis_id=analysis.id,
-                ia2_reasoning=strategic_reasoning,
-                reasoning=f"IA2 Strategic Decision: {strategic_reasoning}",
-                market_context=f"ia1_confidence_{ia1_confidence:.0%}_rr_{final_rr:.1f}_regime_{market_regime}_priority_{execution_priority}"
+                ia2_reasoning=f"IA2 Strategic Analysis: {strategic_reasoning}",
+                # 🚀 NEW STRATEGIC FIELDS
+                strategic_reasoning=strategic_reasoning,
+                market_regime_assessment=market_regime,
+                position_size_recommendation=position_size_rec,
+                execution_priority=execution_priority,
+                calculated_rr=calculated_rr,
+                rr_reasoning=rr_reasoning,
+                risk_level=claude_risk
             )
             
             logger.info(f"✅ IA2 SUCCESS: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%}, RR: {final_rr:.2f}:1)")
