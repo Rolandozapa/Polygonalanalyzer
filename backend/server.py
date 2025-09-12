@@ -9579,15 +9579,15 @@ async def force_voie3_processing():
                     if decision:
                         # Store decision with position_id link (même les décisions HOLD/hold)
                         decision_dict = decision.dict()
-                        decision_dict["ia1_position_id"] = analysis.position_id
+                        decision_dict["ia1_position_id"] = pos_tracking.position_id
                         
                         await db.trading_decisions.insert_one(decision_dict)
                         
                         # Update position tracking
                         await update_position_tracking_ia2(
-                            position_id=analysis.position_id,
+                            position_id=pos_tracking.position_id,
                             decision=decision,
-                            voie_used=3,
+                            voie_used=3 if pos_tracking.voie_3_eligible else 1,
                             success=True
                         )
                         
