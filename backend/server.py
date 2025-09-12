@@ -5315,11 +5315,23 @@ async def force_ia1_cycle():
     try:
         logger.info(f"🚀 FORCING IA1 ANALYSIS on latest scout selection")
         
-        # Get opportunities from the orchestrator's scout - ANALYZE LATEST SCOUT SELECTION
-        opportunities = orchestrator.scout.market_aggregator.get_current_opportunities()
+        # 🔧 FIX: Use direct market aggregator access instead of orchestrator.scout
+        from advanced_market_aggregator import advanced_market_aggregator
+        
+        # Get opportunities directly from market aggregator - ANALYZE LATEST SCOUT SELECTION
+        opportunities = advanced_market_aggregator.get_current_opportunities()
         
         if not opportunities:
-            return {"success": False, "error": "No opportunities available from scout"}
+            logger.warning("No opportunities from market aggregator, trying orchestrator scout...")
+            # Fallback: try orchestrator scout
+            try:
+                opportunities = orchestrator.scout.market_aggregator.get_current_opportunities()
+            except Exception as scout_error:
+                logger.error(f"Scout access error: {scout_error}")
+                return {"success": False, "error": f"No opportunities available from scout: {scout_error}"}
+        
+        if not opportunities:
+            return {"success": False, "error": "No opportunities available from any source"}
             
         # 🎯 USE FIRST OPPORTUNITY FROM SCOUT (latest/best)
         target_opportunity = opportunities[0]
