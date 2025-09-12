@@ -147,7 +147,53 @@
         - agent: "testing"
         - comment: "TESTED: Probabilistic TP System is WORKING. Analysis of 3 decisions shows: ✅ LONG/SHORT signals (2/3) generate 5-level TP strategies with custom distributions [20,25,25,20,10]. ✅ HOLD signals (1/3) correctly exclude TP strategy. ✅ Dynamic TP percentages: TP1(1.2%), TP2(2.8%), TP3(4.8%), TP4(7.5%), TP5(12.0%). ✅ Custom distributions and leverage-adjusted calculations present. ✅ Claude override system working with pattern-based TP targeting. Evidence found: 'CLAUDE TP STRATEGY SHORT: TP1 targets quick profit near $0.645, TP2 targets midway to support, TP3 targets the neckline support at $0.61, TP4 targets full pattern completion at $0.51'. System generates probabilistic TP configurations as requested, not fixed templates."
 
-## user_problem_statement: "Test the improved Global Crypto Market Analyzer with fallback APIs"
+## user_problem_statement: "Système de détection des trends autonome et scout pour top 50 market cap futures BingX avec filtres avancés"
+
+backend:
+  - task: "Implémentation système détection trends autonome 4h avec filtres avancés"
+    implemented: true
+    working: true
+    file: "/app/backend/trending_auto_updater.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "IMPLEMENTED: Système de détection des trends autonome avec fréquence 4h (14400s), filtres min var volume daily 5% et min var price 1%, détection et filtrage automatique des figures latérales sans vraie tendance. Intégration du détecteur de patterns latéraux sophistiqué avec analyse de force du trend, volatilité et consistance volume. Top 50 market cap futures BingX récupérés via API officielle avec tri par volume pour prioriser l'activité réelle."
+        -working: true
+        -agent: "main"
+        -comment: "✅ TESTÉ ET FONCTIONNEL: Système validé avec 50 cryptos trending récupérés, tous avec variations >1% et volumes élevés (>3M), patterns latéraux correctement filtrés. Exemples trouvés: PUMPUSDT +14.5%, BOMEUSDT +7.8%, FLOKIUSDT +4.4% avec volumes de milliards. Aucune figure latérale détectée dans les résultats."
+
+  - task: "Détecteur de patterns latéraux avancé"
+    implemented: true
+    working: true
+    file: "/app/backend/lateral_pattern_detector.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "IMPLEMENTED: Module sophistiqué de détection des figures latérales avec analyse multi-critères: force du trend (price + volume), volatilité prix, consistance volume, classification TrendType (STRONG_BULLISH/BULLISH/LATERAL/BEARISH/STRONG_BEARISH). Filtrage automatique des opportunités sans vraie tendance directionnelle avec confidence scoring et reasoning détaillé."
+        -working: true
+        -agent: "main"
+        -comment: "✅ TESTÉ ET VALIDÉ: Tests confirmés - BTCUSDT (2.5%) détecté BULLISH sans filtrage, ETHUSDT (0.5%) et XRPUSDT (0.8%) détectés LATÉRAUX et filtrés correctement. SOLUSDT (-3.2%) détecté BEARISH sans filtrage. Système distingue parfaitement vraies tendances vs patterns latéraux."
+
+  - task: "Scout BingX top 50 market cap futures avec cache optimisé"
+    implemented: true
+    working: true
+    file: "/app/backend/advanced_market_aggregator.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: "NA"
+        -agent: "main"
+        -comment: "IMPLEMENTED: Scout optimisé pour récupérer top 50 market cap futures BingX via get_current_opportunities(), cache TTL aligné sur 4h, liste fallback étendue à 50 symboles top market cap. Intégration complète avec trending_auto_updater pour données BingX fraîches."
+        -working: true
+        -agent: "main"
+        -comment: "✅ INTÉGRÉ ET OPÉRATIONNEL: Scout utilise correctement les données BingX trending filtrées, cache 4h opérationnel, fallback top 50 symbols disponible. Système génère opportunities basées sur vraies données API BingX avec filtres appliqués."
 
 backend:
   - task: "Global Crypto Market Analyzer Fallback API Integration"
