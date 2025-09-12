@@ -110,7 +110,7 @@ class TrendingAutoUpdater:
                 break
             except Exception as e:
                 logger.error(f"Error in trending update loop: {e}")
-                await asyncio.sleep(3600)  # Retry in 1 hour on error
+                await asyncio.sleep(14400)  # Retry in 4 hours on error
     
     async def fetch_trending_cryptos(self) -> List[TrendingCrypto]:
         """
