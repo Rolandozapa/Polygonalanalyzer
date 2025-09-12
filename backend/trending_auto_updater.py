@@ -24,28 +24,38 @@ class TrendingCrypto:
     price_change: Optional[float] = None
     volume: Optional[float] = None
     market_cap: Optional[float] = None
-    source: str = "readdy_trends"
+    source: str = "bingx_futures"
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 class TrendingAutoUpdater:
     """
-    Auto-updater qui récupère les trends crypto toutes les 6h depuis Readdy
+    🚀 BingX Futures Auto-updater - Récupère trends et top 50 depuis BingX API
+    Remplace Readdy.link par source officielle BingX futures
     """
     
     def __init__(self):
-        self.trending_url = "https://readdy.link/preview/917833d5-a5d5-4425-867f-4fe110fa36f2/1956022"
-        self.update_interval = 21600  # 6 heures en secondes
+        # 🎯 BingX API endpoints for futures market data  
+        self.bingx_api_base = "https://open-api.bingx.com"
+        self.bingx_futures_url = "https://bingx.com/en/market/futures/usd-m-perp"
+        self.update_interval = 3600  # 1 heure (plus fréquent que 6h pour avoir data fraîche)
         self.last_update = None
         self.current_trending = []
         self.is_running = False
         self.update_task = None
         
-        # Patterns de détection des cryptos trending
-        self.crypto_patterns = [
-            r'([A-Z]{2,10})\s*-?\s*.*?Rank\s*#(\d+)',  # Pattern principal
-            r'([A-Z]{2,10})\s*\([^)]+\)\s*.*?#(\d+)',   # Pattern avec parenthèses
-            r'([A-Z]{2,10})\s*.*?#(\d+)',               # Pattern simple
-            r'([A-Z]{2,10}USDT?)',                      # Pattern direct
+        # 🔥 BingX specific patterns pour extraction
+        self.bingx_patterns = [
+            r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMB]?)',  # Volume pattern
+            r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMBT]?)',  # Market cap pattern
+        ]
+        
+        # Top crypto symbols pour fallback (BingX top futures)
+        self.bingx_top_futures = [
+            "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT",
+            "BNBUSDT", "HYPEUSDT", "SUIUSDT", "TRXUSDT", "LINKUSDT", "AVAXUSDT",
+            "XLMUSDT", "PIUSDT", "CROUSDT", "MUSDT", "WLFIUSDT", "UNIUSDT",
+            "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "ETCUSDT", "FILUSDT",
+            "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT"
         ]
         
         logger.info("TrendingAutoUpdater initialized - 6h update cycle")
