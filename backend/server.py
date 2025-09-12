@@ -5772,7 +5772,7 @@ Provide your decision in the EXACT JSON format above with complete market-adapti
             
             reasoning += f"Fallback IA2 R:R calculation: {risk_reward:.2f}:1 (IA1 R:R unavailable). "
             
-            # 🚨 BUG FIX: Respecter la hiérarchie IA2 > Multi-RR > IA1
+            # ✅ FIXED: Hierarchie IA1 → IA2 respectée - IA1 calcule RR précis basé sur S/R
             has_multi_rr_override = "Multi-RR applied" in reasoning or "🎯 Multi-RR applied" in reasoning
             
             # Seuil plus strict pour cohérence avec filtre IA1 - SAUF si IA2 absolute override ou Multi-RR override
