@@ -4235,11 +4235,67 @@ CRITICAL: Provide comprehensive strategic analysis with precise technical levels
                 # 🔧 FIX: Claude returns "reasoning", not "strategic_reasoning"
                 strategic_reasoning = decision_data.get("reasoning", decision_data.get("strategic_reasoning", "IA2 strategic analysis"))
                 claude_risk = decision_data.get("risk_level", "medium")
-                position_size_rec = decision_data.get("position_size_recommendation", 2.0)
+                position_size_rec = decision_data.get("position_size", decision_data.get("position_size_recommendation", 2.0))
                 market_regime = decision_data.get("market_regime_assessment", "neutral")
                 execution_priority = decision_data.get("execution_priority", "immediate")
                 calculated_rr = decision_data.get("calculated_rr", rr_ratio)
                 rr_reasoning = decision_data.get("rr_reasoning", f"IA2 R:R based on S/R levels: {calculated_rr:.2f}:1")
+                
+                # 🎯 NEW: Extract IA2 technical levels
+                ia2_entry = decision_data.get("ia2_entry_price", current_price)
+                ia2_sl = decision_data.get("ia2_stop_loss", current_price * 0.97)  # Default 3% SL
+                ia2_tp1 = decision_data.get("ia2_take_profit_1", current_price * 1.06)  # Default 6% TP
+                ia2_tp2 = decision_data.get("ia2_take_profit_2", current_price * 1.09)  # Default 9% TP  
+                ia2_tp3 = decision_data.get("ia2_take_profit_3", current_price * 1.12)  # Default 12% TP
+                trade_ready = decision_data.get("trade_execution_ready", False)
+                
+                # 🚀 CALCULATE IA2 RR WITH CORRECT FORMULA
+                if claude_signal == "long":
+                    ia2_calculated_rr = (ia2_tp1 - ia2_entry) / (ia2_entry - ia2_sl) if (ia2_entry - ia2_sl) != 0 else 0
+                elif claude_signal == "short":
+                    ia2_calculated_rr = (ia2_entry - ia2_tp1) / (ia2_sl - ia2_entry) if (ia2_sl - ia2_entry) != 0 else 0
+                else:  # hold
+                    ia2_calculated_rr = 0
+                
+                # 🎯 AUTO-EXECUTION LOGIC: RR > 2.0 AND Confidence > 80%
+                auto_execution = False
+                if (claude_signal in ["long", "short"] and 
+                    ia2_calculated_rr >= 2.0 and 
+                    claude_confidence >= 0.80 and 
+                    execution_priority == "immediate"):
+                    auto_execution = True
+                    logger.info(f"🚀 AUTO-EXECUTION TRIGGERED: {symbol} {claude_signal.upper()} - RR: {ia2_calculated_rr:.2f}:1, Confidence: {claude_confidence:.1%}")
+                
+                logger.info(f"✅ IA2 STRATEGIC: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%})")
+                logger.info(f"   📊 Market Regime: {market_regime}")
+                logger.info(f"   🎯 Position Size: {position_size_rec}%")
+                logger.info(f"   ⚡ Execution: {execution_priority}")
+                logger.info(f"   📈 IA2 Calculated RR: {ia2_calculated_rr:.2f}:1")
+                logger.info(f"   💰 IA2 Levels: Entry=${ia2_entry:.4f}, SL=${ia2_sl:.4f}, TP1=${ia2_tp1:.4f}")
+                logger.info(f"   🚀 Auto-Execution: {'YES' if auto_execution else 'NO'}")
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"❌ IA2: JSON parse error for {symbol}: {e}")
+                logger.error(f"   Raw response: {response_text[:200]}...")
+                # Enhanced fallback with strategic elements
+                claude_signal = signal
+                claude_confidence = max(0.6, min(0.9, ia1_confidence * 0.9))
+                strategic_reasoning = f"IA2 strategic analysis: {ia1_signal.upper()} signal with {ia1_confidence:.1%} confidence. Market structure analysis indicates {ia1_signal} bias with calculated risk-reward of {rr_ratio:.2f}:1."
+                claude_risk = "medium"
+                position_size_rec = 2.0
+                market_regime = "neutral"
+                execution_priority = "immediate"
+                calculated_rr = rr_ratio
+                rr_reasoning = f"Simple S/R calculation: LONG RR = (TP-Entry)/(Entry-SL), SHORT RR = (Entry-TP)/(SL-Entry) = {rr_ratio:.2f}:1"
+                # Fallback levels
+                ia2_entry = current_price
+                ia2_sl = current_price * 0.97
+                ia2_tp1 = current_price * 1.06
+                ia2_tp2 = current_price * 1.09
+                ia2_tp3 = current_price * 1.12
+                ia2_calculated_rr = rr_ratio
+                auto_execution = False
+                trade_ready = False
                 
                 logger.info(f"✅ IA2 STRATEGIC: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%})")
                 logger.info(f"   📊 Market Regime: {market_regime}")
