@@ -108,60 +108,123 @@ class IA1RiskRewardIndependenceTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_trending_auto_updater_configuration(self):
-        """Test 1: Verify Trending Auto-Updater Configuration (4h frequency, filters)"""
-        logger.info("\n🔍 TEST 1: Trending Auto-Updater Configuration Test")
+    async def test_1_ia1_rr_formula_validation(self):
+        """Test 1: Validate IA1 RR Formula Implementation"""
+        logger.info("\n🔍 TEST 1: IA1 RR Formula Validation Test")
         
         try:
-            if not self.trending_updater:
-                self.log_test_result("Trending Auto-Updater Configuration", False, 
-                                   "Trending updater module not available")
-                return
+            # Test RR formula implementation with known values
+            test_cases = [
+                {
+                    "name": "LONG Scenario - Standard Case",
+                    "signal": "LONG",
+                    "entry": 100.0,
+                    "take_profit": 110.0,
+                    "stop_loss": 95.0,
+                    "expected_rr": (110.0 - 100.0) / (100.0 - 95.0),  # 10/5 = 2.0
+                    "expected_formula": "LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)"
+                },
+                {
+                    "name": "SHORT Scenario - Standard Case", 
+                    "signal": "SHORT",
+                    "entry": 100.0,
+                    "take_profit": 90.0,
+                    "stop_loss": 105.0,
+                    "expected_rr": (100.0 - 90.0) / (105.0 - 100.0),  # 10/5 = 2.0
+                    "expected_formula": "SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)"
+                },
+                {
+                    "name": "LONG Scenario - High RR Case",
+                    "signal": "LONG", 
+                    "entry": 50.0,
+                    "take_profit": 65.0,
+                    "stop_loss": 47.0,
+                    "expected_rr": (65.0 - 50.0) / (50.0 - 47.0),  # 15/3 = 5.0
+                    "expected_formula": "LONG: RR = (Take_Profit - Entry) / (Entry - Stop_Loss)"
+                },
+                {
+                    "name": "SHORT Scenario - High RR Case",
+                    "signal": "SHORT",
+                    "entry": 50.0,
+                    "take_profit": 35.0,
+                    "stop_loss": 53.0,
+                    "expected_rr": (50.0 - 35.0) / (53.0 - 50.0),  # 15/3 = 5.0
+                    "expected_formula": "SHORT: RR = (Entry - Take_Profit) / (Stop_Loss - Entry)"
+                }
+            ]
             
-            # Check configuration
-            config_analysis = {
-                'update_interval': self.trending_updater.update_interval,
-                'expected_interval': 14400,  # 4 hours
-                'bingx_api_configured': bool(self.trending_updater.bingx_api_base),
-                'top_futures_count': len(self.trending_updater.bingx_top_futures),
-                'expected_futures_count': 50,
-                'has_pattern_detector': hasattr(self.trending_updater, 'pattern_detector')
+            formula_validation_results = {
+                'total_tests': len(test_cases),
+                'correct_calculations': 0,
+                'formula_matches': 0,
+                'calculation_errors': []
             }
             
-            logger.info(f"   📊 Configuration Analysis:")
-            logger.info(f"      Update interval: {config_analysis['update_interval']}s (expected: {config_analysis['expected_interval']}s)")
-            logger.info(f"      BingX API configured: {config_analysis['bingx_api_configured']}")
-            logger.info(f"      Top futures symbols: {config_analysis['top_futures_count']} (expected: {config_analysis['expected_futures_count']})")
-            logger.info(f"      Pattern detector integration: {config_analysis['has_pattern_detector']}")
+            logger.info(f"   📊 Testing {len(test_cases)} RR formula scenarios:")
             
-            # Verify 4h frequency
-            frequency_correct = config_analysis['update_interval'] == config_analysis['expected_interval']
+            for i, test_case in enumerate(test_cases):
+                try:
+                    # Calculate using our expected formula
+                    if test_case['signal'] == 'LONG':
+                        calculated_rr = self.rr_formulas['LONG'](
+                            test_case['entry'], 
+                            test_case['take_profit'], 
+                            test_case['stop_loss']
+                        )
+                    else:  # SHORT
+                        calculated_rr = self.rr_formulas['SHORT'](
+                            test_case['entry'], 
+                            test_case['take_profit'], 
+                            test_case['stop_loss']
+                        )
+                    
+                    # Check if calculation matches expected
+                    calculation_correct = abs(calculated_rr - test_case['expected_rr']) < 0.001
+                    
+                    if calculation_correct:
+                        formula_validation_results['correct_calculations'] += 1
+                        formula_validation_results['formula_matches'] += 1
+                        status = "✅"
+                    else:
+                        formula_validation_results['calculation_errors'].append(
+                            f"{test_case['name']}: Expected {test_case['expected_rr']:.3f}, Got {calculated_rr:.3f}"
+                        )
+                        status = "❌"
+                    
+                    logger.info(f"      {status} {test_case['name']}: "
+                              f"Entry=${test_case['entry']}, TP=${test_case['take_profit']}, SL=${test_case['stop_loss']} "
+                              f"→ RR={calculated_rr:.3f} (expected: {test_case['expected_rr']:.3f})")
+                    logger.info(f"         Formula: {test_case['expected_formula']}")
+                    
+                except Exception as e:
+                    formula_validation_results['calculation_errors'].append(f"{test_case['name']}: {str(e)}")
+                    logger.warning(f"      ❌ {test_case['name']}: Formula test failed - {e}")
             
-            # Verify BingX integration
-            bingx_integration = (
-                config_analysis['bingx_api_configured'] and 
-                config_analysis['top_futures_count'] >= 40  # At least 40 symbols
-            )
+            # Calculate performance metrics
+            calculation_accuracy = formula_validation_results['correct_calculations'] / formula_validation_results['total_tests']
             
-            # Overall configuration score
-            config_score = sum([
-                frequency_correct,
-                bingx_integration,
-                config_analysis['has_pattern_detector']
-            ])
+            logger.info(f"   📊 Formula Validation Performance:")
+            logger.info(f"      Calculation accuracy: {calculation_accuracy:.1%}")
+            logger.info(f"      Correct calculations: {formula_validation_results['correct_calculations']}/{formula_validation_results['total_tests']}")
             
-            if config_score >= 3:
-                self.log_test_result("Trending Auto-Updater Configuration", True, 
-                                   f"Configuration correct: 4h frequency, BingX integration, pattern detector")
-            elif config_score >= 2:
-                self.log_test_result("Trending Auto-Updater Configuration", False, 
-                                   f"Partial configuration: {config_score}/3 requirements met")
+            if formula_validation_results['calculation_errors']:
+                logger.info(f"      Calculation errors:")
+                for error in formula_validation_results['calculation_errors']:
+                    logger.info(f"        - {error}")
+            
+            # Determine test result
+            if calculation_accuracy >= 1.0:
+                self.log_test_result("IA1 RR Formula Validation", True, 
+                                   f"All RR formulas working correctly: {calculation_accuracy:.1%} accuracy")
+            elif calculation_accuracy >= 0.8:
+                self.log_test_result("IA1 RR Formula Validation", False, 
+                                   f"Most RR formulas working: {calculation_accuracy:.1%} accuracy, some errors found")
             else:
-                self.log_test_result("Trending Auto-Updater Configuration", False, 
-                                   f"Configuration issues: {config_score}/3 requirements met")
+                self.log_test_result("IA1 RR Formula Validation", False, 
+                                   f"RR formula issues: {calculation_accuracy:.1%} accuracy, multiple errors")
                 
         except Exception as e:
-            self.log_test_result("Trending Auto-Updater Configuration", False, f"Exception: {str(e)}")
+            self.log_test_result("IA1 RR Formula Validation", False, f"Exception: {str(e)}")
     
     async def test_2_bingx_trending_data_fetch(self):
         """Test 2: BingX Trending Data Fetch with Filters"""
