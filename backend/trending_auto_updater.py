@@ -204,6 +204,18 @@ class TrendingAutoUpdater:
                                     if abs(price_change_pct) < 1.5 and volume < 1000000:  # Très faible mouvement ET faible volume
                                         continue
                                     
+                                    # 🔥 ANALYSE AVANCÉE: Détection pattern latéral avec IA
+                                    pattern_analysis = lateral_pattern_detector.analyze_trend_pattern(
+                                        symbol=symbol,
+                                        price_change_pct=price_change_pct,
+                                        volume=volume
+                                    )
+                                    
+                                    # Filtrer si pattern latéral détecté
+                                    if lateral_pattern_detector.should_filter_opportunity(pattern_analysis):
+                                        logger.debug(f"🚫 FILTERED {symbol}: {pattern_analysis.reasoning}")
+                                        continue
+                                    
                                     # Si toutes les conditions sont remplies, ajouter à la liste
                                     crypto = TrendingCrypto(
                                         symbol=symbol,
