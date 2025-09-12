@@ -9359,6 +9359,49 @@ async def force_voie3_processing():
         logger.error(f"❌ VOIE 3 processing error: {e}")
         return {"success": False, "error": str(e)}
 
+@api_router.post("/debug-timestamp-voie3")
+async def debug_timestamp_voie3():
+    """Debug timestamp filtering for VOIE 3"""
+    try:
+        # Get current time info
+        current_time = get_paris_time()
+        cutoff_48h = current_time - timedelta(hours=48)
+        cutoff_string = cutoff_48h.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)')
+        
+        # Get all high confidence analyses (without timestamp filter)
+        all_high_confidence = await db.technical_analyses.find({
+            "analysis_confidence": {"$gte": 0.95}
+        }).to_list(50)
+        
+        # Get with timestamp filter
+        timestamp_filter = paris_time_to_timestamp_filter(hours_ago=48)
+        filtered_analyses = await db.technical_analyses.find({
+            "analysis_confidence": {"$gte": 0.95},
+            "timestamp": timestamp_filter
+        }).to_list(50)
+        
+        # Get with trading signals
+        trading_signal_analyses = await db.technical_analyses.find({
+            "analysis_confidence": {"$gte": 0.95},
+            "ia1_signal": {"$in": ["long", "short"]}
+        }).to_list(50)
+        
+        debug_info = {
+            "current_time": current_time.strftime('%Y-%m-%d %H:%M:%S (Heure de Paris)'),
+            "cutoff_48h": cutoff_string,
+            "timestamp_filter": timestamp_filter,
+            "all_high_confidence_count": len(all_high_confidence),
+            "filtered_by_timestamp_count": len(filtered_analyses),
+            "with_trading_signals_count": len(trading_signal_analyses),
+            "sample_timestamps": [a.get('timestamp') for a in all_high_confidence[:5]],
+            "sample_signals": [(a.get('symbol'), a.get('ia1_signal'), a.get('analysis_confidence')) for a in all_high_confidence[:5]]
+        }
+        
+        return {"success": True, "debug": debug_info}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/backtest/status")
 async def get_backtest_status():
     """Obtient le statut du système de backtesting"""
