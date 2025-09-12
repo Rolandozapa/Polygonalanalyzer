@@ -688,102 +688,120 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info("\n🔍 TEST 5: LONG and SHORT RR Formula Verification Test")
         
         try:
-            if not all([self.trending_updater, self.pattern_detector, self.market_aggregator]):
-                self.log_test_result("Complete System Integration Flow", False, 
-                                   "One or more system modules not available")
-                return
+            # Test specific LONG and SHORT RR formula implementation in live IA1 analyses
+            logger.info("   🚀 Testing LONG and SHORT RR formulas in live analyses...")
             
-            logger.info("   🚀 Testing complete integration flow...")
-            
-            # Step 1: Get trending data
-            logger.info("   📈 Step 1: Fetching trending cryptos...")
-            trending_cryptos = await self.trending_updater.fetch_trending_cryptos()
-            
-            if not trending_cryptos:
-                self.log_test_result("Complete System Integration Flow", False, 
-                                   "No trending cryptos from step 1")
-                return
-            
-            # Step 2: Apply pattern detection filters
-            logger.info("   🔍 Step 2: Applying pattern detection filters...")
-            filtered_cryptos = []
-            filter_stats = {'total': len(trending_cryptos), 'filtered_out': 0, 'passed': 0}
-            
-            for crypto in trending_cryptos:
-                if crypto.price_change is not None and crypto.volume is not None:
-                    analysis = self.pattern_detector.analyze_trend_pattern(
-                        symbol=crypto.symbol,
-                        price_change_pct=crypto.price_change,
-                        volume=crypto.volume
-                    )
-                    
-                    if not self.pattern_detector.should_filter_opportunity(analysis):
-                        filtered_cryptos.append(crypto)
-                        filter_stats['passed'] += 1
-                    else:
-                        filter_stats['filtered_out'] += 1
-                else:
-                    # Keep cryptos without price/volume data for now
-                    filtered_cryptos.append(crypto)
-                    filter_stats['passed'] += 1
-            
-            logger.info(f"      Filter results: {filter_stats['passed']}/{filter_stats['total']} passed, {filter_stats['filtered_out']} filtered out")
-            
-            # Step 3: Get market opportunities
-            logger.info("   📊 Step 3: Getting market opportunities...")
-            opportunities = self.market_aggregator.get_current_opportunities()
-            
-            # Step 4: Analyze integration
-            logger.info("   🔗 Step 4: Analyzing integration...")
-            
-            integration_analysis = {
-                'trending_count': len(trending_cryptos),
-                'filtered_count': len(filtered_cryptos),
-                'opportunities_count': len(opportunities),
-                'filter_effectiveness': filter_stats['filtered_out'] / filter_stats['total'] if filter_stats['total'] > 0 else 0,
-                'data_flow_working': len(filtered_cryptos) > 0 and len(opportunities) > 0
+            formula_verification_results = {
+                'long_tests': 0,
+                'short_tests': 0,
+                'long_formula_correct': 0,
+                'short_formula_correct': 0,
+                'formula_errors': []
             }
             
-            # Check symbol overlap between trending and opportunities
-            trending_symbols = set(crypto.symbol for crypto in trending_cryptos)
-            opportunity_symbols = set(opp.symbol for opp in opportunities)
-            symbol_overlap = len(trending_symbols.intersection(opportunity_symbols))
-            overlap_percentage = symbol_overlap / len(trending_symbols) if trending_symbols else 0
+            # Test symbols that typically generate LONG and SHORT signals
+            test_scenarios = [
+                {"symbol": "BTCUSDT", "expected_signals": ["long", "short"]},
+                {"symbol": "ETHUSDT", "expected_signals": ["long", "short"]},
+                {"symbol": "SOLUSDT", "expected_signals": ["long", "short"]}
+            ]
             
-            integration_analysis['symbol_overlap'] = symbol_overlap
-            integration_analysis['overlap_percentage'] = overlap_percentage
+            for scenario in test_scenarios:
+                symbol = scenario["symbol"]
+                logger.info(f"   📊 Testing RR formulas for {symbol}...")
+                
+                try:
+                    # Get IA1 analysis
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        if analysis_data.get('success') and 'analysis' in analysis_data:
+                            analysis = analysis_data['analysis']
+                            
+                            signal = analysis.get('recommendation', 'hold').lower()
+                            rr_ratio = analysis.get('risk_reward_ratio', 0)
+                            entry_price = analysis.get('entry_price', 0)
+                            stop_loss = analysis.get('stop_loss_price', 0)
+                            take_profit = analysis.get('take_profit_price', 0)
+                            
+                            if signal in ['long', 'short'] and all([entry_price > 0, stop_loss > 0, take_profit > 0]):
+                                if signal == 'long':
+                                    formula_verification_results['long_tests'] += 1
+                                    expected_rr = self.rr_formulas['LONG'](entry_price, take_profit, stop_loss)
+                                    
+                                    if abs(expected_rr - rr_ratio) < 0.1:
+                                        formula_verification_results['long_formula_correct'] += 1
+                                        logger.info(f"      ✅ LONG formula correct: {expected_rr:.2f} ≈ {rr_ratio:.2f}")
+                                    else:
+                                        formula_verification_results['formula_errors'].append(
+                                            f"LONG {symbol}: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}"
+                                        )
+                                        logger.warning(f"      ❌ LONG formula mismatch: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}")
+                                    
+                                    # Log formula details
+                                    logger.info(f"         LONG Formula: ({take_profit:.6f} - {entry_price:.6f}) / ({entry_price:.6f} - {stop_loss:.6f})")
+                                    
+                                elif signal == 'short':
+                                    formula_verification_results['short_tests'] += 1
+                                    expected_rr = self.rr_formulas['SHORT'](entry_price, take_profit, stop_loss)
+                                    
+                                    if abs(expected_rr - rr_ratio) < 0.1:
+                                        formula_verification_results['short_formula_correct'] += 1
+                                        logger.info(f"      ✅ SHORT formula correct: {expected_rr:.2f} ≈ {rr_ratio:.2f}")
+                                    else:
+                                        formula_verification_results['formula_errors'].append(
+                                            f"SHORT {symbol}: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}"
+                                        )
+                                        logger.warning(f"      ❌ SHORT formula mismatch: Expected {expected_rr:.2f}, Got {rr_ratio:.2f}")
+                                    
+                                    # Log formula details
+                                    logger.info(f"         SHORT Formula: ({entry_price:.6f} - {take_profit:.6f}) / ({stop_loss:.6f} - {entry_price:.6f})")
+                            else:
+                                logger.info(f"      ⚪ {symbol}: {signal} signal, insufficient data for formula test")
+                    
+                    await asyncio.sleep(2)  # Delay between requests
+                    
+                except Exception as e:
+                    logger.error(f"   ❌ Error testing {symbol}: {e}")
             
-            logger.info(f"   📊 Integration Flow Analysis:")
-            logger.info(f"      Trending cryptos: {integration_analysis['trending_count']}")
-            logger.info(f"      After filtering: {integration_analysis['filtered_count']}")
-            logger.info(f"      Market opportunities: {integration_analysis['opportunities_count']}")
-            logger.info(f"      Filter effectiveness: {integration_analysis['filter_effectiveness']:.1%}")
-            logger.info(f"      Symbol overlap: {integration_analysis['symbol_overlap']} ({integration_analysis['overlap_percentage']:.1%})")
-            logger.info(f"      Data flow working: {integration_analysis['data_flow_working']}")
+            # Calculate results
+            total_tests = formula_verification_results['long_tests'] + formula_verification_results['short_tests']
+            total_correct = formula_verification_results['long_formula_correct'] + formula_verification_results['short_formula_correct']
             
-            # Show some examples of the flow
-            logger.info(f"   📋 Integration Flow Examples:")
-            for i, crypto in enumerate(filtered_cryptos[:5]):
-                price_str = f", {crypto.price_change:+.1f}%" if crypto.price_change else ""
-                volume_str = f", Vol: {crypto.volume/1_000_000:.1f}M" if crypto.volume else ""
-                logger.info(f"      {i+1}. {crypto.symbol} (trending → filtered → opportunities{price_str}{volume_str})")
+            logger.info(f"   📊 Formula Verification Results:")
+            logger.info(f"      LONG tests: {formula_verification_results['long_formula_correct']}/{formula_verification_results['long_tests']}")
+            logger.info(f"      SHORT tests: {formula_verification_results['short_formula_correct']}/{formula_verification_results['short_tests']}")
+            logger.info(f"      Total accuracy: {total_correct}/{total_tests}")
+            
+            if formula_verification_results['formula_errors']:
+                logger.info(f"      Formula errors:")
+                for error in formula_verification_results['formula_errors']:
+                    logger.info(f"        - {error}")
             
             # Determine test result
-            flow_working = (
-                integration_analysis['data_flow_working'] and
-                integration_analysis['filter_effectiveness'] > 0.1 and  # At least 10% filtering
-                integration_analysis['overlap_percentage'] > 0.3  # At least 30% symbol overlap
-            )
-            
-            if flow_working:
-                self.log_test_result("Complete System Integration Flow", True, 
-                                   f"Integration flow working: {integration_analysis['trending_count']} → {integration_analysis['filtered_count']} → {integration_analysis['opportunities_count']}, {integration_analysis['overlap_percentage']:.1%} overlap")
+            if total_tests > 0:
+                accuracy = total_correct / total_tests
+                
+                if accuracy >= 0.9:
+                    self.log_test_result("LONG and SHORT RR Formula Verification", True, 
+                                       f"RR formulas correctly implemented: {accuracy:.1%} accuracy ({total_correct}/{total_tests})")
+                elif accuracy >= 0.7:
+                    self.log_test_result("LONG and SHORT RR Formula Verification", False, 
+                                       f"Most RR formulas correct: {accuracy:.1%} accuracy ({total_correct}/{total_tests})")
+                else:
+                    self.log_test_result("LONG and SHORT RR Formula Verification", False, 
+                                       f"RR formula implementation issues: {accuracy:.1%} accuracy ({total_correct}/{total_tests})")
             else:
-                self.log_test_result("Complete System Integration Flow", False, 
-                                   f"Integration flow issues: {integration_analysis['trending_count']} → {integration_analysis['filtered_count']} → {integration_analysis['opportunities_count']}, {integration_analysis['overlap_percentage']:.1%} overlap")
+                self.log_test_result("LONG and SHORT RR Formula Verification", False, 
+                                   "No LONG/SHORT signals available for formula testing")
                 
         except Exception as e:
-            self.log_test_result("Complete System Integration Flow", False, f"Exception: {str(e)}")
+            self.log_test_result("LONG and SHORT RR Formula Verification", False, f"Exception: {str(e)}")
     
     async def test_6_system_performance_and_stability(self):
         """Test 6: System Performance & Stability with 4h Frequency"""
