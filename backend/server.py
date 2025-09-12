@@ -5132,6 +5132,15 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
                     ia2_decision = await orchestrator.ia2.make_decision(target_opportunity, analysis, perf_stats)
                     if ia2_decision:
                         logger.info(f"✅ IA2 strategic decision: {ia2_decision.signal} for {symbol}")
+                        
+                        # 💾 SAVE IA2 DECISION TO DATABASE - The missing piece!
+                        try:
+                            decision_dict = ia2_decision.dict()
+                            await db.trading_decisions.insert_one(decision_dict)
+                            logger.info(f"💾 IA2 decision saved to database for {symbol}")
+                        except Exception as save_error:
+                            logger.error(f"❌ Failed to save IA2 decision: {save_error}")
+                            
                     else:
                         logger.warning(f"⚠️ IA2 returned no decision for {symbol}")
                         
