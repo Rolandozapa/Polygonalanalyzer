@@ -4944,7 +4944,7 @@ async def retry_pending_positions():
         return {"success": False, "error": str(e)}
 
 # 🔥 ESSENTIAL API ENDPOINTS FOR FRONTEND FUNCTIONALITY
-@api_router.get("/opportunities")
+@app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
     """Get current market opportunities"""
     try:
@@ -4966,7 +4966,7 @@ async def get_opportunities(limit: int = 50):
         logger.error(f"❌ Error getting opportunities: {e}")
         return {"success": False, "error": str(e)}
 
-@api_router.get("/analyses")
+@app.get("/api/analyses")
 async def get_analyses(limit: int = 50):
     """Get recent IA1 technical analyses"""
     try:
@@ -4987,7 +4987,7 @@ async def get_analyses(limit: int = 50):
         logger.error(f"❌ Error getting analyses: {e}")
         return {"success": False, "error": str(e)}
 
-@api_router.get("/decisions")
+@app.get("/api/decisions")
 async def get_decisions(limit: int = 50):
     """Get recent IA2 trading decisions"""
     try:
