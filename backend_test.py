@@ -77,13 +77,13 @@ class IA1ToIA2EscalationTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing IA1 Risk-Reward Calculation Independence at: {self.api_url}")
+        logger.info(f"Testing IA1 to IA2 Escalation System at: {self.api_url}")
         
         # MongoDB connection for direct database analysis
         try:
             self.mongo_client = MongoClient("mongodb://localhost:27017")
             self.db = self.mongo_client["myapp"]
-            logger.info("✅ MongoDB connection established for IA1 analysis")
+            logger.info("✅ MongoDB connection established for escalation testing")
         except Exception as e:
             logger.error(f"❌ MongoDB connection failed: {e}")
             self.mongo_client = None
@@ -92,19 +92,20 @@ class IA1ToIA2EscalationTestSuite:
         # Test results
         self.test_results = []
         
-        # Test symbols for RR independence testing
+        # Test symbols for escalation testing
         self.test_symbols = [
-            "BTCUSDT",   # High volatility, strong technical levels
-            "ETHUSDT",   # Medium volatility, clear S/R levels
-            "XRPUSDT",   # Lower volatility, tight ranges
+            "BTCUSDT",   # High volatility, likely to trigger escalation
+            "ETHUSDT",   # Medium volatility, good for testing
             "SOLUSDT",   # High volatility, trending
+            "XRPUSDT",   # Lower volatility, edge cases
             "ADAUSDT"    # Medium volatility, range-bound
         ]
         
-        # Expected RR formula validation
-        self.rr_formulas = {
-            "LONG": lambda entry, tp, sl: (tp - entry) / (entry - sl) if (entry - sl) > 0 else 0,
-            "SHORT": lambda entry, tp, sl: (entry - tp) / (sl - entry) if (sl - entry) > 0 else 0
+        # Escalation criteria for testing
+        self.escalation_criteria = {
+            "VOIE_1": {"confidence_min": 0.70, "signals": ["long", "short"]},
+            "VOIE_2": {"rr_min": 2.0, "signals": ["long", "short", "hold"]},
+            "VOIE_3": {"confidence_min": 0.95, "signals": ["long", "short"]}
         }
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
