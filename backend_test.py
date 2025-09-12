@@ -47,8 +47,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class AutonomousTrendDetectionTestSuite:
-    """Comprehensive test suite for Autonomous Trend Detection System"""
+class IA1RiskRewardIndependenceTestSuite:
+    """Comprehensive test suite for IA1 Risk-Reward Calculation Independence"""
     
     def __init__(self):
         # Get backend URL from frontend env
