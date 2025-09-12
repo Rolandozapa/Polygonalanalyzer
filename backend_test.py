@@ -257,17 +257,17 @@ class AutonomousTrendDetectionTestSuite:
             # Test cases for pattern detection
             test_cases = [
                 # Strong bullish (should NOT be filtered)
-                {"symbol": "BTCUSDT", "price_change": 8.5, "volume": 5000000, "expected_lateral": False, "expected_type": TrendType.STRONG_BULLISH},
+                {"symbol": "BTCUSDT", "price_change": 8.5, "volume": 5000000, "expected_lateral": False, "expected_type": self.TrendType.STRONG_BULLISH},
                 # Bullish (should NOT be filtered)
-                {"symbol": "ETHUSDT", "price_change": 3.2, "volume": 2000000, "expected_lateral": False, "expected_type": TrendType.BULLISH},
+                {"symbol": "ETHUSDT", "price_change": 3.2, "volume": 2000000, "expected_lateral": False, "expected_type": self.TrendType.BULLISH},
                 # Lateral pattern (should be filtered)
-                {"symbol": "XRPUSDT", "price_change": 0.5, "volume": 100000, "expected_lateral": True, "expected_type": TrendType.LATERAL},
+                {"symbol": "XRPUSDT", "price_change": 0.5, "volume": 100000, "expected_lateral": True, "expected_type": self.TrendType.LATERAL},
                 # Strong bearish (should NOT be filtered)
-                {"symbol": "SOLUSDT", "price_change": -7.8, "volume": 3000000, "expected_lateral": False, "expected_type": TrendType.STRONG_BEARISH},
+                {"symbol": "SOLUSDT", "price_change": -7.8, "volume": 3000000, "expected_lateral": False, "expected_type": self.TrendType.STRONG_BEARISH},
                 # Bearish (should NOT be filtered)
-                {"symbol": "ADAUSDT", "price_change": -2.5, "volume": 1500000, "expected_lateral": False, "expected_type": TrendType.BEARISH},
+                {"symbol": "ADAUSDT", "price_change": -2.5, "volume": 1500000, "expected_lateral": False, "expected_type": self.TrendType.BEARISH},
                 # Edge case: High volume but low price change (might be lateral)
-                {"symbol": "DOGEUSDT", "price_change": 0.8, "volume": 10000000, "expected_lateral": True, "expected_type": TrendType.LATERAL}
+                {"symbol": "DOGEUSDT", "price_change": 0.8, "volume": 10000000, "expected_lateral": True, "expected_type": self.TrendType.LATERAL}
             ]
             
             analysis_results = {
