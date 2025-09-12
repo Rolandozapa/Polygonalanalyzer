@@ -44,8 +44,8 @@ def parse_timestamp_from_db(timestamp_value):
             date_part = timestamp_value.split(' (')[0]  # Remove timezone part
             parsed = datetime.strptime(date_part, '%Y-%m-%d %H:%M:%S')
             return PARIS_TZ.localize(parsed)
-        except:
-            # Fallback: assume it's recent if parsing fails
+        except (ValueError, AttributeError, IndexError) as e:
+            logger.warning(f"Failed to parse timestamp '{timestamp_value}': {e}, using current time")
             return get_paris_time()
     else:
         return get_paris_time()
