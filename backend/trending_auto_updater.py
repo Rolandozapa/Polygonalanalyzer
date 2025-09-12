@@ -46,6 +46,9 @@ class TrendingAutoUpdater:
         self.is_running = False
         self.update_task = None
         
+        # 🔥 INTEGRATION: Pattern detector pour filtrage avancé
+        self.pattern_detector = lateral_pattern_detector
+        
         # 🔥 BingX specific patterns pour extraction
         self.bingx_patterns = [
             r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMB]?)',  # Volume pattern
