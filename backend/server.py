@@ -9255,12 +9255,13 @@ async def force_voie3_processing():
         logger.info("🚀 FORCING VOIE 3 PROCESSING - High confidence analyses to IA2")
         
         # Get all IA1 analyses with >95% confidence (VOIE 3 candidates)
-        recent_cutoff = get_paris_time() - timedelta(hours=24)  # Look in last 24h
+        # 🔧 FIX: Use robust timestamp filter for proper day transition handling
+        timestamp_filter = paris_time_to_timestamp_filter(hours_ago=24)
         
         high_confidence_analyses = await db.technical_analyses.find({
             "analysis_confidence": {"$gte": 0.95},
             "ia1_signal": {"$in": ["long", "short"]},  # VOIE 3 only for trading signals
-            "timestamp": {"$gte": recent_cutoff}
+            "timestamp": timestamp_filter
         }).to_list(20)
         
         if not high_confidence_analyses:
