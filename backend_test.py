@@ -231,73 +231,136 @@ class IA1RiskRewardIndependenceTestSuite:
         logger.info("\n🔍 TEST 2: IA1 RR Calculation Independence Test")
         
         try:
-            if not self.trending_updater:
-                self.log_test_result("BingX Trending Data Fetch", False, 
-                                   "Trending updater module not available")
-                return
+            # Test multiple IA1 analyses for the same symbols with different confidence scenarios
+            # This will verify that RR calculation is independent of confidence level
             
-            logger.info("   🚀 Fetching trending cryptos from BingX...")
-            
-            # Fetch trending cryptos
-            trending_cryptos = await self.trending_updater.fetch_trending_cryptos()
-            
-            if not trending_cryptos:
-                self.log_test_result("BingX Trending Data Fetch", False, 
-                                   "No trending cryptos returned")
-                return
-            
-            # Analyze results
-            fetch_analysis = {
-                'total_cryptos': len(trending_cryptos),
-                'expected_max': 50,
-                'bingx_api_count': len([c for c in trending_cryptos if c.source == 'bingx_api']),
-                'bingx_page_count': len([c for c in trending_cryptos if c.source == 'bingx_page']),
-                'fallback_count': len([c for c in trending_cryptos if c.source == 'bingx_fallback']),
-                'with_price_change': len([c for c in trending_cryptos if c.price_change and abs(c.price_change) >= 1.0]),
-                'with_volume': len([c for c in trending_cryptos if c.volume and c.volume >= 500000]),
-                'unique_symbols': len(set(c.symbol for c in trending_cryptos))
+            independence_test_results = {
+                'symbols_tested': 0,
+                'analyses_performed': 0,
+                'rr_consistency_violations': 0,
+                'confidence_correlation_detected': False,
+                'technical_level_consistency': 0,
+                'rr_variations': []
             }
             
-            logger.info(f"   📊 Fetch Analysis:")
-            logger.info(f"      Total cryptos: {fetch_analysis['total_cryptos']} (max expected: {fetch_analysis['expected_max']})")
-            logger.info(f"      BingX API source: {fetch_analysis['bingx_api_count']}")
-            logger.info(f"      BingX page source: {fetch_analysis['bingx_page_count']}")
-            logger.info(f"      Fallback source: {fetch_analysis['fallback_count']}")
-            logger.info(f"      With price change ≥1%: {fetch_analysis['with_price_change']}")
-            logger.info(f"      With volume ≥500K: {fetch_analysis['with_volume']}")
-            logger.info(f"      Unique symbols: {fetch_analysis['unique_symbols']}")
+            logger.info("   🚀 Testing IA1 RR calculation independence from confidence...")
             
-            # Log top 10 trending cryptos
-            logger.info(f"   📈 Top 10 Trending Cryptos:")
-            for i, crypto in enumerate(trending_cryptos[:10]):
-                price_str = f", {crypto.price_change:+.1f}%" if crypto.price_change else ""
-                volume_str = f", Vol: {crypto.volume/1_000_000:.1f}M" if crypto.volume else ""
-                logger.info(f"      {i+1}. {crypto.symbol} ({crypto.source}{price_str}{volume_str})")
+            # Test each symbol multiple times to check for RR consistency
+            for symbol in self.test_symbols[:3]:  # Test first 3 symbols to avoid timeout
+                try:
+                    logger.info(f"   📊 Testing {symbol} for RR independence...")
+                    
+                    # Perform multiple IA1 analyses for the same symbol
+                    # The system should produce consistent RR ratios regardless of confidence
+                    symbol_analyses = []
+                    
+                    for attempt in range(3):  # 3 attempts per symbol
+                        try:
+                            # Force IA1 analysis
+                            response = requests.post(
+                                f"{self.api_url}/force-ia1-analysis",
+                                json={"symbol": symbol},
+                                timeout=30
+                            )
+                            
+                            if response.status_code == 200:
+                                analysis_data = response.json()
+                                if analysis_data.get('success') and 'analysis' in analysis_data:
+                                    analysis = analysis_data['analysis']
+                                    symbol_analyses.append({
+                                        'symbol': symbol,
+                                        'attempt': attempt + 1,
+                                        'confidence': analysis.get('confidence', 0),
+                                        'risk_reward_ratio': analysis.get('risk_reward_ratio', 0),
+                                        'entry_price': analysis.get('entry_price', 0),
+                                        'stop_loss_price': analysis.get('stop_loss_price', 0),
+                                        'take_profit_price': analysis.get('take_profit_price', 0),
+                                        'signal': analysis.get('recommendation', 'hold'),
+                                        'support_levels': analysis.get('support', []),
+                                        'resistance_levels': analysis.get('resistance', [])
+                                    })
+                                    independence_test_results['analyses_performed'] += 1
+                                    
+                                    logger.info(f"      Attempt {attempt + 1}: Confidence={analysis.get('confidence', 0):.1%}, "
+                                              f"RR={analysis.get('risk_reward_ratio', 0):.2f}, "
+                                              f"Signal={analysis.get('recommendation', 'hold')}")
+                            else:
+                                logger.warning(f"      Attempt {attempt + 1}: API returned {response.status_code}")
+                                
+                        except Exception as e:
+                            logger.warning(f"      Attempt {attempt + 1}: Request failed - {e}")
+                        
+                        # Small delay between requests
+                        await asyncio.sleep(2)
+                    
+                    # Analyze RR consistency for this symbol
+                    if len(symbol_analyses) >= 2:
+                        independence_test_results['symbols_tested'] += 1
+                        
+                        # Check RR ratio consistency
+                        rr_values = [a['risk_reward_ratio'] for a in symbol_analyses if a['risk_reward_ratio'] > 0]
+                        confidence_values = [a['confidence'] for a in symbol_analyses]
+                        
+                        if len(rr_values) >= 2:
+                            rr_variance = max(rr_values) - min(rr_values)
+                            confidence_variance = max(confidence_values) - min(confidence_values)
+                            
+                            # Check if RR varies significantly with confidence
+                            if rr_variance > 0.5 and confidence_variance > 0.1:  # Significant variations
+                                independence_test_results['rr_consistency_violations'] += 1
+                                independence_test_results['rr_variations'].append({
+                                    'symbol': symbol,
+                                    'rr_variance': rr_variance,
+                                    'confidence_variance': confidence_variance,
+                                    'analyses': symbol_analyses
+                                })
+                                logger.warning(f"      ⚠️ RR variance detected: {rr_variance:.2f} with confidence variance: {confidence_variance:.1%}")
+                            else:
+                                independence_test_results['technical_level_consistency'] += 1
+                                logger.info(f"      ✅ RR consistent: variance {rr_variance:.2f} with confidence variance {confidence_variance:.1%}")
+                        
+                        # Log technical levels consistency
+                        entry_prices = [a['entry_price'] for a in symbol_analyses if a['entry_price'] > 0]
+                        sl_prices = [a['stop_loss_price'] for a in symbol_analyses if a['stop_loss_price'] > 0]
+                        tp_prices = [a['take_profit_price'] for a in symbol_analyses if a['take_profit_price'] > 0]
+                        
+                        if entry_prices and sl_prices and tp_prices:
+                            entry_variance = (max(entry_prices) - min(entry_prices)) / min(entry_prices) if min(entry_prices) > 0 else 0
+                            sl_variance = (max(sl_prices) - min(sl_prices)) / min(sl_prices) if min(sl_prices) > 0 else 0
+                            tp_variance = (max(tp_prices) - min(tp_prices)) / min(tp_prices) if min(tp_prices) > 0 else 0
+                            
+                            logger.info(f"      📊 Technical Level Variance: Entry={entry_variance:.1%}, SL={sl_variance:.1%}, TP={tp_variance:.1%}")
+                    
+                except Exception as e:
+                    logger.error(f"   ❌ Error testing {symbol}: {e}")
+            
+            # Analyze overall independence
+            logger.info(f"   📊 Independence Test Results:")
+            logger.info(f"      Symbols tested: {independence_test_results['symbols_tested']}")
+            logger.info(f"      Total analyses: {independence_test_results['analyses_performed']}")
+            logger.info(f"      RR consistency violations: {independence_test_results['rr_consistency_violations']}")
+            logger.info(f"      Technical level consistency: {independence_test_results['technical_level_consistency']}")
             
             # Determine test result
-            filters_working = (
-                fetch_analysis['with_price_change'] >= fetch_analysis['total_cryptos'] * 0.7 and  # 70% have ≥1% change
-                fetch_analysis['with_volume'] >= fetch_analysis['total_cryptos'] * 0.7  # 70% have sufficient volume
-            )
-            
-            data_quality = (
-                fetch_analysis['total_cryptos'] >= 10 and  # At least 10 cryptos
-                fetch_analysis['unique_symbols'] == fetch_analysis['total_cryptos'] and  # No duplicates
-                (fetch_analysis['bingx_api_count'] > 0 or fetch_analysis['bingx_page_count'] > 0)  # Real BingX data
-            )
-            
-            if filters_working and data_quality:
-                self.log_test_result("BingX Trending Data Fetch", True, 
-                                   f"Filters working: {fetch_analysis['total_cryptos']} cryptos, {fetch_analysis['with_price_change']} with ≥1% change")
-            elif data_quality:
-                self.log_test_result("BingX Trending Data Fetch", False, 
-                                   f"Data quality good but filters need improvement: {fetch_analysis['with_price_change']}/{fetch_analysis['total_cryptos']} with ≥1% change")
+            if independence_test_results['symbols_tested'] > 0:
+                consistency_rate = independence_test_results['technical_level_consistency'] / independence_test_results['symbols_tested']
+                violation_rate = independence_test_results['rr_consistency_violations'] / independence_test_results['symbols_tested']
+                
+                if consistency_rate >= 0.8 and violation_rate <= 0.2:
+                    self.log_test_result("IA1 RR Calculation Independence", True, 
+                                       f"RR calculation independent of confidence: {consistency_rate:.1%} consistency, {violation_rate:.1%} violations")
+                elif consistency_rate >= 0.6:
+                    self.log_test_result("IA1 RR Calculation Independence", False, 
+                                       f"Partial RR independence: {consistency_rate:.1%} consistency, {violation_rate:.1%} violations")
+                else:
+                    self.log_test_result("IA1 RR Calculation Independence", False, 
+                                       f"RR calculation may depend on confidence: {consistency_rate:.1%} consistency, {violation_rate:.1%} violations")
             else:
-                self.log_test_result("BingX Trending Data Fetch", False, 
-                                   f"Data quality issues: {fetch_analysis['total_cryptos']} cryptos, {fetch_analysis['unique_symbols']} unique")
+                self.log_test_result("IA1 RR Calculation Independence", False, 
+                                   "Insufficient data to test RR independence")
                 
         except Exception as e:
-            self.log_test_result("BingX Trending Data Fetch", False, f"Exception: {str(e)}")
+            self.log_test_result("IA1 RR Calculation Independence", False, f"Exception: {str(e)}")
     
     async def test_3_lateral_pattern_detector_analysis(self):
         """Test 3: Lateral Pattern Detector Multi-Criteria Analysis"""
