@@ -67,6 +67,21 @@ class TechnicalAnalysis(BaseModel):
     ia1_signal: str = "hold"  # NOUVEAU: Signal IA1 (long/short/hold) pour filtrage IA2
     market_sentiment: str = "neutral"
     data_sources: List[str] = []
+    # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
+    mfi_value: Optional[float] = 50.0  # Money Flow Index
+    mfi_signal: Optional[str] = "neutral"  # overbought, oversold, neutral
+    mfi_institution: Optional[str] = "neutral"  # Institution activity
+    vwap_price: Optional[float] = 0.0  # VWAP price
+    vwap_position: Optional[float] = 0.0  # Price position vs VWAP %
+    vwap_signal: Optional[str] = "neutral"  # overbought, oversold, neutral
+    vwap_trend: Optional[str] = "neutral"  # bullish, bearish, neutral
+    ema_hierarchy: Optional[str] = "neutral"  # STRONG_BULL, WEAK_BULL, STRONG_BEAR, etc.
+    ema_position: Optional[str] = "neutral"  # above_all, mixed, below_all
+    ema_cross_signal: Optional[str] = "neutral"  # bullish, bearish, neutral
+    ema_strength: Optional[float] = 0.0  # EMA trend strength %
+    multi_timeframe_dominant: Optional[str] = "DAILY"  # Dominant timeframe
+    multi_timeframe_pattern: Optional[str] = "NEUTRAL"  # Pattern detected
+    multi_timeframe_confidence: Optional[float] = 0.5  # Hierarchy confidence
     timestamp: datetime = Field(default_factory=get_paris_time)
     # NOUVEAUX CHAMPS RISK-REWARD IA1
     risk_reward_ratio: float = 0.0
