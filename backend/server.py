@@ -5076,10 +5076,31 @@ async def force_ia1_cycle(symbol: str = "BTCUSDT"):
         
         if analysis:
             logger.info(f"✅ IA1 analysis completed for {symbol}")
+            
+            # Convert analysis to dict safely (handle enums)
+            try:
+                analysis_dict = analysis.dict() if hasattr(analysis, 'dict') else analysis.__dict__
+                # Convert any enum values to strings
+                for key, value in analysis_dict.items():
+                    if hasattr(value, 'value'):  # If it's an enum
+                        analysis_dict[key] = value.value
+                    elif hasattr(value, '__str__'):  # Convert to string if needed
+                        analysis_dict[key] = str(value)
+            except Exception as dict_error:
+                logger.warning(f"⚠️ Analysis dict conversion error: {dict_error}")
+                # Fallback: create a safe dict manually
+                analysis_dict = {
+                    "id": str(analysis.id) if hasattr(analysis, 'id') else "unknown",
+                    "symbol": str(analysis.symbol) if hasattr(analysis, 'symbol') else symbol,
+                    "analysis_confidence": float(analysis.analysis_confidence) if hasattr(analysis, 'analysis_confidence') else 0.0,
+                    "ia1_signal": str(analysis.ia1_signal) if hasattr(analysis, 'ia1_signal') else "unknown",
+                    "status": "completed"
+                }
+            
             return {
                 "success": True,
                 "message": f"IA1 analysis completed for {symbol}",
-                "analysis": analysis.dict()
+                "analysis": analysis_dict
             }
         else:
             return {
