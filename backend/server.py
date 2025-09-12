@@ -5046,6 +5046,41 @@ async def get_performance():
         logger.error(f"❌ Error getting performance: {e}")
         return {"success": False, "error": str(e)}
 
+@app.get("/api/active-positions")
+async def get_active_positions():
+    """Get active trading positions"""
+    try:
+        # Get active positions from database
+        cursor = db.active_positions.find({"status": {"$in": ["open", "pending"]}}).sort("timestamp", -1)
+        positions = []
+        async for doc in cursor:
+            doc.pop('_id', None)  # Remove ObjectId
+            positions.append(doc)
+        
+        logger.info(f"📈 Returning {len(positions)} active positions")
+        return {
+            "success": True,
+            "positions": positions,
+            "count": len(positions)
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting active positions: {e}")
+        return {"success": False, "error": str(e), "positions": [], "count": 0}
+
+@app.get("/api/trading/execution-mode")
+async def get_execution_mode():
+    """Get current trading execution mode"""
+    try:
+        # For now, return simulation mode as default
+        return {
+            "success": True,
+            "mode": "SIMULATION",
+            "timestamp": get_paris_time().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"❌ Error getting execution mode: {e}")
+        return {"success": False, "error": str(e), "mode": "SIMULATION"}
+
 @app.post("/api/run-ia1-cycle")
 async def force_ia1_cycle(symbol: str = "BTCUSDT"):
     """Force run IA1 analysis cycle for a specific symbol"""
