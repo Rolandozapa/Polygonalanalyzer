@@ -2494,16 +2494,37 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.98)
                     take_profit_price = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.02)
             else:
-                # Fallback si pas de niveaux calculés - utiliser des pourcentages par défaut
+                # 🚀 NIVEAUX FALLBACK AMÉLIORÉS - Génération de RR plus élevés pour signaux convaincants
+                # Utiliser la confidence et la volatilité pour définir des targets plus agressifs
+                confidence_multiplier = max(1.0, analysis_confidence * 1.5)  # Plus de confidence = targets plus agressifs
+                volatility_factor = max(0.05, opportunity.volatility or 0.05)  # Minimum 5% volatilité
+                
                 if ia1_signal.lower() == "long":
-                    stop_loss_price = opportunity.current_price * 0.95  # -5% stop loss
-                    take_profit_price = opportunity.current_price * 1.10  # +10% take profit
+                    # LONG: Stop loss plus serré, take profit plus ambitieux basé sur confidence
+                    base_sl_pct = 0.04 + (volatility_factor * 0.5)  # 4-7% stop loss selon volatilité
+                    base_tp_pct = 0.08 + (confidence_multiplier * 0.05)  # 8-15% take profit selon confidence
+                    
+                    stop_loss_price = opportunity.current_price * (1.0 - base_sl_pct)
+                    take_profit_price = opportunity.current_price * (1.0 + base_tp_pct)
+                    
+                    logger.info(f"🚀 LONG FALLBACK LEVELS {opportunity.symbol}: SL -{base_sl_pct*100:.1f}%, TP +{base_tp_pct*100:.1f}% (confidence {analysis_confidence*100:.1f}%)")
+                    
                 elif ia1_signal.lower() == "short":
-                    stop_loss_price = opportunity.current_price * 1.05  # +5% stop loss (price increase)
-                    take_profit_price = opportunity.current_price * 0.90  # -10% take profit (price decrease)
+                    # SHORT: Stop loss plus serré, take profit plus ambitieux basé sur confidence  
+                    base_sl_pct = 0.04 + (volatility_factor * 0.5)  # 4-7% stop loss selon volatilité
+                    base_tp_pct = 0.08 + (confidence_multiplier * 0.05)  # 8-15% take profit selon confidence
+                    
+                    stop_loss_price = opportunity.current_price * (1.0 + base_sl_pct)  # Price increase = loss
+                    take_profit_price = opportunity.current_price * (1.0 - base_tp_pct)  # Price decrease = profit
+                    
+                    logger.info(f"🚀 SHORT FALLBACK LEVELS {opportunity.symbol}: SL +{base_sl_pct*100:.1f}%, TP -{base_tp_pct*100:.1f}% (confidence {analysis_confidence*100:.1f}%)")
+                    
                 else:  # hold
+                    # HOLD: Niveaux neutres conservateurs
                     stop_loss_price = opportunity.current_price * 0.98  # -2% stop loss
                     take_profit_price = opportunity.current_price * 1.02  # +2% take profit
+                    
+                    logger.info(f"⚪ HOLD FALLBACK LEVELS {opportunity.symbol}: SL -2%, TP +2%")
             
             # 🔧 CALCUL RR BASÉ SUR LES PRIX RÉELS CALCULÉS - FORMULES IA2 EXACTES
             # Utiliser les mêmes formules que IA2 pour cohérence totale
