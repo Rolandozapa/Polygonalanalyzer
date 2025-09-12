@@ -4141,11 +4141,17 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 - IA1 Confidence: {ia1_confidence:.1%}
 - Risk-Reward Ratio: {rr_ratio:.2f}:1
 
-📈 BASIC TECHNICAL INDICATORS:
+🧠 IA1 COMPLETE ANALYSIS SUMMARY:
+{analysis.ia1_reasoning}
+
+🔍 DETECTED PATTERNS & IA1 STRATEGIC CHOICE:
+- All Detected Patterns: {', '.join(analysis.patterns_detected) if analysis.patterns_detected else 'No specific patterns detected'}
+- IA1 Pattern Assessment: Based on the detected patterns, IA1 has made its strategic recommendation of {ia1_signal.upper()} with {ia1_confidence:.1%} confidence
+
+📈 TECHNICAL INDICATORS (DETAILED):
 - RSI: {analysis.rsi:.1f}
 - MACD Signal: {analysis.macd_signal:.6f}
-- Stochastic %K: {analysis.stochastic:.1f}
-- Stochastic %D: {analysis.stochastic_d:.1f}
+- Stochastic %K: {analysis.stochastic:.1f} | %D: {analysis.stochastic_d:.1f}
 - Bollinger Position: {analysis.bollinger_position:.2f}
 - Support Levels: {analysis.support_levels}
 - Resistance Levels: {analysis.resistance_levels}
@@ -4168,35 +4174,34 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 - Decisive Pattern: {analysis.multi_timeframe_pattern}
 - Hierarchy Confidence: {analysis.multi_timeframe_confidence:.1%}
 
-🎯 PATTERNS & SENTIMENT:
-- Detected Patterns: {analysis.patterns_detected}
-- Market Sentiment: {analysis.market_sentiment}
+🎯 FIBONACCI & SENTIMENT:
 - Fibonacci Level: {analysis.fibonacci_level:.3f} ({analysis.fibonacci_nearest_level})
 - Fibonacci Trend: {analysis.fibonacci_trend_direction}
+- Market Sentiment: {analysis.market_sentiment}
 
-💡 STRATEGIC DECISION FRAMEWORK:
-Analyze all indicators considering:
-1. Institutional money flow vs retail sentiment
-2. Multi-timeframe confluence and hierarchy
-3. VWAP institutional behavior
-4. EMA trend strength and momentum
-5. Support/resistance confluence
-6. Risk management and position sizing
+🎯 STRATEGIC DECISION FRAMEWORK:
+As IA2, your role is to validate or override IA1's recommendation based on:
+1. **IA1 Complete Reasoning Analysis**: Does IA1's detailed reasoning align with all technical evidence?
+2. **Pattern Confluence**: Do the detected patterns support IA1's chosen direction?
+3. **Institutional Flow**: What do MFI + VWAP suggest about smart money positioning?
+4. **Multi-Timeframe Alignment**: Does the dominant timeframe support IA1's view?
+5. **Risk Management**: Are there hidden risks IA1 might have missed?
+6. **Market Regime Assessment**: What's the broader market context?
 
 RESPONSE FORMAT (JSON):
 {{
     "signal": "long" or "short" or "hold",
     "confidence": 0.XX (0.50 to 0.99),
-    "reasoning": "Detailed strategic analysis in 2-3 sentences explaining institutional perspective, multi-timeframe analysis, and confluence factors",
+    "reasoning": "Strategic analysis in 2-3 sentences explaining your decision vs IA1's analysis, pattern assessment, institutional flow, and multi-timeframe confluence",
     "risk_level": "low" or "medium" or "high",
     "position_size_recommendation": X.X (0.5 to 8.0 percent),
-    "market_regime_assessment": "bullish/bearish/neutral with confluence analysis",
+    "market_regime_assessment": "bullish/bearish/neutral with detailed confluence analysis",
     "execution_priority": "immediate/wait_for_confluence/avoid",
     "calculated_rr": X.XX,
     "rr_reasoning": "RR calculation with support/resistance analysis"
 }}
 
-CRITICAL: Provide comprehensive strategic analysis in valid JSON format only."""
+CRITICAL: Provide comprehensive strategic analysis validating or challenging IA1's complete reasoning. Return valid JSON only."""
 
             # Send to Claude using correct method
             response = await self.chat.send_message(UserMessage(text=strategic_prompt))
