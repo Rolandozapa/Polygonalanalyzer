@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 """
-BINGX OPPORTUNITIES REFRESH COMPREHENSIVE TEST SUITE
-Focus: Force complete opportunities refresh with BingX data to resolve stale data issues
+AUTONOMOUS TREND DETECTION SYSTEM COMPREHENSIVE TEST SUITE
+Focus: Test the new autonomous trend detection system with 4h frequency and advanced filters
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **Identify Real Opportunities Source**: Where do the 14 opportunities actually come from?
-2. **Force Cache Invalidation**: Clear all caches that might be preventing BingX data
-3. **Test BingX Integration**: Verify trending_auto_updater has BingX data available
-4. **Force Scout Refresh**: Make scout use new BingX opportunities instead of cached ones
-
-CRITICAL ISSUES TO RESOLVE:
-- Why get_current_opportunities logs don't appear (method not called?)
-- Old timestamps (11:54 and 11:20 from this morning) persist despite cache TTL=10s
-- Data sources still show ["cryptocompare", "coingecko"] instead of BingX
-- DOGEUSDT (top BingX gainer +8.87%) missing from opportunities
+1. **Trending Auto-Updater**: Test 4h frequency (14400s), min var volume daily 5%, min var price 1%
+2. **Lateral Pattern Detector**: Test sophisticated multi-criteria analysis and TrendType classification
+3. **Advanced Market Aggregator**: Test get_current_opportunities() with BingX data and 4h cache TTL
+4. **Integration Testing**: Verify trending_auto_updater → pattern detector → market aggregator flow
+5. **Filter Validation**: Ensure only real trends pass filters (no lateral patterns)
+6. **BingX Data Source**: Verify top 50 market cap futures BingX via official API
 
 TESTING APPROACH:
-- Check if scout.scan_opportunities uses advanced_market_aggregator.get_current_opportunities
-- Verify if trending_auto_updater.current_trending has BingX data
-- Force clear all caches (opportunities, market data, etc.)
-- Test multiple entry points: /api/start-scout, direct opportunity calls
-- Monitor logs to see if get_current_opportunities is actually called
+- Test trending_auto_updater.fetch_trending_cryptos() returns 50 cryptos with filters applied
+- Test lateral_pattern_detector with edge cases (low volumes, lateral prices)
+- Validate advanced_market_aggregator.get_current_opportunities() uses filtered data
+- Test complete integration: trending_auto_updater → pattern detector → market aggregator
+- Test 4h frequency and cache TTL alignment
+- Validate that only real trends pass filters (no lateral patterns)
 
-GOAL: Get fresh BingX trending opportunities (DOGEUSDT, ONDOUSDT with high gains) to replace the stale 4.8h old data.
+EXPECTED RESULTS:
+- 50 cryptos max with price change ≥1% and sufficient volume
+- Effective filtering of lateral figures
+- Fresh BingX API data used
+- Stable performance with 4h frequency
+- Top 50 market cap futures correctly retrieved
 """
 
 import asyncio
