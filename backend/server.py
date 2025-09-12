@@ -852,18 +852,49 @@ class TrailingStopManager:
     async def _send_email(self, subject: str, body: str):
         """Send email notification"""
         try:
-            # Use a simple SMTP setup - you might want to configure this with your preferred email service
-            # For now, we'll log the notification (you can configure with Gmail SMTP later)
-            logger.info(f"📧 EMAIL NOTIFICATION: {subject}")
-            logger.info(f"📧 To: {self.notification_email}")
-            logger.info(f"📧 Body: {body[:200]}...")  # Log first 200 chars
-            
-            # TODO: Configure actual SMTP settings
-            # For production, you'd configure Gmail SMTP:
-            # smtp_server = "smtp.gmail.com"
-            # smtp_port = 587
-            # sender_email = "your-app@gmail.com"
-            # sender_password = "your-app-password"
+            # 📧 EMAIL NOTIFICATION SYSTEM - Production Ready
+            try:
+                # Try environment-based SMTP configuration if available
+                smtp_server = os.environ.get('SMTP_SERVER')
+                smtp_port = int(os.environ.get('SMTP_PORT', 587))
+                sender_email = os.environ.get('SENDER_EMAIL')
+                sender_password = os.environ.get('SENDER_PASSWORD')
+                
+                if all([smtp_server, sender_email, sender_password]):
+                    import smtplib
+                    from email.mime.text import MIMEText
+                    from email.mime.multipart import MIMEMultipart
+                    
+                    # Create email message
+                    msg = MIMEMultipart()
+                    msg['From'] = sender_email
+                    msg['To'] = self.notification_email
+                    msg['Subject'] = subject
+                    msg.attach(MIMEText(body, 'plain'))
+                    
+                    # Send email
+                    server = smtplib.SMTP(smtp_server, smtp_port)
+                    server.starttls()
+                    server.login(sender_email, sender_password)
+                    server.send_message(msg)
+                    server.quit()
+                    
+                    logger.info(f"✅ EMAIL SENT: {subject} to {self.notification_email}")
+                else:
+                    # Fallback to logging (no SMTP configured)
+                    logger.info(f"📧 EMAIL NOTIFICATION (Log Mode): {subject}")
+                    logger.info(f"📧 To: {self.notification_email}")
+                    logger.info(f"📧 Body: {body[:200]}...")  # Log first 200 chars
+                    logger.info("💡 Configure SMTP_SERVER, SENDER_EMAIL, SENDER_PASSWORD for real emails")
+                    
+            except ImportError:
+                logger.warning("📧 smtplib not available, falling back to logging")
+                logger.info(f"📧 EMAIL NOTIFICATION: {subject}")
+                logger.info(f"📧 Body: {body[:200]}...")
+            except Exception as smtp_error:
+                logger.error(f"❌ SMTP Error: {smtp_error}, falling back to logging")
+                logger.info(f"📧 EMAIL NOTIFICATION (Fallback): {subject}")
+                logger.info(f"📧 Body: {body[:200]}...")
             
         except Exception as e:
             logger.error(f"Failed to send email: {e}")
