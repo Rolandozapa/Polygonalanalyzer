@@ -7264,7 +7264,7 @@ class UltraProfessionalOrchestrator:
     def __init__(self):
         self.scout = UltraProfessionalCryptoScout()
         self.ia1 = UltraProfessionalIA1TechnicalAnalyst()
-        self.ia2 = UltraProfessionalIA2StrategicAnalyst()
+        self.ia2 = UltraProfessionalIA2DecisionAgent()
         self._initialized = False
         self.is_running = False
         self.cycle_count = 0
