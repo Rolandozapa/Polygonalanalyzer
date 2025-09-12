@@ -7532,17 +7532,28 @@ class UltraProfessionalTradingOrchestrator:
                         logger.warning(f"❌ Null objects in valid_analyses: opportunity={opportunity}, analysis={analysis}")
                         continue
                     
-                    # NOUVEAU: Vérification de déduplication avant stockage
+                    # 🔧 FIX: Robuste vérification déduplication avec gestion timestamp post-maintenance
                     symbol = opportunity.symbol
                     current_time = get_paris_time()
                     
-                    # Chercher des opportunités récentes (dernier cycle 4h) pour éviter les doublons
-                    recent_cutoff = get_paris_time() - timedelta(hours=4)
+                    # Create robust timestamp filter that handles day transitions properly
+                    timestamp_filter = paris_time_to_timestamp_filter(hours_ago=4)
                     
                     existing_recent = await db.market_opportunities.find_one({
                         "symbol": symbol,
-                        "timestamp": {"$gte": recent_cutoff}
+                        "timestamp": timestamp_filter
                     })
+                    
+                    # Additional validation: manually check timestamp if found
+                    if existing_recent:
+                        db_timestamp = existing_recent.get('timestamp')
+                        parsed_time = parse_timestamp_from_db(db_timestamp)
+                        time_diff = current_time - parsed_time
+                        
+                        # Double-check: if more than 4 hours passed, allow new opportunity
+                        if time_diff.total_seconds() > 4 * 3600:  # 4 hours = 14400 seconds
+                            logger.info(f"🔄 OPPORTUNITY TIMESTAMP FIX: {symbol} - DB timestamp too old ({time_diff}), allowing new opportunity")
+                            existing_recent = None  # Force new opportunity
                     
                     if existing_recent:
                         opportunities_deduplicated += 1
