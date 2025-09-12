@@ -4204,6 +4204,31 @@ The scientific indicators below provide mathematical precision - you add context
             global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
             
             # Create comprehensive prompt for Claude with market sentiment and leverage logic
+            try:
+                logger.info(f"🔧 IA2: Building prompt for {opportunity.symbol}...")
+                
+                # Test each variable before f-string construction
+                logger.info(f"🔧 IA2: market_sentiment type: {type(market_sentiment)}")
+                logger.info(f"🔧 IA2: composite_rr_data type: {type(composite_rr_data)}")
+                logger.info(f"🔧 IA2: current_indicators type: {type(current_indicators)}")
+                logger.info(f"🔧 IA2: sophisticated_risk_level type: {type(sophisticated_risk_level)}")
+                
+                # Test small f-string parts individually
+                test_part1 = f"Symbol: {opportunity.symbol}"
+                logger.info(f"🔧 IA2: test_part1 OK")
+                
+                test_part2 = f"RR: {composite_rr_data['composite_rr']:.2f}" if isinstance(composite_rr_data, dict) else "RR: N/A"
+                logger.info(f"🔧 IA2: test_part2 OK")
+                
+                test_part3 = f"Market: {market_sentiment['market_sentiment']}" if isinstance(market_sentiment, dict) else "Market: N/A"
+                logger.info(f"🔧 IA2: test_part3 OK")
+                
+                # If we reach here, the problem is in the big f-string template
+                logger.info(f"🔧 IA2: All variables validated, building full prompt...")
+                
+            except Exception as prompt_debug:
+                logger.error(f"❌ IA2 PROMPT DEBUG ERROR for {opportunity.symbol}: {prompt_debug}")
+                return None
             prompt = f"""
 ULTRA PROFESSIONAL ADVANCED TRADING DECISION ANALYSIS
 
