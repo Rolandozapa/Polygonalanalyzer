@@ -520,9 +520,9 @@ class IA1RiskRewardIndependenceTestSuite:
         except Exception as e:
             self.log_test_result("Technical Levels Based RR Calculation", False, f"Exception: {str(e)}")
     
-    async def test_4_advanced_market_aggregator_integration(self):
-        """Test 4: Advanced Market Aggregator Integration with BingX Data"""
-        logger.info("\n🔍 TEST 4: Advanced Market Aggregator Integration Test")
+    async def test_4_database_rr_consistency_analysis(self):
+        """Test 4: Database Analysis of IA1 RR Consistency Across Different Confidence Levels"""
+        logger.info("\n🔍 TEST 4: Database RR Consistency Analysis Test")
         
         try:
             if not self.market_aggregator:
