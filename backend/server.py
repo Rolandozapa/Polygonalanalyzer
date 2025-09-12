@@ -5206,7 +5206,7 @@ async def get_analyses(limit: int = 50):
             
             # 🔧 CRITICAL FIX: Normalize timestamp format for proper sorting
             timestamp = doc.get('timestamp', '')
-            if '+' in timestamp and not timestamp.endswith('Z'):
+            if timestamp and isinstance(timestamp, str) and '+' in timestamp and not timestamp.endswith('Z'):
                 # Convert timezone-aware timestamp to UTC Z format for consistent sorting
                 try:
                     from datetime import datetime
@@ -5219,6 +5219,16 @@ async def get_analyses(limit: int = 50):
                         doc['timestamp'] = timestamp.replace('+00:00', 'Z')
                 except Exception as ts_error:
                     logger.warning(f"Timestamp conversion error: {ts_error}")
+            elif timestamp and not isinstance(timestamp, str):
+                # Convert datetime object to string
+                try:
+                    if hasattr(timestamp, 'isoformat'):
+                        doc['timestamp'] = timestamp.isoformat().replace('+00:00', 'Z')
+                    else:
+                        doc['timestamp'] = str(timestamp)
+                except Exception as ts_error:
+                    logger.warning(f"Timestamp object conversion error: {ts_error}")
+                    doc['timestamp'] = str(timestamp)
             
             # 🔧 CRITICAL FIX: Ensure patterns_detected is always an array for frontend
             if 'patterns_detected' in doc:
