@@ -100,3 +100,40 @@ class TradingDecision(BaseModel):
     actual_quantity: Optional[float] = None
     bingx_status: Optional[str] = None
     timestamp: datetime = Field(default_factory=get_paris_time)
+
+class TradingPerformance(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    symbol: str
+    entry_price: float
+    exit_price: Optional[float] = None
+    position_size: float
+    pnl: Optional[float] = None
+    duration_minutes: Optional[int] = None
+    outcome: Optional[str] = None
+    timestamp: datetime = Field(default_factory=get_paris_time)
+
+class PositionTracking(BaseModel):
+    """Track IA1→IA2 position flow for resilience and avoid duplicates"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    position_id: str  # Unique position ID from IA1
+    symbol: str
+    ia1_analysis_id: str  # Reference to TechnicalAnalysis.id
+    ia1_timestamp: datetime
+    ia1_confidence: float
+    ia1_signal: str
+    
+    # IA2 tracking
+    ia2_decision_id: Optional[str] = None  # Reference to TradingDecision.id if processed
+    ia2_timestamp: Optional[datetime] = None
+    ia2_status: str = "pending"  # pending, processed, failed, skipped
+    
+    # VOIE tracking
+    voie_used: Optional[int] = None  # 1, 2, or 3
+    voie_3_eligible: bool = False  # >95% confidence
+    
+    # Resilience tracking
+    processing_attempts: int = 0
+    last_attempt: Optional[datetime] = None
+    error_message: Optional[str] = None
+    
+    timestamp: datetime = Field(default_factory=get_paris_time)
