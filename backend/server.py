@@ -5188,8 +5188,8 @@ async def get_opportunities(limit: int = 50):
             return {
                 "success": True,
                 "opportunities": opportunities,
-            "count": len(opportunities)
-        }
+                "count": len(opportunities)
+            }
     except Exception as e:
         logger.error(f"❌ Error getting opportunities: {e}")
         return {"success": False, "error": str(e)}
