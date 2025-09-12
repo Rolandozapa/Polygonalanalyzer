@@ -4229,7 +4229,32 @@ CRITICAL: Provide comprehensive strategic analysis with precise technical levels
             # Parse JSON response with enhanced strategic fields
             try:
                 import json
-                decision_data = json.loads(response_text)
+                
+                # 🔧 FIX: Strip markdown formatting from Claude responses (```json ... ```)
+                clean_response = response_text.strip()
+                if clean_response.startswith('```json'):
+                    # Extract JSON from markdown code block
+                    lines = clean_response.split('\n')
+                    json_lines = []
+                    in_json_block = False
+                    for line in lines:
+                        if line.strip() == '```json':
+                            in_json_block = True
+                            continue
+                        elif line.strip() == '```' and in_json_block:
+                            break
+                        elif in_json_block:
+                            json_lines.append(line)
+                    clean_response = '\n'.join(json_lines)
+                elif clean_response.startswith('```') and clean_response.endswith('```'):
+                    # Generic code block stripping
+                    clean_response = clean_response[3:-3].strip()
+                    if clean_response.startswith('json\n'):
+                        clean_response = clean_response[5:]  # Remove 'json\n'
+                
+                logger.info(f"🔧 CLEANED IA2 JSON for {symbol}: {clean_response[:200]}...")
+                
+                decision_data = json.loads(clean_response)
                 
                 # Extract Claude's enhanced strategic decision
                 claude_signal = decision_data.get("signal", signal).lower()  # Ensure lowercase for enum
