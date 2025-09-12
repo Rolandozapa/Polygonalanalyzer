@@ -5455,7 +5455,7 @@ async def force_ia1_cycle():
                         "ia1_reasoning": str(analysis.ia1_reasoning) if hasattr(analysis, 'ia1_reasoning') else "No reasoning available",
                         "risk_reward_ratio": float(analysis.risk_reward_ratio) if hasattr(analysis, 'risk_reward_ratio') else 0.0,
                         "patterns_detected": [],  # Empty array as safe fallback
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),  # Uniform timestamp format
                         "status": "completed_with_fallback_save"
                     }
                     await db.technical_analyses.insert_one(safe_analysis_dict)
