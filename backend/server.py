@@ -4731,6 +4731,15 @@ async def force_ia1_analysis(request: dict):
         
         logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
         
+        # 🎯 ANTI-DOUBLON: Vérifier si ce symbole a été analysé récemment (optionnel pour force)
+        recent_analysis = await db.ia1_analyses.find_one({
+            "symbol": symbol,
+            "timestamp": {"$gte": get_paris_time() - timedelta(minutes=10)}
+        })
+        
+        if recent_analysis:
+            logger.warning(f"⚠️ {symbol} analyzed {(get_paris_time() - recent_analysis['timestamp']).total_seconds():.0f}s ago - forcing anyway")
+        
         # Get the opportunity
         from advanced_market_aggregator import advanced_market_aggregator
         opportunities = advanced_market_aggregator.get_current_opportunities()
