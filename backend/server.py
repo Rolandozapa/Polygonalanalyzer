@@ -2813,6 +2813,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         risk_reward_ratio=1.0
                     )
                     logger.info(f"✅ IA1 SAUVÉ AVEC ERREUR TECHNIQUE pour {opportunity.symbol}")
+                    
+                    # 🚨 SAUVEGARDER L'ANALYSE IA1 MÊME AVEC ERREUR TECHNIQUE
+                    try:
+                        analysis_dict = fallback_analysis.dict()
+                        analysis_dict['timestamp'] = get_paris_time()
+                        await db.technical_analyses.insert_one(analysis_dict)
+                        logger.info(f"💾 IA1 analysis with technical error saved to database for {opportunity.symbol}")
+                    except Exception as save_error:
+                        logger.error(f"❌ Failed to save IA1 analysis with technical error: {save_error}")
+                    
                     return fallback_analysis
                 except Exception as fallback_error:
                     logger.error(f"❌ Fallback IA1 failed for {opportunity.symbol}: {fallback_error}")
