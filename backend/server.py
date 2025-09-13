@@ -2323,8 +2323,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 reasoning += f"\n{direction_emoji} Direction: {final_direction.upper()} (strength: {detected_pattern.strength:.2f})"
                 reasoning += f"\nTrend Duration: {detected_pattern.trend_duration_days} days"
                 
-                # 🚨 CORRECTION: Utiliser les prix réels calculés, pas les prix du pattern
-                reasoning += f"\nEntry: ${opportunity.current_price:.6f} → Target: ${take_profit_price:.6f}"
+                # 🚨 CORRECTION: Prix temporaire pour le reasoning (sera mis à jour après calcul)
+                reasoning += f"\nEntry: ${opportunity.current_price:.6f} → Target: [Calculating...]"
                 reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern supports IA1's {final_direction.upper()} strategic decision."
             
             # 🚀 UTILISER LE JSON IA1 COMPLET + enrichir avec calculs techniques
