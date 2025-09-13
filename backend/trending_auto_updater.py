@@ -135,18 +135,10 @@ class TrendingAutoUpdater:
                 trending_cryptos.extend(bingx_api_tickers)
                 logger.info(f"🔥 BingX API: Found {len(bingx_api_tickers)} trending cryptos from API")
             
-            # 🎯 METHOD 2: BingX Futures page scraping (backup)
-            if len(trending_cryptos) < 20:  # Si pas assez depuis API
-                bingx_page_data = await self._fetch_bingx_page_data()
-                if bingx_page_data:
-                    trending_cryptos.extend(bingx_page_data)
-                    logger.info(f"🔥 BingX Page: Found {len(bingx_page_data)} additional cryptos from market page")
-            
-            # 🎯 METHOD 3: Fallback avec top BingX futures
-            if len(trending_cryptos) < 10:
-                fallback_cryptos = await self._create_fallback_cryptos()
-                trending_cryptos.extend(fallback_cryptos)
-                logger.info(f"🔥 BingX Fallback: Added {len(fallback_cryptos)} top futures symbols")
+            # 🚨 PAS DE FALLBACK - Utilisation UNIQUEMENT des données API BingX
+            if len(trending_cryptos) == 0:
+                logger.error("❌ SCOUT CRITICAL: No data from BingX API - returning empty list")
+                return []  # Pas de fallback, retourner vide si l'API échoue
             
             # Remove duplicates et tri par volume/price change
             unique_cryptos = {}
