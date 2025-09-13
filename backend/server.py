@@ -8048,9 +8048,15 @@ class UltraProfessionalOrchestrator:
                 except Exception as e:
                     logger.error(f"❌ Failed to save opportunities to database: {e}")
             
-            # Step 2: Analyze with IA1 - Focus on best opportunities first
+            # Step 2: Analyze with IA1 - Focus on diverse opportunities
             analyses_count = 0
-            for opportunity in opportunities[:10]:  # Limit to prevent overload
+            
+            # 🎯 CORRECTION: Mélanger les opportunités pour éviter la répétition du même token
+            import random
+            shuffled_opportunities = opportunities.copy()
+            random.shuffle(shuffled_opportunities)
+            
+            for opportunity in shuffled_opportunities[:10]:  # Limit to prevent overload with diversity
                 try:
                     # Skip fallback opportunities with no real data
                     if (opportunity.price_change_24h == 0.0 and 
