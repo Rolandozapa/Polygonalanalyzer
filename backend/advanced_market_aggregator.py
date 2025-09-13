@@ -1334,17 +1334,38 @@ class AdvancedMarketAggregator:
                 
                 # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
                 for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
+                    # 🚨 CORRECTION CRITIQUE: Récupérer le prix réel si manquant
+                    current_price = crypto.price if hasattr(crypto, 'price') and crypto.price and crypto.price > 0 else 0.0
+                    
+                    # Si pas de prix depuis BingX API, utiliser OHLCV fallback
+                    if current_price <= 0:
+                        try:
+                            logger.info(f"🔄 OHLCV FALLBACK: Fetching real price for {crypto.symbol}")
+                            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+                            
+                            # Récupérer les données OHLCV pour obtenir le prix actuel
+                            ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(crypto.symbol, days=2)
+                            
+                            if ohlcv_data is not None and not ohlcv_data.empty:
+                                current_price = float(ohlcv_data['close'].iloc[-1])  # Prix de clôture le plus récent
+                                logger.info(f"✅ OHLCV SUCCESS: {crypto.symbol} price = ${current_price:.6f}")
+                            else:
+                                logger.warning(f"⚠️ OHLCV FAILED: No data for {crypto.symbol}")
+                                
+                        except Exception as e:
+                            logger.error(f"❌ OHLCV ERROR for {crypto.symbol}: {e}")
+                    
                     # Utiliser les données réelles du scout BingX (avec tous les filtres appliqués)
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
-                        current_price=crypto.price if hasattr(crypto, 'price') and crypto.price else 0.0,
+                        current_price=current_price,  # Prix réel depuis BingX API ou OHLCV fallback
                         volume_24h=crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0,
                         price_change_24h=crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
                         volatility=abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
                         market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
                         market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
-                        data_sources=["bingx_scout_filtered"],
-                        data_confidence=0.9  # Haute confiance pour les données scout BingX filtrées
+                        data_sources=["bingx_scout_filtered", "ohlcv_fallback"] if current_price > 0 else ["bingx_scout_filtered"],
+                        data_confidence=0.9 if current_price > 0 else 0.5  # Confiance réduite si pas de prix
                     )
                     opportunities.append(opportunity)
                     
