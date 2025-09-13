@@ -5658,17 +5658,24 @@ async def test_escalation_logic():
 
 @app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
-    """Get current market opportunities - now using fresh BingX trending data"""
+    """Get current FILTERED opportunities from BingX scout system ONLY"""
     try:
-        # 🚀 NEW: Get fresh opportunities from advanced market aggregator instead of stale DB data
+        # 🎯 STRICT SCOUT FILTERING: Only show opportunities that passed BingX scout filters
         fresh_opportunities = advanced_market_aggregator.get_current_opportunities()
         
         if fresh_opportunities:
+            # Filter to show ONLY scout-filtered opportunities (not database entries)
+            scout_filtered_opportunities = []
+            for opp in fresh_opportunities:
+                # Only include opportunities that have 'bingx_scout_filtered' in data_sources
+                if 'bingx_scout_filtered' in opp.data_sources:
+                    scout_filtered_opportunities.append(opp)
+            
             # Convert to JSON-serializable format and limit results
             opportunities = []
-            for opp in fresh_opportunities[:limit]:
+            for opp in scout_filtered_opportunities[:limit]:
                 opp_dict = {
-                    "id": opp.symbol + "_" + str(hash(opp.timestamp))[-8:],  # Generate consistent ID
+                    "id": opp.symbol + "_" + str(hash(opp.timestamp))[-8:],
                     "symbol": opp.symbol,
                     "current_price": opp.current_price,
                     "volume_24h": opp.volume_24h,
@@ -5678,34 +5685,44 @@ async def get_opportunities(limit: int = 50):
                     "market_cap_rank": opp.market_cap_rank,
                     "data_sources": opp.data_sources,
                     "data_confidence": opp.data_confidence,
-                    "timestamp": opp.timestamp.isoformat()
+                    "timestamp": opp.timestamp.isoformat(),
+                    # 🎯 Additional scout filter info
+                    "scout_filtered": True,
+                    "filter_criteria": "Volume >5%, Price >1%, Anti-lateral patterns"
                 }
                 opportunities.append(opp_dict)
             
-            logger.info(f"📊 Returning {len(opportunities)} FRESH BingX opportunities")
+            logger.info(f"📊 Returning {len(opportunities)} SCOUT-FILTERED BingX opportunities (passed all filters)")
             return {
                 "success": True,
                 "opportunities": opportunities,
-                "count": len(opportunities)
+                "count": len(opportunities),
+                "filter_status": "scout_filtered_only",
+                "criteria": {
+                    "min_volume_change": "5%",
+                    "min_price_change": "1%", 
+                    "lateral_patterns": "excluded",
+                    "source": "BingX Top 50 Futures"
+                }
             }
         else:
-            # Fallback to database if no fresh opportunities available
-            logger.warning("⚠️ No fresh opportunities, falling back to database")
-            cursor = db.market_opportunities.find().sort("timestamp", -1).limit(limit)
-            opportunities = []
-            async for doc in cursor:
-                # Convert MongoDB document to JSON-serializable format
-                doc.pop('_id', None)  # Remove ObjectId
-                opportunities.append(doc)
-            
-            logger.info(f"📊 Returning {len(opportunities)} opportunities from database fallback")
+            # No fresh scout data - return empty instead of fallback
+            logger.warning("⚠️ No scout-filtered opportunities available")
             return {
                 "success": True,
-                "opportunities": opportunities,
-                "count": len(opportunities)
+                "opportunities": [],
+                "count": 0,
+                "filter_status": "no_scout_data",
+                "message": "No opportunities currently pass scout filtering criteria",
+                "criteria": {
+                    "min_volume_change": "5%",
+                    "min_price_change": "1%",
+                    "lateral_patterns": "excluded",
+                    "source": "BingX Top 50 Futures"
+                }
             }
     except Exception as e:
-        logger.error(f"❌ Error getting opportunities: {e}")
+        logger.error(f"❌ Error getting filtered opportunities: {e}")
         return {"success": False, "error": str(e)}
 
 @app.get("/api/analyses")
