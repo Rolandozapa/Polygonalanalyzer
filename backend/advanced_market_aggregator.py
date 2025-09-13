@@ -1287,47 +1287,51 @@ class AdvancedMarketAggregator:
             # 🚀 NEW: Get trending data from trending_auto_updater if available
             opportunities = []
             
-            # Try to get trending symbols from the global trending updater or direct fetch
+            # 🎯 NOUVELLE APPROCHE: Liste statique diversifiée de futures populaires BingX
+            # Élimine les trending cryptos répétitifs en utilisant des symboles fixes variés
             try:
-                # 🚀 DIRECT ACCESS: Import trending updater directly 
-                from trending_auto_updater import trending_auto_updater
+                logger.info("🎯 USING STATIC DIVERSE FUTURES LIST - No more trending crypto repetitions")
                 
-                # Check if we have recent trending data
-                current_time = datetime.now(timezone.utc)
-                data_is_fresh = False
-                if trending_auto_updater.last_update:
-                    # Ensure last_update is a datetime object
-                    if isinstance(trending_auto_updater.last_update, datetime):
-                        last_update = trending_auto_updater.last_update
-                        if last_update.tzinfo is None:
-                            last_update = last_update.replace(tzinfo=timezone.utc)
-                        data_is_fresh = (current_time - last_update).total_seconds() < 14400
-                    elif isinstance(trending_auto_updater.last_update, (int, float)):
-                        # Convert timestamp to datetime
-                        last_update = datetime.fromtimestamp(trending_auto_updater.last_update, tz=timezone.utc)
-                        data_is_fresh = (current_time - last_update).total_seconds() < 14400
+                # Liste diversifiée de futures BingX populaires
+                static_futures = [
+                    "BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "DOTUSDT", 
+                    "LINKUSDT", "LTCUSDT", "BCHUSDT", "XRPUSDT", "MATICUSDT",
+                    "AVAXUSDT", "ATOMUSDT", "NEARUSDT", "FILUSDT", "TRXUSDT",
+                    "UNIUSDT", "VETUSDT", "ICPUSDT", "FTMUSDT", "SANDUSDT",
+                    "MANAUSDT", "THETAUSDT", "AAVEUSDT", "AXSUSDT", "CHZUSDT",
+                    "ENJUSDT", "SUSHIUSDT", "GRTUSDT", "SNXUSDT", "COMPUSDT",
+                    "YFIUSDT", "MKRUSDT", "ZRXUSDT", "BATUSDT", "LRCUSDT",
+                    "UMAUSDT", "KNCUSDT", "BANDUSDT", "STORJUSDT", "SKLUSDT",
+                    "CRVUSDT", "1INCHUSDT", "ALPHAUSDT", "RAREUSDT", "CKBUSDT",
+                    "GALAUSDT", "FTTUSDT", "LDOUSDT", "MASKUSDT", "NMRUSDT"
+                ]
                 
-                trending_cryptos = []
+                # Mélanger pour diversité à chaque appel
+                import random
+                random.shuffle(static_futures)
                 
-                if data_is_fresh and trending_auto_updater.current_trending:
-                    # Use cached fresh data
-                    trending_cryptos = trending_auto_updater.current_trending
-                    logger.info(f"🔥 USING CACHED BINGX TRENDING: {len(trending_cryptos)} trending cryptos")
-                else:
-                    # Force refresh - get fresh BingX data
-                    logger.info("🔄 Fetching fresh BingX trending data...")
-                    import asyncio
-                    trending_cryptos = asyncio.run(trending_auto_updater.fetch_trending_cryptos())
-                    if trending_cryptos:
-                        trending_auto_updater.current_trending = trending_cryptos
-                        trending_auto_updater.last_update = current_time
-                        logger.info(f"✅ FRESH BINGX DATA: {len(trending_cryptos)} trending cryptos fetched")
-                
-                if trending_cryptos:
-                    for crypto in trending_cryptos[:50]:  # Top 50 comme demandé par l'utilisateur
-                        opportunity = MarketOpportunity(
-                            symbol=crypto.symbol,
-                            current_price=crypto.price if hasattr(crypto, 'price') and crypto.price else 100.0,  # Use real price from BingX
+                for symbol in static_futures[:50]:  # Top 50 diversifiés
+                    # Obtenir le prix réel depuis OHLCV
+                    real_price = 100.0  # Fallback
+                    try:
+                        from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+                        ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(symbol, days=1)
+                        if ohlcv_data is not None and not ohlcv_data.empty:
+                            real_price = float(ohlcv_data['close'].iloc[-1])
+                            
+                        # Calculer les statistiques basiques
+                        volume_24h = float(ohlcv_data['volume'].iloc[-1]) if not ohlcv_data.empty else 1000000.0
+                        price_change_24h = 0.02  # Default 2%
+                        if len(ohlcv_data) >= 2:
+                            prev_close = float(ohlcv_data['close'].iloc[-2])
+                            price_change_24h = (real_price - prev_close) / prev_close
+                            
+                    except Exception as e:
+                        logger.debug(f"Could not fetch OHLCV for {symbol}: {e}")
+                        
+                    opportunity = MarketOpportunity(
+                        symbol=symbol,
+                        current_price=real_price,  # Prix réel d'OHLCV
                             volume_24h=crypto.volume or 1000000.0,
                             price_change_24h=crypto.price_change or 0.02,
                             volatility=abs(crypto.price_change or 0.02) / 100.0,  # Real volatility from price change
