@@ -80,6 +80,11 @@ from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 
 # 🚨 CACHE ANTI-DOUBLON GLOBAL (persistant entre appels API)
 GLOBAL_ANALYZED_SYMBOLS_CACHE = set()
+
+# 🔒 MUTEX POUR ÉVITER APPELS PARALLÈLES IA1/IA2
+import asyncio
+IA1_ANALYSIS_LOCK = asyncio.Lock()
+IA2_DECISION_LOCK = asyncio.Lock()
 from intelligent_ohlcv_fetcher import intelligent_ohlcv_fetcher, OHLCVMetadata, HighFrequencyData, EnhancedSupportResistance, DynamicRiskReward
 from global_crypto_market_analyzer import global_crypto_market_analyzer, GlobalMarketData, MarketRegime, MarketSentiment
 from bingx_integration import bingx_manager, TradingPosition
