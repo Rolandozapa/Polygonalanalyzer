@@ -5725,40 +5725,58 @@ async def get_execution_mode():
 
 @app.post("/api/run-ia1-cycle")
 async def force_ia1_cycle():
-    """Force run IA1 analysis cycle - analyzes the latest scout selection"""
+    """Force run IA1 analysis cycle - analyzes scout selection with rotation"""
     try:
         logger.info(f"🚀 FORCING IA1 ANALYSIS on latest scout selection")
         
-        # 🔥 CRITICAL FIX: Use database opportunities instead of market aggregator fallback
-        # Get opportunities from database (same source as /api/opportunities endpoint)
-        cursor = db.market_opportunities.find().sort("timestamp", -1).limit(10)
-        opportunities_docs = []
-        async for doc in cursor:
-            opportunities_docs.append(doc)
+        # 🔥 NEW APPROACH: Get fresh opportunities from scout system with rotation
+        from advanced_market_aggregator import advanced_market_aggregator
+        opportunities = advanced_market_aggregator.get_current_opportunities()
         
-        if not opportunities_docs:
-            logger.warning("No opportunities in database, trying market aggregator...")
-            # Fallback: try market aggregator
-            from advanced_market_aggregator import advanced_market_aggregator
-            opportunities = advanced_market_aggregator.get_current_opportunities()
-            if not opportunities:
-                return {"success": False, "error": "No opportunities available from any source"}
-            target_opportunity = opportunities[0]
+        if not opportunities:
+            return {"success": False, "error": "No opportunities available from scout system"}
+        
+        logger.info(f"📊 Scout provided {len(opportunities)} filtered opportunities")
+        
+        # 🎯 INTELLIGENT SELECTION: Choose crypto that hasn't been analyzed recently
+        import random
+        
+        # Filter out recently analyzed cryptos (last 30 minutes)
+        fresh_opportunities = []
+        for opp in opportunities:
+            recent_analysis = await db.technical_analyses.find_one({
+                "symbol": opp.symbol,
+                "timestamp": {"$gte": get_paris_time() - timedelta(minutes=30)}
+            })
+            
+            if not recent_analysis:
+                fresh_opportunities.append(opp)
+        
+        # Choose target opportunity
+        if fresh_opportunities:
+            # Randomize fresh opportunities to ensure rotation
+            random.shuffle(fresh_opportunities)
+            target_opportunity = fresh_opportunities[0]
+            logger.info(f"🎯 SELECTED FRESH: {target_opportunity.symbol} (not analyzed in last 30 min)")
         else:
-            # Convert first database opportunity to MarketOpportunity object
-            opp_doc = opportunities_docs[0]
-            target_opportunity = MarketOpportunity(
-                symbol=opp_doc.get('symbol', 'UNKNOWN'),
-                current_price=float(opp_doc.get('current_price', 100.0)),
-                volume_24h=float(opp_doc.get('volume_24h', 1000000.0)),
-                price_change_24h=float(opp_doc.get('price_change_24h', 0.0)),
-                volatility=float(opp_doc.get('volatility', 0.05)),
-                market_cap=float(opp_doc.get('market_cap', 1000000000)),
-                market_cap_rank=int(opp_doc.get('market_cap_rank', 1)),
-                data_sources=opp_doc.get('data_sources', ['database']),
-                data_confidence=float(opp_doc.get('data_confidence', 0.8)),
-                timestamp=datetime.now(timezone.utc)
-            )
+            # All opportunities analyzed recently, take the oldest analysis
+            analyses_cursor = db.technical_analyses.find({
+                "symbol": {"$in": [opp.symbol for opp in opportunities]}
+            }).sort("timestamp", 1).limit(1)
+            
+            oldest_analysis = None
+            async for analysis in analyses_cursor:
+                oldest_analysis = analysis
+                break
+            
+            if oldest_analysis:
+                # Find the opportunity for the oldest analysis
+                target_opportunity = next((opp for opp in opportunities if opp.symbol == oldest_analysis['symbol']), opportunities[0])
+                logger.info(f"🔄 SELECTED OLDEST: {target_opportunity.symbol} (oldest analysis)")
+            else:
+                # Fallback: take first opportunity
+                target_opportunity = opportunities[0]
+                logger.info(f"🎯 FALLBACK SELECTED: {target_opportunity.symbol}")
             
         symbol = target_opportunity.symbol
         logger.info(f"🎯 IA1 analyzing REAL scout selection: {symbol} (price: {target_opportunity.price_change_24h:+.1f}%, vol: {target_opportunity.volume_24h:,.0f}, sources: {target_opportunity.data_sources})")
