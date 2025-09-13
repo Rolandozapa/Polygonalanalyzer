@@ -8250,9 +8250,9 @@ class UltraProfessionalOrchestrator:
                     
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
                     
-                    # 🚨 AJOUTER AU CACHE IMMÉDIATEMENT pour éviter doublons pendant l'analyse
-                    self.recent_analyzed_symbols.add(opportunity.symbol)
-                    logger.debug(f"🔒 {opportunity.symbol} ajouté au cache anti-doublon")
+                    # 🚨 AJOUTER AU CACHE GLOBAL IMMÉDIATEMENT pour éviter doublons pendant l'analyse
+                    GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)
+                    logger.info(f"🔒 {opportunity.symbol} ajouté au cache GLOBAL anti-doublon")
                     
                     analysis = await self.ia1.analyze_opportunity(opportunity)
                     if analysis:
