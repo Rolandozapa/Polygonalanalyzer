@@ -239,6 +239,16 @@ class TrendingAutoUpdater:
                                     price_change_pct = float(ticker_data.get('priceChangePercent', 0))
                                     volume = float(ticker_data.get('volume', 0))
                                     
+                                    # 🚨 CORRECTION CRITIQUE: Récupérer le prix actuel depuis l'API BingX
+                                    current_price = float(ticker_data.get('lastPrice', 0)) or float(ticker_data.get('price', 0))
+                                    
+                                    # Si pas de prix dans l'API, calculer depuis le change %
+                                    if current_price <= 0 and price_change_pct != 0:
+                                        # Essayer de déduire le prix depuis le change % (approximatif)
+                                        # Si on a +8%, le prix actuel = prix_hier * 1.08
+                                        # Mais on n'a pas le prix d'hier, donc on va chercher avec OHLCV
+                                        logger.debug(f"⚠️ No price from BingX API for {symbol}, will use OHLCV fallback")
+                                    
                                     # 🎯 FILTRES UTILISATEUR: min var volume daily 5%, min var price 1%
                                     # Filtre 1: Variation de prix minimum 1%
                                     if abs(price_change_pct) < 1.0:
