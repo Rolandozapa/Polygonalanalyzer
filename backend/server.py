@@ -2790,7 +2790,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
             })
             
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
-            logger.info(f"🔧 PRIX AJOUTÉS À ANALYSIS_DATA {opportunity.symbol}: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
+            logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
+            logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
+            logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             validated_data = self._validate_analysis_data(analysis_data)
