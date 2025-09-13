@@ -1334,38 +1334,61 @@ class AdvancedMarketAggregator:
                 
                 # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
                 for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
-                    # 🚨 CORRECTION CRITIQUE: Récupérer le prix réel si manquant
+                    # 🚨 SYSTÉMATIQUE: TOUJOURS récupérer les données OHLCV historiques pour l'analyse technique
                     current_price = crypto.price if hasattr(crypto, 'price') and crypto.price and crypto.price > 0 else 0.0
+                    ohlcv_available = False
                     
-                    # Si pas de prix depuis BingX API, utiliser OHLCV fallback
-                    if current_price <= 0:
-                        try:
-                            logger.info(f"🔄 OHLCV FALLBACK: Fetching real price for {crypto.symbol}")
-                            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+                    try:
+                        logger.info(f"📊 OHLCV SYSTÉMATIQUE: Récupération données historiques pour {crypto.symbol}")
+                        from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+                        
+                        # 🎯 RÉCUPÉRATION SYSTÉMATIQUE: 10+ jours pour indicateurs multi-frame
+                        ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(crypto.symbol, days=15)
+                        
+                        if ohlcv_data is not None and not ohlcv_data.empty:
+                            ohlcv_available = True
                             
-                            # Récupérer les données OHLCV pour obtenir le prix actuel
-                            ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(crypto.symbol, days=2)
+                            # Si pas de prix depuis BingX API, utiliser le prix OHLCV
+                            if current_price <= 0:
+                                current_price = float(ohlcv_data['close'].iloc[-1])
+                                logger.info(f"💰 PRIX OHLCV: {crypto.symbol} = ${current_price:.6f}")
                             
-                            if ohlcv_data is not None and not ohlcv_data.empty:
-                                current_price = float(ohlcv_data['close'].iloc[-1])  # Prix de clôture le plus récent
-                                logger.info(f"✅ OHLCV SUCCESS: {crypto.symbol} price = ${current_price:.6f}")
+                            # Calculer statistiques avancées depuis les données OHLCV
+                            volume_24h_ohlcv = float(ohlcv_data['volume'].iloc[-1]) if len(ohlcv_data) > 0 else 0.0
+                            
+                            # Calcul de volatilité réelle sur 10 jours
+                            if len(ohlcv_data) >= 10:
+                                price_changes = ohlcv_data['close'].pct_change().dropna()
+                                real_volatility = float(price_changes.std() * 100)  # Volatilité en %
                             else:
-                                logger.warning(f"⚠️ OHLCV FAILED: No data for {crypto.symbol}")
-                                
-                        except Exception as e:
-                            logger.error(f"❌ OHLCV ERROR for {crypto.symbol}: {e}")
+                                real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                            
+                            logger.info(f"✅ OHLCV COMPLET: {crypto.symbol} - {len(ohlcv_data)} jours, volatilité {real_volatility:.2f}%")
+                        else:
+                            logger.warning(f"⚠️ OHLCV ÉCHEC: Pas de données historiques pour {crypto.symbol}")
+                            real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                            volume_24h_ohlcv = crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0
+                            
+                    except Exception as e:
+                        logger.error(f"❌ OHLCV ERREUR pour {crypto.symbol}: {e}")
+                        ohlcv_available = False
+                        real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                        volume_24h_ohlcv = crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0
                     
-                    # Utiliser les données réelles du scout BingX (avec tous les filtres appliqués)
+                    # Utiliser le meilleur volume disponible (OHLCV > BingX API)
+                    best_volume = volume_24h_ohlcv if ohlcv_available and volume_24h_ohlcv > 0 else (crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0)
+                    
+                    # Créer l'opportunité avec données complètes
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
-                        current_price=current_price,  # Prix réel depuis BingX API ou OHLCV fallback
-                        volume_24h=crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0,
+                        current_price=current_price,  # Prix réel depuis BingX API ou OHLCV
+                        volume_24h=best_volume,  # Meilleur volume disponible
                         price_change_24h=crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
-                        volatility=abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
+                        volatility=real_volatility,  # Volatilité calculée sur données historiques
                         market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
                         market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
-                        data_sources=["bingx_scout_filtered", "ohlcv_fallback"] if current_price > 0 else ["bingx_scout_filtered"],
-                        data_confidence=0.9 if current_price > 0 else 0.5  # Confiance réduite si pas de prix
+                        data_sources=["bingx_scout_filtered", "ohlcv_historical"] if ohlcv_available else ["bingx_scout_filtered"],
+                        data_confidence=0.95 if ohlcv_available and current_price > 0 else 0.7  # Très haute confiance avec OHLCV
                     )
                     opportunities.append(opportunity)
                     
