@@ -1321,14 +1321,8 @@ class AdvancedMarketAggregator:
                     logger.info("🔄 SCOUT REFRESH: Fetching fresh BingX top 50 futures with filters...")
                     import asyncio
                     
-                    # Récupération async des cryptos filtrés (await directement car dans un contexte async)
-                    try:
-                        # Dans un event loop existant, on utilise await directement
-                        filtered_cryptos = await trending_auto_updater.fetch_trending_cryptos()
-                    except Exception:
-                        # Si await ne fonctionne pas, créer une nouvelle tâche
-                        loop = asyncio.get_event_loop()
-                        filtered_cryptos = await loop.run_in_executor(None, lambda: asyncio.run(trending_auto_updater.fetch_trending_cryptos()))
+                    # Utiliser une méthode synchrone pour éviter les problèmes d'event loop
+                    filtered_cryptos = trending_auto_updater.get_cached_or_fetch_sync()
                     
                     if filtered_cryptos:
                         trending_auto_updater.current_trending = filtered_cryptos
