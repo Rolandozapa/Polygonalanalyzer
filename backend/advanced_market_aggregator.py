@@ -1361,23 +1361,6 @@ class AdvancedMarketAggregator:
                         data_confidence=0.5
                     ))
                 logger.info(f"✅ MINIMAL FALLBACK: {len(opportunities)} basic opportunities created")
-                            if ohlcv_data is not None and not ohlcv_data.empty:
-                                real_price = float(ohlcv_data['close'].iloc[-1])  # Latest close price
-                        except Exception as e:
-                            logger.debug(f"Could not fetch real price for {symbol}: {e}")
-                        
-                        opportunity = MarketOpportunity(
-                            symbol=symbol,
-                            current_price=real_price,  # Use real price when available
-                            volume_24h=1000000.0,  # Mock volume
-                            price_change_24h=0.02,  # Mock 2% change
-                            volatility=0.05,  # Mock 5% volatility
-                            market_cap=1000000000,  # Mock market cap
-                            market_cap_rank=1,
-                            data_sources=["bingx_fallback"],
-                            data_confidence=0.7
-                        )
-                        opportunities.append(opportunity)
             
             # Cache the opportunities
             self.cache[cache_key] = {
