@@ -3404,6 +3404,57 @@ class UltraProfessionalIA1TechnicalAnalyst:
             current_price = float(prices.iloc[-1]) if len(prices) > 0 else 100.0
             return current_price * 1.02, current_price, current_price * 0.98
     
+    def _calculate_bollinger_position(self, prices: pd.Series, period: int = 20, std_dev: float = 2):
+        """Calculate Bollinger Bands position (0-100, where 50 = middle)"""
+        try:
+            upper, middle, lower = self._calculate_bollinger_bands(prices, period, std_dev)
+            current_price = float(prices.iloc[-1])
+            
+            # Position entre les bandes (0-100)
+            if upper == lower:  # Éviter division par zéro
+                return 50.0
+            
+            position = ((current_price - lower) / (upper - lower)) * 100
+            return max(0.0, min(100.0, position))  # Clamper entre 0-100
+            
+        except Exception as e:
+            logger.debug(f"Error calculating Bollinger position: {e}")
+            return 50.0  # Position neutre par défaut
+    
+    def _calculate_stochastic(self, high: pd.Series, low: pd.Series, close: pd.Series, k_period: int = 14, d_period: int = 3):
+        """Calculate Stochastic Oscillator (%K and %D)"""
+        try:
+            if len(close) < k_period:
+                return {"k": 50.0, "d": 50.0}
+            
+            # %K calculation
+            lowest_low = low.rolling(window=k_period).min()
+            highest_high = high.rolling(window=k_period).max()
+            
+            # Éviter division par zéro
+            denominator = highest_high - lowest_low
+            denominator = denominator.replace(0, 1)  # Remplacer 0 par 1
+            
+            k_percent = 100 * ((close - lowest_low) / denominator)
+            
+            # %D calculation (moving average de %K)
+            d_percent = k_percent.rolling(window=d_period).mean()
+            
+            k_value = float(k_percent.iloc[-1])
+            d_value = float(d_percent.iloc[-1])
+            
+            # Valider les résultats
+            if pd.isna(k_value) or not (0 <= k_value <= 100):
+                k_value = 50.0
+            if pd.isna(d_value) or not (0 <= d_value <= 100):
+                d_value = 50.0
+                
+            return {"k": k_value, "d": d_value}
+            
+        except Exception as e:
+            logger.debug(f"Error calculating Stochastic: {e}")
+            return {"k": 50.0, "d": 50.0}
+    
     def _ensure_json_safe(self, value, default=0.0):
         """S'assure qu'une valeur est safe pour la sérialisation JSON"""
         try:
