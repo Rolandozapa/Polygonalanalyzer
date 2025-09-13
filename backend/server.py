@@ -4791,24 +4791,30 @@ async def start_scout_cycle():
 
 @api_router.post("/force-ia1-analysis")
 async def force_ia1_analysis(request: dict):
-    """Force IA1 analysis for a specific symbol (bypass pattern filters)"""
-    try:
-        symbol = request.get("symbol")
-        if not symbol:
-            return {"success": False, "error": "Symbol required"}
-        
-        logger.info(f"🚀 FORCING IA1 ANALYSIS for {symbol}")
-        
-        # 🎯 ANTI-DOUBLON: Vérifier si ce symbole a été analysé récemment (optionnel pour force)
-        recent_analysis = await db.ia1_analyses.find_one({
-            "symbol": symbol,
-            "timestamp": {"$gte": get_paris_time() - timedelta(minutes=10)}
-        })
-        
-        if recent_analysis:
-            logger.warning(f"⚠️ {symbol} analyzed {(get_paris_time() - recent_analysis['timestamp']).total_seconds():.0f}s ago - forcing anyway")
-        
-        # Get the opportunity
+    """Force IA1 analysis for a specific symbol - AVEC PROTECTION ANTI-PARALLÈLE"""
+    global IA1_ANALYSIS_LOCK
+    
+    if IA1_ANALYSIS_LOCK.locked():
+        return {"success": False, "error": "IA1 analysis already running - wait for completion"}
+    
+    async with IA1_ANALYSIS_LOCK:
+        try:
+            symbol = request.get("symbol")
+            if not symbol:
+                return {"success": False, "error": "Symbol required"}
+            
+            logger.info(f"🔒 FORCING IA1 ANALYSIS for {symbol} (PROTECTED)")
+            
+            # 🎯 ANTI-DOUBLON: Vérifier si ce symbole a été analysé récemment (optionnel pour force)
+            recent_analysis = await db.technical_analyses.find_one({
+                "symbol": symbol,
+                "timestamp": {"$gte": get_paris_time() - timedelta(minutes=10)}
+            })
+            
+            if recent_analysis:
+                logger.warning(f"⚠️ {symbol} analyzed {(get_paris_time() - recent_analysis['timestamp']).total_seconds():.0f}s ago - forcing anyway")
+            
+            # Get the opportunity
         from advanced_market_aggregator import advanced_market_aggregator
         opportunities = advanced_market_aggregator.get_current_opportunities()
         target_opportunity = None
