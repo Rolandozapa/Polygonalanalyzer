@@ -8105,6 +8105,7 @@ class UltraProfessionalOrchestrator:
         self._initialized = False
         self.is_running = False
         self.cycle_count = 0
+        self.recent_analyzed_symbols = set()  # 🚨 NOUVEAU: Track des symboles récents en mémoire
         
         logger.info("🚀 UltraProfessionalOrchestrator initialized")
     
