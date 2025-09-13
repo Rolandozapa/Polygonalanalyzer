@@ -2854,14 +2854,30 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # 🚨 SI IA1 JSON a été généré avec succès mais erreur technique, essayer de sauver l'analyse
             if 'ia1_complete_json' in locals() and ia1_complete_json and 'analysis' in ia1_complete_json:
                 try:
+                    # 🚀 CRITICAL FIX: Use calculated technical indicators even in fallback
+                    fallback_rsi = rsi if 'rsi' in locals() and rsi != 50.0 else 50.0
+                    fallback_macd = macd_signal if 'macd_signal' in locals() and macd_signal != 0.0 else 0.0
+                    fallback_stoch_k = stochastic_k if 'stochastic_k' in locals() and stochastic_k != 50.0 else 50.0
+                    fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d != 50.0 else 50.0
+                    fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position != 0.0 else 0.0
+                    
+                    # 🚀 Use calculated advanced indicators if available
+                    fallback_mfi = mfi if 'mfi' in locals() and mfi != 50.0 else 50.0
+                    fallback_vwap = vwap if 'vwap' in locals() and vwap != 0.0 else 0.0
+                    fallback_vwap_pos = vwap_position if 'vwap_position' in locals() and vwap_position != 0.0 else 0.0
+                    fallback_ema_hier = trend_hierarchy if 'trend_hierarchy' in locals() and trend_hierarchy != 'neutral' else 'neutral'
+                    fallback_ema_strength = trend_strength_score if 'trend_strength_score' in locals() and trend_strength_score != 0.5 else 0.5
+                    
+                    logger.info(f"🔥 FALLBACK WITH CALCULATED INDICATORS for {opportunity.symbol}: RSI={fallback_rsi:.1f}, MFI={fallback_mfi:.1f}, VWAP={fallback_vwap_pos:+.2f}%")
+                    
                     # Utiliser l'analyse IA1 même avec erreur technique
                     fallback_analysis = TechnicalAnalysis(
                         symbol=opportunity.symbol,
-                        rsi=50.0,  # Indicateurs par défaut  
-                        macd_signal=0.0,
-                        stochastic=50.0,
-                        stochastic_d=50.0,
-                        bollinger_position=0.0,
+                        rsi=fallback_rsi,  # 🚀 Use calculated RSI
+                        macd_signal=fallback_macd,  # 🚀 Use calculated MACD
+                        stochastic=fallback_stoch_k,  # 🚀 Use calculated Stochastic
+                        stochastic_d=fallback_stoch_d,  # 🚀 Use calculated Stochastic %D
+                        bollinger_position=fallback_bb_pos,  # 🚀 Use calculated BB position
                         fibonacci_level=0.618,
                         support_levels=[opportunity.current_price * 0.95],
                         resistance_levels=[opportunity.current_price * 1.05],
@@ -2871,6 +2887,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         ia1_reasoning=ia1_complete_json.get('reasoning', f"IA1 analysis with technical error for {opportunity.symbol}"),
                         market_sentiment="neutral",
                         data_sources=opportunity.data_sources,
+                        # 🚀 Add advanced indicators to fallback analysis
+                        mfi_value=fallback_mfi,
+                        mfi_signal=('extreme_overbought' if fallback_mfi > 90 else 'overbought' if fallback_mfi > 80 else 'extreme_oversold' if fallback_mfi < 10 else 'oversold' if fallback_mfi < 20 else 'neutral'),
+                        mfi_institution=('distribution' if fallback_mfi > 80 else 'accumulation' if fallback_mfi < 20 else 'neutral'),
+                        vwap_price=fallback_vwap,
+                        vwap_position=fallback_vwap_pos,
+                        vwap_signal=('extreme_overbought' if abs(fallback_vwap_pos) > 2.0 and fallback_vwap_pos > 0 else 'overbought' if abs(fallback_vwap_pos) > 1.0 and fallback_vwap_pos > 0 else 'extreme_oversold' if abs(fallback_vwap_pos) > 2.0 and fallback_vwap_pos < 0 else 'oversold' if abs(fallback_vwap_pos) > 1.0 and fallback_vwap_pos < 0 else 'neutral'),
+                        vwap_trend=('bullish' if fallback_vwap_pos > 0.2 else 'bearish' if fallback_vwap_pos < -0.2 else 'neutral'),
+                        ema_hierarchy=fallback_ema_hier,
+                        ema_position=('above_all' if fallback_ema_hier == 'strong_bull' else 'above_fast' if fallback_ema_hier == 'weak_bull' else 'below_fast' if fallback_ema_hier == 'weak_bear' else 'below_all' if fallback_ema_hier == 'strong_bear' else 'mixed'),
+                        ema_cross_signal='neutral',
+                        ema_strength=fallback_ema_strength,
                         entry_price=opportunity.current_price,
                         stop_loss_price=opportunity.current_price * 0.98,
                         take_profit_price=opportunity.current_price * 1.02,
