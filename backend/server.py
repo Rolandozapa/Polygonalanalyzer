@@ -8051,10 +8051,32 @@ class UltraProfessionalOrchestrator:
             # Step 2: Analyze with IA1 - Focus on diverse opportunities
             analyses_count = 0
             
-            # 🎯 CORRECTION: Mélanger les opportunités pour éviter la répétition du même token
+            # 🎯 CORRECTION: Diversifier les opportunités pour éviter la répétition du même token
             import random
-            shuffled_opportunities = opportunities.copy()
-            random.shuffle(shuffled_opportunities)
+            
+            # Prioriser les symboles non-analysés récemment
+            fresh_opportunities = []
+            recent_opportunities = []
+            
+            for opp in opportunities:
+                recent_analysis = await db.ia1_analyses.find_one({
+                    "symbol": opp.symbol,
+                    "timestamp": {"$gte": get_paris_time() - timedelta(hours=2)}
+                })
+                
+                if recent_analysis:
+                    recent_opportunities.append(opp)
+                else:
+                    fresh_opportunities.append(opp)
+            
+            # Mélanger et prioriser les fresh opportunities
+            random.shuffle(fresh_opportunities)
+            random.shuffle(recent_opportunities)
+            
+            # Combiner: fresh d'abord, puis recent
+            shuffled_opportunities = fresh_opportunities + recent_opportunities
+            
+            logger.info(f"📊 DIVERSITÉ: {len(fresh_opportunities)} fresh symbols, {len(recent_opportunities)} recently analyzed")
             
             for opportunity in shuffled_opportunities[:10]:  # Limit to prevent overload with diversity
                 try:
