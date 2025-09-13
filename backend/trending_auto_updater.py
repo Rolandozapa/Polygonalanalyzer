@@ -281,6 +281,7 @@ class TrendingAutoUpdater:
                                     crypto = TrendingCrypto(
                                         symbol=symbol,
                                         name=symbol.replace('USDT', ''),
+                                        price=current_price if current_price > 0 else None,  # 🚨 PRIX ACTUEL
                                         price_change=price_change_pct,
                                         volume=volume,
                                         source="bingx_api"
