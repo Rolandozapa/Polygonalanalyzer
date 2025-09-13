@@ -77,6 +77,9 @@ from bingx_official_engine import bingx_official_engine, BingXOrderSide, BingXOr
 from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+
+# 🚨 CACHE ANTI-DOUBLON GLOBAL (persistant entre appels API)
+GLOBAL_ANALYZED_SYMBOLS_CACHE = set()
 from intelligent_ohlcv_fetcher import intelligent_ohlcv_fetcher, OHLCVMetadata, HighFrequencyData, EnhancedSupportResistance, DynamicRiskReward
 from global_crypto_market_analyzer import global_crypto_market_analyzer, GlobalMarketData, MarketRegime, MarketSentiment
 from bingx_integration import bingx_manager, TradingPosition
