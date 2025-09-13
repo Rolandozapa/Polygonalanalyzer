@@ -2978,7 +2978,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     result["reason"] = f"Une seule source: {primary_source}"
             
             # Fallback: validation de base sur une source unique (si pas de multi-source)
-            if len(historical_data) >= 50:
+            if len(historical_data) >= 20:  # 🚨 AJUSTÉ: 20 jours minimum au lieu de 50 pour optimisation
                 # Vérifications de base pour source unique
                 price_columns = ['Open', 'High', 'Low', 'Close']
                 
