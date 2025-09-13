@@ -2465,10 +2465,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
             # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
             
-            # 🎯 PRESERVE IA1 ORGANIC CONFIDENCE - RESTORE SOPHISTICATION
-            # Use IA1's own confidence if it provided one, otherwise use calculated
+            # 🎯 EXTRACT IA1 ORGANIC CONFIDENCE & APPLY PROFESSIONAL SCORING
+            ia1_organic_confidence = None
+            scoring_base_confidence = None
+            
+            # 1️⃣ EXTRACT IA1 ORGANIC CONFIDENCE
             if 'confidence' in ia1_complete_json and ia1_complete_json['confidence'] is not None:
-                # 🚀 RESTORE ORGANIC IA1 CONFIDENCE - Use IA1's sophisticated analysis
                 raw_ia1_confidence = float(ia1_complete_json['confidence'])
                 if raw_ia1_confidence > 1.0:
                     # IA1 sent percentage format (94.5) - convert to decimal
@@ -2477,95 +2479,74 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     # IA1 sent decimal format (0.945) - use as is
                     ia1_organic_confidence = raw_ia1_confidence
                 
-                # Use IA1's organic confidence as the PRIMARY confidence
-                analysis_confidence = ia1_organic_confidence
-                logger.info(f"🧠 USING IA1 ORGANIC CONFIDENCE: {analysis_confidence:.1%} (sophisticated analysis preserved)")
-                
+                logger.info(f"🧠 IA1 ORGANIC CONFIDENCE EXTRACTED: {ia1_organic_confidence:.1%} for {opportunity.symbol}")
+                scoring_base_confidence = ia1_organic_confidence * 100  # Convert to 0-100 scale for scoring
             else:
-                # Fallback: Use calculated confidence only if IA1 didn't provide one
-                base_analysis_confidence = self._calculate_analysis_confidence(
+                # Fallback: Calculate backend confidence if IA1 didn't provide
+                base_confidence = self._calculate_analysis_confidence(
                     rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
                 )
-                analysis_confidence = base_analysis_confidence
-                logger.info(f"📊 USING CALCULATED CONFIDENCE: {analysis_confidence:.1%} (IA1 didn't provide organic confidence)")
+                logger.info(f"📊 IA1 NO ORGANIC CONFIDENCE - Using calculated: {base_confidence:.1%} for {opportunity.symbol}")
+                scoring_base_confidence = base_confidence * 100  # Convert to 0-100 scale
             
-            # 🔍 DEBUG: Log confidence source
-            logger.info(f"🔍 CONFIDENCE SOURCE for {opportunity.symbol}: {'IA1 Organic' if 'confidence' in ia1_complete_json else 'Backend Calculated'} = {analysis_confidence:.1%}")
-            
-            # 🔍 DEBUG: Which code path is being used?
-            logger.info(f"🔍 DEBUG IA1 FLOW for {opportunity.symbol}: About to start main analysis (not fallback)")
-            
-            # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL IA1
-            # Appliquer bonus/malus de marché et token-spécifiques au score IA1
-            logger.info(f"🎯 APPLYING PROFESSIONAL SCORING TO IA1 {opportunity.symbol}")
-            
+            # 2️⃣ APPLY PROFESSIONAL SCORING WITH GLOBAL MARKET TREND
             # Get global market data for Market Cap 24h bonus/malus 
             market_cap_change_24h = 0.0
             try:
                 global_market_data = await global_crypto_market_analyzer.get_global_market_data()
                 if global_market_data:
                     market_cap_change_24h = global_market_data.market_cap_change_24h
-                    logger.info(f"🌍 Global Market Cap 24h: {market_cap_change_24h:+.2f}%")
+                    logger.info(f"🌍 Global Market Cap 24h: {market_cap_change_24h:+.2f}% for {opportunity.symbol} scoring")
                 else:
                     logger.warning("⚠️ No global market data available for Market Cap 24h bonus/malus")
             except Exception as e:
                 logger.warning(f"Error getting Market Cap 24h for bonus/malus: {e}")
             
-            # Préparer les facteurs de marché pour IA1
+            # 3️⃣ PROFESSIONAL SCORING SYSTEM WITH IA1 ORGANIC BASE
+            logger.info(f"🎯 APPLYING PROFESSIONAL SCORING WITH IA1 ORGANIC BASE for {opportunity.symbol}")
+            
+            # Setup factor scores for professional scoring
             factor_scores = {
-                'var_cap': abs(opportunity.price_change_24h or 0),  # Volatilité prix 24h
-                'var_vol': getattr(opportunity, 'volume_change_24h', 0) or 0,  # Variation volume 24h  
-                'fg': 50,  # Fear & Greed placeholder (à connecter si disponible)
-                'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap else 0.05,  # Ratio vol/cap
-                'rsi_extreme': max(0, rsi - 70) if rsi > 70 else max(0, 30 - rsi) if rsi < 30 else 0,  # RSI extremes
-                'volatility': opportunity.volatility or 0.05,  # Volatilité générale
-                'mcap_24h': market_cap_change_24h  # 🚨 NOUVELLE VARIABLE CRITIQUE: Market Cap 24h pour bonus/malus
+                'rsi': rsi / 100,
+                'macd': min(max(macd_histogram * 10, -1), 1),  # Normalize MACD
+                'bb': min(max(bb_position, -2), 2) / 2,  # Normalize BB position
+                'vol': min(opportunity.volatility * 10, 1),
+                'mcap_24h': self._calculate_mcap_bonus_malus(market_cap_change_24h, ia1_signal),
+                'var_vol': 0.18,       # 18% - Volume change key signal
+                'var_cap': abs(opportunity.price_change_24h or 0),  # Price volatility 24h
+                'volcap': min((opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1), 1) if opportunity.market_cap else 0.05,  # Volume/Cap ratio
+                'confidence_base': scoring_base_confidence / 100  # Normalized base confidence
             }
             
-            # Définir les fonctions de normalisation pour IA1
-            norm_funcs = {
-                'var_cap': lambda x: -self.tanh_norm(x, s=10),  # Pénaliser forte volatilité prix
-                'var_vol': lambda x: self.tanh_norm((x - 20) / 50, s=1),  # Récompenser volume > 20% 
-                'fg': lambda x: ((50.0 - x) / 50.0) * -1.0,  # Approche contrarian F&G
-                'volcap': lambda x: self.tanh_norm((x - 0.02) * 25, s=5),  # Optimal vers 0.02
-                'rsi_extreme': lambda x: self.tanh_norm(x / 20, s=1),  # Récompenser RSI extremes pour reversals
-                'volatility': lambda x: -self.tanh_norm((x - 0.08) * 10, s=2),  # Pénaliser volatilité > 8%
-                'mcap_24h': lambda x: self._calculate_mcap_bonus_malus(x, ia1_signal)  # 🚨 BONUS/MALUS Market Cap 24h
-            }
-            
-            # Poids des facteurs pour IA1 (total = 1.0)
+            # Weights for each factor
             weights = {
-                'var_cap': 0.22,       # 22% - Volatilité prix très important pour IA1
+                'rsi': 0.15, 'macd': 0.12, 'bb': 0.10, 'vol': 0.08,
+                'mcap_24h': 0.10,       # 10% - Global Market Cap influence
                 'var_vol': 0.18,       # 18% - Volume change crucial
-                'fg': 0.05,            # 5% - Sentiment moins important pour technique
-                'volcap': 0.18,        # 18% - Liquidité critique pour technique
-                'rsi_extreme': 0.15,   # 15% - RSI extremes pour signaux retournement
-                'volatility': 0.12,    # 12% - Volatilité générale
-                'mcap_24h': 0.10       # 🚨 10% - MARKET CAP 24H BONUS/MALUS (crucial pour timing)
+                'var_cap': 0.12,       # 12% - Price volatility consideration
+                'volcap': 0.10,        # 10% - Volume/cap institutional signals
+                'confidence_base': 0.05  # 5% - Base confidence influence
             }
             
-            # Calculer le multiplicateur market cap
-            mc_mult = self.get_market_cap_multiplier(opportunity.market_cap or 1_000_000)
-            
-            # Appliquer la formule finale au score IA1
-            scoring_result = self.compute_final_score(
-                note_base=base_analysis_confidence * 100,  # Convertir 0-1 → 0-100
-                factor_scores=factor_scores,
-                norm_funcs=norm_funcs,
-                weights=weights,
-                amplitude=12.0,  # Max 12 points d'ajustement pour IA1 (un peu moins qu'IA2)
-                mc_mult=mc_mult
+            # Apply professional scoring
+            final_score = self.compute_final_score(
+                scoring_base_confidence,  # Use IA1 organic or calculated base
+                factor_scores,
+                weights,
+                ia1_signal=ia1_signal
             )
             
-            # Convertir le score final en confiance (0-100 → 0-1)
-            analysis_confidence = scoring_result['note_final'] / 100.0
+            # Convert back to 0-1 scale
+            analysis_confidence = final_score / 100.0
             
-            # Logs du scoring professionnel IA1
-            logger.info(f"🎯 IA1 PROFESSIONAL SCORING {opportunity.symbol}:")
-            logger.info(f"   📊 Base Confidence: {base_analysis_confidence:.1%} → Final: {analysis_confidence:.1%}")
-            logger.info(f"   📊 Market Adjustment: {scoring_result['adjustment']:.1f} points")
-            logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} (Market Cap: {opportunity.market_cap or 1_000_000:,.0f})")
-            logger.info(f"   🎯 Key Factors: RSI={rsi:.1f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
+            logger.info(f"🔥 PROFESSIONAL SCORING COMPLETE for {opportunity.symbol}:")
+            logger.info(f"   🧠 Base (IA1 Organic): {scoring_base_confidence:.1f}%")
+            logger.info(f"   🌍 Global Market Adjustment: {factor_scores['mcap_24h']:.3f}")
+            logger.info(f"   🎯 Final Confidence: {analysis_confidence:.1%}")
+            
+            # Log the sophisticated confidence breakdown
+            if ia1_organic_confidence:
+                logger.info(f"💎 SOPHISTICATED CONFIDENCE for {opportunity.symbol}: IA1={ia1_organic_confidence:.1%} → Professional={analysis_confidence:.1%} (MarketCap24h: {market_cap_change_24h:+.1f}%)")
             
             # 🔧 CALCUL DES PRIX RÉALISTES BASÉS SUR LES NIVEAUX TECHNIQUES
             # Utiliser les niveaux techniques calculés pour définir des prix réalistes
