@@ -8065,6 +8065,16 @@ class UltraProfessionalOrchestrator:
                         logger.debug(f"⏭️ Skipping fallback opportunity: {opportunity.symbol}")
                         continue
                     
+                    # 🎯 CORRECTION: Éviter l'analyse du même symbole récemment analysé
+                    recent_analysis = await db.ia1_analyses.find_one({
+                        "symbol": opportunity.symbol,
+                        "timestamp": {"$gte": get_paris_time() - timedelta(hours=1)}
+                    })
+                    
+                    if recent_analysis:
+                        logger.debug(f"⏭️ Skipping {opportunity.symbol} - already analyzed in last hour")
+                        continue
+                    
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
                     
                     analysis = await self.ia1.analyze_opportunity(opportunity)
