@@ -1334,93 +1334,52 @@ class AdvancedMarketAggregator:
                 
                 # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
                 for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
-                    # 🚨 SYSTÉMATIQUE: TOUJOURS récupérer les données OHLCV historiques pour l'analyse technique
+                    # 🚀 APPROCHE OPTIMISÉE: Scout léger + IA1 récupère OHLCV à la demande
                     current_price = crypto.price if hasattr(crypto, 'price') and crypto.price and crypto.price > 0 else 0.0
-                    ohlcv_available = False
                     
-                    try:
-                        logger.info(f"📊 OHLCV SYSTÉMATIQUE: Récupération données historiques pour {crypto.symbol}")
-                        from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
-                        
-                        # 🎯 RÉCUPÉRATION SCOUT: 10 jours légers (IA1 récupérera 4 semaines en interne)
-                        # Utiliser méthode async dans un contexte synchrone - VERSION OPTIMISÉE
-                        import threading
-                        import concurrent.futures
-                        
-                        def fetch_ohlcv_light():
-                            # Nouveau event loop dans le thread
-                            new_loop = asyncio.new_event_loop()
-                            asyncio.set_event_loop(new_loop)
-                            try:
-                                # Version allégée : seulement 10 jours pour le scout (IA1 récupérera 4 semaines)
-                                return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_scout_ohlcv_data(crypto.symbol, days=10))
-                            finally:
-                                new_loop.close()
-                        
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future = executor.submit(fetch_ohlcv_light)
-                            ohlcv_data = future.result(timeout=15)  # 15 secondes max (plus rapide)
-                        
-                        if ohlcv_data is not None and not ohlcv_data.empty:
-                            ohlcv_available = True
+                    # Si pas de prix depuis BingX API, utiliser OHLCV fallback uniquement
+                    if current_price <= 0:
+                        try:
+                            logger.info(f"💰 PRIX FALLBACK: Récupération prix actuel pour {crypto.symbol}")
+                            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
                             
-                            # Si pas de prix depuis BingX API, utiliser le prix OHLCV
-                            if current_price <= 0:
-                                current_price = float(ohlcv_data['close'].iloc[-1])
-                                logger.info(f"💰 PRIX OHLCV: {crypto.symbol} = ${current_price:.6f}")
+                            # Version très légère : juste le prix actuel
+                            import threading
+                            import concurrent.futures
                             
-                            # Calculer statistiques avancées depuis les données OHLCV
-                            volume_24h_ohlcv = 0.0
-                            if len(ohlcv_data) > 0:
-                                # Gestion robuste des colonnes de volume
-                                volume_col = None
-                                for col in ['volume', 'Volume', 'vol', 'Vol']:
-                                    if col in ohlcv_data.columns:
-                                        volume_col = col
-                                        break
-                                
-                                if volume_col and not ohlcv_data[volume_col].isna().iloc[-1]:
-                                    volume_24h_ohlcv = float(ohlcv_data[volume_col].iloc[-1])
-                            
-                            # Calcul de volatilité réelle sur 10 jours
-                            real_volatility = 0.0
-                            if len(ohlcv_data) >= 10 and 'close' in ohlcv_data.columns:
+                            def fetch_price_only():
+                                new_loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(new_loop)
                                 try:
-                                    price_changes = ohlcv_data['close'].pct_change().dropna()
-                                    if len(price_changes) > 0:
-                                        real_volatility = float(price_changes.std() * 100)  # Volatilité en %
-                                except Exception:
-                                    real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                                    # Récupérer seulement 2 jours pour le prix actuel
+                                    enhanced_ohlcv_fetcher.lookback_days = 2
+                                    return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(crypto.symbol))
+                                finally:
+                                    enhanced_ohlcv_fetcher.lookback_days = 10  # Restaurer
+                                    new_loop.close()
                             
-                            if real_volatility <= 0:
-                                real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                            with concurrent.futures.ThreadPoolExecutor() as executor:
+                                future = executor.submit(fetch_price_only)
+                                price_data = future.result(timeout=10)  # 10 secondes max
                             
-                            logger.info(f"✅ OHLCV COMPLET: {crypto.symbol} - {len(ohlcv_data)} jours, volatilité {real_volatility:.2f}%")
-                        else:
-                            logger.warning(f"⚠️ OHLCV ÉCHEC: Pas de données historiques pour {crypto.symbol}")
-                            real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
-                            volume_24h_ohlcv = crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0
-                            
-                    except Exception as e:
-                        logger.error(f"❌ OHLCV ERREUR pour {crypto.symbol}: {e}")
-                        ohlcv_available = False
-                        real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
-                        volume_24h_ohlcv = crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0
+                            if price_data is not None and not price_data.empty and 'close' in price_data.columns:
+                                current_price = float(price_data['close'].iloc[-1])
+                                logger.info(f"✅ PRIX RÉCUPÉRÉ: {crypto.symbol} = ${current_price:.6f}")
+                                
+                        except Exception as e:
+                            logger.warning(f"⚠️ PRIX FALLBACK ÉCHEC pour {crypto.symbol}: {e}")
                     
-                    # Utiliser le meilleur volume disponible (OHLCV > BingX API)
-                    best_volume = volume_24h_ohlcv if ohlcv_available and volume_24h_ohlcv > 0 else (crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0)
-                    
-                    # Créer l'opportunité avec données complètes
+                    # Créer l'opportunité avec données BingX principalement (IA1 récupérera OHLCV)
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
-                        current_price=current_price,  # Prix réel depuis BingX API ou OHLCV
-                        volume_24h=best_volume,  # Meilleur volume disponible
+                        current_price=current_price,  # Prix depuis BingX API ou prix fallback
+                        volume_24h=crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0,
                         price_change_24h=crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
-                        volatility=real_volatility,  # Volatilité calculée sur données historiques
+                        volatility=abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
                         market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
                         market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
-                        data_sources=["bingx_scout_filtered", "ohlcv_historical"] if ohlcv_available else ["bingx_scout_filtered"],
-                        data_confidence=0.95 if ohlcv_available and current_price > 0 else 0.7  # Très haute confiance avec OHLCV
+                        data_sources=["bingx_scout_filtered"],
+                        data_confidence=0.9 if current_price > 0 else 0.5  # Bonne confiance avec prix réel
                     )
                     opportunities.append(opportunity)
                     
