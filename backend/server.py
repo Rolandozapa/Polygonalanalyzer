@@ -8259,12 +8259,13 @@ class UltraProfessionalOrchestrator:
                         analyses_count += 1
                         logger.debug(f"✅ {opportunity.symbol} analysé avec succès")
                         
-                        # Nettoyer le cache (garder seulement les 20 derniers)
-                        if len(self.recent_analyzed_symbols) > 20:
+                        # Nettoyer le cache global (garder seulement les 20 derniers)
+                        if len(GLOBAL_ANALYZED_SYMBOLS_CACHE) > 20:
                             # Convertir en liste, garder les 15 derniers
-                            symbols_list = list(self.recent_analyzed_symbols)
-                            self.recent_analyzed_symbols = set(symbols_list[-15:])
-                            logger.debug(f"🧹 Cache anti-doublon nettoyé: {len(self.recent_analyzed_symbols)} symboles")
+                            symbols_list = list(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+                            GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
+                            GLOBAL_ANALYZED_SYMBOLS_CACHE.update(symbols_list[-15:])
+                            logger.info(f"🧹 Cache GLOBAL anti-doublon nettoyé: {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)} symboles")
                         
                         # Step 3: Check if should escalate to IA2
                         if self._should_send_to_ia2(analysis, opportunity):
