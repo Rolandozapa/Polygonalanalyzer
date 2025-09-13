@@ -2909,8 +2909,8 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 # Restaurer la valeur originale
                 enhanced_ohlcv_fetcher.lookback_days = original_lookback
             
-            if real_data is not None and len(real_data) >= 100:  # Minimum for stable MACD calculation
-                logger.info(f"✅ IA1 using ENHANCED MULTI-SOURCE OHLCV data for {symbol}: {len(real_data)} days")
+            if real_data is not None and len(real_data) >= 20:  # Minimum pour indicateurs techniques (20 jours)
+                logger.info(f"✅ IA1 using ENHANCED OHLCV data for {symbol}: {len(real_data)} jours (4 semaines)")
                 
                 # Log multi-source info if available
                 if hasattr(real_data, 'attrs') and real_data.attrs:
