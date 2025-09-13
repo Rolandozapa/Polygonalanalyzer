@@ -8231,9 +8231,10 @@ class UltraProfessionalOrchestrator:
                         continue
                     
                     # 🚨 TRIPLE VÉRIFICATION ANTI-DOUBLON
-                    # 1. Vérification mémoire (plus rapide)
-                    if opportunity.symbol in self.recent_analyzed_symbols:
-                        logger.info(f"⏭️ SKIP {opportunity.symbol} - dans le cache mémoire anti-doublon")
+                    # 1. Vérification cache global (plus rapide + persistant)
+                    global GLOBAL_ANALYZED_SYMBOLS_CACHE
+                    if opportunity.symbol in GLOBAL_ANALYZED_SYMBOLS_CACHE:
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - dans le cache GLOBAL anti-doublon")
                         continue
                     
                     # 2. Vérification base de données
