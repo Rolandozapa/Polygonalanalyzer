@@ -24,6 +24,7 @@ class TrendingCrypto:
     symbol: str
     name: str
     rank: Optional[int] = None
+    price: Optional[float] = None  # 🚨 AJOUT CRITIQUE: Prix actuel
     price_change: Optional[float] = None
     volume: Optional[float] = None
     market_cap: Optional[float] = None
