@@ -1357,10 +1357,10 @@ class AdvancedMarketAggregator:
             
             # Cache les opportunités scout UNIQUEMENT
             if opportunities:  # Seulement si le scout a fourni des données
-            self.cache[cache_key] = {
-                'data': opportunities,
-                'timestamp': current_time
-            }
+                self.cache[cache_key] = {
+                    'data': opportunities,
+                    'timestamp': current_time
+                }
             
             symbol_list = [opp.symbol for opp in opportunities[:10]]
             logger.info(f"🚀 FINAL OPPORTUNITIES: Generated {len(opportunities)} opportunities: {symbol_list}")
