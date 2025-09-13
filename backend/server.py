@@ -2470,6 +2470,12 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
             )
             
+            # 🔍 DEBUG: Log base confidence calculation details
+            logger.info(f"🔍 DEBUG CONFIDENCE {opportunity.symbol}:")
+            logger.info(f"   📊 RSI: {rsi:.1f}, MACD: {macd_histogram:.6f}, BB: {bb_position:.3f}")
+            logger.info(f"   📊 Volatility: {opportunity.volatility:.3f}, Data Confidence: {opportunity.data_confidence:.3f}")
+            logger.info(f"   📊 Base Analysis Confidence: {base_analysis_confidence:.3f} ({base_analysis_confidence:.1%})")
+            
             # 🌍 RÉCUPÉRATION DU MARKET CAP 24H POUR BONUS/MALUS
             market_cap_change_24h = 0.0
             try:
