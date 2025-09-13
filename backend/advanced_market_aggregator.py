@@ -1327,7 +1327,7 @@ class AdvancedMarketAggregator:
                     if filtered_cryptos:
                         trending_auto_updater.current_trending = filtered_cryptos
                         trending_auto_updater.last_update = current_time
-                        logger.info(f"✅ SCOUT SUCCESS: {len(filtered_cryptos)} filtered BingX futures fetched and cached")
+                        logger.info(f"✅ SCOUT SUCCESS: {len(filtered_cryptos)} cryptos selected from TOP 50 BingX futures (after filtering)")
                     else:
                         logger.error("❌ SCOUT FAILED: No filtered cryptos from BingX API")
                         return []  # Pas de fallback - retour vide si échec
