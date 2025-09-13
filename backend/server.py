@@ -4815,39 +4815,39 @@ async def force_ia1_analysis(request: dict):
                 logger.warning(f"⚠️ {symbol} analyzed {(get_paris_time() - recent_analysis['timestamp']).total_seconds():.0f}s ago - forcing anyway")
             
             # Get the opportunity
-        from advanced_market_aggregator import advanced_market_aggregator
-        opportunities = advanced_market_aggregator.get_current_opportunities()
-        target_opportunity = None
-        
-        for opp in opportunities:
-            if opp.symbol == symbol:
-                target_opportunity = opp
-                break
-        
-        if not target_opportunity:
-            return {"success": False, "error": f"Symbol {symbol} not found in opportunities"}
-        
-        # Force IA1 analysis (bypass pattern filter)
-        analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
-        
-        if analysis:
-            logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
-            return {
-                "success": True, 
-                "message": f"IA1 analysis completed for {symbol}",
-                "analysis": {
-                    "symbol": analysis.symbol,
-                    "confidence": analysis.analysis_confidence,
-                    "recommendation": analysis.ia1_signal,
-                    "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
-                }
-            }
-        else:
-            return {"success": False, "error": f"IA1 analysis failed for {symbol}"}
+            from advanced_market_aggregator import advanced_market_aggregator
+            opportunities = advanced_market_aggregator.get_current_opportunities()
+            target_opportunity = None
             
-    except Exception as e:
-        logger.error(f"❌ Force IA1 analysis error: {e}")
-        return {"success": False, "error": str(e)}
+            for opp in opportunities:
+                if opp.symbol == symbol:
+                    target_opportunity = opp
+                    break
+            
+            if not target_opportunity:
+                return {"success": False, "error": f"Symbol {symbol} not found in opportunities"}
+            
+            # Force IA1 analysis (bypass pattern filter)
+            analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
+            
+            if analysis:
+                logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
+                return {
+                    "success": True, 
+                    "message": f"IA1 analysis completed for {symbol}",
+                    "analysis": {
+                        "symbol": analysis.symbol,
+                        "confidence": analysis.analysis_confidence,
+                        "recommendation": analysis.ia1_signal,
+                        "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
+                    }
+                }
+            else:
+                return {"success": False, "error": f"IA1 analysis failed for {symbol}"}
+                
+        except Exception as e:
+            logger.error(f"❌ Force IA1 analysis error: {e}")
+            return {"success": False, "error": str(e)}
 
 @api_router.post("/run-ia1-cycle")
 async def run_ia1_cycle():
