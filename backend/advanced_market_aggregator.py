@@ -1275,7 +1275,8 @@ class AdvancedMarketAggregator:
             logger.info("🔄 BRIDGE: get_current_opportunities() called - fetching REAL BingX trending data")
             
             # Use cached opportunities if available and recent
-            current_time = time.time()
+            current_time_timestamp = time.time()
+            current_time = datetime.now(timezone.utc)  # Pour les datetime operations
             cache_key = "current_opportunities"
             
             if (cache_key in self.cache and 
