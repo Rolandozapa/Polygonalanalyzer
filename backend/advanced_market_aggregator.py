@@ -1332,19 +1332,17 @@ class AdvancedMarketAggregator:
                     opportunity = MarketOpportunity(
                         symbol=symbol,
                         current_price=real_price,  # Prix réel d'OHLCV
-                            volume_24h=crypto.volume or 1000000.0,
-                            price_change_24h=crypto.price_change or 0.02,
-                            volatility=abs(crypto.price_change or 0.02) / 100.0,  # Real volatility from price change
-                            market_cap=crypto.market_cap or 1000000000,
-                            market_cap_rank=crypto.rank or 1,
-                            data_sources=[crypto.source],
-                            data_confidence=0.9 if crypto.source == 'bingx_api' else 0.7  # Higher confidence for API data
-                        )
-                        opportunities.append(opportunity)
+                        volume_24h=volume_24h,
+                        price_change_24h=price_change_24h,
+                        volatility=abs(price_change_24h),  # Real volatility from price change
+                        market_cap=1000000000,  # Default market cap
+                        market_cap_rank=static_futures.index(symbol) + 1,  # Ranking based on list position
+                        data_sources=["static_futures_list"],
+                        data_confidence=0.8  # Good confidence for static futures
+                    )
+                    opportunities.append(opportunity)
                     
-                    logger.info(f"✅ BINGX OPPORTUNITIES: Generated {len(opportunities)} opportunities from BingX trending")
-                else:
-                    logger.warning("⚠️ No fresh BingX trending data available")
+                logger.info(f"✅ STATIC FUTURES OPPORTUNITIES: Generated {len(opportunities)} diversified opportunities")
                     
             except Exception as trending_error:
                 logger.warning(f"⚠️ Could not access BingX trending data: {trending_error}")
