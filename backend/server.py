@@ -4620,14 +4620,24 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
                 else:  # hold
                     ia2_calculated_rr = 0
                 
-                # 🎯 AUTO-EXECUTION LOGIC: RR > 2.0 AND Confidence > 80%
+                # 🎯 AUTO-EXECUTION LOGIC: Use IA2's trade_execution_ready + validation
                 auto_execution = False
                 if (claude_signal in ["long", "short"] and 
-                    ia2_calculated_rr >= 2.0 and 
+                    trade_ready and  # 🚨 IA2 says trade is ready (calculated_rr > 2.0)
+                    ia2_calculated_rr >= 2.0 and  # 🚨 Backend validation of IA2's RR
                     claude_confidence >= 0.80 and 
                     execution_priority == "immediate"):
                     auto_execution = True
-                    logger.info(f"🚀 AUTO-EXECUTION TRIGGERED: {symbol} {claude_signal.upper()} - RR: {ia2_calculated_rr:.2f}:1, Confidence: {claude_confidence:.1%}")
+                    logger.info(f"🚀 AUTO-EXECUTION TRIGGERED: {symbol} {claude_signal.upper()}")
+                    logger.info(f"   💎 IA2 Trade Ready: {trade_ready}")
+                    logger.info(f"   📊 IA2 RR: {ia2_calculated_rr:.2f}:1 (>2.0 ✅)")
+                    logger.info(f"   🧠 IA2 Confidence: {claude_confidence:.1%} (>80% ✅)")
+                elif not trade_ready:
+                    logger.info(f"❌ AUTO-EXECUTION BLOCKED: {symbol} - IA2 trade_execution_ready = false (RR likely ≤ 2.0)")
+                elif ia2_calculated_rr < 2.0:
+                    logger.info(f"❌ AUTO-EXECUTION BLOCKED: {symbol} - IA2 RR {ia2_calculated_rr:.2f}:1 < 2.0")
+                else:
+                    logger.info(f"❌ AUTO-EXECUTION BLOCKED: {symbol} - Other criteria not met (confidence/execution_priority)")
                 
                 logger.info(f"✅ IA2 STRATEGIC: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%})")
                 logger.info(f"   📊 Market Regime: {market_regime}")
