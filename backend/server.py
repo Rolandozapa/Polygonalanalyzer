@@ -8253,9 +8253,7 @@ class UltraProfessionalOrchestrator:
                     analysis = await self.ia1.analyze_opportunity(opportunity)
                     if analysis:
                         analyses_count += 1
-                        
-                        # 🚨 AJOUTER AU CACHE ANTI-DOUBLON
-                        self.recent_analyzed_symbols.add(opportunity.symbol)
+                        logger.debug(f"✅ {opportunity.symbol} analysé avec succès")
                         
                         # Nettoyer le cache (garder seulement les 20 derniers)
                         if len(self.recent_analyzed_symbols) > 20:
