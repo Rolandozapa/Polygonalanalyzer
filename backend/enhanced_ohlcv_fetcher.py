@@ -7,45 +7,63 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List, Tuple
 import os
 from dotenv import load_dotenv
+import yfinance as yf
+import json
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 class EnhancedOHLCVFetcher:
-    """Enhanced OHLCV data fetcher with improved symbol resolution and multiple sources"""
+    """🚀 ULTRA-ROBUST OHLCV Fetcher - Multiple Premium Sources"""
     
     def __init__(self):
         self.lookback_days = 10  # Optimisé pour scout - IA1 récupérera 4 semaines en interne
-        self.coinapi_key = os.environ.get('COINAPI_KEY')
-        self.coingecko_key = os.environ.get('COINGECKO_API_KEY') 
-        self.twelvedata_key = os.environ.get('TWELVEDATA_KEY')
         
-        # Historical Data Fallback APIs
-        self.alpha_vantage_key = os.environ.get('ALPHA_VANTAGE_KEY')
-        self.polygon_key = os.environ.get('POLYGON_KEY')
-        self.iex_cloud_key = os.environ.get('IEX_CLOUD_KEY')
+        # 🔑 PREMIUM API KEYS
+        self.coinapi_key = os.environ.get('COINAPI_KEY', '30484334-1a7c-49a0-ae01-63922e3e542a')
+        self.coinapi_key_secondary = os.environ.get('COINAPI_KEY_SECONDARY', 'bdb7e19a-0e6a-4954-8ba7-fd460b82d57e')
+        self.cmc_api_key = os.environ.get('CMC_API_KEY', '70046baa-e887-42ee-a909-03c6b6afab67')
+        self.twelvedata_key = os.environ.get('TWELVEDATA_KEY', 'd95a7424cbdd428297a058d8b74b')
+        self.binance_api_key = os.environ.get('BINANCE_API_KEY', 'dS4YsQ9BzFYypHvsSuJMLN7qe8jXxHO1H18ebkG7Oj4C5bBaq1ti1qKNL0t5wJ2g')
         
-        # Enhanced symbol mapping
+        # 🆓 FREE BACKUP APIs
+        self.coingecko_key = os.environ.get('COINGECKO_API_KEY')  # Optional pro key
+        
+        # 🎯 MULTI-SOURCE PRIORITY ORDER (High→Low reliability)
+        self.data_sources = [
+            {'name': 'BingX', 'priority': 10, 'method': self._fetch_bingx_ohlcv},
+            {'name': 'Binance', 'priority': 9, 'method': self._fetch_binance_ohlcv},  
+            {'name': 'CoinAPI', 'priority': 8, 'method': self._fetch_coinapi_ohlcv},
+            {'name': 'CoinMarketCap', 'priority': 7, 'method': self._fetch_cmc_ohlcv},
+            {'name': 'TwelveData', 'priority': 6, 'method': self._fetch_twelvedata_ohlcv},
+            {'name': 'CoinGecko', 'priority': 5, 'method': self._fetch_coingecko_ohlcv},
+            {'name': 'Yahoo', 'priority': 4, 'method': self._fetch_yahoo_ohlcv},
+            {'name': 'Bitfinex', 'priority': 3, 'method': self._fetch_bitfinex_ohlcv},
+            {'name': 'CryptoCompare', 'priority': 2, 'method': self._fetch_cryptocompare_ohlcv}
+        ]
+        
+        # Enhanced symbol mapping for all exchanges
         self.symbol_mappings = {
-            # Binance format
-            'binance': {
-                'BTC': 'BTCUSDT', 'ETH': 'ETHUSDT', 'BNB': 'BNBUSDT',
-                'SOL': 'SOLUSDT', 'XRP': 'XRPUSDT', 'ADA': 'ADAUSDT', 
-                'DOGE': 'DOGEUSDT', 'AVAX': 'AVAXUSDT', 'DOT': 'DOTUSDT',
-                'MATIC': 'MATICUSDT', 'LINK': 'LINKUSDT', 'UNI': 'UNIUSDT',
-                'LTC': 'LTCUSDT', 'BCH': 'BCHUSDT', 'ATOM': 'ATOMUSDT',
-                'FIL': 'FILUSDT', 'TRX': 'TRXUSDT', 'ETC': 'ETCUSDT',
-                'NEAR': 'NEARUSDT', 'ALGO': 'ALGOUSDT', 'VET': 'VETUSDT'
+            'yahoo': {
+                'BTCUSDT': 'BTC-USD', 'ETHUSDT': 'ETH-USD', 'BNBUSDT': 'BNB-USD',
+                'SOLUSDT': 'SOL-USD', 'XRPUSDT': 'XRP-USD', 'ADAUSDT': 'ADA-USD',
+                'DOGEUSDT': 'DOGE-USD', 'AVAXUSDT': 'AVAX-USD', 'DOTUSDT': 'DOT-USD',
+                'MATICUSDT': 'MATIC-USD', 'LINKUSDT': 'LINK-USD', 'UNIUSDT': 'UNI-USD'
             },
-            # CoinGecko format
             'coingecko': {
                 'BTCUSDT': 'bitcoin', 'ETHUSDT': 'ethereum', 'BNBUSDT': 'binancecoin',
                 'SOLUSDT': 'solana', 'XRPUSDT': 'ripple', 'ADAUSDT': 'cardano',
                 'DOGEUSDT': 'dogecoin', 'AVAXUSDT': 'avalanche-2', 'DOTUSDT': 'polkadot',
-                'MATICUSDT': 'matic-network', 'LINKUSDT': 'chainlink', 'UNIUSDT': 'uniswap',
-                'LTCUSDT': 'litecoin', 'BCHUSDT': 'bitcoin-cash', 'ATOMUSDT': 'cosmos',
-                'FILUSDT': 'filecoin', 'TRXUSDT': 'tron', 'ETCUSDT': 'ethereum-classic',
-                'NEARUSDT': 'near', 'ALGOUSDT': 'algorand', 'VETUSDT': 'vechain'
+                'MATICUSDT': 'matic-network', 'LINKUSDT': 'chainlink', 'UNIUSDT': 'uniswap'
+            },
+            'bitfinex': {
+                'BTCUSDT': 'tBTCUSD', 'ETHUSDT': 'tETHUSD', 'LTCUSDT': 'tLTCUSD',
+                'XRPUSDT': 'tXRPUSD', 'ADAUSDT': 'tADAUSD', 'SOLUSDT': 'tSOLUSD'
+            },
+            'coinapi': {
+                # CoinAPI uses exchange_id format
+                'binance': 'BINANCE_SPOT_',
+                'bingx': 'BINGX_SPOT_'
             }
         }
         
