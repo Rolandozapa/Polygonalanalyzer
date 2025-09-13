@@ -1342,23 +1342,24 @@ class AdvancedMarketAggregator:
                         logger.info(f"📊 OHLCV SYSTÉMATIQUE: Récupération données historiques pour {crypto.symbol}")
                         from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
                         
-                        # 🎯 RÉCUPÉRATION SYSTÉMATIQUE: 10+ jours pour indicateurs multi-frame
-                        # Utiliser méthode async dans un contexte synchrone
+                        # 🎯 RÉCUPÉRATION SCOUT: 10 jours légers (IA1 récupérera 4 semaines en interne)
+                        # Utiliser méthode async dans un contexte synchrone - VERSION OPTIMISÉE
                         import threading
                         import concurrent.futures
                         
-                        def fetch_ohlcv_sync():
+                        def fetch_ohlcv_light():
                             # Nouveau event loop dans le thread
                             new_loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(new_loop)
                             try:
+                                # Version allégée : seulement 10 jours pour le scout
                                 return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(crypto.symbol))
                             finally:
                                 new_loop.close()
                         
                         with concurrent.futures.ThreadPoolExecutor() as executor:
-                            future = executor.submit(fetch_ohlcv_sync)
-                            ohlcv_data = future.result(timeout=30)  # 30 secondes max
+                            future = executor.submit(fetch_ohlcv_light)
+                            ohlcv_data = future.result(timeout=15)  # 15 secondes max (plus rapide)
                         
                         if ohlcv_data is not None and not ohlcv_data.empty:
                             ohlcv_available = True
