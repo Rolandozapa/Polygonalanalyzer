@@ -2774,13 +2774,19 @@ class UltraProfessionalIA1TechnicalAnalyst:
             if ia1_calculated_levels:
                 analysis_data.update(ia1_calculated_levels)
             
-            # 🔧 AJOUTER LES PRIX CALCULÉS DANS ANALYSIS_DATA
+            # 🔧 AJOUTER LES PRIX ET INDICATEURS CALCULÉS DANS ANALYSIS_DATA
             analysis_data.update({
                 "entry_price": entry_price,
                 "stop_loss_price": stop_loss_price,
                 "take_profit_price": take_profit_price,
                 "risk_reward_ratio": ia1_risk_reward_ratio,
-                "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}"
+                "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
+                # 🚨 AJOUTER LES VRAIS INDICATEURS TECHNIQUES CALCULÉS
+                "rsi": rsi,
+                "macd_signal": macd_signal,
+                "stochastic": stochastic_k,
+                "stochastic_d": stochastic_d,
+                "bollinger_position": bb_position
             })
             
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
