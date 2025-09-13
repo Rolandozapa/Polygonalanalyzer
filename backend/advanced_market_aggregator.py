@@ -1287,37 +1287,54 @@ class AdvancedMarketAggregator:
             # 🚀 NEW: Get trending data from trending_auto_updater if available
             opportunities = []
             
-            # 🎯 NOUVELLE APPROCHE: Liste statique diversifiée de futures populaires BingX
-            # Élimine les trending cryptos répétitifs en utilisant des symboles fixes variés
+            # 🎯 SCOUT SYSTEM: Utiliser UNIQUEMENT le système scout BingX avec filtres
+            # Plus de cryptos statiques ou de fallback - seulement les données BingX filtrées
             try:
-                logger.info("🎯 USING STATIC DIVERSE FUTURES LIST - No more trending crypto repetitions")
+                logger.info("🔍 SCOUT SYSTEM: Fetching TOP 50 BingX futures with filters (updated every 4h)")
                 
-                # Liste diversifiée de futures BingX populaires
-                static_futures = [
-                    "BTCUSDT", "ETHUSDT", "SOLUSDT", "ADAUSDT", "DOTUSDT", 
-                    "LINKUSDT", "LTCUSDT", "BCHUSDT", "XRPUSDT", "MATICUSDT",
-                    "AVAXUSDT", "ATOMUSDT", "NEARUSDT", "FILUSDT", "TRXUSDT",
-                    "UNIUSDT", "VETUSDT", "ICPUSDT", "FTMUSDT", "SANDUSDT",
-                    "MANAUSDT", "THETAUSDT", "AAVEUSDT", "AXSUSDT", "CHZUSDT",
-                    "ENJUSDT", "SUSHIUSDT", "GRTUSDT", "SNXUSDT", "COMPUSDT",
-                    "YFIUSDT", "MKRUSDT", "ZRXUSDT", "BATUSDT", "LRCUSDT",
-                    "UMAUSDT", "KNCUSDT", "BANDUSDT", "STORJUSDT", "SKLUSDT",
-                    "CRVUSDT", "1INCHUSDT", "ALPHAUSDT", "RAREUSDT", "CKBUSDT",
-                    "GALAUSDT", "FTTUSDT", "LDOUSDT", "MASKUSDT", "NMRUSDT"
-                ]
+                # Importer le système scout BingX
+                from trending_auto_updater import trending_auto_updater
                 
-                # Mélanger pour diversité à chaque appel
-                import random
-                random.shuffle(static_futures)
+                # Vérifier si nous avons des données fraîches (moins de 4h)
+                current_time = datetime.now(timezone.utc)
+                data_is_fresh = False
                 
-                for symbol in static_futures[:50]:  # Top 50 diversifiés
-                    # Obtenir le prix réel depuis OHLCV
-                    real_price = 100.0  # Fallback
-                    try:
-                        from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
-                        ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(symbol, days=1)
-                        if ohlcv_data is not None and not ohlcv_data.empty:
-                            real_price = float(ohlcv_data['close'].iloc[-1])
+                if trending_auto_updater.last_update:
+                    if isinstance(trending_auto_updater.last_update, datetime):
+                        last_update = trending_auto_updater.last_update
+                        if last_update.tzinfo is None:
+                            last_update = last_update.replace(tzinfo=timezone.utc)
+                        data_is_fresh = (current_time - last_update).total_seconds() < 14400  # 4 heures
+                    elif isinstance(trending_auto_updater.last_update, (int, float)):
+                        last_update = datetime.fromtimestamp(trending_auto_updater.last_update, tz=timezone.utc)
+                        data_is_fresh = (current_time - last_update).total_seconds() < 14400
+                
+                filtered_cryptos = []
+                
+                if data_is_fresh and trending_auto_updater.current_trending:
+                    # Utiliser les données du cache si elles sont fraîches
+                    filtered_cryptos = trending_auto_updater.current_trending
+                    logger.info(f"🔥 USING FRESH BINGX SCOUT DATA: {len(filtered_cryptos)} filtered cryptos (cache)")
+                else:
+                    # Récupérer de nouvelles données BingX avec filtres toutes les 4h
+                    logger.info("🔄 SCOUT REFRESH: Fetching fresh BingX top 50 futures with filters...")
+                    import asyncio
+                    
+                    # Récupération async des cryptos filtrés
+                    filtered_cryptos = asyncio.run(trending_auto_updater.fetch_trending_cryptos())
+                    
+                    if filtered_cryptos:
+                        trending_auto_updater.current_trending = filtered_cryptos
+                        trending_auto_updater.last_update = current_time
+                        logger.info(f"✅ SCOUT SUCCESS: {len(filtered_cryptos)} filtered BingX futures fetched and cached")
+                    else:
+                        logger.error("❌ SCOUT FAILED: No filtered cryptos from BingX API")
+                        return []  # Pas de fallback - retour vide si échec
+                
+                # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
+                for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
+                    # Utiliser les données réelles du scout BingX
+                    real_price = crypto.price if hasattr(crypto, 'price') and crypto.price else 0.0
                             
                         # Calculer les statistiques basiques
                         volume_24h = 1000000.0  # Default volume
