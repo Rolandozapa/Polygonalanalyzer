@@ -1343,7 +1343,22 @@ class AdvancedMarketAggregator:
                         from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
                         
                         # 🎯 RÉCUPÉRATION SYSTÉMATIQUE: 10+ jours pour indicateurs multi-frame
-                        ohlcv_data = enhanced_ohlcv_fetcher.get_ohlcv_data(crypto.symbol, days=15)
+                        # Utiliser méthode async dans un contexte synchrone
+                        import threading
+                        import concurrent.futures
+                        
+                        def fetch_ohlcv_sync():
+                            # Nouveau event loop dans le thread
+                            new_loop = asyncio.new_event_loop()
+                            asyncio.set_event_loop(new_loop)
+                            try:
+                                return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(crypto.symbol))
+                            finally:
+                                new_loop.close()
+                        
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = executor.submit(fetch_ohlcv_sync)
+                            ohlcv_data = future.result(timeout=30)  # 30 secondes max
                         
                         if ohlcv_data is not None and not ohlcv_data.empty:
                             ohlcv_available = True
