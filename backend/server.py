@@ -8192,7 +8192,7 @@ class UltraProfessionalOrchestrator:
             recent_opportunities = []
             
             for opp in opportunities:
-                recent_analysis = await db.ia1_analyses.find_one({
+                recent_analysis = await db.technical_analyses.find_one({
                     "symbol": opp.symbol,
                     "timestamp": {"$gte": get_paris_time() - timedelta(minutes=30)}  # 🚨 30 min au lieu de 2h pour éviter doublons
                 })
