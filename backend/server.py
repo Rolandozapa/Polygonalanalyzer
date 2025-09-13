@@ -8245,7 +8245,7 @@ class UltraProfessionalOrchestrator:
                     
                     if recent_check:
                         logger.info(f"⏭️ SKIP {opportunity.symbol} - analyzed {(get_paris_time() - recent_check['timestamp']).total_seconds():.0f}s ago")
-                        self.recent_analyzed_symbols.add(opportunity.symbol)  # Ajouter au cache mémoire
+                        GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)  # Ajouter au cache global
                         continue
                     
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
