@@ -1360,7 +1360,7 @@ class AdvancedMarketAggregator:
             if opportunities:  # Seulement si le scout a fourni des données
                 self.cache[cache_key] = {
                     'data': opportunities,
-                    'timestamp': current_time
+                    'timestamp': current_time_timestamp
                 }
             
             symbol_list = [opp.symbol for opp in opportunities[:10]]
