@@ -2235,6 +2235,13 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     # 🎯 CAPTURER LE JSON COMPLET IA1
                     ia1_complete_json = parsed_response.copy()
                     logger.info(f"✅ IA1 JSON complet capturé pour {opportunity.symbol}: {len(ia1_complete_json)} champs")
+                    logger.info(f"🔍 DEBUG IA1 JSON FIELDS: {list(ia1_complete_json.keys())}")
+                    
+                    # Log confidence field specifically
+                    if 'confidence' in ia1_complete_json:
+                        logger.info(f"🎯 IA1 CONFIDENCE FIELD FOUND: {ia1_complete_json['confidence']} for {opportunity.symbol}")
+                    else:
+                        logger.warning(f"⚠️ IA1 CONFIDENCE FIELD MISSING in JSON for {opportunity.symbol}")
                     
                     # Extract key fields for processing
                     if 'recommendation' in parsed_response:
