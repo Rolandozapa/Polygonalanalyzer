@@ -2337,10 +2337,18 @@ class UltraProfessionalIA1TechnicalAnalyst:
             ia1_risk_reward_ratio = 1.0  # Default fallback
             ia1_calculated_levels = {}
             
+            # 🚨 CORRECTION: Obtenir le vrai prix depuis les données OHLCV
             # Variables pour les prix réels d'IA1
-            entry_price = opportunity.current_price
-            stop_loss_price = opportunity.current_price  
-            take_profit_price = opportunity.current_price
+            real_current_price = opportunity.current_price
+            
+            # Essayer d'obtenir le vrai prix depuis les données OHLCV
+            if not historical_data.empty and len(historical_data) > 0:
+                real_current_price = float(historical_data['close'].iloc[-1])
+                logger.info(f"💰 PRIX RÉEL OHLCV {opportunity.symbol}: ${real_current_price:.6f} (vs opportunity: ${opportunity.current_price:.6f})")
+            
+            entry_price = real_current_price
+            stop_loss_price = real_current_price  
+            take_profit_price = real_current_price
             
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
