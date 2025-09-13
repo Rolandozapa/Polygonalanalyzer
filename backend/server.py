@@ -2358,6 +2358,53 @@ class UltraProfessionalIA1TechnicalAnalyst:
             stop_loss_price = real_current_price  
             take_profit_price = real_current_price
             
+            # 🚨 CALCUL MANQUANT DES INDICATEURS TECHNIQUES IA1
+            logger.info(f"📊 CALCULATING MISSING TECHNICAL INDICATORS for {opportunity.symbol}")
+            
+            # Initialiser avec valeurs par défaut sûres
+            rsi = 50.0
+            macd_signal = 0.0
+            macd_histogram = 0.0
+            stochastic_k = 50.0
+            stochastic_d = 50.0
+            bb_position = 0.0
+            
+            # Calculer les vrais indicateurs si nous avons des données OHLCV
+            if not historical_data.empty and len(historical_data) >= 20:
+                try:
+                    # RSI (14 périodes)
+                    if 'close' in historical_data.columns:
+                        rsi = self._calculate_rsi(historical_data['close'])
+                        logger.info(f"   ✅ RSI calculé: {rsi:.2f}")
+                    
+                    # MACD (12, 26, 9)
+                    if 'close' in historical_data.columns:
+                        macd_data = self._calculate_macd(historical_data['close'])
+                        if macd_data:
+                            macd_signal = macd_data.get('signal', 0.0)
+                            macd_histogram = macd_data.get('histogram', 0.0)
+                            logger.info(f"   ✅ MACD calculé: Signal={macd_signal:.6f}, Histogram={macd_histogram:.6f}")
+                    
+                    # Stochastic (14, 3, 3)
+                    if 'high' in historical_data.columns and 'low' in historical_data.columns and 'close' in historical_data.columns:
+                        stoch_data = self._calculate_stochastic(historical_data['high'], historical_data['low'], historical_data['close'])
+                        if stoch_data:
+                            stochastic_k = stoch_data.get('k', 50.0)
+                            stochastic_d = stoch_data.get('d', 50.0)
+                            logger.info(f"   ✅ Stochastic calculé: K={stochastic_k:.2f}, D={stochastic_d:.2f}")
+                    
+                    # Bollinger Bands position
+                    if 'close' in historical_data.columns:
+                        bb_data = self._calculate_bollinger_position(historical_data['close'])
+                        if bb_data:
+                            bb_position = bb_data.get('position', 0.0)
+                            logger.info(f"   ✅ Bollinger position calculée: {bb_position:.4f}")
+                            
+                except Exception as e:
+                    logger.error(f"❌ Error calculating technical indicators for {opportunity.symbol}: {e}")
+                    
+            logger.info(f"📊 FINAL INDICATORS {opportunity.symbol}: RSI={rsi:.2f}, MACD={macd_signal:.6f}, Stoch={stochastic_k:.2f}, BB={bb_position:.4f}")
+            
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
                 
