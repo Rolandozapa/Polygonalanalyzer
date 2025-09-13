@@ -1333,7 +1333,7 @@ class AdvancedMarketAggregator:
                         return []  # Pas de fallback - retour vide si échec
                 
                 # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
-                for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
+                for crypto in filtered_cryptos:  # 🚨 TOUS les cryptos filtrés (pas de limite 50)
                     # 🚀 APPROCHE OPTIMISÉE: Scout léger + IA1 récupère OHLCV à la demande
                     current_price = crypto.price if hasattr(crypto, 'price') and crypto.price and crypto.price > 0 else 0.0
                     
