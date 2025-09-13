@@ -8065,10 +8065,9 @@ class UltraProfessionalOrchestrator:
             logger.info(f"📊 Found {len(opportunities)} real opportunities from BingX")
             
             if not opportunities:
-                logger.warning("⚠️ No opportunities from market aggregator, trying scout scan as fallback...")
-                # Fallback: try scout scan
-                opportunities = await self.scout.scan_opportunities()
-                logger.info(f"📊 Fallback: Found {len(opportunities)} opportunities from scout scan")
+                logger.error("❌ SCOUT SYSTEM FAILURE: No opportunities from BingX scout system")
+                logger.error("❌ STOPPING CYCLE: Scout must provide filtered BingX data - no fallbacks allowed")
+                return {"success": False, "error": "Scout system failure - no BingX data available"}
             
             # 🔥 CRITICAL FIX: Save opportunities to database for API access
             if opportunities:
