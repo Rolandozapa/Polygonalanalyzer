@@ -1352,8 +1352,8 @@ class AdvancedMarketAggregator:
                             new_loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(new_loop)
                             try:
-                                # Version allégée : seulement 10 jours pour le scout
-                                return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(crypto.symbol))
+                                # Version allégée : seulement 10 jours pour le scout (IA1 récupérera 4 semaines)
+                                return new_loop.run_until_complete(enhanced_ohlcv_fetcher.get_scout_ohlcv_data(crypto.symbol, days=10))
                             finally:
                                 new_loop.close()
                         
