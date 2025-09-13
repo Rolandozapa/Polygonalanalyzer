@@ -4512,26 +4512,38 @@ As IA2, your role is to validate or override IA1's recommendation based on:
 5. **Risk Management**: Are there hidden risks IA1 might have missed?
 6. **Market Regime Assessment**: What's the broader market context?
 
+🚨 CRITICAL IA2 LEVEL GENERATION & RR VALIDATION:
+You MUST generate your OWN technical levels independent of IA1:
+- **Analyze support/resistance yourself** using the provided technical data
+- **Calculate YOUR OWN entry/stop-loss/take-profit levels**
+- **Compute YOUR OWN Risk-Reward ratio** using your levels
+- **EXECUTE TRADE ONLY if YOUR calculated RR > 2.0**
+
 RESPONSE FORMAT (JSON):
 {{
     "signal": "long" or "short" or "hold",
     "confidence": 0.XX (0.50 to 0.99),
-    "reasoning": "Strategic analysis in 2-3 sentences explaining your decision vs IA1's analysis, pattern assessment, institutional flow, and multi-timeframe confluence",
+    "reasoning": "Strategic analysis explaining your decision vs IA1's analysis, your own technical level identification, and why your RR supports/rejects execution",
     "risk_level": "low" or "medium" or "high",
     "position_size": X.X (0.5 to 8.0 percent of portfolio),
     "market_regime_assessment": "bullish/bearish/neutral with detailed confluence analysis",
     "execution_priority": "immediate/wait_for_confluence/avoid",
     
-    "ia2_entry_price": XXX.XXXX (your identified optimal entry price),
-    "ia2_stop_loss": XXX.XXXX (your calculated stop loss level based on support/resistance),
-    "ia2_take_profit_1": XXX.XXXX (your primary take profit target),
-    "ia2_take_profit_2": XXX.XXXX (your secondary take profit target),
-    "ia2_take_profit_3": XXX.XXXX (your extended take profit target),
+    "ia2_entry_price": XXX.XXXX (YOUR identified optimal entry price - independent from IA1),
+    "ia2_stop_loss": XXX.XXXX (YOUR calculated stop loss level based on YOUR support/resistance analysis),
+    "ia2_take_profit_1": XXX.XXXX (YOUR primary take profit target),
+    "ia2_take_profit_2": XXX.XXXX (YOUR secondary take profit target),
+    "ia2_take_profit_3": XXX.XXXX (YOUR extended take profit target),
     
-    "calculated_rr": X.XX (your calculated risk-reward ratio),
-    "rr_reasoning": "Detailed explanation of your RR calculation with specific support/resistance levels",
-    "trade_execution_ready": true/false (whether this trade meets execution criteria)
+    "calculated_rr": X.XX (YOUR calculated risk-reward ratio using YOUR levels),
+    "rr_reasoning": "Detailed explanation of YOUR RR calculation with YOUR specific support/resistance levels and WHY these levels are optimal",
+    "trade_execution_ready": true/false (MUST be true ONLY if calculated_rr > 2.0 AND signal is long/short)
 }}
+
+🔥 EXECUTION LOGIC - MANDATORY:
+- **IF calculated_rr > 2.0 AND signal = long/short**: trade_execution_ready = true
+- **IF calculated_rr ≤ 2.0 OR signal = hold**: trade_execution_ready = false
+- **Your RR calculation determines trade execution, not IA1's RR**
 
 CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
 - **LONG Signal**: Entry near current support, SL below stronger support, TP at resistance levels
@@ -4540,7 +4552,7 @@ CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
 - **Position Size**: Consider volatility, market regime, and confluence strength
 - **RR Calculation**: LONG RR = (TP1-Entry)/(Entry-SL), SHORT RR = (Entry-TP1)/(SL-Entry)
 
-CRITICAL: Provide comprehensive strategic analysis with precise technical levels. Return valid JSON only."""
+CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. Return valid JSON only."""
 
             # Send to Claude using correct method
             response = await self.chat.send_message(UserMessage(text=strategic_prompt))
