@@ -8206,10 +8206,16 @@ class UltraProfessionalOrchestrator:
             random.shuffle(fresh_opportunities)
             random.shuffle(recent_opportunities)
             
-            # Combiner: fresh d'abord, puis recent
-            shuffled_opportunities = fresh_opportunities + recent_opportunities
-            
-            logger.info(f"📊 DIVERSITÉ: {len(fresh_opportunities)} fresh symbols, {len(recent_opportunities)} recently analyzed")
+            # 🎯 STRATÉGIE DIVERSITÉ RENFORCÉE
+            if len(fresh_opportunities) >= 5:
+                # Si on a assez de symboles fresh, utiliser seulement ceux-là
+                shuffled_opportunities = fresh_opportunities
+                logger.info(f"🎯 UTILISATION FRESH ONLY: {len(fresh_opportunities)} symboles fresh disponibles")
+            else:
+                # Sinon, combiner fresh + les plus anciens des recent
+                recent_opportunities_sorted = sorted(recent_opportunities, key=lambda x: x.symbol)  # Tri pour cohérence
+                shuffled_opportunities = fresh_opportunities + recent_opportunities_sorted[:3]  # Max 3 recent
+                logger.info(f"📊 DIVERSITÉ MIXTE: {len(fresh_opportunities)} fresh + {min(3, len(recent_opportunities))} recent")
             
             for opportunity in shuffled_opportunities[:10]:  # Limit to prevent overload with diversity
                 try:
