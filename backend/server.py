@@ -7814,6 +7814,38 @@ async def check_our_ip():
             "message": "Could not determine our IP address"
         }
 
+@api_router.delete("/clear-all-data")
+async def clear_all_data():
+    """🧹 NETTOYAGE COMPLET - Clear all stored data"""
+    try:
+        # Clear IA1 analyses
+        result1 = await db.ia1_analyses.delete_many({})
+        
+        # Clear IA2 decisions  
+        result2 = await db.trading_decisions.delete_many({})
+        
+        # Clear market opportunities
+        result3 = await db.market_opportunities.delete_many({})
+        
+        # Clear positions
+        result4 = await db.positions.delete_many({})
+        
+        logger.info(f"🧹 NETTOYAGE COMPLET: {result1.deleted_count} analyses, {result2.deleted_count} decisions, {result3.deleted_count} opportunities, {result4.deleted_count} positions deleted")
+        
+        return {
+            "success": True,
+            "message": "All data cleared successfully",
+            "deleted": {
+                "analyses": result1.deleted_count,
+                "decisions": result2.deleted_count, 
+                "opportunities": result3.deleted_count,
+                "positions": result4.deleted_count
+            }
+        }
+    except Exception as e:
+        logger.error(f"❌ Clear data error: {e}")
+        return {"success": False, "error": str(e)}
+
 @api_router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
