@@ -2786,6 +2786,38 @@ class UltraProfessionalIA1TechnicalAnalyst:
             
         except Exception as e:
             logger.error(f"IA1 ultra analysis error for {opportunity.symbol}: {e}")
+            
+            # 🚨 SI IA1 JSON a été généré avec succès mais erreur technique, essayer de sauver l'analyse
+            if 'ia1_complete_json' in locals() and ia1_complete_json and 'analysis' in ia1_complete_json:
+                try:
+                    # Utiliser l'analyse IA1 même avec erreur technique
+                    fallback_analysis = TechnicalAnalysis(
+                        symbol=opportunity.symbol,
+                        rsi=50.0,  # Indicateurs par défaut  
+                        macd_signal=0.0,
+                        stochastic=50.0,
+                        stochastic_d=50.0,
+                        bollinger_position=0.0,
+                        fibonacci_level=0.618,
+                        support_levels=[opportunity.current_price * 0.95],
+                        resistance_levels=[opportunity.current_price * 1.05],
+                        patterns_detected=ia1_complete_json.get('patterns', ['technical_error']),
+                        analysis_confidence=float(ia1_complete_json.get('confidence', 70)) / 100,
+                        ia1_signal=ia1_complete_json.get('recommendation', 'hold').lower(),
+                        ia1_reasoning=ia1_complete_json.get('reasoning', f"IA1 analysis with technical error for {opportunity.symbol}"),
+                        market_sentiment="neutral",
+                        data_sources=opportunity.data_sources,
+                        entry_price=opportunity.current_price,
+                        stop_loss_price=opportunity.current_price * 0.98,
+                        take_profit_price=opportunity.current_price * 1.02,
+                        risk_reward_ratio=1.0
+                    )
+                    logger.info(f"✅ IA1 SAUVÉ AVEC ERREUR TECHNIQUE pour {opportunity.symbol}")
+                    return fallback_analysis
+                except Exception as fallback_error:
+                    logger.error(f"❌ Fallback IA1 failed for {opportunity.symbol}: {fallback_error}")
+            
+            # Fallback complet en dernier recours
             return self._create_fallback_analysis(opportunity)
     
     def _calculate_ia1_risk_reward(self, opportunity: MarketOpportunity, historical_data: pd.DataFrame, 
