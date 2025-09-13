@@ -2905,7 +2905,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         support_levels=[opportunity.current_price * 0.95],
                         resistance_levels=[opportunity.current_price * 1.05],
                         patterns_detected=ia1_complete_json.get('patterns', ['technical_error']),
-                        analysis_confidence=float(ia1_complete_json.get('confidence', 70)) if float(ia1_complete_json.get('confidence', 70)) > 1 else float(ia1_complete_json.get('confidence', 70)) * 100,  # 🚨 FIX: Handle both percentage and decimal formats
+                        analysis_confidence=fallback_confidence,
                         ia1_signal=ia1_complete_json.get('recommendation', 'hold').lower(),
                         ia1_reasoning=ia1_complete_json.get('reasoning', f"IA1 analysis with technical error for {opportunity.symbol}"),
                         market_sentiment="neutral",
