@@ -8592,26 +8592,21 @@ class UltraProfessionalOrchestrator:
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """
         Determine if IA1 analysis should be sent to IA2
-        Implements the 3 VOIES escalation logic
+        Implements the 2 VOIES escalation logic as specified
         """
         try:
             ia1_signal = analysis.ia1_signal.lower()
             confidence = analysis.analysis_confidence
             rr_ratio = analysis.risk_reward_ratio
             
-            # VOIE 1: Strong signal with confidence >= 70%
-            if ia1_signal in ['long', 'short'] and confidence >= 0.70:
-                logger.info(f"🚀 IA2 ACCEPTED (VOIE 1): {opportunity.symbol} - {ia1_signal} {confidence:.1%}")
+            # LOGIQUE 1: LONG/SHORT + Confiance >70% + RR >2.0 → IA2
+            if ia1_signal in ['long', 'short'] and confidence > 0.70 and rr_ratio > 2.0:
+                logger.info(f"🚀 IA2 ACCEPTED (LOGIQUE 1): {opportunity.symbol} - {ia1_signal} {confidence:.1%}, RR {rr_ratio:.2f}:1")
                 return True
             
-            # VOIE 2: Excellent RR >= 2.0 regardless of signal
-            if rr_ratio >= 2.0:
-                logger.info(f"🚀 IA2 ACCEPTED (VOIE 2): {opportunity.symbol} - RR {rr_ratio:.2f}:1")
-                return True
-            
-            # VOIE 3: Exceptional technical sentiment >= 95% (override)
-            if ia1_signal in ['long', 'short'] and confidence >= 0.95:
-                logger.info(f"🚀 IA2 ACCEPTED (VOIE 3 - OVERRIDE): {opportunity.symbol} - Exceptional sentiment {confidence:.1%}")
+            # LOGIQUE 2: LONG/SHORT + Confiance >95% → IA2 (sans condition RR)
+            if ia1_signal in ['long', 'short'] and confidence > 0.95:
+                logger.info(f"🚀 IA2 ACCEPTED (LOGIQUE 2 - OVERRIDE): {opportunity.symbol} - {ia1_signal} {confidence:.1%} (High Confidence Override)")
                 return True
             
             # Not eligible for IA2
