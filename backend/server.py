@@ -2311,16 +2311,21 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 reasoning = response[:3000] if response else "Ultra professional analysis with multi-source validation"
                 logger.warning(f"⚠️ Fallback to raw response: {len(reasoning)} chars")
             
-            # Ajouter les informations avancées et Master Pattern
+            # Ajouter les informations avancées et Master Pattern - CORRIGER LA COHÉRENCE
             if master_pattern:
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 CHOICE): {master_pattern}"
             if detected_pattern:
-                direction_emoji = "📈" if detected_pattern.trading_direction == "long" else "📉" if detected_pattern.trading_direction == "short" else "⚖️"
+                # 🚨 CORRECTION: Aligner la direction du pattern avec la décision IA1 finale
+                final_direction = ia1_signal.lower()
+                direction_emoji = "📈" if final_direction == "long" else "📉" if final_direction == "short" else "⚖️"
+                
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 STRATEGIC CHOICE): {detected_pattern.pattern_type.value}"
-                reasoning += f"\n{direction_emoji} Direction: {detected_pattern.trading_direction.upper()} (strength: {detected_pattern.strength:.2f})"
+                reasoning += f"\n{direction_emoji} Direction: {final_direction.upper()} (strength: {detected_pattern.strength:.2f})"
                 reasoning += f"\nTrend Duration: {detected_pattern.trend_duration_days} days"
-                reasoning += f"\nEntry: ${detected_pattern.entry_price:.2f} → Target: ${detected_pattern.target_price:.2f}"
-                reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern is IA1's PRIMARY BASIS for strategic decision."
+                
+                # 🚨 CORRECTION: Utiliser les prix réels calculés, pas les prix du pattern
+                reasoning += f"\nEntry: ${opportunity.current_price:.6f} → Target: ${take_profit_price:.6f}"
+                reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern supports IA1's {final_direction.upper()} strategic decision."
             
             # 🚀 UTILISER LE JSON IA1 COMPLET + enrichir avec calculs techniques
             analysis_data = ia1_complete_json.copy()  # Commencer avec IA1 JSON complet
