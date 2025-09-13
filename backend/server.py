@@ -2575,8 +2575,46 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 mc_mult=mc_mult
             )
             
-            # Convert back to 0-1 scale
-            analysis_confidence = scoring_result['note_final'] / 100.0
+            # Convert back to 0-1 scale for final analysis confidence
+            original_analysis_confidence = scoring_result['note_final'] / 100.0
+            
+            # 🏛️ SEPARATE INSTITUTIONAL VALIDATION (MFI + VWAP + SMA50)
+            # This does NOT modify IA1 confidence - provides independent validation
+            try:
+                institutional_validation_score = self._calculate_institutional_validation(
+                    mfi=mfi,
+                    vwap_position=vwap_position, 
+                    vwap_price=vwap,
+                    sma50_vs_price=(opportunity.current_price / vwap) if vwap > 0 else 1.0,
+                    market_cap_24h=market_cap_change_24h,
+                    primary_signal=ia1_signal
+                )
+                
+                # Determine validation status
+                if institutional_validation_score >= 75:
+                    validation_risk = "low"
+                    validation_status = "✅ INSTITUTIONAL CONFIRMATION"
+                elif institutional_validation_score >= 60:
+                    validation_risk = "medium" 
+                    validation_status = "⚠️ INSTITUTIONAL NEUTRAL"
+                else:
+                    validation_risk = "high"
+                    validation_status = "❌ INSTITUTIONAL WARNING"
+                
+                logger.info(f"🏛️ SEPARATE INSTITUTIONAL VALIDATION for {opportunity.symbol}:")
+                logger.info(f"   🧠 IA1 Final Confidence: {original_analysis_confidence:.1%} (PRESERVED)")
+                logger.info(f"   🏛️ Institutional Score: {institutional_validation_score:.1f}/100 ({validation_risk} risk)")
+                logger.info(f"   📊 Components: MFI={mfi:.1f}, VWAP={vwap_position:+.1f}%, Market={market_cap_change_24h:+.1f}%")
+                logger.info(f"   🎯 {validation_status}")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Institutional validation error for {opportunity.symbol}: {e}")
+                institutional_validation_score = 50.0
+                validation_risk = "medium"
+                validation_status = "⚠️ VALIDATION UNAVAILABLE"
+            
+            # 🚀 USE ORIGINAL IA1 CONFIDENCE (with professional scoring applied)
+            analysis_confidence = original_analysis_confidence
             
             logger.info(f"🔥 PROFESSIONAL SCORING COMPLETE for {opportunity.symbol}:")
             logger.info(f"   🧠 Base (IA1 Organic): {scoring_base_confidence:.1f}%")
