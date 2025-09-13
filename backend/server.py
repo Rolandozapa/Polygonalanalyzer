@@ -2392,37 +2392,46 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         rsi = self._calculate_rsi(historical_data[close_col])
                         logger.info(f"   ✅ RSI calculé: {rsi:.2f}")
                     
-                    # MACD (12, 26, 9)
+                    # 🚨 CALCUL MACD (12, 26, 9)
                     # 🔧 FIX: Handle both 'Close' and 'close' column names
                     close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
                     if close_col:
-                        macd_data = self._calculate_macd(historical_data[close_col])
-                        if macd_data:
-                            macd_signal = macd_data.get('signal', 0.0)
-                            macd_histogram = macd_data.get('histogram', 0.0)
-                            logger.info(f"   ✅ MACD calculé: Signal={macd_signal:.6f}, Histogram={macd_histogram:.6f}")
+                        macd_result = self._calculate_macd(historical_data[close_col])
+                        if macd_result and isinstance(macd_result, tuple) and len(macd_result) >= 3:
+                            # MACD returns (macd_line, signal_line, histogram)
+                            macd_line, macd_signal, macd_histogram = macd_result
+                            logger.info(f"   ✅ MACD calculé: Line={macd_line:.6f}, Signal={macd_signal:.6f}, Histogram={macd_histogram:.6f}")
+                        else:
+                            macd_line, macd_signal, macd_histogram = 0.0, 0.0, 0.0
                     
-                    # Stochastic (14, 3, 3)
+                    # 🚨 CALCUL STOCHASTIC (14, 3, 3)
                     # 🔧 FIX: Handle column name variations
                     high_col = 'High' if 'High' in historical_data.columns else 'high' if 'high' in historical_data.columns else None
                     low_col = 'Low' if 'Low' in historical_data.columns else 'low' if 'low' in historical_data.columns else None
                     close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
                     
                     if high_col and low_col and close_col:
-                        stoch_data = self._calculate_stochastic(historical_data[high_col], historical_data[low_col], historical_data[close_col])
-                        if stoch_data:
-                            stochastic_k = stoch_data.get('k', 50.0)
-                            stochastic_d = stoch_data.get('d', 50.0)
+                        stoch_result = self._calculate_stochastic(historical_data[high_col], historical_data[low_col], historical_data[close_col])
+                        if stoch_result and isinstance(stoch_result, tuple) and len(stoch_result) >= 2:
+                            # Stochastic returns (%K, %D)
+                            stochastic_k, stochastic_d = stoch_result
                             logger.info(f"   ✅ Stochastic calculé: K={stochastic_k:.2f}, D={stochastic_d:.2f}")
+                        else:
+                            stochastic_k, stochastic_d = 50.0, 50.0
                     
-                    # Bollinger Bands position
+                    # 🚨 CALCUL BOLLINGER BANDS POSITION
                     # 🔧 FIX: Handle both 'Close' and 'close' column names
                     close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
                     if close_col:
-                        bb_data = self._calculate_bollinger_position(historical_data[close_col])
-                        if bb_data:
-                            bb_position = bb_data.get('position', 0.0)
+                        bb_result = self._calculate_bollinger_position(historical_data[close_col])
+                        if bb_result and isinstance(bb_result, (dict, float)):
+                            if isinstance(bb_result, dict):
+                                bb_position = bb_result.get('position', 0.0)
+                            else:
+                                bb_position = float(bb_result)
                             logger.info(f"   ✅ Bollinger position calculée: {bb_position:.4f}")
+                        else:
+                            bb_position = 0.0
                             
                 except Exception as e:
                     logger.error(f"❌ Error calculating technical indicators for {opportunity.symbol}: {e}")
