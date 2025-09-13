@@ -1369,13 +1369,29 @@ class AdvancedMarketAggregator:
                                 logger.info(f"💰 PRIX OHLCV: {crypto.symbol} = ${current_price:.6f}")
                             
                             # Calculer statistiques avancées depuis les données OHLCV
-                            volume_24h_ohlcv = float(ohlcv_data['volume'].iloc[-1]) if len(ohlcv_data) > 0 else 0.0
+                            volume_24h_ohlcv = 0.0
+                            if len(ohlcv_data) > 0:
+                                # Gestion robuste des colonnes de volume
+                                volume_col = None
+                                for col in ['volume', 'Volume', 'vol', 'Vol']:
+                                    if col in ohlcv_data.columns:
+                                        volume_col = col
+                                        break
+                                
+                                if volume_col and not ohlcv_data[volume_col].isna().iloc[-1]:
+                                    volume_24h_ohlcv = float(ohlcv_data[volume_col].iloc[-1])
                             
                             # Calcul de volatilité réelle sur 10 jours
-                            if len(ohlcv_data) >= 10:
-                                price_changes = ohlcv_data['close'].pct_change().dropna()
-                                real_volatility = float(price_changes.std() * 100)  # Volatilité en %
-                            else:
+                            real_volatility = 0.0
+                            if len(ohlcv_data) >= 10 and 'close' in ohlcv_data.columns:
+                                try:
+                                    price_changes = ohlcv_data['close'].pct_change().dropna()
+                                    if len(price_changes) > 0:
+                                        real_volatility = float(price_changes.std() * 100)  # Volatilité en %
+                                except Exception:
+                                    real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                            
+                            if real_volatility <= 0:
                                 real_volatility = abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
                             
                             logger.info(f"✅ OHLCV COMPLET: {crypto.symbol} - {len(ohlcv_data)} jours, volatilité {real_volatility:.2f}%")
