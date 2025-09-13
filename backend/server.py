@@ -3540,7 +3540,31 @@ class UltraProfessionalIA1TechnicalAnalyst:
             cleaned_data["risk_reward_ratio"] = self._ensure_json_safe(analysis_data.get("risk_reward_ratio"), 1.0)
             cleaned_data["rr_reasoning"] = str(analysis_data.get("rr_reasoning", ""))
             
+            # 🚀 ADVANCED TECHNICAL INDICATORS - CRITICAL FIX FOR IA1 ANALYSIS
+            # Add MFI indicators
+            cleaned_data["mfi_value"] = self._ensure_json_safe(analysis_data.get("mfi_value"), 50.0)
+            cleaned_data["mfi_signal"] = str(analysis_data.get("mfi_signal", "neutral"))
+            cleaned_data["mfi_institution"] = str(analysis_data.get("mfi_institution", "neutral"))
+            
+            # Add VWAP indicators
+            cleaned_data["vwap_price"] = self._ensure_json_safe(analysis_data.get("vwap_price"), 0.0)
+            cleaned_data["vwap_position"] = self._ensure_json_safe(analysis_data.get("vwap_position"), 0.0)
+            cleaned_data["vwap_signal"] = str(analysis_data.get("vwap_signal", "neutral"))
+            cleaned_data["vwap_trend"] = str(analysis_data.get("vwap_trend", "neutral"))
+            
+            # Add EMA hierarchy indicators
+            cleaned_data["ema_hierarchy"] = str(analysis_data.get("ema_hierarchy", "neutral"))
+            cleaned_data["ema_position"] = str(analysis_data.get("ema_position", "mixed"))
+            cleaned_data["ema_cross_signal"] = str(analysis_data.get("ema_cross_signal", "neutral"))
+            cleaned_data["ema_strength"] = self._ensure_json_safe(analysis_data.get("ema_strength"), 0.5)
+            
+            # Add multi-timeframe indicators
+            cleaned_data["multi_timeframe_dominant"] = str(analysis_data.get("multi_timeframe_dominant", "DAILY"))
+            cleaned_data["multi_timeframe_pattern"] = str(analysis_data.get("multi_timeframe_pattern", "NEUTRAL"))
+            cleaned_data["multi_timeframe_confidence"] = self._ensure_json_safe(analysis_data.get("multi_timeframe_confidence"), 0.5)
+            
             logger.info(f"💰 PRIX VALIDÉS {analysis_data.get('symbol', 'UNKNOWN')}: Entry=${cleaned_data['entry_price']:.6f} | SL=${cleaned_data['stop_loss_price']:.6f} | TP=${cleaned_data['take_profit_price']:.6f} | RR={cleaned_data['risk_reward_ratio']:.2f}:1")
+            logger.info(f"🔥 ADVANCED INDICATORS VALIDÉS: MFI={cleaned_data['mfi_value']:.1f} ({cleaned_data['mfi_signal']}), VWAP={cleaned_data['vwap_position']:+.2f}% ({cleaned_data['vwap_signal']}), EMA={cleaned_data['ema_hierarchy']} ({cleaned_data['ema_strength']*100:.0f}%)")
             
             return cleaned_data
         except Exception as e:
