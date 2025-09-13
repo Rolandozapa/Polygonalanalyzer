@@ -2960,7 +2960,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 result["coherence_rate"] = validation_rate
                 result["sources_info"] = f"{primary_source} + {secondary_source}"
                 
-                # Critère principal: Au moins 2 sources avec validation croisée
+                # 🚨 VALIDATION ASSOUPLIE: Accepter 1 source de qualité au lieu d'exiger 2 sources
                 if sources_count >= 2 and validation_rate >= 0.8:  # 80% de cohérence minimum
                     result["is_valid"] = True
                     result["confidence_score"] = min(validation_rate + 0.1, 1.0)  # Bonus pour multi-source
@@ -2974,8 +2974,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 elif sources_count >= 2:
                     result["reason"] = f"Sources multiples mais cohérence faible: {validation_rate:.1%}"
                     return result
+                elif sources_count == 1 and primary_source in ['Yahoo Finance Enhanced', 'CryptoCompare Historical', 'Binance API']:
+                    # 🚀 NOUVEAU: Accepter 1 source fiable sans exiger validation croisée
+                    result["is_valid"] = True
+                    result["confidence_score"] = 0.8  # Bonne confiance pour source fiable
+                    result["reason"] = f"Source unique fiable: {primary_source}"
+                    return result
                 else:
-                    result["reason"] = f"Une seule source: {primary_source}"
+                    result["reason"] = f"Une seule source non-fiable: {primary_source}"
             
             # Fallback: validation de base sur une source unique (si pas de multi-source)
             if len(historical_data) >= 20:  # 🚨 AJUSTÉ: 20 jours minimum au lieu de 50 pour optimisation
