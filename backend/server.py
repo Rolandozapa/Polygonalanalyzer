@@ -5459,6 +5459,50 @@ async def retry_pending_positions():
         return {"success": False, "error": str(e)}
 
 # 🔥 ESSENTIAL API ENDPOINTS FOR FRONTEND FUNCTIONALITY
+@app.get("/api/scout-status")
+async def get_scout_status():
+    """Get current scout status and force refresh for testing"""
+    try:
+        from trending_auto_updater import trending_auto_updater
+        
+        # Force a fresh fetch to test the corrected filtering
+        logger.info("🧪 TESTING: Forcing fresh scout data fetch for testing")
+        
+        # Force fresh data by clearing cache
+        trending_auto_updater.current_trending = []
+        trending_auto_updater.last_update = None
+        
+        # Get fresh filtered cryptos
+        filtered_cryptos = await trending_auto_updater.fetch_trending_cryptos()
+        
+        # Show detailed results
+        results = {
+            "total_filtered_cryptos": len(filtered_cryptos),
+            "scout_criteria": {
+                "min_price_change": "1.0%",
+                "min_volume": "500,000",
+                "anti_lateral_patterns": "enabled"
+            },
+            "filtered_cryptos": []
+        }
+        
+        for crypto in filtered_cryptos[:10]:  # Show first 10 for testing
+            results["filtered_cryptos"].append({
+                "symbol": crypto.symbol,
+                "price_change": crypto.price_change,
+                "volume": crypto.volume,
+                "source": crypto.source
+            })
+        
+        logger.info(f"🎯 SCOUT TEST RESULTS: {len(filtered_cryptos)} cryptos passed filtering criteria")
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"❌ Scout status error: {e}")
+        return {"error": str(e)}
+
+
 @app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
     """Get current market opportunities - now using fresh BingX trending data"""
