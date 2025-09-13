@@ -7874,6 +7874,35 @@ async def check_our_ip():
             "message": "Could not determine our IP address"
         }
 
+@api_router.post("/force-scout-refresh")
+async def force_scout_refresh():
+    """🔄 FORCE SCOUT REFRESH - Force refresh of BingX scout filtering"""
+    try:
+        from trending_auto_updater import trending_auto_updater
+        from advanced_market_aggregator import advanced_market_aggregator
+        
+        # Clear scout cache to force refresh
+        trending_auto_updater.current_trending = None
+        trending_auto_updater.last_update = None
+        
+        # Clear market aggregator cache
+        advanced_market_aggregator.cache.clear()
+        
+        # Force fresh scout data
+        import asyncio
+        fresh_cryptos = await trending_auto_updater.fetch_trending_cryptos()
+        
+        logger.info(f"🔄 FORCED SCOUT REFRESH: {len(fresh_cryptos)} cryptos selected from TOP 50 after fresh filtering")
+        
+        return {
+            "success": True,
+            "message": f"Scout refreshed - {len(fresh_cryptos)} cryptos selected from TOP 50",
+            "filtered_cryptos": [{"symbol": c.symbol, "price_change": c.price_change, "volume": c.volume} for c in fresh_cryptos[:10]]
+        }
+    except Exception as e:
+        logger.error(f"❌ Force scout refresh error: {e}")
+        return {"success": False, "error": str(e)}
+
 @api_router.delete("/clear-all-data")
 async def clear_all_data():
     """🧹 NETTOYAGE COMPLET - Clear all stored data"""
