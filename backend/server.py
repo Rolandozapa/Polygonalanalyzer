@@ -2882,6 +2882,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
                         stochastic=fallback_stoch_k,  # 🚀 Use calculated Stochastic
                         stochastic_d=fallback_stoch_d,  # 🚀 Use calculated Stochastic %D
                         bollinger_position=fallback_bb_pos,  # 🚀 Use calculated BB position
+                        # 🚀 CRITICAL FIX: Add calculated signals for basic indicators
+                        rsi_signal=('extreme_overbought' if fallback_rsi > 90 else 'overbought' if fallback_rsi > 70 else 'extreme_oversold' if fallback_rsi < 10 else 'oversold' if fallback_rsi < 30 else 'neutral'),
+                        macd_trend=('strong_bullish' if fallback_macd > 0.1 else 'bullish' if fallback_macd > 0 else 'strong_bearish' if fallback_macd < -0.1 else 'bearish' if fallback_macd < 0 else 'neutral'),
+                        stochastic_signal=('extreme_overbought' if fallback_stoch_k > 90 else 'overbought' if fallback_stoch_k > 80 else 'extreme_oversold' if fallback_stoch_k < 10 else 'oversold' if fallback_stoch_k < 20 else 'neutral'),
                         fibonacci_level=0.618,
                         support_levels=[opportunity.current_price * 0.95],
                         resistance_levels=[opportunity.current_price * 1.05],
