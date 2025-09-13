@@ -73,8 +73,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class IA1ToIA2EscalationTestSuite:
-    """Comprehensive test suite for IA1 to IA2 Escalation System"""
+class TechnicalIndicatorsTestSuite:
+    """Comprehensive test suite for IA1 Technical Indicators Fix"""
     
     def __init__(self):
         # Get backend URL from frontend env
