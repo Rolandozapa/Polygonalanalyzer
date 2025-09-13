@@ -1333,41 +1333,27 @@ class AdvancedMarketAggregator:
                 
                 # Créer les opportunités depuis les données scout filtrées UNIQUEMENT
                 for crypto in filtered_cryptos[:50]:  # Top 50 filtrés par le scout
-                    # Utiliser les données réelles du scout BingX
-                    real_price = crypto.price if hasattr(crypto, 'price') and crypto.price else 0.0
-                            
-                        # Calculer les statistiques basiques
-                        volume_24h = 1000000.0  # Default volume
-                        price_change_24h = 0.02  # Default 2%
-                        
-                        if ohlcv_data is not None and not ohlcv_data.empty:
-                            volume_24h = float(ohlcv_data['volume'].iloc[-1])
-                            if len(ohlcv_data) >= 2:
-                                prev_close = float(ohlcv_data['close'].iloc[-2])
-                                price_change_24h = (real_price - prev_close) / prev_close
-                            
-                    except Exception as e:
-                        logger.debug(f"Could not fetch OHLCV for {symbol}: {e}")
-                        
+                    # Utiliser les données réelles du scout BingX (avec tous les filtres appliqués)
                     opportunity = MarketOpportunity(
-                        symbol=symbol,
-                        current_price=real_price,  # Prix réel d'OHLCV
-                        volume_24h=volume_24h,
-                        price_change_24h=price_change_24h,
-                        volatility=abs(price_change_24h),  # Real volatility from price change
-                        market_cap=1000000000,  # Default market cap
-                        market_cap_rank=static_futures.index(symbol) + 1,  # Ranking based on list position
-                        data_sources=["static_futures_list"],
-                        data_confidence=0.8  # Good confidence for static futures
+                        symbol=crypto.symbol,
+                        current_price=crypto.price if hasattr(crypto, 'price') and crypto.price else 0.0,
+                        volume_24h=crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0,
+                        price_change_24h=crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
+                        volatility=abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
+                        market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
+                        market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
+                        data_sources=["bingx_scout_filtered"],
+                        data_confidence=0.9  # Haute confiance pour les données scout BingX filtrées
                     )
                     opportunities.append(opportunity)
                     
-                logger.info(f"✅ STATIC FUTURES OPPORTUNITIES: Generated {len(opportunities)} diversified opportunities")
+                logger.info(f"✅ SCOUT OPPORTUNITIES: Generated {len(opportunities)} FILTERED BingX opportunities (updated every 4h)")
                     
-            except Exception as static_error:
-                logger.error(f"❌ Error creating static futures opportunities: {static_error}")
-                # Minimal fallback avec quelques symbols de base
-                basic_symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT"]
+            except Exception as scout_error:
+                logger.error(f"❌ SCOUT SYSTEM ERROR: {scout_error}")
+                # 🚨 PAS DE FALLBACK - Si le scout échoue, retourner liste vide
+                logger.warning("⚠️ NO FALLBACK CRYPTOS - Scout system must work or return empty")
+                return []  # Retour vide si le scout ne fonctionne pas
                 for symbol in basic_symbols:
                     opportunities.append(MarketOpportunity(
                         symbol=symbol,
