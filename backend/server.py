@@ -2465,16 +2465,32 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # 🎯 POST-PROCESSING: VALIDATION MULTI-TIMEFRAME
             # Appliquer l'analyse multi-timeframe pour corriger les erreurs de maturité chartiste
             
-            # Calculer d'abord la confiance d'analyse de base
-            base_analysis_confidence = self._calculate_analysis_confidence(
-                rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
-            )
+            # 🎯 PRESERVE IA1 ORGANIC CONFIDENCE - RESTORE SOPHISTICATION
+            # Use IA1's own confidence if it provided one, otherwise use calculated
+            if 'confidence' in ia1_complete_json and ia1_complete_json['confidence'] is not None:
+                # 🚀 RESTORE ORGANIC IA1 CONFIDENCE - Use IA1's sophisticated analysis
+                raw_ia1_confidence = float(ia1_complete_json['confidence'])
+                if raw_ia1_confidence > 1.0:
+                    # IA1 sent percentage format (94.5) - convert to decimal
+                    ia1_organic_confidence = raw_ia1_confidence / 100.0
+                else:
+                    # IA1 sent decimal format (0.945) - use as is
+                    ia1_organic_confidence = raw_ia1_confidence
+                
+                # Use IA1's organic confidence as the PRIMARY confidence
+                analysis_confidence = ia1_organic_confidence
+                logger.info(f"🧠 USING IA1 ORGANIC CONFIDENCE: {analysis_confidence:.1%} (sophisticated analysis preserved)")
+                
+            else:
+                # Fallback: Use calculated confidence only if IA1 didn't provide one
+                base_analysis_confidence = self._calculate_analysis_confidence(
+                    rsi, macd_histogram, bb_position, opportunity.volatility, opportunity.data_confidence
+                )
+                analysis_confidence = base_analysis_confidence
+                logger.info(f"📊 USING CALCULATED CONFIDENCE: {analysis_confidence:.1%} (IA1 didn't provide organic confidence)")
             
-            # 🔍 DEBUG: Log base confidence calculation details
-            logger.info(f"🔍 DEBUG CONFIDENCE {opportunity.symbol}:")
-            logger.info(f"   📊 RSI: {rsi:.1f}, MACD: {macd_histogram:.6f}, BB: {bb_position:.3f}")
-            logger.info(f"   📊 Volatility: {opportunity.volatility:.3f}, Data Confidence: {opportunity.data_confidence:.3f}")
-            logger.info(f"   📊 Base Analysis Confidence: {base_analysis_confidence:.3f} ({base_analysis_confidence:.1%})")
+            # 🔍 DEBUG: Log confidence source
+            logger.info(f"🔍 CONFIDENCE SOURCE for {opportunity.symbol}: {'IA1 Organic' if 'confidence' in ia1_complete_json else 'Backend Calculated'} = {analysis_confidence:.1%}")
             
             # 🔍 DEBUG: Which code path is being used?
             logger.info(f"🔍 DEBUG IA1 FLOW for {opportunity.symbol}: About to start main analysis (not fallback)")
