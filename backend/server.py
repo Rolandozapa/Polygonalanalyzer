@@ -4845,25 +4845,32 @@ async def force_ia1_analysis(request: dict):
 
 @api_router.post("/run-ia1-cycle")
 async def run_ia1_cycle():
-    """Run a quick IA1 analysis cycle on current opportunities"""
-    try:
-        logger.info("🚀 RUNNING QUICK IA1 CYCLE")
-        
-        if not orchestrator or not orchestrator._initialized:
-            return {"success": False, "error": "Orchestrator not initialized"}
-        
-        # Run a single trading cycle
-        opportunities_processed = await orchestrator.run_trading_cycle()
-        
-        return {
-            "success": True, 
-            "message": "IA1 cycle completed",
-            "opportunities_processed": opportunities_processed
-        }
-        
-    except Exception as e:
-        logger.error(f"❌ IA1 cycle error: {e}")
-        return {"success": False, "error": str(e)}
+    """Run a quick IA1 analysis cycle on current opportunities - AVEC PROTECTION ANTI-PARALLÈLE"""
+    global IA1_ANALYSIS_LOCK
+    
+    if IA1_ANALYSIS_LOCK.locked():
+        return {"success": False, "error": "IA1 cycle already running - avoiding parallel execution"}
+    
+    async with IA1_ANALYSIS_LOCK:
+        try:
+            logger.info("🔒 IA1 CYCLE LOCKED - Starting protected analysis")
+            
+            if not orchestrator or not orchestrator._initialized:
+                return {"success": False, "error": "Orchestrator not initialized"}
+            
+            # Run a single trading cycle
+            opportunities_processed = await orchestrator.run_trading_cycle()
+            
+            logger.info("🔓 IA1 CYCLE UNLOCKED - Analysis completed")
+            return {
+                "success": True, 
+                "message": "IA1 cycle completed",
+                "opportunities_processed": opportunities_processed
+            }
+            
+        except Exception as e:
+            logger.error(f"❌ IA1 cycle error: {e}")
+            return {"success": False, "error": str(e)}
 
 @api_router.post("/force-ia2-escalation")
 async def force_ia2_escalation(request: dict):
