@@ -1354,21 +1354,9 @@ class AdvancedMarketAggregator:
                 # 🚨 PAS DE FALLBACK - Si le scout échoue, retourner liste vide
                 logger.warning("⚠️ NO FALLBACK CRYPTOS - Scout system must work or return empty")
                 return []  # Retour vide si le scout ne fonctionne pas
-                for symbol in basic_symbols:
-                    opportunities.append(MarketOpportunity(
-                        symbol=symbol,
-                        current_price=50000.0 if "BTC" in symbol else 3000.0 if "ETH" in symbol else 100.0,
-                        volume_24h=1000000.0,
-                        price_change_24h=0.02,
-                        volatility=0.02,
-                        market_cap=1000000000,
-                        market_cap_rank=basic_symbols.index(symbol) + 1,
-                        data_sources=["minimal_fallback"],
-                        data_confidence=0.5
-                    ))
-                logger.info(f"✅ MINIMAL FALLBACK: {len(opportunities)} basic opportunities created")
             
-            # Cache the opportunities
+            # Cache les opportunités scout UNIQUEMENT
+            if opportunities:  # Seulement si le scout a fourni des données
             self.cache[cache_key] = {
                 'data': opportunities,
                 'timestamp': current_time
