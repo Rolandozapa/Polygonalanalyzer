@@ -120,6 +120,19 @@ class EnhancedOHLCVFetcher:
             logger.error(f"❌ Error in multi-timeframe data preparation: {e}")
             return {}
 
+    async def get_scout_ohlcv_data(self, symbol: str, days: int = 10) -> Optional[pd.DataFrame]:
+        """SCOUT VERSION: Lightweight OHLCV data fetching for scout system (10 days)"""
+        # Temporarily override lookback_days for scout
+        original_lookback = self.lookback_days
+        self.lookback_days = days
+        
+        try:
+            result = await self.get_enhanced_ohlcv_data(symbol)
+            return result
+        finally:
+            # Restore original lookback_days
+            self.lookback_days = original_lookback
+    
     async def get_enhanced_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
         """Enhanced OHLCV data fetching with multi-source validation (minimum 2 sources)"""
         # Normalize symbol
