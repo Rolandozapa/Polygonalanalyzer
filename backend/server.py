@@ -2476,7 +2476,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"   📊 Volatility: {opportunity.volatility:.3f}, Data Confidence: {opportunity.data_confidence:.3f}")
             logger.info(f"   📊 Base Analysis Confidence: {base_analysis_confidence:.3f} ({base_analysis_confidence:.1%})")
             
-            # 🌍 RÉCUPÉRATION DU MARKET CAP 24H POUR BONUS/MALUS
+            # 🔍 DEBUG: Which code path is being used?
+            logger.info(f"🔍 DEBUG IA1 FLOW for {opportunity.symbol}: About to start main analysis (not fallback)")
+            
+            # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL IA1
+            # Appliquer bonus/malus de marché et token-spécifiques au score IA1
+            logger.info(f"🎯 APPLYING PROFESSIONAL SCORING TO IA1 {opportunity.symbol}")
+            
+            # Get global market data for Market Cap 24h bonus/malus 
             market_cap_change_24h = 0.0
             try:
                 global_market_data = await global_crypto_market_analyzer.get_global_market_data()
@@ -2487,10 +2494,6 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     logger.warning("⚠️ No global market data available for Market Cap 24h bonus/malus")
             except Exception as e:
                 logger.warning(f"Error getting Market Cap 24h for bonus/malus: {e}")
-            
-            # 🎯 FORMULE FINALE DE SCORING PROFESSIONNEL IA1
-            # Appliquer bonus/malus de marché et token-spécifiques au score IA1
-            logger.info(f"🎯 APPLYING PROFESSIONAL SCORING TO IA1 {opportunity.symbol}")
             
             # Préparer les facteurs de marché pour IA1
             factor_scores = {
