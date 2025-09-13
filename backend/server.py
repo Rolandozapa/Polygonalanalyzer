@@ -3489,6 +3489,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
 
     def _validate_analysis_data(self, analysis_data: dict) -> dict:
         """Valide et nettoie toutes les données d'analyse pour JSON"""
+        logger.info(f"🔍 DEBUG: _validate_analysis_data called for {analysis_data.get('symbol', 'UNKNOWN')} with {len(analysis_data)} fields")
         try:
             cleaned_data = {}
             
