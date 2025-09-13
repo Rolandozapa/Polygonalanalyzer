@@ -8779,6 +8779,88 @@ class UltraProfessionalOrchestrator:
             logger.error(f"❌ Trading cycle error: {e}")
             return 0
     
+    def _calculate_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
+                                           sma50_vs_price: float, market_cap_24h: float, primary_signal: str) -> float:
+        """
+        🏛️ INSTITUTIONAL VALIDATION SCORE
+        Separate validation based on institutional indicators (MFI, VWAP, SMA50)
+        Does NOT modify IA1 confidence - provides independent validation
+        """
+        try:
+            # Base score starts at 50 (neutral)
+            validation_score = 50.0
+            
+            # 1️⃣ MFI INSTITUTIONAL FLOW (35% weight)
+            mfi_score = 0.0
+            if mfi >= 80:
+                # Overbought - Institutional distribution 
+                mfi_score = 25.0 if primary_signal == "short" else 10.0
+            elif mfi >= 70:
+                # Strong buying - Institutional accumulation
+                mfi_score = 30.0 if primary_signal == "long" else 15.0  
+            elif mfi <= 20:
+                # Oversold - Institutional accumulation
+                mfi_score = 30.0 if primary_signal == "long" else 10.0
+            elif mfi <= 30:
+                # Weak selling - Institutional support
+                mfi_score = 25.0 if primary_signal == "long" else 15.0
+            else:
+                # Neutral MFI
+                mfi_score = 15.0
+            
+            # 2️⃣ VWAP INSTITUTIONAL POSITIONING (35% weight)
+            vwap_score = 0.0
+            if abs(vwap_position) > 2.0:
+                # Extreme deviation from institutional average
+                if vwap_position > 2.0:  # Far above VWAP
+                    vwap_score = 25.0 if primary_signal == "short" else 5.0
+                else:  # Far below VWAP
+                    vwap_score = 25.0 if primary_signal == "long" else 5.0
+            elif abs(vwap_position) > 1.0:
+                # Moderate deviation
+                if vwap_position > 1.0:  # Above VWAP
+                    vwap_score = 20.0 if primary_signal == "long" else 15.0
+                else:  # Below VWAP  
+                    vwap_score = 20.0 if primary_signal == "short" else 15.0
+            else:
+                # Near VWAP - institutional consensus
+                vwap_score = 20.0
+            
+            # 3️⃣ SMA50 STRUCTURAL TREND (20% weight)
+            sma_score = 0.0
+            if sma50_vs_price > 1.05:
+                # Price 5%+ above SMA50 - bullish structure
+                sma_score = 15.0 if primary_signal == "long" else 8.0
+            elif sma50_vs_price < 0.95:
+                # Price 5%+ below SMA50 - bearish structure  
+                sma_score = 15.0 if primary_signal == "short" else 8.0
+            else:
+                # Price near SMA50 - neutral structure
+                sma_score = 10.0
+            
+            # 4️⃣ GLOBAL MARKET CONTEXT (10% weight)
+            market_score = 0.0
+            if market_cap_24h > 2.0:
+                # Strong bull market
+                market_score = 8.0 if primary_signal == "long" else 3.0
+            elif market_cap_24h < -2.0:
+                # Strong bear market
+                market_score = 8.0 if primary_signal == "short" else 3.0
+            else:
+                # Neutral market
+                market_score = 5.0
+            
+            # Final institutional validation score
+            final_validation = validation_score + mfi_score + vwap_score + sma_score + market_score
+            final_validation = max(0.0, min(100.0, final_validation))  # Clamp to 0-100
+            
+            return final_validation
+            
+        except Exception as e:
+            logger.error(f"❌ Error calculating institutional validation: {e}")
+            return 50.0  # Neutral fallback
+
+
     def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """
         Determine if IA1 analysis should be sent to IA2
