@@ -2795,6 +2795,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
+            logger.info(f"🔍 DEBUG: About to call _validate_analysis_data for {opportunity.symbol}")
             validated_data = self._validate_analysis_data(analysis_data)
             
             # Créer l'analyse finale directement (SYSTEM SIMPLIFIÉ)
