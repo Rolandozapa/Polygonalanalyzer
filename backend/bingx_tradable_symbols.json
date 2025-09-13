@@ -464,6 +464,7 @@
     "XAI-USDT",
     "XAUT-USDT",
     "XCN-USDT",
+    "XDOG-USDT",
     "XLM-USDT",
     "XNY-USDT",
     "XPIN-USDT",
@@ -484,7 +485,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 483,
-  "updated_at": "2025-09-13T08:41:46.914191",
+  "count": 484,
+  "updated_at": "2025-09-13T15:13:00.744718",
   "source": "BingX Futures API"
 }
