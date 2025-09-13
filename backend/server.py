@@ -7877,6 +7877,28 @@ async def check_our_ip():
             "message": "Could not determine our IP address"
         }
 
+@api_router.get("/debug-anti-doublon")
+async def debug_anti_doublon():
+    """🔍 DEBUG - Voir état du cache anti-doublon"""
+    global GLOBAL_ANALYZED_SYMBOLS_CACHE
+    return {
+        "cache_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+        "cached_symbols": list(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+        "message": f"Cache contient {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)} symboles"
+    }
+
+@api_router.post("/clear-anti-doublon-cache")
+async def clear_anti_doublon_cache():
+    """🧹 CLEAR - Vider le cache anti-doublon"""
+    global GLOBAL_ANALYZED_SYMBOLS_CACHE
+    old_size = len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+    GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
+    return {
+        "success": True,
+        "message": f"Cache anti-doublon vidé ({old_size} symboles supprimés)",
+        "new_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+    }
+
 @api_router.post("/force-scout-refresh")
 async def force_scout_refresh():
     """🔄 FORCE SCOUT REFRESH - Force refresh of BingX scout filtering"""
