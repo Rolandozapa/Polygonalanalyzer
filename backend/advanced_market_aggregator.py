@@ -1320,11 +1320,14 @@ class AdvancedMarketAggregator:
                             real_price = float(ohlcv_data['close'].iloc[-1])
                             
                         # Calculer les statistiques basiques
-                        volume_24h = float(ohlcv_data['volume'].iloc[-1]) if not ohlcv_data.empty else 1000000.0
+                        volume_24h = 1000000.0  # Default volume
                         price_change_24h = 0.02  # Default 2%
-                        if len(ohlcv_data) >= 2:
-                            prev_close = float(ohlcv_data['close'].iloc[-2])
-                            price_change_24h = (real_price - prev_close) / prev_close
+                        
+                        if ohlcv_data is not None and not ohlcv_data.empty:
+                            volume_24h = float(ohlcv_data['volume'].iloc[-1])
+                            if len(ohlcv_data) >= 2:
+                                prev_close = float(ohlcv_data['close'].iloc[-2])
+                                price_change_24h = (real_price - prev_close) / prev_close
                             
                     except Exception as e:
                         logger.debug(f"Could not fetch OHLCV for {symbol}: {e}")
