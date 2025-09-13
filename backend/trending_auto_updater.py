@@ -157,9 +157,9 @@ class TrendingAutoUpdater:
             return final_trending[:50]  # Top 50 après filtrage
             
         except Exception as e:
-            logger.error(f"❌ Error fetching BingX trending cryptos: {e}")
-            # Emergency fallback
-            return await self._create_fallback_cryptos()
+            logger.error(f"❌ SCOUT ERROR: Failed to fetch BingX trending cryptos: {e}")
+            # Pas de fallback d'urgence - retourner vide si échec total
+            return []
     
     async def _fetch_bingx_api_data(self) -> List[TrendingCrypto]:
         """Fetch trending data from BingX API"""
