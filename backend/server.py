@@ -2893,13 +2893,21 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "quality": "error"
             }
 
-    async def _get_enhanced_historical_data(self, symbol: str, days: int = 100) -> Optional[pd.DataFrame]:
-        """Get enhanced historical data using improved OHLCV fetcher - VRAIES données seulement avec plus d'historique"""
+    async def _get_enhanced_historical_data(self, symbol: str, days: int = 28) -> Optional[pd.DataFrame]:
+        """Get enhanced historical data using improved OHLCV fetcher - 4 semaines pour analyse technique IA1"""
         try:
-            logger.info(f"🔍 Fetching enhanced OHLCV data for {symbol} using improved multi-source fetcher")
+            logger.info(f"🔍 Fetching IA1 OHLCV data for {symbol} ({days} jours pour analyse technique)")
             
-            # Use the enhanced OHLCV fetcher with more historical data for better MACD
-            real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
+            # Créer une instance temporaire avec le bon nombre de jours
+            original_lookback = enhanced_ohlcv_fetcher.lookback_days
+            enhanced_ohlcv_fetcher.lookback_days = days
+            
+            try:
+                # Use the enhanced OHLCV fetcher avec 4 semaines pour IA1
+                real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
+            finally:
+                # Restaurer la valeur originale
+                enhanced_ohlcv_fetcher.lookback_days = original_lookback
             
             if real_data is not None and len(real_data) >= 100:  # Minimum for stable MACD calculation
                 logger.info(f"✅ IA1 using ENHANCED MULTI-SOURCE OHLCV data for {symbol}: {len(real_data)} days")
