@@ -5521,6 +5521,54 @@ async def get_scout_status():
         return {"error": str(e)}
 
 
+@app.get("/api/test-escalation-logic")
+async def test_escalation_logic():
+    """Test escalation logic with different scenarios"""
+    test_scenarios = [
+        {"name": "LOGIQUE 1 - Valid", "signal": "long", "confidence": 0.75, "rr": 2.5, "should_escalate": True},
+        {"name": "LOGIQUE 1 - Invalid (Low RR)", "signal": "long", "confidence": 0.75, "rr": 1.5, "should_escalate": False},
+        {"name": "LOGIQUE 1 - Invalid (Low Confidence)", "signal": "long", "confidence": 0.65, "rr": 2.5, "should_escalate": False},
+        {"name": "LOGIQUE 2 - Valid", "signal": "short", "confidence": 0.96, "rr": 1.0, "should_escalate": True},
+        {"name": "LOGIQUE 2 - Invalid", "signal": "short", "confidence": 0.94, "rr": 1.0, "should_escalate": False},
+        {"name": "HOLD - Never escalates", "signal": "hold", "confidence": 0.99, "rr": 3.0, "should_escalate": False},
+    ]
+    
+    results = []
+    for scenario in test_scenarios:
+        # Create mock analysis
+        mock_analysis = TechnicalAnalysis(
+            symbol="TEST",
+            rsi=50, macd_signal=0, stochastic=50, bollinger_position=0,
+            fibonacci_level=0.5, support_levels=[100], resistance_levels=[110],
+            patterns_detected=["test"], analysis_confidence=scenario["confidence"],
+            ia1_signal=scenario["signal"], ia1_reasoning="Test analysis",
+            market_sentiment="neutral", data_sources=["test"],
+            risk_reward_ratio=scenario["rr"], entry_price=100, stop_loss_price=95, take_profit_price=105
+        )
+        
+        # Create mock opportunity
+        mock_opportunity = MarketOpportunity(
+            symbol="TEST", current_price=100, volume_24h=1000000, price_change_24h=0,
+            volatility=0.05, market_cap=1000000, market_cap_rank=1, data_sources=["test"],
+            data_confidence=0.8, timestamp=datetime.now(timezone.utc)
+        )
+        
+        # Test escalation logic
+        should_escalate = orchestrator._should_send_to_ia2(mock_analysis, mock_opportunity)
+        
+        results.append({
+            "scenario": scenario["name"],
+            "signal": scenario["signal"],
+            "confidence": f"{scenario['confidence']:.1%}",
+            "rr": f"{scenario['rr']:.1f}:1",
+            "expected": scenario["should_escalate"],
+            "actual": should_escalate,
+            "status": "✅ PASS" if should_escalate == scenario["should_escalate"] else "❌ FAIL"
+        })
+    
+    return {"escalation_logic_test": results}
+
+
 @app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
     """Get current market opportunities - now using fresh BingX trending data"""
