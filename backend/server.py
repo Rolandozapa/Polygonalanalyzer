@@ -8220,6 +8220,16 @@ class UltraProfessionalOrchestrator:
                         logger.debug(f"⏭️ Skipping fallback opportunity: {opportunity.symbol}")
                         continue
                     
+                    # 🚨 DOUBLE VÉRIFICATION ANTI-DOUBLON avant analyse
+                    recent_check = await db.technical_analyses.find_one({
+                        "symbol": opportunity.symbol,
+                        "timestamp": {"$gte": get_paris_time() - timedelta(minutes=30)}
+                    })
+                    
+                    if recent_check:
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - analyzed {(get_paris_time() - recent_check['timestamp']).total_seconds():.0f}s ago")
+                        continue
+                    
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
                     
                     analysis = await self.ia1.analyze_opportunity(opportunity)
