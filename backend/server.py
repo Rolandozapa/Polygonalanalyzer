@@ -2386,29 +2386,40 @@ class UltraProfessionalIA1TechnicalAnalyst:
             if not historical_data.empty and len(historical_data) >= 20:
                 try:
                     # RSI (14 périodes)
-                    if 'close' in historical_data.columns:
-                        rsi = self._calculate_rsi(historical_data['close'])
+                    # 🔧 FIX: Handle both 'Close' and 'close' column names
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
+                    if close_col:
+                        rsi = self._calculate_rsi(historical_data[close_col])
                         logger.info(f"   ✅ RSI calculé: {rsi:.2f}")
                     
                     # MACD (12, 26, 9)
-                    if 'close' in historical_data.columns:
-                        macd_data = self._calculate_macd(historical_data['close'])
+                    # 🔧 FIX: Handle both 'Close' and 'close' column names
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
+                    if close_col:
+                        macd_data = self._calculate_macd(historical_data[close_col])
                         if macd_data:
                             macd_signal = macd_data.get('signal', 0.0)
                             macd_histogram = macd_data.get('histogram', 0.0)
                             logger.info(f"   ✅ MACD calculé: Signal={macd_signal:.6f}, Histogram={macd_histogram:.6f}")
                     
                     # Stochastic (14, 3, 3)
-                    if 'high' in historical_data.columns and 'low' in historical_data.columns and 'close' in historical_data.columns:
-                        stoch_data = self._calculate_stochastic(historical_data['high'], historical_data['low'], historical_data['close'])
+                    # 🔧 FIX: Handle column name variations
+                    high_col = 'High' if 'High' in historical_data.columns else 'high' if 'high' in historical_data.columns else None
+                    low_col = 'Low' if 'Low' in historical_data.columns else 'low' if 'low' in historical_data.columns else None
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
+                    
+                    if high_col and low_col and close_col:
+                        stoch_data = self._calculate_stochastic(historical_data[high_col], historical_data[low_col], historical_data[close_col])
                         if stoch_data:
                             stochastic_k = stoch_data.get('k', 50.0)
                             stochastic_d = stoch_data.get('d', 50.0)
                             logger.info(f"   ✅ Stochastic calculé: K={stochastic_k:.2f}, D={stochastic_d:.2f}")
                     
                     # Bollinger Bands position
-                    if 'close' in historical_data.columns:
-                        bb_data = self._calculate_bollinger_position(historical_data['close'])
+                    # 🔧 FIX: Handle both 'Close' and 'close' column names
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
+                    if close_col:
+                        bb_data = self._calculate_bollinger_position(historical_data[close_col])
                         if bb_data:
                             bb_position = bb_data.get('position', 0.0)
                             logger.info(f"   ✅ Bollinger position calculée: {bb_position:.4f}")
