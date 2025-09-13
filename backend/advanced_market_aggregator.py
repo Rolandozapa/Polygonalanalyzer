@@ -1280,7 +1280,7 @@ class AdvancedMarketAggregator:
             cache_key = "current_opportunities"
             
             if (cache_key in self.cache and 
-                current_time - self.cache[cache_key].get('timestamp', 0) < self.cache_ttl):
+                current_time_timestamp - self.cache[cache_key].get('timestamp', 0) < self.cache_ttl):
                 cached_opportunities = self.cache[cache_key]['data']
                 logger.info(f"✅ CACHE HIT: Returning {len(cached_opportunities)} cached opportunities")
                 return cached_opportunities
