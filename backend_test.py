@@ -1,46 +1,59 @@
 #!/usr/bin/env python3
 """
-IA1 TO IA2 ESCALATION SYSTEM TEST SUITE
-Focus: Test IA1 to IA2 Escalation System - COMPREHENSIVE VALIDATION
+IA1 TECHNICAL INDICATORS FIX TEST SUITE
+Focus: Test IA1 Technical Indicators Fix - COMPREHENSIVE VALIDATION
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **Escalation Logic Validation**: Test the 3 voies escalation system:
-   - VOIE 1: LONG/SHORT signals with confidence ≥ 70%
-   - VOIE 2: Risk-Reward ratio ≥ 2.0 (any signal)  
-   - VOIE 3: LONG/SHORT signals with confidence ≥ 95% (override)
+1. **Technical Indicators Calculation**: Test the `/api/run-ia1-cycle` endpoint to ensure technical indicators are showing calculated values instead of defaults:
+   - RSI should show real values (not 50.0)
+   - MACD should show real values (not 0.0) 
+   - Stochastic should show real values (not 50.0)
+   - MFI should show real values (not 50.0)
+   - VWAP should show real values (not 0.0)
+   - Advanced indicators like mfi_signal, vwap_signal should show meaningful values (not "neutral")
 
-2. **End-to-End Escalation Flow**: Verify complete pipeline from IA1 → IA2 → Decision storage
+2. **Error Handling Robustness**: Test that even when there are technical errors during analysis, the calculated indicators are preserved instead of falling back to defaults.
 
-3. **Database Integration**: Check that IA2 decisions are properly saved when escalation occurs
+3. **IA1 to IA2 Escalation**: Test if the system can now properly escalate to IA2 based on real technical indicators:
+   - Risk-reward ratios should be calculated based on real data
+   - Confidence levels should reflect actual market conditions
+   - Escalation criteria should work with real indicators
+
+4. **Data Consistency**: Verify that the technical indicators in the API response match what's being calculated and logged in the backend.
 
 SPECIFIC TESTING SCENARIOS:
-1. **API Endpoint Testing**:
-   - Test /api/run-ia1-cycle for automatic escalation
-   - Check escalation response fields: escalated_to_ia2, ia2_decision
-   - Verify /api/decisions shows new IA2 decisions after escalation
+1. **Technical Indicators Validation**:
+   - Test /api/run-ia1-cycle for real technical indicator values
+   - Verify RSI values are not default 50.0
+   - Verify MACD values are not default 0.0
+   - Verify Stochastic values are not default 50.0
+   - Verify MFI values are not default 50.0
+   - Verify VWAP values are not default 0.0
+   - Check advanced signals are not "neutral"
 
-2. **Escalation Criteria Validation**:
-   - Test analyses with confidence 70%+ and LONG/SHORT signals → VOIE 1
-   - Test analyses with RR ≥ 2.0 regardless of signal → VOIE 2  
-   - Test analyses with confidence 95%+ and LONG/SHORT signals → VOIE 3
+2. **Error Handling Robustness**:
+   - Test that calculated indicators are preserved during fallback scenarios
+   - Verify no loss of technical data during error conditions
+   - Check that real indicators override defaults even with errors
 
-3. **Error Resolution Check**:
-   - Verify fixed "advanced_market_aggregator" import error
-   - Check that IA2 escalation completes without errors
-   - Validate performance stats are properly retrieved
+3. **IA1 to IA2 Escalation with Real Indicators**:
+   - Test escalation with real technical indicators
+   - Verify confidence levels reflect real market conditions
+   - Check risk-reward calculations use real data
 
 ENDPOINTS TO TEST:
-- POST /api/run-ia1-cycle for automatic escalation testing
-- GET /api/decisions to verify IA2 decisions are stored
-- GET /api/analyses to check IA1 analyses with escalation flags
-- Monitor logs for escalation flow and error resolution
+- POST /api/run-ia1-cycle for technical indicators testing
+- GET /api/decisions to verify decisions based on real indicators
+- GET /api/analyses to check technical indicators in stored analyses
+- Monitor logs for technical indicators calculation and error handling
 
 SUCCESS CRITERIA:
-✅ _should_send_to_ia2 function correctly identifies eligible analyses
-✅ Escalation occurs for analyses meeting any of the 3 voies criteria
-✅ IA2 make_decision method executes successfully after escalation
-✅ New IA2 decisions appear in database after successful escalation
-✅ No more "cannot access local variable" errors in escalation flow
+✅ Technical indicators show real calculated values instead of defaults
+✅ RSI, MACD, Stochastic, MFI, VWAP show meaningful non-default values
+✅ Advanced signals (mfi_signal, vwap_signal) show calculated values not "neutral"
+✅ Error handling preserves calculated indicators during fallback scenarios
+✅ IA1 to IA2 escalation works with real technical indicators
+✅ Data consistency between API response and backend calculations
 """
 
 import asyncio
