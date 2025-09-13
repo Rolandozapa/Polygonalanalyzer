@@ -2880,6 +2880,15 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     
                     logger.info(f"🔥 FALLBACK WITH CALCULATED INDICATORS for {opportunity.symbol}: RSI={fallback_rsi:.1f}, MFI={fallback_mfi:.1f}, VWAP={fallback_vwap_pos:+.2f}%")
                     
+                    # 🚨 CRITICAL FIX: Handle confidence format properly
+                    raw_confidence = float(ia1_complete_json.get('confidence', 70))
+                    if raw_confidence > 1.0:
+                        # IA1 sent percentage format (70) - convert to decimal
+                        fallback_confidence = raw_confidence / 100.0
+                    else:
+                        # IA1 sent decimal format (0.7) - use as is
+                        fallback_confidence = raw_confidence
+                    
                     # Utiliser l'analyse IA1 même avec erreur technique
                     fallback_analysis = TechnicalAnalysis(
                         symbol=opportunity.symbol,
