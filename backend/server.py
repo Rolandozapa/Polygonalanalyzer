@@ -2783,10 +2783,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
                 # 🚨 AJOUTER LES VRAIS INDICATEURS TECHNIQUES CALCULÉS
                 "rsi": rsi,
-                "macd_signal": macd_signal,
+                "macd_signal": macd_signal,  
                 "stochastic": stochastic_k,
                 "stochastic_d": stochastic_d,
-                "bollinger_position": bb_position
+                "bollinger_position": bb_position,
+                # 🚀 CRITICAL FIX: Add calculated signals for RSI, MACD, Stochastic
+                "rsi_signal": ('extreme_overbought' if rsi > 90 else 'overbought' if rsi > 70 else 'extreme_oversold' if rsi < 10 else 'oversold' if rsi < 30 else 'neutral'),
+                "macd_trend": ('strong_bullish' if macd_signal > 0.1 else 'bullish' if macd_signal > 0 else 'strong_bearish' if macd_signal < -0.1 else 'bearish' if macd_signal < 0 else 'neutral'),
+                "stochastic_signal": ('extreme_overbought' if stochastic_k > 90 else 'overbought' if stochastic_k > 80 else 'extreme_oversold' if stochastic_k < 10 else 'oversold' if stochastic_k < 20 else 'neutral')
             })
             
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
