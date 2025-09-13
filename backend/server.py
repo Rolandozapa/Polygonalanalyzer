@@ -1759,9 +1759,9 @@ class UltraProfessionalIA1TechnicalAnalyst:
         try:
             logger.info(f"🔍 MULTI-SOURCE CHECK: Validation données pour {opportunity.symbol}...")
             
-            # NOUVEAU: Filtrage micro-prix pour éviter erreurs de calcul
-            if opportunity.current_price < 0.0001:  # Moins de 0.01 cent
-                logger.warning(f"⚠️ MICRO-PRIX DÉTECTÉ: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
+            # 🚨 MICRO-PRIX AJUSTÉ: Permettre FLOKI et tokens similaires
+            if opportunity.current_price < 0.00001:  # Moins de 0.001 cent (FLOKI OK à ~0.0001)
+                logger.warning(f"⚠️ MICRO-PRIX EXTRÊME: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
                 return None
             
             # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
