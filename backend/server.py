@@ -8227,7 +8227,13 @@ class UltraProfessionalOrchestrator:
                         logger.debug(f"⏭️ Skipping fallback opportunity: {opportunity.symbol}")
                         continue
                     
-                    # 🚨 DOUBLE VÉRIFICATION ANTI-DOUBLON avant analyse
+                    # 🚨 TRIPLE VÉRIFICATION ANTI-DOUBLON
+                    # 1. Vérification mémoire (plus rapide)
+                    if opportunity.symbol in self.recent_analyzed_symbols:
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - dans le cache mémoire anti-doublon")
+                        continue
+                    
+                    # 2. Vérification base de données
                     recent_check = await db.technical_analyses.find_one({
                         "symbol": opportunity.symbol,
                         "timestamp": {"$gte": get_paris_time() - timedelta(minutes=30)}
@@ -8235,6 +8241,7 @@ class UltraProfessionalOrchestrator:
                     
                     if recent_check:
                         logger.info(f"⏭️ SKIP {opportunity.symbol} - analyzed {(get_paris_time() - recent_check['timestamp']).total_seconds():.0f}s ago")
+                        self.recent_analyzed_symbols.add(opportunity.symbol)  # Ajouter au cache mémoire
                         continue
                     
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
