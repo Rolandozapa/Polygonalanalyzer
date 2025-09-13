@@ -2590,6 +2590,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Cap RR pour éviter valeurs aberrantes mais permettre RR élevés réalistes
             ia1_risk_reward_ratio = min(max(ia1_risk_reward_ratio, 0.1), 20.0)
 
+            # 🚨 MISE À JOUR REASONING avec les vrais prix calculés
+            if "Target: [Calculating...]" in reasoning:
+                reasoning = reasoning.replace("Target: [Calculating...]", f"Target: ${take_profit_price:.6f}")
+
             # Construire l'analyse technique temporaire pour la validation
             temp_analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
