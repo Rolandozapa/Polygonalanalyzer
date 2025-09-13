@@ -161,6 +161,61 @@ class TrendingAutoUpdater:
             # Pas de fallback d'urgence - retourner vide si échec total
             return []
     
+    def get_cached_or_fetch_sync(self) -> List[TrendingCrypto]:
+        """
+        🔄 Méthode SYNCHRONE pour récupérer les cryptos trending
+        Vérifie le cache d'abord, sinon lance une tâche async dans un nouveau thread
+        """
+        try:
+            # Vérifier si nous avons des données fraîches en cache
+            current_time = datetime.now(timezone.utc)
+            data_is_fresh = False
+            
+            if self.last_update and self.current_trending:
+                if isinstance(self.last_update, datetime):
+                    last_update = self.last_update
+                    if last_update.tzinfo is None:
+                        last_update = last_update.replace(tzinfo=timezone.utc)
+                    data_is_fresh = (current_time - last_update).total_seconds() < 14400  # 4 heures
+                elif isinstance(self.last_update, (int, float)):
+                    last_update = datetime.fromtimestamp(self.last_update, tz=timezone.utc)
+                    data_is_fresh = (current_time - last_update).total_seconds() < 14400
+            
+            if data_is_fresh and self.current_trending:
+                logger.info(f"🔥 SYNC CACHE HIT: Using {len(self.current_trending)} cached BingX cryptos")
+                return self.current_trending
+            
+            # Pas de données fraîches, utiliser un thread pour éviter les problèmes d'event loop
+            logger.info("🔄 SYNC FETCH: Getting fresh BingX data in thread...")
+            import threading
+            import concurrent.futures
+            
+            def fetch_in_thread():
+                # Nouveau event loop dans le thread
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
+                try:
+                    return new_loop.run_until_complete(self.fetch_trending_cryptos())
+                finally:
+                    new_loop.close()
+            
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(fetch_in_thread)
+                filtered_cryptos = future.result(timeout=30)  # 30 secondes max
+            
+            if filtered_cryptos:
+                self.current_trending = filtered_cryptos
+                self.last_update = current_time
+                logger.info(f"✅ SYNC SUCCESS: {len(filtered_cryptos)} BingX cryptos fetched")
+                return filtered_cryptos
+            else:
+                logger.error("❌ SYNC FAILED: No cryptos from BingX")
+                return []
+                
+        except Exception as e:
+            logger.error(f"❌ SYNC ERROR: {e}")
+            return []
+    
     async def _fetch_bingx_api_data(self) -> List[TrendingCrypto]:
         """Fetch trending data from BingX API"""
         try:
