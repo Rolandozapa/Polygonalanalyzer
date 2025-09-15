@@ -2388,7 +2388,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             4. Justify confidence level considering timeframe hierarchy
             """
             
-            response = await self.chat.send_message(UserMessage(text=prompt))
+            # Process the prompt with chunking support
+            chunks = self._chunk_prompt_for_llm(prompt)
+            response = await self._process_chunked_analysis(chunks, opportunity.symbol)
             logger.info(f"🤖 IA1 raw response for {opportunity.symbol}: {len(response)} chars - {response[:200]}...")
             
             # 🚀 APPROCHE DIRECTE: Utiliser le JSON IA1 complet et l'enrichir avec Multi-RR
