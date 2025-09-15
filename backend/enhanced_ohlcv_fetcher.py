@@ -598,9 +598,12 @@ class EnhancedOHLCVFetcher:
             # Convert to Yahoo format
             yahoo_symbol = symbol.replace('USDT', '-USD')
             
-            # Use yfinance to get data
-            ticker = yf.Ticker(yahoo_symbol)
-            hist = ticker.history(period=f"{self.lookback_days}d")
+            # 🚨 CRITICAL FIX: Utiliser async context pour éviter multiprocessing conflicts
+            loop = asyncio.get_event_loop()
+            with ThreadPoolExecutor(max_workers=1) as temp_pool:
+                # Use yfinance to get data in separate thread
+                ticker = await loop.run_in_executor(temp_pool, yf.Ticker, yahoo_symbol)
+                hist = await loop.run_in_executor(temp_pool, lambda: ticker.history(period=f"{self.lookback_days}d"))
             
             if len(hist) > 5:  # Reduced minimum threshold 
                 # Convert to our standard format
