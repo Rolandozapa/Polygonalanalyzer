@@ -8843,6 +8843,82 @@ class UltraProfessionalOrchestrator:
             logger.error(f"❌ Trading cycle error: {e}")
             return 0
     
+    def _calculate_enhanced_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
+                                                   sma50_vs_price: float, market_cap_24h: float, primary_signal: str,
+                                                   dune_data=None) -> float:
+        """
+        🔮 ENHANCED INSTITUTIONAL VALIDATION with Dune Analytics
+        Combines traditional indicators (MFI, VWAP, SMA50) with on-chain validation data
+        """
+        try:
+            # Start with base traditional validation
+            base_score = self._calculate_institutional_validation(
+                mfi, vwap_position, vwap_price, sma50_vs_price, market_cap_24h, primary_signal
+            )
+            
+            # If no Dune data, return base score
+            if not dune_data:
+                return base_score
+            
+            # 🔮 DUNE ANALYTICS ENHANCEMENT (up to +20 points)
+            dune_bonus = 0.0
+            
+            # 1️⃣ DEX Volume Validation (5 points max)
+            if dune_data.dex_volume_24h > 1000000:  # >$1M DEX volume
+                dune_bonus += 5.0
+            elif dune_data.dex_volume_24h > 100000:  # >$100K DEX volume
+                dune_bonus += 3.0
+            elif dune_data.dex_volume_24h > 10000:   # >$10K DEX volume
+                dune_bonus += 1.0
+            
+            # 2️⃣ Liquidity Health (5 points max)
+            if dune_data.liquidity_score > 80:
+                dune_bonus += 5.0
+            elif dune_data.liquidity_score > 60:
+                dune_bonus += 3.0
+            elif dune_data.liquidity_score > 40:
+                dune_bonus += 1.0
+            
+            # 3️⃣ Institutional Flow Alignment (5 points max)
+            if dune_data.institutional_flow == "large_inflow" and primary_signal == "long":
+                dune_bonus += 5.0  # Perfect alignment
+            elif dune_data.institutional_flow == "large_outflow" and primary_signal == "short":
+                dune_bonus += 5.0  # Perfect alignment
+            elif dune_data.institutional_flow == "neutral":
+                dune_bonus += 2.0  # Neutral is OK
+            else:
+                dune_bonus -= 2.0  # Flow against signal = penalty
+            
+            # 4️⃣ Price Impact Health (3 points max)
+            if dune_data.price_impact_1k < 0.5:  # Very low price impact = high liquidity
+                dune_bonus += 3.0
+            elif dune_data.price_impact_1k < 1.0:  # Moderate price impact
+                dune_bonus += 1.0
+            
+            # 5️⃣ Volume Trend (2 points max)  
+            if abs(dune_data.volume_trend_7d) > 20:  # Strong volume trend
+                if (dune_data.volume_trend_7d > 0 and primary_signal == "long") or \
+                   (dune_data.volume_trend_7d < 0 and primary_signal == "short"):
+                    dune_bonus += 2.0
+                else:
+                    dune_bonus -= 1.0
+            
+            # Final enhanced score
+            enhanced_score = base_score + dune_bonus
+            enhanced_score = max(0.0, min(100.0, enhanced_score))  # Clamp to 0-100
+            
+            logger.info(f"🔮 Dune Enhancement for validation: Base={base_score:.1f} + Dune={dune_bonus:+.1f} = {enhanced_score:.1f}")
+            
+            return enhanced_score
+            
+        except Exception as e:
+            logger.error(f"❌ Error in enhanced institutional validation: {e}")
+            # Fallback to base validation if Dune enhancement fails
+            return self._calculate_institutional_validation(
+                mfi, vwap_position, vwap_price, sma50_vs_price, market_cap_24h, primary_signal
+            )
+
+
     def _calculate_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
                                            sma50_vs_price: float, market_cap_24h: float, primary_signal: str) -> float:
         """
