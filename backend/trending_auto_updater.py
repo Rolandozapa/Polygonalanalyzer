@@ -207,9 +207,22 @@ class TrendingAutoUpdater:
                     logger.info(f"✅ CACHE HIT: Using cached trending data ({time_since_update:.0f}s old)")
                     return self.current_trending
             
-            # Si pas de cache valide, retourner empty et laisser l'async loop s'en occuper
-            logger.warning("📦 NO CACHE: Returning empty list - async loop will update")
-            return []
+            # Si pas de cache valide, faire un appel immédiat simple
+            logger.warning("📦 NO CACHE: Attempting immediate simple fetch")
+            try:
+                # Appel direct sans ThreadPoolExecutor pour éviter les conflits
+                filtered_cryptos = self.fetch_trending_cryptos()
+                if filtered_cryptos:
+                    self.current_trending = filtered_cryptos[:50]  # Top 50
+                    self.last_update = current_time
+                    logger.info(f"✅ IMMEDIATE FETCH: Got {len(self.current_trending)} trending cryptos")
+                    return self.current_trending
+                else:
+                    logger.warning("❌ IMMEDIATE FETCH: No data returned")
+                    return []
+            except Exception as e:
+                logger.error(f"❌ IMMEDIATE FETCH ERROR: {e}")
+                return []
                 
         except Exception as e:
             logger.error(f"❌ SYNC ERROR: {e}")
