@@ -597,6 +597,135 @@ class EnhancedOHLCVFetcher:
             logger.debug(f"Error parsing CoinAPI data for {symbol}: {e}")
             return None
     
+    def _parse_bingx_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse BingX klines data"""
+        try:
+            if not data or 'data' not in data or not data['data']:
+                return None
+                
+            records = []
+            for item in data['data']:
+                # BingX format: [timestamp, open, high, low, close, volume]
+                records.append({
+                    'timestamp': pd.to_datetime(int(item[0]), unit='ms'),
+                    'Open': float(item[1]),
+                    'High': float(item[2]),
+                    'Low': float(item[3]),
+                    'Close': float(item[4]),
+                    'Volume': float(item[5])
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing BingX data for {symbol}: {e}")
+            return None
+    
+    def _parse_coindesk_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CoinDesk Data API response"""
+        try:
+            if not data or 'entries' not in data:
+                return None
+                
+            entries = data['entries']
+            if not entries:
+                return None
+            
+            records = []
+            for entry in entries:
+                # CoinDesk format varies, adapt based on actual response
+                timestamp = pd.to_datetime(entry.get('timestamp', entry.get('date')))
+                
+                # Handle OHLC data
+                if 'ohlc' in entry:
+                    ohlc = entry['ohlc']
+                    records.append({
+                        'timestamp': timestamp,
+                        'Open': float(ohlc.get('o', ohlc.get('open', 0))),
+                        'High': float(ohlc.get('h', ohlc.get('high', 0))),
+                        'Low': float(ohlc.get('l', ohlc.get('low', 0))),
+                        'Close': float(ohlc.get('c', ohlc.get('close', 0))),
+                        'Volume': float(entry.get('volume', 1000000))
+                    })
+                elif 'price' in entry:
+                    # If only price data is available
+                    price = float(entry['price'])
+                    records.append({
+                        'timestamp': timestamp,
+                        'Open': price,
+                        'High': price,
+                        'Low': price,
+                        'Close': price,
+                        'Volume': 1000000  # Synthetic volume
+                    })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CoinDesk data for {symbol}: {e}")
+            return None
+    
+    def _parse_kraken_data(self, data: Dict, symbol: str, kraken_symbol: str) -> Optional[pd.DataFrame]:
+        """Parse Kraken OHLC data"""
+        try:
+            if not data or 'result' not in data:
+                return None
+                
+            result = data['result']
+            if kraken_symbol not in result:
+                # Try to find the symbol in result keys
+                possible_keys = [k for k in result.keys() if k != 'last']
+                if not possible_keys:
+                    return None
+                kraken_symbol = possible_keys[0]
+            
+            ohlc_data = result[kraken_symbol]
+            if not ohlc_data:
+                return None
+            
+            records = []
+            for item in ohlc_data:
+                # Kraken format: [timestamp, open, high, low, close, vwap, volume, count]
+                records.append({
+                    'timestamp': pd.to_datetime(float(item[0]), unit='s'),
+                    'Open': float(item[1]),
+                    'High': float(item[2]),
+                    'Low': float(item[3]),
+                    'Close': float(item[4]),
+                    'Volume': float(item[6])
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            # Only return recent data (limit to lookback_days)
+            if len(df) > self.lookback_days:
+                df = df.tail(self.lookback_days)
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing Kraken data for {symbol}: {e}")
+            return None
+    
     async def _fetch_historical_fallback_data(self, normalized_symbol: str, original_symbol: str) -> Optional[pd.DataFrame]:
         """
         FALLBACK SYSTEM: Try specialized historical data APIs when primary sources fail
