@@ -133,7 +133,7 @@ class EnhancedOHLCVFetcher:
             for tf_name, config in timeframes_config.items():
                 try:
                     tf_data = config['data']
-                    if len(tf_data) >= 20:  # Minimum pour calculs
+                    if len(tf_data) >= 5:  # Reduced minimum for flexibility
                         multi_tf_data[tf_name] = tf_data
                         logger.info(f"✅ {tf_name}: {len(tf_data)} points ({config['description']})")
                     else:
