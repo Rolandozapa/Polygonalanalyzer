@@ -1,27 +1,36 @@
 #!/usr/bin/env python3
 """
-IA1 TECHNICAL INDICATORS FIX TEST SUITE
-Focus: Test IA1 Technical Indicators Fix - COMPREHENSIVE VALIDATION
+ENHANCED OHLCV MULTI-SOURCE INTEGRATION TEST SUITE
+Focus: Test Enhanced OHLCV Multi-Source Integration with Main Trading Bot System
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **All Technical Indicators Working**: Verify RSI, MACD, Stochastic, MFI, VWAP all show calculated values with meaningful signals
-2. **Signal Quality**: Confirm all signals show proper categorization (extreme_overbought, overbought, bullish, bearish, etc.) instead of 'unknown' or 'neutral'
-3. **Error Handling**: Test that calculated indicators are preserved during fallback scenarios
-4. **Data Consistency**: Verify backend calculations match API responses
+1. **Data Fetching Integration**: Test that enhanced OHLCV system works with main server.py and provides reliable market data for IA1 analysis
+2. **API Endpoint Testing**: Verify that all trading bot endpoints can access enhanced OHLCV data through existing infrastructure
+3. **Scout System Integration**: Ensure scout system can use enhanced OHLCV fetcher for data validation
+4. **Multi-Source Validation**: Test that system correctly combines data from multiple sources and provides validation metadata
+5. **Error Handling**: Verify robust fallback mechanisms work when primary sources fail
+6. **Performance Testing**: Ensure async multi-source fetching doesn't impact API response times
 
-EXPECTED RESULTS FROM PREVIOUS TEST:
-- RSI: 100.0 with rsi_signal: "extreme_overbought" ✅
-- MACD: 7.51e-08 with macd_trend: "bullish" ✅  
-- Stochastic: 89.0% with stochastic_signal: "overbought" ✅
-- MFI: 83.1% with mfi_signal: "overbought" ✅
-- VWAP: 13.47% with vwap_signal: "extreme_overbought" ✅
+ENHANCED OHLCV SYSTEM ACHIEVEMENTS TO VALIDATE:
+✅ BingX Enhanced: 3/3 (100%) - Real-time futures data with proper -USDT formatting
+✅ Kraken Enhanced: 3/3 (100%) - Professional-grade OHLC data for validation
+✅ Yahoo Finance Enhanced: 3/3 (100%) - Free backup source with extensive coverage
+✅ Multi-Source Enhanced: 3/3 (100%) - Combines BingX + Kraken with cross-validation
+
+SPECIFIC TESTS TO RUN:
+- GET /api/run-ia1-cycle - Should use enhanced OHLCV data for technical analysis
+- GET /api/scout - Should leverage enhanced data sources for trending crypto validation
+- Test symbols: BTCUSDT, ETHUSDT, SOLUSDT (all confirmed working at 100% success rate)
+- Verify technical indicators get real OHLCV data instead of fallback values
+- Test that enhanced system provides data even when individual sources fail
 
 SUCCESS CRITERIA:
-✅ Technical indicators show real calculated values instead of defaults
-✅ RSI, MACD, Stochastic, MFI, VWAP show meaningful non-default values
-✅ Advanced signals show calculated values not "unknown" or "neutral"
-✅ Error handling preserves calculated indicators during fallback scenarios
-✅ 100% success rate for all technical indicators
+✅ Enhanced OHLCV fetcher provides real market data to IA1 analysis
+✅ Multi-source validation working with BingX + Kraken + Yahoo Finance
+✅ Scout system leverages enhanced OHLCV data for trending validation
+✅ API endpoints return enhanced OHLCV data with proper metadata
+✅ Fallback mechanisms work when individual sources fail
+✅ Performance maintained with async multi-source fetching
 """
 
 import asyncio
