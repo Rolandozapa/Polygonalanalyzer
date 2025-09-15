@@ -623,16 +623,20 @@ class EnhancedOHLCVFetcher:
             if not data or 'data' not in data or not data['data']:
                 return None
                 
+            klines_data = data['data']
+            if not klines_data:
+                return None
+                
             records = []
-            for item in data['data']:
+            for item in klines_data:
                 # BingX format: [timestamp, open, high, low, close, volume]
                 records.append({
-                    'timestamp': pd.to_datetime(int(item[0]), unit='ms'),
-                    'Open': float(item[1]),
-                    'High': float(item[2]),
-                    'Low': float(item[3]),
-                    'Close': float(item[4]),
-                    'Volume': float(item[5])
+                    'timestamp': pd.to_datetime(int(item['time']), unit='ms'),
+                    'Open': float(item['open']),
+                    'High': float(item['high']),
+                    'Low': float(item['low']),
+                    'Close': float(item['close']),
+                    'Volume': float(item['volume'])
                 })
             
             if not records:
@@ -646,6 +650,42 @@ class EnhancedOHLCVFetcher:
             
         except Exception as e:
             logger.debug(f"Error parsing BingX data for {symbol}: {e}")
+            return None
+    
+    def _parse_coindesk_bpi_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CoinDesk Bitcoin Price Index data"""
+        try:
+            if not data or 'bpi' not in data:
+                return None
+                
+            bpi_data = data['bpi']
+            if not bpi_data:
+                return None
+            
+            records = []
+            for date_str, price in bpi_data.items():
+                # BPI only provides closing prices, so we create synthetic OHLC
+                price_float = float(price)
+                records.append({
+                    'timestamp': pd.to_datetime(date_str),
+                    'Open': price_float,      # Same as close for BPI
+                    'High': price_float,      # Same as close for BPI
+                    'Low': price_float,       # Same as close for BPI
+                    'Close': price_float,
+                    'Volume': 1000000         # Synthetic volume
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CoinDesk BPI data for {symbol}: {e}")
             return None
     
     def _parse_coindesk_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
