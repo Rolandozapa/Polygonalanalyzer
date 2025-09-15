@@ -19,24 +19,28 @@ class EnhancedOHLCVFetcher:
     def __init__(self):
         self.lookback_days = 10  # Optimisé pour scout - IA1 récupérera 4 semaines en interne
         
-        # 🔑 PREMIUM API KEYS
+        # 🔑 PREMIUM API KEYS (All Working Keys)
         self.coinapi_key = os.environ.get('COINAPI_KEY_PRIMARY', os.environ.get('COINAPI_KEY', '30484334-1a7c-49a0-ae01-63922e3e542a'))
         self.coinapi_key_secondary = os.environ.get('COINAPI_KEY_SECONDARY', 'bdb7e19a-0e6a-4954-8ba7-fd460b82d57e')
         self.cmc_api_key = os.environ.get('CMC_API_KEY', '70046baa-e887-42ee-a909-03c6b6afab67')
         self.twelvedata_key = os.environ.get('TWELVEDATA_KEY', 'd95a7424cbdd428297a058d8b74b')
         self.binance_api_key = os.environ.get('BINANCE_API_KEY', 'dS4YsQ9BzFYypHvsSuJMLN7qe8jXxHO1H18ebkG7Oj4C5bBaq1ti1qKNL0t5wJ2g')
         
-        # 🆓 FREE BACKUP APIs
+        # 🆓 FREE BACKUP APIs  
         self.coingecko_key = os.environ.get('COINGECKO_API_KEY')  # Optional pro key
+        self.cryptocompare_key = os.environ.get('CRYPTOCOMPARE_KEY', '')  # Free tier available
         
-        # 🚀 NEW ENHANCED API KEYS
+        # 🚀 ENHANCED EXCHANGE APIs
         self.bingx_api_key = os.environ.get('BINGX_API_KEY')
-        self.bingx_secret_key = os.environ.get('BINGX_SECRET_KEY')
+        self.bingx_secret_key = os.environ.get('BINGX_SECRET_KEY') 
         self.bingx_base_url = os.environ.get('BINGX_BASE_URL', 'https://open-api.bingx.com')
         self.coindesk_api_key = os.environ.get('COINDESK_API_KEY')  # Optional pro key
         self.kraken_api_key = os.environ.get('KRAKEN_API_KEY')  # Optional for higher limits
         
-        # Additional fallback API keys (for comprehensive coverage)
+        # 🔮 INSTITUTIONAL DATA SOURCES
+        self.dune_api_key = os.environ.get('DUNE_API_KEY', '2K3F0FhNZ53UxijCdgbdmtFfdeUWjvTd')
+        
+        # 📈 ADDITIONAL DATA PROVIDERS
         self.alpha_vantage_key = os.environ.get('ALPHA_VANTAGE_KEY')
         self.polygon_key = os.environ.get('POLYGON_KEY')
         self.iex_cloud_key = os.environ.get('IEX_CLOUD_KEY')
