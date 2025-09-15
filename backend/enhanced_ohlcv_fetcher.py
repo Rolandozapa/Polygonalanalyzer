@@ -176,12 +176,13 @@ class EnhancedOHLCVFetcher:
         # Try multiple sources simultaneously for validation (prioritized order)
         sources = [
             ('BingX Enhanced', self._fetch_bingx_enhanced),
-            ('Binance Enhanced', self._fetch_binance_enhanced),
-            ('CoinDesk Enhanced', self._fetch_coindesk_enhanced),
-            ('Kraken Enhanced', self._fetch_kraken_enhanced),
-            ('CoinGecko Enhanced', self._fetch_coingecko_enhanced), 
+            ('CoinMarketCap DEX Enhanced', self._fetch_cmc_dex_enhanced),
             ('TwelveData Enhanced', self._fetch_twelvedata_enhanced),
             ('CoinAPI Enhanced', self._fetch_coinapi_enhanced),
+            ('Kraken Enhanced', self._fetch_kraken_enhanced),
+            ('Bitfinex Enhanced', self._fetch_bitfinex_enhanced),
+            ('CoinGecko Enhanced', self._fetch_coingecko_enhanced), 
+            ('CryptoCompare Enhanced', self._fetch_cryptocompare_enhanced),
             ('Yahoo Finance Enhanced', self._fetch_yahoo_enhanced)
         ]
         
