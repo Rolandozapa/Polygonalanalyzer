@@ -6069,6 +6069,27 @@ async def get_opportunities(limit: int = 50):
         logger.error(f"❌ Error getting filtered opportunities: {e}")
         return {"success": False, "error": str(e)}
 
+def sanitize_float_values(obj):
+    """
+    Recursively sanitize float values to prevent JSON serialization errors
+    Converts NaN, inf, -inf to safe values
+    """
+    import math
+    
+    if isinstance(obj, dict):
+        return {k: sanitize_float_values(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_float_values(item) for item in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj):
+            return 0.0  # Convert NaN to 0
+        elif math.isinf(obj):
+            return 999999999.0 if obj > 0 else -999999999.0  # Convert inf to large number
+        else:
+            return obj
+    else:
+        return obj
+
 @app.get("/api/analyses")
 async def get_analyses(limit: int = 50):
     """Get recent IA1 technical analyses"""
@@ -6078,6 +6099,9 @@ async def get_analyses(limit: int = 50):
         async for doc in cursor:
             # Convert MongoDB document to JSON-serializable format
             doc.pop('_id', None)  # Remove ObjectId
+            
+            # 🔧 CRITICAL FIX: Sanitize float values to prevent JSON errors
+            doc = sanitize_float_values(doc)
             
             # 🔧 CRITICAL FIX: Normalize timestamp format for proper sorting
             timestamp = doc.get('timestamp', '')
