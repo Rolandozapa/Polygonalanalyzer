@@ -43,15 +43,14 @@ class EnhancedOHLCVFetcher:
         
         # 🎯 MULTI-SOURCE PRIORITY ORDER (High→Low reliability)
         self.data_sources = [
-            {'name': 'BingX', 'priority': 10, 'method': self._fetch_bingx_ohlcv},
-            {'name': 'Binance', 'priority': 9, 'method': self._fetch_binance_ohlcv},  
-            {'name': 'CoinAPI', 'priority': 8, 'method': self._fetch_coinapi_ohlcv},
-            {'name': 'CoinMarketCap', 'priority': 7, 'method': self._fetch_cmc_ohlcv},
-            {'name': 'TwelveData', 'priority': 6, 'method': self._fetch_twelvedata_ohlcv},
-            {'name': 'CoinGecko', 'priority': 5, 'method': self._fetch_coingecko_ohlcv},
-            {'name': 'Yahoo', 'priority': 4, 'method': self._fetch_yahoo_ohlcv},
-            {'name': 'Bitfinex', 'priority': 3, 'method': self._fetch_bitfinex_ohlcv},
-            {'name': 'CryptoCompare', 'priority': 2, 'method': self._fetch_cryptocompare_ohlcv}
+            {'name': 'BingX', 'priority': 10, 'method': self._fetch_bingx_enhanced},
+            {'name': 'Binance', 'priority': 9, 'method': self._fetch_binance_enhanced},  
+            {'name': 'CoinDesk', 'priority': 8, 'method': self._fetch_coindesk_enhanced},
+            {'name': 'Kraken', 'priority': 7, 'method': self._fetch_kraken_enhanced},
+            {'name': 'CoinAPI', 'priority': 6, 'method': self._fetch_coinapi_enhanced},
+            {'name': 'TwelveData', 'priority': 5, 'method': self._fetch_twelvedata_enhanced},
+            {'name': 'CoinGecko', 'priority': 4, 'method': self._fetch_coingecko_enhanced},
+            {'name': 'Yahoo', 'priority': 3, 'method': self._fetch_yahoo_enhanced}
         ]
         
         # Enhanced symbol mapping for all exchanges
