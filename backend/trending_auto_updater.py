@@ -207,10 +207,10 @@ class TrendingAutoUpdater:
                     logger.info(f"✅ CACHE HIT: Using cached trending data ({time_since_update:.0f}s old)")
                     return self.current_trending
             
-            # Si pas de cache valide, retourner une liste basique pour éviter les blocages
+            # Si pas de cache valide, retourner une liste basique pour que le système continue à fonctionner
             logger.warning("📦 NO CACHE: Returning basic fallback list")
             # Retourner les TOP 50 symboles de base pour que le système continue à fonctionner
-            basic_cryptos = [
+            basic_symbols = [
                 'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 
                 'AVAXUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'LTCUSDT', 'BCHUSDT', 'UNIUSDT',
                 'ATOMUSDT', 'FILUSDT', 'APTUSDT', 'NEARUSDT', 'VETUSDT', 'ICPUSDT', 'HBARUSDT',
@@ -220,18 +220,21 @@ class TrendingAutoUpdater:
                 'ENJUSDT', 'BATUSDT', 'FLOWUSDT', 'KSMUSDT', 'ZRXUSDT', 'RENUSDT', 'LRCUSDT', '1INCHUSDT'
             ]
             
-            # Convertir en format TrendingCrypto
+            # Convertir en objets TrendingCrypto corrects
             fallback_trending = []
-            for symbol in basic_cryptos:
-                fallback_trending.append({
-                    'symbol': symbol,
-                    'price_change': 2.5,  # Valeur neutre
-                    'volume': 1000000,     # Volume raisonnable
-                    'source': 'fallback_basic'
-                })
+            for symbol in basic_symbols:
+                trending_crypto = TrendingCrypto(
+                    symbol=symbol,
+                    name=symbol.replace('USDT', ''),
+                    price=1.0,  # Prix neutre
+                    price_change=2.5,  # Valeur neutre positive 
+                    volume=1000000,     # Volume raisonnable
+                    source='fallback_basic'
+                )
+                fallback_trending.append(trending_crypto)
             
             self.current_trending = fallback_trending
-            logger.info(f"✅ FALLBACK: Using {len(fallback_trending)} basic symbols")
+            logger.info(f"✅ FALLBACK: Using {len(fallback_trending)} basic TrendingCrypto objects")
             return fallback_trending
                 
         except Exception as e:
