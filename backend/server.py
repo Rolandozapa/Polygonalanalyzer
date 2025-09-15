@@ -2587,20 +2587,35 @@ class UltraProfessionalIA1TechnicalAnalyst:
             # Convert back to 0-1 scale for final analysis confidence
             original_analysis_confidence = scoring_result['note_final'] / 100.0
             
-            # 🏛️ SEPARATE INSTITUTIONAL VALIDATION (MFI + VWAP + SMA50)
+            # 🏛️ ENHANCED INSTITUTIONAL VALIDATION (MFI + VWAP + SMA50 + DUNE ANALYTICS)
             # This does NOT modify IA1 confidence - provides independent validation
             try:
-                institutional_validation_score = self._calculate_institutional_validation(
+                # Get Dune Analytics on-chain validation data
+                dune_validation = None
+                try:
+                    from dune_analytics_validator import dune_validator
+                    dune_validation = await dune_validator.get_institutional_validation(opportunity.symbol)
+                    if dune_validation:
+                        logger.info(f"🔮 Dune validation for {opportunity.symbol}: DEX Volume=${dune_validation.dex_volume_24h:,.0f}, Liquidity=${dune_validation.dex_liquidity:,.0f}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Dune Analytics unavailable for {opportunity.symbol}: {e}")
+                
+                # Enhanced institutional validation with Dune data
+                institutional_validation_score = self._calculate_enhanced_institutional_validation(
                     mfi=mfi,
                     vwap_position=vwap_position, 
                     vwap_price=vwap,
                     sma50_vs_price=(opportunity.current_price / vwap) if vwap > 0 else 1.0,
                     market_cap_24h=market_cap_change_24h,
-                    primary_signal=ia1_signal
+                    primary_signal=ia1_signal,
+                    dune_data=dune_validation
                 )
                 
-                # Determine validation status
-                if institutional_validation_score >= 75:
+                # Determine validation status with Dune enhancement
+                if institutional_validation_score >= 80:
+                    validation_risk = "very_low"
+                    validation_status = "🔮 INSTITUTIONAL + ON-CHAIN CONFIRMATION"
+                elif institutional_validation_score >= 75:
                     validation_risk = "low"
                     validation_status = "✅ INSTITUTIONAL CONFIRMATION"
                 elif institutional_validation_score >= 60:
@@ -2610,14 +2625,16 @@ class UltraProfessionalIA1TechnicalAnalyst:
                     validation_risk = "high"
                     validation_status = "❌ INSTITUTIONAL WARNING"
                 
-                logger.info(f"🏛️ SEPARATE INSTITUTIONAL VALIDATION for {opportunity.symbol}:")
+                logger.info(f"🏛️ ENHANCED INSTITUTIONAL VALIDATION for {opportunity.symbol}:")
                 logger.info(f"   🧠 IA1 Final Confidence: {original_analysis_confidence:.1%} (PRESERVED)")
                 logger.info(f"   🏛️ Institutional Score: {institutional_validation_score:.1f}/100 ({validation_risk} risk)")
                 logger.info(f"   📊 Components: MFI={mfi:.1f}, VWAP={vwap_position:+.1f}%, Market={market_cap_change_24h:+.1f}%")
+                if dune_validation:
+                    logger.info(f"   🔮 Dune: DEX_Vol=${dune_validation.dex_volume_24h:,.0f}, Liquidity=${dune_validation.dex_liquidity:,.0f}, Flow={dune_validation.institutional_flow}")
                 logger.info(f"   🎯 {validation_status}")
                 
             except Exception as e:
-                logger.warning(f"⚠️ Institutional validation error for {opportunity.symbol}: {e}")
+                logger.warning(f"⚠️ Enhanced institutional validation error for {opportunity.symbol}: {e}")
                 institutional_validation_score = 50.0
                 validation_risk = "medium"
                 validation_status = "⚠️ VALIDATION UNAVAILABLE"
