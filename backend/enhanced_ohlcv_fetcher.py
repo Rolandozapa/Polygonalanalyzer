@@ -735,6 +735,8 @@ class EnhancedOHLCVFetcher:
         
         # Historical data fallback sources (specialized for historical data)
         fallback_sources = [
+            ('BingX Historical', self._fetch_bingx_enhanced),  # Try BingX again in fallback
+            ('Kraken Historical', self._fetch_kraken_enhanced),  # Try Kraken again
             ('Alpha Vantage Historical', self._fetch_alpha_vantage_historical),
             ('Polygon Historical', self._fetch_polygon_historical),
             ('IEX Cloud Historical', self._fetch_iex_cloud_historical),
