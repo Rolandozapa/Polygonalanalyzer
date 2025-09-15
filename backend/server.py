@@ -2640,8 +2640,38 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 validation_risk = "medium"
                 validation_status = "⚠️ VALIDATION UNAVAILABLE"
             
-            # 🚀 USE ORIGINAL IA1 CONFIDENCE (with professional scoring applied)
-            analysis_confidence = original_analysis_confidence
+            # 🚀 ENHANCED MARKET CONDITION SCORING - Apply sophisticated market analysis
+            try:
+                # Get TechnicalAnalysis object for enhanced scoring (create temporary object with current data)
+                temp_analysis = type('TempAnalysis', (), {
+                    'trend_strength_score': rsi,  # Use RSI as trend strength proxy
+                    'analysis_confidence': original_analysis_confidence
+                })()
+                
+                # Apply enhanced market scoring
+                enhanced_scoring = enhanced_market_scoring.enhance_ia1_confidence(
+                    base_confidence=original_analysis_confidence,
+                    opportunity=opportunity,
+                    analysis=temp_analysis
+                )
+                
+                # Use enhanced confidence
+                analysis_confidence = enhanced_scoring.get('enhanced_confidence', original_analysis_confidence)
+                
+                # Log enhanced scoring details
+                market_summary = enhanced_market_scoring.create_market_condition_summary(enhanced_scoring)
+                logger.info(f"🎯 ENHANCED MARKET SCORING for {opportunity.symbol}:")
+                logger.info(f"   🧠 Base Confidence: {original_analysis_confidence:.1%}")
+                logger.info(f"   📊 Enhanced Confidence: {analysis_confidence:.1%}")
+                logger.info(f"   📈 Improvement: {enhanced_scoring.get('improvement', 0.0):+.1f} points")
+                logger.info(f"   🏆 Market Cap Bucket: {enhanced_scoring.get('mc_bucket', 'unknown')}")
+                logger.info(market_summary)
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Enhanced market scoring error for {opportunity.symbol}: {e}")
+                # Fallback to original confidence
+                analysis_confidence = original_analysis_confidence
+                logger.info(f"🔄 Using original IA1 confidence: {analysis_confidence:.1%}")
             
             logger.info(f"🔥 PROFESSIONAL SCORING COMPLETE for {opportunity.symbol}:")
             logger.info(f"   🧠 Base (IA1 Organic): {scoring_base_confidence:.1f}%")
