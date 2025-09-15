@@ -1369,6 +1369,12 @@ class AdvancedMarketAggregator:
                         except Exception as e:
                             logger.warning(f"⚠️ PRIX FALLBACK ÉCHEC pour {crypto.symbol}: {e}")
                     
+                    # 🕒 TIMESTAMPS ÉCHELONNÉS: Chaque opportunité a un timestamp unique
+                    # Calculer le décalage basé sur l'index pour éviter les timestamps identiques
+                    base_time = current_time
+                    offset_seconds = filtered_cryptos.index(crypto) * 15  # 15 secondes entre chaque opportunité
+                    unique_timestamp = base_time + timedelta(seconds=offset_seconds)
+                    
                     # Créer l'opportunité avec données BingX principalement (IA1 récupérera OHLCV)
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
@@ -1379,7 +1385,8 @@ class AdvancedMarketAggregator:
                         market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
                         market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
                         data_sources=["bingx_scout_filtered"],
-                        data_confidence=0.9 if current_price > 0 else 0.5  # Bonne confiance avec prix réel
+                        data_confidence=0.9 if current_price > 0 else 0.5,  # Bonne confiance avec prix réel
+                        timestamp=unique_timestamp  # 🚀 TIMESTAMP UNIQUE pour chaque opportunité
                     )
                     opportunities.append(opportunity)
                     
