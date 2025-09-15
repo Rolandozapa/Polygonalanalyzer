@@ -96,6 +96,7 @@ from ai_performance_enhancer import ai_performance_enhancer
 from chartist_learning_system import chartist_learning_system
 from ai_training_optimizer import ai_training_optimizer
 from advanced_technical_indicators import AdvancedTechnicalIndicators
+from enhanced_market_scoring import enhanced_market_scoring, EnhancedMarketScoring
 import psutil  # CPU monitoring optimization - moved from loop
 
 ROOT_DIR = Path(__file__).parent
