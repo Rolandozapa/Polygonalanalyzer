@@ -383,8 +383,11 @@ class EnhancedOHLCVFetcher:
     async def _fetch_bingx_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
         """Enhanced BingX OHLCV data fetching - primary source"""
         try:
-            # BingX futures format (standard USDT pairs)
-            bingx_symbol = symbol if symbol.endswith('USDT') else f"{symbol}USDT"
+            # BingX futures format requires -USDT not USDT
+            if symbol.endswith('USDT'):
+                bingx_symbol = symbol.replace('USDT', '-USDT')
+            else:
+                bingx_symbol = f"{symbol}-USDT"
             
             url = f"{self.bingx_base_url}/openApi/swap/v2/quote/klines"
             params = {
@@ -397,7 +400,10 @@ class EnhancedOHLCVFetcher:
                 async with session.get(url, params=params) as response:
                     if response.status == 200:
                         data = await response.json()
-                        return self._parse_bingx_data(data, symbol)
+                        if data.get('code') == 0:  # Success code
+                            return self._parse_bingx_data(data, symbol)
+                        else:
+                            logger.debug(f"BingX API error for {symbol}: {data.get('msg', 'Unknown error')}")
                     else:
                         logger.debug(f"BingX API returned {response.status} for {symbol}")
                         
