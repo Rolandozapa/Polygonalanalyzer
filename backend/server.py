@@ -2131,12 +2131,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🚀 {opportunity.symbol} - EMA HIERARCHY: {trend_hierarchy.upper()}, Price vs EMAs: {price_vs_emas}, Cross: {ema_cross_signal}, Strength: {trend_strength_score:.0f}%")
             logger.info(f"📊 {opportunity.symbol} - EMAs: 9=${ema_9:.4f}, 21=${ema_21:.4f}, SMA50=${sma_50:.4f}, EMA200=${ema_200:.4f}")
             
-            # Calculate Bollinger Band position
+            # Get current price for calculations
             current_price = opportunity.current_price
-            if bb_upper > bb_lower:
-                bb_position = (current_price - bb_middle) / (bb_upper - bb_middle)
-            else:
-                bb_position = 0
             
             # Get market sentiment from aggregator
             performance_stats = self.market_aggregator.get_performance_stats()
