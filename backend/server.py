@@ -8805,24 +8805,52 @@ class UltraProfessionalOrchestrator:
                         logger.debug(f"⏭️ Skipping fallback opportunity: {opportunity.symbol}")
                         continue
                     
-                    # 🚨 TRIPLE VÉRIFICATION ANTI-DOUBLON
-                    # 1. Vérification cache global (plus rapide + persistant)
+                    # 🔐 COMPREHENSIVE ANTI-DUPLICATE SYSTEM - 4-HOUR PERSISTENT VERIFICATION
                     global GLOBAL_ANALYZED_SYMBOLS_CACHE
-                    logger.info(f"🔍 CHECKING CACHE: {opportunity.symbol} in {GLOBAL_ANALYZED_SYMBOLS_CACHE}")
+                    
+                    # 1. Fast in-memory cache check (performance optimization)
+                    logger.info(f"🔍 CACHE CHECK: {opportunity.symbol} in cache (size: {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)})")
                     if opportunity.symbol in GLOBAL_ANALYZED_SYMBOLS_CACHE:
-                        logger.info(f"⏭️ SKIP {opportunity.symbol} - dans le cache GLOBAL anti-doublon (taille: {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)})")
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - in GLOBAL anti-duplicate cache")
                         continue
                     
-                    # 2. Vérification base de données
-                    recent_check = await db.technical_analyses.find_one({
+                    # 2. 4-HOUR DATABASE VERIFICATION (persistent anti-duplicate)
+                    # Use the dedicated timestamp filter function for proper 4-hour window
+                    four_hour_filter = paris_time_to_timestamp_filter(4)
+                    
+                    # Check technical_analyses collection for any analysis within 4 hours
+                    recent_analysis = await db.technical_analyses.find_one({
                         "symbol": opportunity.symbol,
-                        "timestamp": {"$gte": get_paris_time() - timedelta(minutes=30)}
+                        "timestamp": four_hour_filter
                     })
                     
-                    if recent_check:
-                        logger.info(f"⏭️ SKIP {opportunity.symbol} - analyzed {(get_paris_time() - recent_check['timestamp']).total_seconds():.0f}s ago")
-                        GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)  # Ajouter au cache global
+                    if recent_analysis:
+                        # Calculate time since last analysis for logging
+                        last_timestamp = parse_timestamp_from_db(recent_analysis.get('timestamp'))
+                        time_since_analysis = (get_paris_time() - last_timestamp).total_seconds()
+                        hours_ago = time_since_analysis / 3600
+                        
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - analyzed {hours_ago:.1f}h ago (4h rule)")
+                        GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)  # Add to cache for next time
                         continue
+                    
+                    # 3. Additional check: trading_decisions collection (in case analysis led to decision)
+                    recent_decision = await db.trading_decisions.find_one({
+                        "symbol": opportunity.symbol,
+                        "timestamp": four_hour_filter
+                    })
+                    
+                    if recent_decision:
+                        last_timestamp = parse_timestamp_from_db(recent_decision.get('timestamp'))
+                        time_since_decision = (get_paris_time() - last_timestamp).total_seconds()
+                        hours_ago = time_since_decision / 3600
+                        
+                        logger.info(f"⏭️ SKIP {opportunity.symbol} - trading decision {hours_ago:.1f}h ago (4h rule)")
+                        GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)  # Add to cache for next time
+                        continue
+                    
+                    # 4. SYMBOL CLEARED FOR ANALYSIS - No duplicates found in 4-hour window
+                    logger.info(f"✅ CLEARED: {opportunity.symbol} - No analysis/decision within 4h window")
                     
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
                     
