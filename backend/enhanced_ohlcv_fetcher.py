@@ -846,6 +846,106 @@ class EnhancedOHLCVFetcher:
             logger.debug(f"Error parsing CoinDesk data for {symbol}: {e}")
             return None
     
+    def _parse_cmc_dex_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CoinMarketCap DEX OHLCV data"""
+        try:
+            if not data or 'data' not in data:
+                return None
+                
+            quotes_data = data['data']
+            if not quotes_data:
+                return None
+            
+            records = []
+            for item in quotes_data:
+                # CMC DEX format includes timestamp and OHLCV data
+                records.append({
+                    'timestamp': pd.to_datetime(item['time_open']),
+                    'Open': float(item['open']),
+                    'High': float(item['high']),
+                    'Low': float(item['low']),
+                    'Close': float(item['close']),
+                    'Volume': float(item.get('volume', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CMC DEX data for {symbol}: {e}")
+            return None
+    
+    def _parse_bitfinex_data(self, data: List, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse Bitfinex candles data"""
+        try:
+            if not data or len(data) < 5:
+                return None
+                
+            records = []
+            for item in data:
+                # Bitfinex format: [MTS, OPEN, CLOSE, HIGH, LOW, VOLUME]
+                records.append({
+                    'timestamp': pd.to_datetime(int(item[0]), unit='ms'),
+                    'Open': float(item[1]),
+                    'High': float(item[3]),
+                    'Low': float(item[4]),
+                    'Close': float(item[2]),
+                    'Volume': float(item[5])
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing Bitfinex data for {symbol}: {e}")
+            return None
+    
+    def _parse_cryptocompare_enhanced_data(self, data: Dict, symbol: str) -> Optional[pd.DataFrame]:
+        """Parse CryptoCompare enhanced historical data"""
+        try:
+            if not data or 'Data' not in data or 'Data' not in data['Data']:
+                return None
+                
+            time_series = data['Data']['Data']
+            if not time_series:
+                return None
+            
+            records = []
+            for item in time_series:
+                records.append({
+                    'timestamp': pd.to_datetime(item['time'], unit='s'),
+                    'Open': float(item['open']),
+                    'High': float(item['high']),
+                    'Low': float(item['low']),
+                    'Close': float(item['close']),
+                    'Volume': float(item.get('volumeto', 1000000))
+                })
+            
+            if not records:
+                return None
+                
+            df = pd.DataFrame(records)
+            df.set_index('timestamp', inplace=True)
+            df = df.sort_index()
+            
+            return df
+            
+        except Exception as e:
+            logger.debug(f"Error parsing CryptoCompare enhanced data for {symbol}: {e}")
+            return None
+
     def _parse_kraken_data(self, data: Dict, symbol: str, kraken_symbol: str) -> Optional[pd.DataFrame]:
         """Parse Kraken OHLC data"""
         try:
