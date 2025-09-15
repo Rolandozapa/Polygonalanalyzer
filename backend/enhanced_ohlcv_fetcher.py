@@ -36,6 +36,11 @@ class EnhancedOHLCVFetcher:
         self.coindesk_api_key = os.environ.get('COINDESK_API_KEY')  # Optional pro key
         self.kraken_api_key = os.environ.get('KRAKEN_API_KEY')  # Optional for higher limits
         
+        # Additional fallback API keys (for comprehensive coverage)
+        self.alpha_vantage_key = os.environ.get('ALPHA_VANTAGE_KEY')
+        self.polygon_key = os.environ.get('POLYGON_KEY')
+        self.iex_cloud_key = os.environ.get('IEX_CLOUD_KEY')
+        
         # 🎯 MULTI-SOURCE PRIORITY ORDER (High→Low reliability)
         self.data_sources = [
             {'name': 'BingX', 'priority': 10, 'method': self._fetch_bingx_ohlcv},
