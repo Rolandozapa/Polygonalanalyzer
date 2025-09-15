@@ -975,9 +975,11 @@ class AdvancedMarketAggregator:
             
             async def fetch_yf_data(symbol):
                 try:
-                    ticker = await loop.run_in_executor(self.thread_pool, yf.Ticker, symbol)
-                    info = await loop.run_in_executor(self.thread_pool, lambda: ticker.info)
-                    hist = await loop.run_in_executor(self.thread_pool, lambda: ticker.history(period='2d'))
+                    # 🚨 PERFORMANCE FIX: Utiliser thread pool temporaire
+                    with ThreadPoolExecutor(max_workers=1) as temp_pool:
+                        ticker = await loop.run_in_executor(temp_pool, yf.Ticker, symbol)
+                        info = await loop.run_in_executor(temp_pool, lambda: ticker.info)
+                        hist = await loop.run_in_executor(temp_pool, lambda: ticker.history(period='2d'))
                     
                     if not hist.empty and info:
                         current_price = hist['Close'].iloc[-1]
