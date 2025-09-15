@@ -2611,13 +2611,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     # 🔧 FIX: Handle both 'Close' and 'close' column names
                     close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
                     if close_col:
-                        macd_result = self._calculate_macd(historical_data[close_col])
-                        if macd_result and isinstance(macd_result, tuple) and len(macd_result) >= 3:
-                            # MACD returns (macd_line, signal_line, histogram)
-                            macd_line, macd_signal, macd_histogram = macd_result
-                            logger.info(f"   ✅ MACD calculé: Line={macd_line:.6f}, Signal={macd_signal:.6f}, Histogram={macd_histogram:.6f}")
-                        else:
-                            macd_line, macd_signal, macd_histogram = 0.0, 0.0, 0.0
+                        # 🚀 NEW OPTIMIZED MACD: Utiliser le module MACD optimisé
+                        macd_line, macd_signal, macd_histogram = calculate_macd_optimized(historical_data[close_col])
+                        logger.info(f"   🚀 MACD optimized: Line={macd_line:.8f}, Signal={macd_signal:.8f}, Histogram={macd_histogram:.8f}")
+                    else:
+                        macd_line, macd_signal, macd_histogram = 0.0, 0.0, 0.0
                     
                     # 🚨 CALCUL STOCHASTIC (14, 3, 3)
                     # 🔧 FIX: Handle column name variations
