@@ -256,8 +256,11 @@ class EnhancedOHLCVFetcher:
         return None
     
     async def _fetch_coingecko_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
-        """Enhanced CoinGecko fetching with ID resolution"""
+        """Enhanced CoinGecko fetching with rate limiting and ID resolution"""
         try:
+            # Add delay to avoid rate limits
+            await asyncio.sleep(1)
+            
             # Get coin ID from mapping or try to resolve
             coin_id = self.symbol_mappings['coingecko'].get(symbol)
             if not coin_id:
@@ -278,6 +281,8 @@ class EnhancedOHLCVFetcher:
                     if response.status == 200:
                         data = await response.json()
                         return self._parse_coingecko_data(data, symbol)
+                    elif response.status == 429:
+                        logger.debug(f"CoinGecko rate limit hit for {symbol}")
                     else:
                         logger.debug(f"CoinGecko API returned {response.status} for {symbol}")
                         
