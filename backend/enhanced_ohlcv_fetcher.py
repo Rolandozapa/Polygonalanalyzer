@@ -1002,14 +1002,18 @@ class EnhancedOHLCVFetcher:
         
         # Historical data fallback sources (specialized for historical data)
         fallback_sources = [
+            ('CoinMarketCap DEX Historical', self._fetch_cmc_dex_enhanced),  # Premium institutional data
+            ('TwelveData Historical', self._fetch_twelvedata_enhanced),  # Premium market data
+            ('CoinAPI Historical', self._fetch_coinapi_enhanced),  # Premium API
             ('BingX Historical', self._fetch_bingx_enhanced),  # Try BingX again in fallback
+            ('Bitfinex Historical', self._fetch_bitfinex_enhanced),  # Professional exchange
             ('Kraken Historical', self._fetch_kraken_enhanced),  # Try Kraken again
+            ('CryptoCompare Historical', self._fetch_cryptocompare_enhanced),  # Enhanced CryptoCompare
             ('Alpha Vantage Historical', self._fetch_alpha_vantage_historical),
             ('Polygon Historical', self._fetch_polygon_historical),
             ('IEX Cloud Historical', self._fetch_iex_cloud_historical),
             ('CoinCap Historical', self._fetch_coincap_historical),
-            ('Messari Historical', self._fetch_messari_historical),
-            ('CryptoCompare Historical', self._fetch_cryptocompare_historical_fallback)
+            ('Messari Historical', self._fetch_messari_historical)
         ]
         
         for source_name, fetch_func in fallback_sources:
