@@ -421,17 +421,19 @@ class RealMarketDataService:
         except Exception as e:
             logger.warning(f"Binance historical data failed for {symbol}: {e}")
         
-        # Fallback to Yahoo Finance
-        try:
-            yf_symbol = symbol.replace('USDT', '-USD')
-            ticker = yf.Ticker(yf_symbol)
-            hist = ticker.history(period=f"{days}d")
-            
-            if not hist.empty:
-                return hist
-                
-        except Exception as e:
-            logger.warning(f"Yahoo Finance historical data failed for {symbol}: {e}")
+        # Fallback to Yahoo Finance - DISABLED to resolve CPU saturation
+        # 🚨 YFINANCE DISABLED: Temporarily disabled to resolve CPU saturation
+        logger.warning("🚨 Yahoo Finance historical data temporarily disabled to resolve CPU saturation")
+        # try:
+        #     yf_symbol = symbol.replace('USDT', '-USD')
+        #     ticker = yf.Ticker(yf_symbol)
+        #     hist = ticker.history(period=f"{days}d")
+        #     
+        #     if not hist.empty:
+        #         return hist
+        #         
+        # except Exception as e:
+        #     logger.warning(f"Yahoo Finance historical data failed for {symbol}: {e}")
         
         # Generate synthetic data as last resort
         logger.warning(f"Generating synthetic historical data for {symbol}")
