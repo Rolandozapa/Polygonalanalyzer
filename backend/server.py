@@ -6206,11 +6206,16 @@ async def get_analyses(limit: int = 50):
         analyses.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
         
         logger.info(f"🧠 Returning {len(analyses)} IA1 analyses (patterns_detected fixed, timestamps normalized)")
-        return {
+        
+        response_data = {
             "success": True,
             "analyses": analyses,
             "count": len(analyses)
         }
+        
+        # 🚨 PERFORMANCE: Mettre en cache la réponse
+        set_cached_response(cache_key, response_data)
+        return response_data
     except Exception as e:
         logger.error(f"❌ Error getting analyses: {e}")
         return {"success": False, "error": str(e)}
