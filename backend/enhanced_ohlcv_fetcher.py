@@ -18,7 +18,8 @@ class EnhancedOHLCVFetcher:
     """🚀 ULTRA-ROBUST OHLCV Fetcher - Multiple Premium Sources"""
     
     def __init__(self):
-        self.lookback_days = 10  # Optimisé pour scout - IA1 récupérera 4 semaines en interne
+        # 🎯 TECHNICAL INDICATORS OPTIMIZED: 35 jours pour MACD (26+9) + buffer de sécurité
+        self.lookback_days = 35  # Augmenté de 10 à 35 jours pour supporter MACD et Stochastic
         
         # 🔑 PREMIUM API KEYS (All Working Keys)
         self.coinapi_key = os.environ.get('COINAPI_KEY_PRIMARY', os.environ.get('COINAPI_KEY', '30484334-1a7c-49a0-ae01-63922e3e542a'))
