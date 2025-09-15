@@ -3724,8 +3724,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
     def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[float, float, float]:
         """Calculate MACD indicator with improved validation and stability"""
         try:
-            # Need at least 30+ days for stable MACD (reduced from 50 for more availability)
-            min_required = max(30, slow + signal)  # Minimum realistic requirement
+            # 🚨 OPTIMIZED: Ajusté pour fonctionner avec les données disponibles (35 jours max)
+            min_required = max(20, slow + 5)  # Plus réaliste : 26 + 5 = 31 jours max
             if len(prices) < min_required:
                 logger.debug(f"MACD: Insufficient data ({len(prices)} < {min_required} days)")
                 return 0.0, 0.0, 0.0  # Neutral MACD
