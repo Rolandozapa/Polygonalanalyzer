@@ -6070,7 +6070,7 @@ async def get_opportunities(limit: int = 50):
                 opportunities.append(opp_dict)
             
             logger.info(f"📊 Returning {len(opportunities)} SCOUT-FILTERED BingX opportunities (passed all filters)")
-            return {
+            response_data = {
                 "success": True,
                 "opportunities": opportunities,
                 "count": len(opportunities),
@@ -6082,6 +6082,10 @@ async def get_opportunities(limit: int = 50):
                     "source": "BingX Top 50 Futures"
                 }
             }
+            
+            # 🚨 PERFORMANCE: Mettre en cache la réponse
+            set_cached_response(cache_key, response_data)
+            return response_data
         else:
             # No fresh scout data - return empty instead of fallback
             logger.warning("⚠️ No scout-filtered opportunities available")
