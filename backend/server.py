@@ -6089,7 +6089,7 @@ async def get_opportunities(limit: int = 50):
         else:
             # No fresh scout data - return empty instead of fallback
             logger.warning("⚠️ No scout-filtered opportunities available")
-            return {
+            response_data = {
                 "success": True,
                 "opportunities": [],
                 "count": 0,
@@ -6102,6 +6102,10 @@ async def get_opportunities(limit: int = 50):
                     "source": "BingX Top 50 Futures"
                 }
             }
+            
+            # 🚨 PERFORMANCE: Mettre en cache même les réponses vides
+            set_cached_response(cache_key, response_data)
+            return response_data
     except Exception as e:
         logger.error(f"❌ Error getting filtered opportunities: {e}")
         return {"success": False, "error": str(e)}
