@@ -1055,9 +1055,9 @@ class EnhancedOHLCVFetcher:
         for source_name, fetch_func in sources:
             try:
                 data = await fetch_func(normalized_symbol)
-                if data is not None and len(data) >= 20:  # Minimum 20 days
+                if data is not None and len(data) >= 5:  # Reduced minimum for flexibility
                     validated_data = self._validate_and_clean_data(data)
-                    if validated_data is not None and len(validated_data) >= 20:
+                    if validated_data is not None and len(validated_data) >= 5:
                         logger.info(f"🆘 EMERGENCY SUCCESS: {source_name} provided {len(validated_data)} days for {original_symbol}")
                         
                         # Add emergency metadata
