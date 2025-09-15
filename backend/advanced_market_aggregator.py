@@ -907,7 +907,9 @@ class AdvancedMarketAggregator:
             return []
     
     async def _fetch_exchange_data(self) -> List[MarketDataResponse]:
-        """Fetch data from CCXT exchanges in parallel"""
+        """🚨 CCXT DISABLED: Fetch data from CCXT exchanges - TEMPORARILY DISABLED FOR CPU DEBUG"""
+        logger.warning("🚨 CCXT exchange data fetching temporarily disabled to resolve CPU saturation")
+        return []  # Return empty list instead of fetching from exchanges
         if not self.exchanges:
             return []
         
