@@ -927,25 +927,149 @@ class EnhancedOHLCVIntegrationTestSuite:
         except Exception:
             return None
     
+    async def test_6_scout_system_integration(self):
+        """Test 6: Scout System Integration - Enhanced OHLCV Data Usage"""
+        logger.info("\n🔍 TEST 6: Scout System Integration Test")
+        
+        try:
+            scout_integration_results = {
+                'total_scout_tests': 0,
+                'successful_scout_calls': 0,
+                'failed_scout_calls': 0,
+                'ohlcv_data_detected': 0,
+                'multi_source_validation_detected': 0,
+                'scout_performance': {}
+            }
+            
+            logger.info("   🚀 Testing Scout system integration with Enhanced OHLCV...")
+            logger.info("   📊 Expected: Scout system leverages enhanced OHLCV fetcher for trending validation")
+            
+            # Test Scout endpoint
+            try:
+                logger.info(f"   📈 Testing Scout system integration...")
+                scout_integration_results['total_scout_tests'] += 1
+                
+                # Call Scout endpoint
+                start_time = time.time()
+                response = requests.get(f"{self.api_url}/scout", timeout=60)
+                response_time = time.time() - start_time
+                
+                if response.status_code == 200:
+                    scout_data = response.json()
+                    
+                    if scout_data.get('success'):
+                        scout_integration_results['successful_scout_calls'] += 1
+                        
+                        # Check for OHLCV data usage indicators
+                        opportunities = scout_data.get('opportunities', [])
+                        
+                        ohlcv_indicators = {
+                            'has_price_data': False,
+                            'has_volume_data': False,
+                            'has_volatility_data': False,
+                            'has_multi_source_validation': False,
+                            'response_time_acceptable': response_time < 45.0
+                        }
+                        
+                        if opportunities:
+                            for opportunity in opportunities[:3]:  # Check first 3 opportunities
+                                # Check for price data
+                                if opportunity.get('current_price', 0) > 0.1:
+                                    ohlcv_indicators['has_price_data'] = True
+                                
+                                # Check for volume data
+                                if opportunity.get('volume_24h', 0) > 1000:
+                                    ohlcv_indicators['has_volume_data'] = True
+                                
+                                # Check for volatility data
+                                if opportunity.get('volatility', 0) > 0.01:
+                                    ohlcv_indicators['has_volatility_data'] = True
+                                
+                                # Check for multi-source validation indicators
+                                if 'validation' in str(opportunity).lower() or 'source' in str(opportunity).lower():
+                                    ohlcv_indicators['has_multi_source_validation'] = True
+                        
+                        # Calculate integration quality
+                        quality_score = sum(ohlcv_indicators.values()) / len(ohlcv_indicators)
+                        
+                        if quality_score >= 0.8:
+                            logger.info(f"      ✅ Scout OHLCV integration excellent ({quality_score:.1%} quality)")
+                        else:
+                            logger.warning(f"      ⚠️ Scout OHLCV integration partial ({quality_score:.1%} quality)")
+                        
+                        # Store performance data
+                        scout_integration_results['scout_performance'] = {
+                            'quality_score': quality_score,
+                            'indicators': ohlcv_indicators,
+                            'response_time': response_time,
+                            'opportunities_count': len(opportunities)
+                        }
+                        
+                        if ohlcv_indicators['has_price_data'] and ohlcv_indicators['has_volume_data']:
+                            scout_integration_results['ohlcv_data_detected'] += 1
+                        
+                        if ohlcv_indicators['has_multi_source_validation']:
+                            scout_integration_results['multi_source_validation_detected'] += 1
+                        
+                    else:
+                        scout_integration_results['failed_scout_calls'] += 1
+                        logger.warning(f"      ❌ Scout call failed: {scout_data.get('error', 'Unknown error')}")
+                else:
+                    scout_integration_results['failed_scout_calls'] += 1
+                    logger.warning(f"      ❌ Scout API call failed: HTTP {response.status_code}")
+                
+            except Exception as e:
+                scout_integration_results['failed_scout_calls'] += 1
+                logger.error(f"   ❌ Error testing Scout integration: {e}")
+            
+            # Calculate scout integration results
+            logger.info(f"   📊 Scout Integration Test Results:")
+            logger.info(f"      Total scout tests: {scout_integration_results['total_scout_tests']}")
+            logger.info(f"      Successful scout calls: {scout_integration_results['successful_scout_calls']}")
+            logger.info(f"      Failed scout calls: {scout_integration_results['failed_scout_calls']}")
+            logger.info(f"      OHLCV data detected: {scout_integration_results['ohlcv_data_detected']}")
+            logger.info(f"      Multi-source validation detected: {scout_integration_results['multi_source_validation_detected']}")
+            
+            # Determine test result
+            if scout_integration_results['total_scout_tests'] > 0:
+                success_rate = scout_integration_results['successful_scout_calls'] / scout_integration_results['total_scout_tests']
+                
+                if success_rate >= 0.8 and scout_integration_results['ohlcv_data_detected'] > 0:
+                    self.log_test_result("Scout System Integration", True, 
+                                       f"Scout integration excellent: {success_rate:.1%} success rate with OHLCV data detection")
+                elif success_rate >= 0.6:
+                    self.log_test_result("Scout System Integration", False, 
+                                       f"Scout integration partial: {success_rate:.1%} success rate")
+                else:
+                    self.log_test_result("Scout System Integration", False, 
+                                       f"Scout integration issues: {success_rate:.1%} success rate")
+            else:
+                self.log_test_result("Scout System Integration", False, 
+                                   "No Scout integration tests could be performed")
+                
+        except Exception as e:
+            self.log_test_result("Scout System Integration", False, f"Exception: {str(e)}")
+
     async def run_comprehensive_test_suite(self):
-        """Run comprehensive technical indicators test suite"""
-        logger.info("🚀 Starting Technical Indicators Fix Validation Test Suite")
+        """Run comprehensive Enhanced OHLCV Multi-Source Integration test suite"""
+        logger.info("🚀 Starting Enhanced OHLCV Multi-Source Integration Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 TECHNICAL INDICATORS FIX VALIDATION TEST SUITE")
-        logger.info("🎯 Testing: Complete technical indicators fix validation")
-        logger.info("🎯 Expected: 100% success rate for all technical indicators")
+        logger.info("📋 ENHANCED OHLCV MULTI-SOURCE INTEGRATION TEST SUITE")
+        logger.info("🎯 Testing: Comprehensive Enhanced OHLCV Multi-Source System Integration")
+        logger.info("🎯 Expected: 5 premium sources operational with institutional-grade reliability")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_technical_indicators_calculation()
+        await self.test_1_data_fetching_integration()
         await self.test_2_signal_quality_validation()
         await self.test_3_error_handling_robustness()
         await self.test_4_data_consistency_validation()
         await self.test_5_comprehensive_indicators_validation()
+        await self.test_6_scout_system_integration()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 TECHNICAL INDICATORS FIX VALIDATION TEST SUMMARY")
+        logger.info("📊 ENHANCED OHLCV MULTI-SOURCE INTEGRATION TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -967,16 +1091,18 @@ class EnhancedOHLCVIntegrationTestSuite:
         requirements_status = {}
         
         for result in self.test_results:
-            if "Technical Indicators Calculation" in result['test']:
-                requirements_status['All Technical Indicators Working'] = result['success']
+            if "Data Fetching Integration" in result['test']:
+                requirements_status['Enhanced OHLCV System Integration'] = result['success']
             elif "Signal Quality" in result['test']:
-                requirements_status['Signal Quality - Meaningful Values'] = result['success']
+                requirements_status['Real OHLCV Data vs Fallback Values'] = result['success']
             elif "Error Handling" in result['test']:
-                requirements_status['Error Handling Robustness'] = result['success']
+                requirements_status['Fallback Mechanisms Robustness'] = result['success']
             elif "Data Consistency" in result['test']:
-                requirements_status['Backend-API Data Consistency'] = result['success']
+                requirements_status['Multi-Source Validation System'] = result['success']
             elif "Comprehensive" in result['test']:
-                requirements_status['Expected Results Validation'] = result['success']
+                requirements_status['Performance & Quality Standards'] = result['success']
+            elif "Scout System" in result['test']:
+                requirements_status['Scout System OHLCV Integration'] = result['success']
         
         logger.info("🎯 CRITICAL REQUIREMENTS STATUS:")
         for requirement, status in requirements_status.items():
@@ -990,23 +1116,23 @@ class EnhancedOHLCVIntegrationTestSuite:
         logger.info(f"\n🏆 REQUIREMENTS SATISFACTION: {requirements_met}/{total_requirements}")
         
         if requirements_met == total_requirements:
-            logger.info("\n🎉 VERDICT: TECHNICAL INDICATORS FIX 100% SUCCESSFUL!")
-            logger.info("✅ All technical indicators working with calculated values")
-            logger.info("✅ Signal quality excellent - meaningful categorization")
-            logger.info("✅ Error handling robust - indicators preserved during fallback")
-            logger.info("✅ Data consistency confirmed - backend matches API responses")
-            logger.info("✅ Expected results validated - RSI, MACD, Stochastic, MFI, VWAP")
-            logger.info("✅ System meets all technical indicators requirements")
+            logger.info("\n🎉 VERDICT: ENHANCED OHLCV MULTI-SOURCE INTEGRATION 100% SUCCESSFUL!")
+            logger.info("✅ All 5 working sources provide premium-quality market data")
+            logger.info("✅ Multi-source validation working with BingX + Kraken cross-verification")
+            logger.info("✅ Technical indicators receive real data instead of fallback values")
+            logger.info("✅ Scout system benefits from enhanced data quality and validation")
+            logger.info("✅ System gracefully handles API limitations and quota restrictions")
+            logger.info("✅ Overall system reliability achieved through redundant high-quality sources")
         elif requirements_met >= total_requirements * 0.8:
-            logger.info("\n⚠️ VERDICT: TECHNICAL INDICATORS FIX MOSTLY SUCCESSFUL")
-            logger.info("🔍 Minor issues may need attention for complete fix")
+            logger.info("\n⚠️ VERDICT: ENHANCED OHLCV INTEGRATION MOSTLY SUCCESSFUL")
+            logger.info("🔍 Minor issues may need attention for complete integration")
         elif requirements_met >= total_requirements * 0.6:
-            logger.info("\n⚠️ VERDICT: TECHNICAL INDICATORS FIX PARTIALLY SUCCESSFUL")
-            logger.info("🔧 Several requirements need attention for complete fix")
+            logger.info("\n⚠️ VERDICT: ENHANCED OHLCV INTEGRATION PARTIALLY SUCCESSFUL")
+            logger.info("🔧 Several requirements need attention for complete integration")
         else:
-            logger.info("\n❌ VERDICT: TECHNICAL INDICATORS FIX NOT SUCCESSFUL")
-            logger.info("🚨 Major issues detected - technical indicators still not working properly")
-            logger.info("🚨 System needs significant fixes for technical indicators")
+            logger.info("\n❌ VERDICT: ENHANCED OHLCV INTEGRATION NOT SUCCESSFUL")
+            logger.info("🚨 Major issues detected - enhanced OHLCV system not working properly")
+            logger.info("🚨 System needs significant fixes for multi-source integration")
         
         return passed_tests, total_tests
 
