@@ -22,7 +22,11 @@ async def debug_bingx(symbol='BTCUSDT'):
     print(f"\n🔍 DEBUGGING BingX API for {symbol}")
     
     bingx_base_url = 'https://open-api.bingx.com'
-    bingx_symbol = symbol if symbol.endswith('USDT') else f"{symbol}USDT"
+    # BingX futures format requires -USDT not USDT
+    if symbol.endswith('USDT'):
+        bingx_symbol = symbol.replace('USDT', '-USDT')
+    else:
+        bingx_symbol = f"{symbol}-USDT"
     
     url = f"{bingx_base_url}/openApi/swap/v2/quote/klines"
     params = {
