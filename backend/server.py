@@ -8512,13 +8512,80 @@ async def check_our_ip():
 
 @api_router.get("/debug-anti-doublon")
 async def debug_anti_doublon():
-    """🔍 DEBUG - Voir état du cache anti-doublon"""
+    """🔍 DEBUG - Comprehensive anti-duplicate cache status"""
     global GLOBAL_ANALYZED_SYMBOLS_CACHE
-    return {
-        "cache_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
-        "cached_symbols": list(GLOBAL_ANALYZED_SYMBOLS_CACHE),
-        "message": f"Cache contient {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)} symboles"
-    }
+    
+    try:
+        # Get database stats for comparison
+        four_hour_filter = paris_time_to_timestamp_filter(4)
+        
+        # Count recent analyses and decisions in database
+        recent_analyses_count = await db.technical_analyses.count_documents({
+            "timestamp": four_hour_filter
+        })
+        
+        recent_decisions_count = await db.trading_decisions.count_documents({
+            "timestamp": four_hour_filter
+        })
+        
+        # Get sample symbols from database
+        recent_analyses_sample = await db.technical_analyses.find({
+            "timestamp": four_hour_filter
+        }, {"symbol": 1, "timestamp": 1}).limit(10).to_list(length=10)
+        
+        return {
+            "cache_status": {
+                "size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+                "symbols": list(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+                "max_size": 30
+            },
+            "database_status": {
+                "recent_analyses_4h": recent_analyses_count,
+                "recent_decisions_4h": recent_decisions_count,
+                "sample_recent_symbols": [a.get("symbol") for a in recent_analyses_sample[:5]]
+            },
+            "synchronization": {
+                "cache_vs_db_ratio": f"{len(GLOBAL_ANALYZED_SYMBOLS_CACHE)}/{recent_analyses_count + recent_decisions_count}",
+                "message": "Cache should contain most symbols from recent DB entries"
+            }
+        }
+        
+    except Exception as e:
+        return {
+            "cache_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+            "cached_symbols": list(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+            "error": f"Database check failed: {e}",
+            "message": f"Cache contains {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)} symbols"
+        }
+
+@api_router.post("/refresh-anti-doublon-cache")
+async def refresh_anti_doublon_cache():
+    """🔄 REFRESH - Refresh cache from database (smart sync)"""
+    global GLOBAL_ANALYZED_SYMBOLS_CACHE
+    
+    try:
+        old_size = len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+        
+        # Clear current cache
+        GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
+        
+        # Repopulate from database
+        cached_symbols_count = await populate_cache_from_db()
+        
+        return {
+            "success": True,
+            "message": f"Cache refreshed from database",
+            "old_size": old_size,
+            "new_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+            "symbols_added": cached_symbols_count
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Cache refresh failed: {e}",
+            "cache_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+        }
 
 @api_router.post("/clear-anti-doublon-cache")
 async def clear_anti_doublon_cache():
