@@ -2140,6 +2140,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Calculate Fibonacci retracement levels
             fib_data = self._calculate_fibonacci_levels(historical_data)
             
+            # 🔍 DEBUG: Vérification des valeurs avant création TechnicalAnalysis
+            logger.info(f"🔍 DEBUG {opportunity.symbol} - stochastic_k={stochastic_k}, stochastic_d={stochastic_d}, bb_position={bb_position}")
+            
             # 🎯 ANALYSE MULTI-TIMEFRAME HIÉRARCHIQUE
             # Construire l'analyse technique de base pour le multi-timeframe
             basic_analysis = TechnicalAnalysis(
