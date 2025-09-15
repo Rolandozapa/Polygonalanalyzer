@@ -144,6 +144,17 @@ backend:
         -working: false
         -agent: "testing"
         -comment: "❌ ENHANCED OHLCV INTEGRATION ISSUES IDENTIFIED - MIXED RESULTS: Comprehensive testing reveals the Enhanced OHLCV system is partially working but has critical integration issues with the main trading bot. DETAILED FINDINGS: (1) ✅ SCOUT SYSTEM INTEGRATION WORKING - /api/opportunities endpoint successfully returns 50 opportunities with real market data (FLOKIUSDT: $0.000095, Volume: $45.6B, Volatility: 596%), confirming the Enhanced OHLCV system is providing data to the scout system, (2) ✅ BACKEND OHLCV FETCHER OPERATIONAL - Backend logs show Enhanced OHLCV fetcher successfully retrieving data from multiple sources: 'BingX Enhanced provided 28 days', 'CryptoCompare Enhanced provided 29 days', 'Multi-source validation for VANAUSDT: 2 sources', confirming the core OHLCV system is working, (3) ❌ IA1 ANALYSIS INTEGRATION BROKEN - /api/run-ia1-cycle and /api/force-ia1-analysis return null/zero values for entry_price, current_price, and all technical indicators (RSI, MACD, MFI, VWAP all return null/neutral), indicating OHLCV data is not reaching the IA1 analysis engine, (4) ❌ TECHNICAL INDICATORS NOT RECEIVING OHLCV DATA - All technical indicators return neutral/unknown values despite Enhanced OHLCV system working, suggesting disconnect between OHLCV fetcher and technical analysis calculations, (5) ⚠️ LLM CONTEXT WINDOW ERRORS - Backend logs show 'ContextWindowExceededError: 145648 tokens' which may be interfering with analysis completion. CRITICAL ACTIONS NEEDED: Fix integration between Enhanced OHLCV fetcher and IA1 analysis engine, resolve LLM context window issues, ensure technical indicators receive real OHLCV data instead of fallback values. CURRENT STATUS: Enhanced OHLCV system working (✅) but not integrated with main trading analysis (❌)."
+  - task: "Anti-Duplicate System MongoDB Integration"
+    implemented: false
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "🔄 IMPLEMENTING PERSISTENT ANTI-DUPLICATE SYSTEM: Starting integration of MongoDB-based anti-duplicate verification logic with the existing in-memory cache system. CURRENT SYSTEM ANALYSIS: (1) ✅ IN-MEMORY CACHE OPERATIONAL - GLOBAL_ANALYZED_SYMBOLS_CACHE working with automatic cleaning at 20 symbols, (2) ✅ 30-MINUTE DATABASE CHECK - Current system verifies recent analyses within 30 minutes, (3) ✅ TIMESTAMP STAGGERING CONFIRMED - 15-second intervals between opportunities ensure unique timestamps, (4) 🔄 NEED 4-HOUR PERSISTENT VERIFICATION - Must extend anti-duplicate system to enforce 4-hour window through database queries using paris_time_to_timestamp_filter(4), (5) 🔄 HYBRID SYSTEM REQUIRED - Need robust combination of fast in-memory cache with persistent MongoDB verification for server restart resilience. IMPLEMENTATION TARGET: Enhance run_trading_cycle with comprehensive MongoDB-based anti-duplicate queries, maintain performance with existing GLOBAL_ANALYZED_SYMBOLS_CACHE, ensure proper 4-hour duplicate prevention mechanism, test thoroughly with database persistence."
 
 frontend:
   # No frontend testing required for this review request
