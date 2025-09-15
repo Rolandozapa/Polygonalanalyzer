@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 import yfinance as yf
 import os
 from enum import Enum
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
