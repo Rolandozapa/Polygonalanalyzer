@@ -81,6 +81,86 @@ from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 # 🚨 CACHE ANTI-DOUBLON GLOBAL (persistant entre appels API)
 GLOBAL_ANALYZED_SYMBOLS_CACHE = set()
 
+# 🔧 Anti-Duplicate Cache Management Functions
+async def populate_cache_from_db():
+    """Populate the global cache with recently analyzed symbols from database"""
+    try:
+        # Get symbols analyzed within the last 4 hours
+        four_hour_filter = paris_time_to_timestamp_filter(4)
+        
+        # Get recent analyses
+        recent_analyses = await db.technical_analyses.find({
+            "timestamp": four_hour_filter
+        }, {"symbol": 1}).to_list(length=None)
+        
+        # Get recent decisions
+        recent_decisions = await db.trading_decisions.find({
+            "timestamp": four_hour_filter
+        }, {"symbol": 1}).to_list(length=None)
+        
+        # Add symbols to cache
+        symbols_added = set()
+        for analysis in recent_analyses:
+            symbol = analysis.get("symbol")
+            if symbol:
+                GLOBAL_ANALYZED_SYMBOLS_CACHE.add(symbol)
+                symbols_added.add(symbol)
+        
+        for decision in recent_decisions:
+            symbol = decision.get("symbol")
+            if symbol:
+                GLOBAL_ANALYZED_SYMBOLS_CACHE.add(symbol)
+                symbols_added.add(symbol)
+        
+        logger.info(f"🔄 Cache populated with {len(symbols_added)} symbols from last 4h: {list(symbols_added)[:10]}{'...' if len(symbols_added) > 10 else ''}")
+        return len(symbols_added)
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to populate cache from database: {e}")
+        return 0
+
+async def cleanup_expired_cache_entries():
+    """Remove expired entries from cache by cross-checking with database"""
+    try:
+        if not GLOBAL_ANALYZED_SYMBOLS_CACHE:
+            return 0
+        
+        # Get symbols that still have recent activity (within 4 hours)
+        four_hour_filter = paris_time_to_timestamp_filter(4)
+        
+        # Check which cached symbols still have recent analyses/decisions
+        valid_symbols = set()
+        
+        for symbol in list(GLOBAL_ANALYZED_SYMBOLS_CACHE):
+            # Check if symbol still has recent analysis
+            recent_analysis = await db.technical_analyses.find_one({
+                "symbol": symbol,
+                "timestamp": four_hour_filter
+            })
+            
+            # Check if symbol still has recent decision
+            recent_decision = await db.trading_decisions.find_one({
+                "symbol": symbol,
+                "timestamp": four_hour_filter
+            })
+            
+            if recent_analysis or recent_decision:
+                valid_symbols.add(symbol)
+        
+        # Remove expired entries
+        expired_count = len(GLOBAL_ANALYZED_SYMBOLS_CACHE) - len(valid_symbols)
+        GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
+        GLOBAL_ANALYZED_SYMBOLS_CACHE.update(valid_symbols)
+        
+        if expired_count > 0:
+            logger.info(f"🧹 Cleaned {expired_count} expired entries from cache. Active: {len(valid_symbols)}")
+        
+        return expired_count
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to cleanup cache: {e}")
+        return 0
+
 # 🔒 MUTEX POUR ÉVITER APPELS PARALLÈLES IA1/IA2
 import asyncio
 IA1_ANALYSIS_LOCK = asyncio.Lock()
