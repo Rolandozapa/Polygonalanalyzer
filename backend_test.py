@@ -143,9 +143,9 @@ class EnhancedOHLCVIntegrationTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_technical_indicators_calculation(self):
-        """Test 1: Technical Indicators Calculation - Real Values vs Defaults"""
-        logger.info("\n🔍 TEST 1: Technical Indicators Calculation Test")
+    async def test_1_data_fetching_integration(self):
+        """Test 1: Data Fetching Integration - Enhanced OHLCV System with Main Server"""
+        logger.info("\n🔍 TEST 1: Data Fetching Integration Test")
         
         try:
             indicators_results = {
