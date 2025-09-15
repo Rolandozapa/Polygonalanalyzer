@@ -789,7 +789,7 @@ class EnhancedOHLCVFetcher:
     async def _fetch_historical_fallback_data(self, normalized_symbol: str, original_symbol: str) -> Optional[pd.DataFrame]:
         """
         FALLBACK SYSTEM: Try specialized historical data APIs when primary sources fail
-        Guarantees minimum 20 days of data even when all primary OHLCV sources fail
+        Guarantees minimum 5 days of data even when all primary OHLCV sources fail
         """
         logger.info(f"🔄 FALLBACK ACTIVATED: Trying historical data APIs for {original_symbol}")
         
