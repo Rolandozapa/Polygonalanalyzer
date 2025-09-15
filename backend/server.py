@@ -8934,22 +8934,27 @@ class UltraProfessionalOrchestrator:
                     
                     logger.info(f"🎯 IA1 analyzing scout selection: {opportunity.symbol} (price: {opportunity.price_change_24h:+.1f}%, vol: {opportunity.volume_24h:,.0f})")
                     
-                    # 🚨 AJOUTER AU CACHE GLOBAL IMMÉDIATEMENT pour éviter doublons pendant l'analyse
+                    # 🚨 ADD TO CACHE IMMEDIATELY to prevent duplicates during analysis
                     GLOBAL_ANALYZED_SYMBOLS_CACHE.add(opportunity.symbol)
-                    logger.info(f"🔒 {opportunity.symbol} ajouté au cache GLOBAL anti-doublon")
+                    logger.info(f"🔒 {opportunity.symbol} added to GLOBAL anti-duplicate cache")
                     
                     analysis = await self.ia1.analyze_opportunity(opportunity)
                     if analysis:
                         analyses_count += 1
-                        logger.debug(f"✅ {opportunity.symbol} analysé avec succès")
+                        logger.debug(f"✅ {opportunity.symbol} analyzed successfully")
                         
-                        # Nettoyer le cache global (garder seulement les 20 derniers)
-                        if len(GLOBAL_ANALYZED_SYMBOLS_CACHE) > 20:
-                            # Convertir en liste, garder les 15 derniers
+                        # Intelligent cache management - cleanup expired entries periodically
+                        if len(GLOBAL_ANALYZED_SYMBOLS_CACHE) > 25:
+                            logger.info("🧹 Triggering intelligent cache cleanup...")
+                            expired_count = await cleanup_expired_cache_entries()
+                            logger.info(f"🧹 Cache cleanup completed. Removed {expired_count} expired entries. Current size: {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)}")
+                        
+                        # Fallback: Simple size limit if cleanup didn't reduce enough
+                        if len(GLOBAL_ANALYZED_SYMBOLS_CACHE) > 30:
                             symbols_list = list(GLOBAL_ANALYZED_SYMBOLS_CACHE)
                             GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
-                            GLOBAL_ANALYZED_SYMBOLS_CACHE.update(symbols_list[-15:])
-                            logger.info(f"🧹 Cache GLOBAL anti-doublon nettoyé: {len(GLOBAL_ANALYZED_SYMBOLS_CACHE)} symboles")
+                            GLOBAL_ANALYZED_SYMBOLS_CACHE.update(symbols_list[-20:])
+                            logger.info(f"🧹 Cache size limit applied: kept 20 most recent symbols")
                         
                         # Step 3: Check if should escalate to IA2
                         if self._should_send_to_ia2(analysis, opportunity):
