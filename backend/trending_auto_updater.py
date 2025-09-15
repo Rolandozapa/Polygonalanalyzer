@@ -99,24 +99,32 @@ class TrendingAutoUpdater:
         logger.info("Auto-trending updater stopped")
     
     async def _update_loop(self):
-        """Boucle principale d'update toutes les 6h avec protection CPU"""
-        # Attendre un peu avant le premier update pour éviter la surcharge au startup
-        await asyncio.sleep(60)  # 1 minute de delay
+        """🚀 OPTIMIZED: Boucle principale d'update - VERSION CPU OPTIMISÉE"""
+        # 🚨 CPU OPTIMIZATION: Délai initial plus long pour éviter la surcharge startup
+        await asyncio.sleep(300)  # 5 minutes au lieu de 1 minute
         
         while self.is_running:
             try:
-                # 🚨 PROTECTION CPU - Vérifier la charge avant l'update (non-blocking CPU check)
+                # 🚨 STRICT CPU PROTECTION - Plus strict et plus efficace
                 if PSUTIL_AVAILABLE:
-                    cpu_usage = psutil.cpu_percent()  # Non-blocking version - CPU optimized
-                    if cpu_usage > 70.0:
-                        logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Skipping trending update")
-                        await asyncio.sleep(14400)  # Wait 4 hours
+                    cpu_usage = psutil.cpu_percent(interval=1)  # 1 seconde sample
+                    if cpu_usage > 50.0:  # Plus strict : 50% au lieu de 70%
+                        logger.warning(f"🚨 HIGH CPU ({cpu_usage:.1f}%) - Delaying trending update")
+                        await asyncio.sleep(1800)  # 30 minutes au lieu de 4h si CPU élevé
                         continue
                 
-                logger.info("🔍 Starting trending update cycle...")
-                await self.update_trending_list()
-                logger.info(f"⏰ Next trending update in 4 hours")
-                await asyncio.sleep(self.update_interval)
+                logger.info("🔍 Starting OPTIMIZED trending update cycle...")
+                
+                # 🚨 CPU OPTIMIZATION: Update avec timeout strict
+                try:
+                    # Timeout de 60 secondes max pour l'update
+                    await asyncio.wait_for(self.update_trending_list(), timeout=60.0)
+                    logger.info(f"⏰ Next trending update in 4 hours (CPU optimized)")
+                except asyncio.TimeoutError:
+                    logger.warning("⏰ Trending update timeout - skipping this cycle")
+                
+                # 🚨 CPU OPTIMIZATION: Intervalle plus long entre vérifications CPU
+                await asyncio.sleep(self.update_interval)  # 4 heures complètes
                 
             except asyncio.CancelledError:
                 logger.info("Trending update loop cancelled")
