@@ -1112,7 +1112,7 @@ class UltraProfessionalCryptoScout:
         """Calcul Risk-Reward bidirectionnel par le Scout - CORRIGÉ pour éviter les valeurs identiques"""
         try:
             current_price = opportunity.current_price
-            volatility = max(opportunity.volatility, 0.015)  # Min 1.5% volatility
+            volatility = max(opportunity.volatility, 0.025)  # 🚀 OPTIMISÉ: Min 2.5% volatility pour RR plus élevés
             price_change_24h = opportunity.price_change_24h
             
             # ATR approximatif basé sur la volatilité 24h
