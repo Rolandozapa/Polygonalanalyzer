@@ -207,22 +207,32 @@ class TrendingAutoUpdater:
                     logger.info(f"✅ CACHE HIT: Using cached trending data ({time_since_update:.0f}s old)")
                     return self.current_trending
             
-            # Si pas de cache valide, faire un appel immédiat simple
-            logger.warning("📦 NO CACHE: Attempting immediate simple fetch")
-            try:
-                # Appel direct sans ThreadPoolExecutor pour éviter les conflits
-                filtered_cryptos = self.fetch_trending_cryptos()
-                if filtered_cryptos:
-                    self.current_trending = filtered_cryptos[:50]  # Top 50
-                    self.last_update = current_time
-                    logger.info(f"✅ IMMEDIATE FETCH: Got {len(self.current_trending)} trending cryptos")
-                    return self.current_trending
-                else:
-                    logger.warning("❌ IMMEDIATE FETCH: No data returned")
-                    return []
-            except Exception as e:
-                logger.error(f"❌ IMMEDIATE FETCH ERROR: {e}")
-                return []
+            # Si pas de cache valide, retourner une liste basique pour éviter les blocages
+            logger.warning("📦 NO CACHE: Returning basic fallback list")
+            # Retourner les TOP 50 symboles de base pour que le système continue à fonctionner
+            basic_cryptos = [
+                'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 
+                'AVAXUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'LTCUSDT', 'BCHUSDT', 'UNIUSDT',
+                'ATOMUSDT', 'FILUSDT', 'APTUSDT', 'NEARUSDT', 'VETUSDT', 'ICPUSDT', 'HBARUSDT',
+                'ALGOUSDT', 'ETCUSDT', 'MANAUSDT', 'SANDUSDT', 'XTZUSDT', 'THETAUSDT', 'FTMUSDT',
+                'EGLDUSDT', 'AAVEUSDT', 'GRTUSDT', 'AXSUSDT', 'KLAYUSDT', 'RUNEUSDT', 'QNTUSDT',
+                'CRVUSDT', 'SUSHIUSDT', 'ZECUSDT', 'COMPUSDT', 'YFIUSDT', 'SNXUSDT', 'MKRUSDT',
+                'ENJUSDT', 'BATUSDT', 'FLOWUSDT', 'KSMUSDT', 'ZRXUSDT', 'RENUSDT', 'LRCUSDT', '1INCHUSDT'
+            ]
+            
+            # Convertir en format TrendingCrypto
+            fallback_trending = []
+            for symbol in basic_cryptos:
+                fallback_trending.append({
+                    'symbol': symbol,
+                    'price_change': 2.5,  # Valeur neutre
+                    'volume': 1000000,     # Volume raisonnable
+                    'source': 'fallback_basic'
+                })
+            
+            self.current_trending = fallback_trending
+            logger.info(f"✅ FALLBACK: Using {len(fallback_trending)} basic symbols")
+            return fallback_trending
                 
         except Exception as e:
             logger.error(f"❌ SYNC ERROR: {e}")
