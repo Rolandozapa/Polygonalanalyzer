@@ -6001,10 +6001,42 @@ async def test_escalation_logic():
     return {"escalation_logic_test": results}
 
 
+# 🚨 PERFORMANCE: Cache pour éviter la saturation CPU
+ENDPOINT_CACHE = {}
+CACHE_EXPIRY_SECONDS = 30  # Cache de 30 secondes pour réduire les appels
+
+def is_cache_valid(cache_key: str) -> bool:
+    """Vérifier si le cache est encore valide"""
+    if cache_key not in ENDPOINT_CACHE:
+        return False
+    
+    cache_time = ENDPOINT_CACHE[cache_key].get('timestamp', 0)
+    return (time.time() - cache_time) < CACHE_EXPIRY_SECONDS
+
+def get_cached_response(cache_key: str):
+    """Récupérer une réponse cachée"""
+    if is_cache_valid(cache_key):
+        return ENDPOINT_CACHE[cache_key]['data']
+    return None
+
+def set_cached_response(cache_key: str, data):
+    """Mettre en cache une réponse"""
+    ENDPOINT_CACHE[cache_key] = {
+        'data': data,
+        'timestamp': time.time()
+    }
+
 @app.get("/api/opportunities")
 async def get_opportunities(limit: int = 50):
     """Get current FILTERED opportunities from BingX scout system ONLY"""
     try:
+        # 🚨 PERFORMANCE: Cache pour éviter la saturation CPU
+        cache_key = f"opportunities_{limit}"
+        cached_response = get_cached_response(cache_key)
+        if cached_response:
+            logger.debug(f"📦 CACHE HIT: Returning cached opportunities ({len(cached_response.get('opportunities', []))})")
+            return cached_response
+        
         # 🎯 STRICT SCOUT FILTERING: Only show opportunities that passed BingX scout filters
         fresh_opportunities = advanced_market_aggregator.get_current_opportunities()
         
