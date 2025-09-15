@@ -5,6 +5,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List, Tuple
+from concurrent.futures import ThreadPoolExecutor
 import os
 from dotenv import load_dotenv
 import yfinance as yf
