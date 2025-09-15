@@ -1042,7 +1042,7 @@ class EnhancedOHLCVFetcher:
     async def _fetch_relaxed_primary_data(self, normalized_symbol: str, original_symbol: str) -> Optional[pd.DataFrame]:
         """
         LAST RESORT: Try primary sources again with relaxed requirements
-        Accept any data >= 20 days from any primary source
+        Accept any data >= 5 days from any primary source
         """
         logger.info(f"🚨 LAST RESORT: Relaxed primary source attempt for {original_symbol}")
         
