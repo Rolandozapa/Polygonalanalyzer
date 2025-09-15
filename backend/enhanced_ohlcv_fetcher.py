@@ -413,30 +413,32 @@ class EnhancedOHLCVFetcher:
         return None
     
     async def _fetch_coindesk_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
-        """Enhanced CoinDesk Data API fetching - institutional grade data"""
+        """Enhanced CoinDesk Data API fetching - using alternative public endpoint"""
         try:
-            # CoinDesk uses base currency format
-            base_symbol = symbol.replace('USDT', '').replace('USD', '').lower()
+            # CoinDesk Bitcoin Price Index (BPI) for Bitcoin only
+            if not symbol.upper().startswith('BTC'):
+                logger.debug(f"CoinDesk API only supports Bitcoin, skipping {symbol}")
+                return None
             
-            # CoinDesk API endpoint (using public endpoints first)
-            url = f"https://production-api.coindesk.com/v2/price/values/{base_symbol}"
+            # Use the public Bitcoin Price Index API
+            url = "https://api.coindesk.com/v1/bpi/historical/close.json"
+            
+            # Calculate date range
+            end_date = datetime.now(timezone.utc)
+            start_date = end_date - timedelta(days=self.lookback_days)
+            
             params = {
-                "start_date": (datetime.now(timezone.utc) - timedelta(days=self.lookback_days)).strftime('%Y-%m-%d'),
-                "end_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
-                "ohlc": "true"
+                "start": start_date.strftime('%Y-%m-%d'),
+                "end": end_date.strftime('%Y-%m-%d')
             }
             
-            headers = {}
-            if self.coindesk_api_key:
-                headers["Authorization"] = f"Bearer {self.coindesk_api_key}"
-                
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
-                async with session.get(url, params=params, headers=headers) as response:
+                async with session.get(url, params=params) as response:
                     if response.status == 200:
                         data = await response.json()
-                        return self._parse_coindesk_data(data, symbol)
+                        return self._parse_coindesk_bpi_data(data, symbol)
                     else:
-                        logger.debug(f"CoinDesk API returned {response.status} for {symbol}")
+                        logger.debug(f"CoinDesk BPI API returned {response.status} for {symbol}")
                         
         except Exception as e:
             logger.debug(f"CoinDesk enhanced fetch error for {symbol}: {e}")
