@@ -8589,14 +8589,20 @@ async def refresh_anti_doublon_cache():
 
 @api_router.post("/clear-anti-doublon-cache")
 async def clear_anti_doublon_cache():
-    """🧹 CLEAR - Vider le cache anti-doublon"""
+    """🧹 CLEAR - Clear anti-duplicate cache (force fresh analysis)"""
     global GLOBAL_ANALYZED_SYMBOLS_CACHE
     old_size = len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+    old_symbols = list(GLOBAL_ANALYZED_SYMBOLS_CACHE)
     GLOBAL_ANALYZED_SYMBOLS_CACHE.clear()
+    
+    logger.info(f"🧹 MANUAL CACHE CLEAR: Removed {old_size} symbols from anti-duplicate cache")
+    
     return {
         "success": True,
-        "message": f"Cache anti-doublon vidé ({old_size} symboles supprimés)",
-        "new_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE)
+        "message": f"Anti-duplicate cache cleared ({old_size} symbols removed)",
+        "old_size": old_size,
+        "new_size": len(GLOBAL_ANALYZED_SYMBOLS_CACHE),
+        "cleared_symbols": old_symbols[:10] + (["..."] if len(old_symbols) > 10 else [])
     }
 
 @api_router.post("/force-scout-refresh")
