@@ -256,8 +256,11 @@ class TechnicalPatternDetector:
             loop = asyncio.get_event_loop()
             yf_symbol = symbol.replace('USDT', '-USD')
             
-            ticker = await loop.run_in_executor(None, yf.Ticker, yf_symbol)
-            hist = await loop.run_in_executor(None, lambda: ticker.history(period=f"{self.lookback_days}d"))
+            # 🚨 CRITICAL FIX: Utiliser ThreadPoolExecutor temporaire au lieu de None (default executor)
+            # Évite les conflits AsyncIO + multiprocessing de yfinance
+            with ThreadPoolExecutor(max_workers=1) as temp_pool:
+                ticker = await loop.run_in_executor(temp_pool, yf.Ticker, yf_symbol)
+                hist = await loop.run_in_executor(temp_pool, lambda: ticker.history(period=f"{self.lookback_days}d"))
             
             if not hist.empty:
                 # Normalise les colonnes
