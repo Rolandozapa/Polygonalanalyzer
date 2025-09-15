@@ -6,7 +6,8 @@ import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
 import yfinance as yf
-import ccxt
+# 🚨 CCXT DISABLED: import ccxt - TEMPORARILY DISABLED FOR CPU DEBUG
+# import ccxt
 import pandas as pd
 import numpy as np
 from dataclasses import dataclass
