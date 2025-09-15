@@ -197,31 +197,19 @@ class TrendingAutoUpdater:
                 return self.current_trending
             
             # Pas de données fraîches, utiliser un thread pour éviter les problèmes d'event loop
-            logger.info("🔄 SYNC FETCH: Getting fresh BingX data in thread...")
-            import threading
-            import concurrent.futures
+            # 🚨 CRITICAL CPU FIX: Simplifier l'appel synchrone - éviter ThreadPoolExecutor
+            logger.info("🔄 SIMPLE SYNC: Getting cached BingX data (CPU optimized)")
             
-            def fetch_in_thread():
-                # Nouveau event loop dans le thread
-                new_loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(new_loop)
-                try:
-                    return new_loop.run_until_complete(self.fetch_trending_cryptos())
-                finally:
-                    new_loop.close()
+            # Au lieu de créer un nouveau thread/event loop, utiliser les données cached
+            if self.current_trending and self.last_update:
+                time_since_update = (current_time - self.last_update).total_seconds()
+                if time_since_update < self.update_interval:  # Moins de 4 heures
+                    logger.info(f"✅ CACHE HIT: Using cached trending data ({time_since_update:.0f}s old)")
+                    return self.current_trending
             
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(fetch_in_thread)
-                filtered_cryptos = future.result(timeout=30)  # 30 secondes max
-            
-            if filtered_cryptos:
-                self.current_trending = filtered_cryptos
-                self.last_update = current_time
-                logger.info(f"✅ SYNC SUCCESS: {len(filtered_cryptos)} BingX cryptos fetched")
-                return filtered_cryptos
-            else:
-                logger.error("❌ SYNC FAILED: No cryptos from BingX")
-                return []
+            # Si pas de cache valide, retourner empty et laisser l'async loop s'en occuper
+            logger.warning("📦 NO CACHE: Returning empty list - async loop will update")
+            return []
                 
         except Exception as e:
             logger.error(f"❌ SYNC ERROR: {e}")
