@@ -3679,9 +3679,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
     # Note: Synthetic data generation removed - using REAL OHLCV data only
     
     def _calculate_rsi(self, prices: pd.Series, period: int = 14) -> float:
-        """🚨 TEMPORARY DISABLED for CPU debugging"""
-        logger.warning("🚨 RSI calculation temporarily disabled for CPU debugging")
-        return 50.0  # Neutral RSI
         """Calculate RSI indicator avec gestion micro-prix"""
         try:
             if len(prices) < period + 1:
