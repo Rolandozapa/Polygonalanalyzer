@@ -359,39 +359,44 @@ class RealMarketDataService:
         opportunities = []
         
         try:
-            # Yahoo Finance crypto symbols
-            crypto_symbols = ['BTC-USD', 'ETH-USD', 'SOL-USD', 'ADA-USD', 'DOT-USD']
+            logger.info("🔍 Fetching crypto prices via secondary APIs")
+            # 🚨 YFINANCE DISABLED: Temporarily disabled to resolve CPU saturation
+            logger.warning("🚨 Yahoo Finance crypto fetching temporarily disabled to resolve CPU saturation")
+            return []  # Return empty list instead of yfinance data
             
-            for symbol in crypto_symbols:
-                try:
-                    ticker = yf.Ticker(symbol)
-                    info = ticker.info
-                    hist = ticker.history(period='2d')
-                    
-                    if not hist.empty and info:
-                        current_price = hist['Close'].iloc[-1]
-                        prev_price = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
-                        price_change = ((current_price - prev_price) / prev_price) * 100
-                        
-                        # Calculate volatility from recent data
-                        volatility = hist['Close'].pct_change().std()
-                        if pd.isna(volatility):
-                            volatility = 0.02
-                        
-                        opportunity = MarketDataPoint(
-                            symbol=symbol.replace('-USD', 'USDT'),
-                            price=current_price,
-                            volume_24h=hist['Volume'].iloc[-1] * current_price,
-                            price_change_24h=price_change,
-                            volatility=volatility,
-                            market_cap=info.get('marketCap'),
-                            timestamp=datetime.now(timezone.utc)
-                        )
-                        opportunities.append(opportunity)
-                        
-                except Exception as e:
-                    logger.warning(f"Failed to get Yahoo Finance data for {symbol}: {e}")
-                    continue
+            # Original yfinance code commented out:
+            # crypto_symbols = ['BTC-USD', 'ETH-USD', 'SOL-USD', 'ADA-USD', 'DOT-USD']
+            # 
+            # for symbol in crypto_symbols:
+            #     try:
+            #         ticker = yf.Ticker(symbol)
+            #         info = ticker.info
+            #         hist = ticker.history(period='2d')
+            #         
+            #         if not hist.empty and info:
+            #             current_price = hist['Close'].iloc[-1]
+            #             prev_price = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
+            #             price_change = ((current_price - prev_price) / prev_price) * 100
+            #             
+            #             # Calculate volatility from recent data
+            #             volatility = hist['Close'].pct_change().std()
+            #             if pd.isna(volatility):
+            #                 volatility = 0.02
+            #             
+            #             opportunity = MarketDataPoint(
+            #                 symbol=symbol.replace('-USD', 'USDT'),
+            #                 price=current_price,
+            #                 volume_24h=hist['Volume'].iloc[-1] * current_price,
+            #                 price_change_24h=price_change,
+            #                 volatility=volatility,
+            #                 market_cap=info.get('marketCap'),
+            #                 timestamp=datetime.now(timezone.utc)
+            #             )
+            #             opportunities.append(opportunity)
+            #             
+            #     except Exception as e:
+            #         logger.warning(f"Failed to get Yahoo Finance data for {symbol}: {e}")
+            #         continue
                     
         except Exception as e:
             logger.error(f"Error fetching Yahoo Finance data: {e}")
