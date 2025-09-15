@@ -497,7 +497,9 @@ class AdvancedMarketAggregator:
         self.successful_requests = 0
         
         # Thread pool for parallel processing - CPU optimized (reduced from 20 to 6 workers)
-        self.thread_pool = ThreadPoolExecutor(max_workers=6)
+        # 🚨 PERFORMANCE FIX: Ne pas créer un ThreadPoolExecutor permanent
+        # self.thread_pool = ThreadPoolExecutor(max_workers=6)
+        self.thread_pool = None  # Sera créé à la demande et fermé immédiatement
         
         # Initialize API endpoints
         self.api_endpoints = self._initialize_api_endpoints()
