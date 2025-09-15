@@ -165,9 +165,12 @@ class EnhancedOHLCVFetcher:
         
         logger.info(f"🔍 Fetching multi-source OHLCV for {symbol} (normalized: {normalized_symbol})")
         
-        # Try multiple sources simultaneously for validation
+        # Try multiple sources simultaneously for validation (prioritized order)
         sources = [
+            ('BingX Enhanced', self._fetch_bingx_enhanced),
             ('Binance Enhanced', self._fetch_binance_enhanced),
+            ('CoinDesk Enhanced', self._fetch_coindesk_enhanced),
+            ('Kraken Enhanced', self._fetch_kraken_enhanced),
             ('CoinGecko Enhanced', self._fetch_coingecko_enhanced), 
             ('TwelveData Enhanced', self._fetch_twelvedata_enhanced),
             ('CoinAPI Enhanced', self._fetch_coinapi_enhanced),
