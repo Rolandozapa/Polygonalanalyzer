@@ -6135,6 +6135,13 @@ def sanitize_float_values(obj):
 async def get_analyses(limit: int = 50):
     """Get recent IA1 technical analyses"""
     try:
+        # 🚨 PERFORMANCE: Cache pour éviter la saturation CPU
+        cache_key = f"analyses_{limit}"
+        cached_response = get_cached_response(cache_key)
+        if cached_response:
+            logger.debug(f"📦 CACHE HIT: Returning cached analyses ({cached_response.get('count', 0)})")
+            return cached_response
+        
         cursor = db.technical_analyses.find().sort("timestamp", -1).limit(limit)
         analyses = []
         async for doc in cursor:
