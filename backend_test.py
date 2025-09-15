@@ -1137,8 +1137,8 @@ class EnhancedOHLCVIntegrationTestSuite:
         return passed_tests, total_tests
 
 async def main():
-    """Main function to run the comprehensive technical indicators test suite"""
-    test_suite = TechnicalIndicatorsTestSuite()
+    """Main function to run the comprehensive Enhanced OHLCV Multi-Source Integration test suite"""
+    test_suite = EnhancedOHLCVIntegrationTestSuite()
     passed_tests, total_tests = await test_suite.run_comprehensive_test_suite()
     
     # Exit with appropriate code
