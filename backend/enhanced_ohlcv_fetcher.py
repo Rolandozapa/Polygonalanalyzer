@@ -480,7 +480,7 @@ class EnhancedOHLCVFetcher:
         return None
 
     async def _fetch_yahoo_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
-        """Enhanced Yahoo Finance fetching as fallback"""
+        """Enhanced Yahoo Finance fetching - reliable free source"""
         try:
             # Convert to Yahoo format
             yahoo_symbol = symbol.replace('USDT', '-USD')
@@ -489,7 +489,7 @@ class EnhancedOHLCVFetcher:
             ticker = yf.Ticker(yahoo_symbol)
             hist = ticker.history(period=f"{self.lookback_days}d")
             
-            if len(hist) > 20:  # Minimum reasonable data
+            if len(hist) > 5:  # Reduced minimum threshold 
                 # Convert to our standard format
                 df = pd.DataFrame({
                     'Open': hist['Open'],
@@ -499,7 +499,10 @@ class EnhancedOHLCVFetcher:
                     'Volume': hist['Volume']
                 })
                 df.index = pd.to_datetime(df.index)
-                return df
+                
+                # Ensure we have the required minimum length
+                if len(df) >= 5:
+                    return df
                 
         except Exception as e:
             logger.debug(f"Yahoo Finance enhanced fetch error for {symbol}: {e}")
