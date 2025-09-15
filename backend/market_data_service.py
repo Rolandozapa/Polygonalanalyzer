@@ -5,7 +5,8 @@ import logging
 import json
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timezone, timedelta
-import yfinance as yf
+# 🚨 YFINANCE DISABLED: import yfinance as yf - TEMPORARILY DISABLED FOR CPU DEBUG
+# import yfinance as yf
 # 🚨 CCXT DISABLED: import ccxt - TEMPORARILY DISABLED FOR CPU DEBUG
 # import ccxt
 import pandas as pd
