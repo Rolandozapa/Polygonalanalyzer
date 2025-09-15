@@ -106,10 +106,15 @@ class EnhancedOHLCVIntegrationTestSuite:
                 "expected_success_rate": 1.0,  # 100% confirmed
                 "key_features": ["free", "backup", "extensive_coverage"]
             },
-            "Multi-Source": {
-                "description": "Combines BingX + Kraken with cross-validation",
+            "Bitfinex": {
+                "description": "Exchange-grade data with REST API v2",
                 "expected_success_rate": 1.0,  # 100% confirmed
-                "key_features": ["multi_source", "cross_validation", "combined"]
+                "key_features": ["exchange_grade", "rest_api_v2", "professional"]
+            },
+            "CryptoCompare": {
+                "description": "Comprehensive coverage with v2 historical data",
+                "expected_success_rate": 1.0,  # 100% confirmed
+                "key_features": ["comprehensive", "v2_historical", "coverage"]
             }
         }
         
@@ -126,6 +131,35 @@ class EnhancedOHLCVIntegrationTestSuite:
                 "description": "Should leverage enhanced data sources for trending crypto validation",
                 "expected_ohlcv_usage": True,
                 "test_payload": None
+            }
+        }
+        
+        # Technical indicators to validate (from review request)
+        self.technical_indicators = {
+            'RSI': {
+                'field': 'rsi_signal',
+                'expected_values': ['oversold', 'overbought', 'extreme_oversold', 'extreme_overbought'],
+                'default_values': ['unknown', 'neutral', '']
+            },
+            'MACD': {
+                'field': 'macd_trend', 
+                'expected_values': ['bullish', 'bearish'],
+                'default_values': ['unknown', 'neutral', '']
+            },
+            'Stochastic': {
+                'field': 'stochastic_signal',
+                'expected_values': ['oversold', 'overbought', 'extreme_oversold', 'extreme_overbought'],
+                'default_values': ['unknown', 'neutral', '']
+            },
+            'MFI': {
+                'field': 'mfi_signal',
+                'expected_values': ['oversold', 'overbought'],
+                'default_values': ['unknown', 'neutral', '']
+            },
+            'VWAP': {
+                'field': 'vwap_signal',
+                'expected_values': ['oversold', 'overbought', 'extreme_oversold', 'extreme_overbought'],
+                'default_values': ['unknown', 'neutral', '']
             }
         }
         
