@@ -376,11 +376,100 @@ class EnhancedOHLCVFetcher:
         
         return None
     
+    async def _fetch_bingx_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced BingX OHLCV data fetching - primary source"""
+        try:
+            # BingX futures format (standard USDT pairs)
+            bingx_symbol = symbol if symbol.endswith('USDT') else f"{symbol}USDT"
+            
+            url = f"{self.bingx_base_url}/openApi/swap/v2/quote/klines"
+            params = {
+                "symbol": bingx_symbol,
+                "interval": "1d",
+                "limit": self.lookback_days
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_bingx_data(data, symbol)
+                    else:
+                        logger.debug(f"BingX API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"BingX enhanced fetch error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_coindesk_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced CoinDesk Data API fetching - institutional grade data"""
+        try:
+            # CoinDesk uses base currency format
+            base_symbol = symbol.replace('USDT', '').replace('USD', '').lower()
+            
+            # CoinDesk API endpoint (using public endpoints first)
+            url = f"https://production-api.coindesk.com/v2/price/values/{base_symbol}"
+            params = {
+                "start_date": (datetime.now(timezone.utc) - timedelta(days=self.lookback_days)).strftime('%Y-%m-%d'),
+                "end_date": datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                "ohlc": "true"
+            }
+            
+            headers = {}
+            if self.coindesk_api_key:
+                headers["Authorization"] = f"Bearer {self.coindesk_api_key}"
+                
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url, params=params, headers=headers) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_coindesk_data(data, symbol)
+                    else:
+                        logger.debug(f"CoinDesk API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"CoinDesk enhanced fetch error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_kraken_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced Kraken API fetching with OHLC endpoint"""
+        try:
+            # Convert to Kraken pair format
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            # Kraken uses different naming conventions
+            kraken_symbol_map = {
+                'BTC': 'XXBTZUSD', 'ETH': 'XETHZUSD', 'LTC': 'XLTCZUSD',
+                'XRP': 'XXRPZUSD', 'ADA': 'ADAUSD', 'SOL': 'SOLUSD',
+                'DOT': 'DOTUSD', 'AVAX': 'AVAXUSD', 'MATIC': 'MATICUSD',
+                'LINK': 'LINKUSD', 'UNI': 'UNIUSD'
+            }
+            
+            kraken_symbol = kraken_symbol_map.get(base_symbol, f"{base_symbol}USD")
+            
+            url = "https://api.kraken.com/0/public/OHLC"
+            params = {
+                "pair": kraken_symbol,
+                "interval": "1440"  # Daily interval
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_kraken_data(data, symbol, kraken_symbol)
+                    else:
+                        logger.debug(f"Kraken API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"Kraken enhanced fetch error for {symbol}: {e}")
+        
+        return None
+
     async def _fetch_yahoo_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
         """Enhanced Yahoo Finance fetching as fallback"""
         try:
-            import yfinance as yf
-            
             # Convert to Yahoo format
             yahoo_symbol = symbol.replace('USDT', '-USD')
             
