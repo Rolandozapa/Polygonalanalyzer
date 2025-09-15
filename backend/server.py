@@ -8775,6 +8775,11 @@ class UltraProfessionalOrchestrator:
             # Initialize scout trending system
             await self.scout.initialize_trending_system()
             
+            # 🔐 Initialize anti-duplicate cache from database
+            logger.info("🔄 Populating anti-duplicate cache from database...")
+            cached_symbols_count = await populate_cache_from_db()
+            logger.info(f"✅ Anti-duplicate cache initialized with {cached_symbols_count} symbols")
+            
             self._initialized = True
             logger.info("✅ Orchestrator initialized successfully")
             
