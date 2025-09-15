@@ -933,11 +933,12 @@ class AdvancedMarketAggregator:
         try:
             loop = asyncio.get_event_loop()
             
-            # Run in thread pool to avoid blocking
-            tickers = await loop.run_in_executor(
-                self.thread_pool, 
-                lambda: exchange.fetch_tickers() if hasattr(exchange, 'fetch_tickers') else {}
-            )
+            # 🚨 PERFORMANCE FIX: Utiliser thread pool temporaire avec context manager
+            with ThreadPoolExecutor(max_workers=2) as temp_pool:
+                tickers = await loop.run_in_executor(
+                    temp_pool, 
+                    lambda: exchange.fetch_tickers() if hasattr(exchange, 'fetch_tickers') else {}
+                )
             
             data = []
             for symbol, ticker in tickers.items():
