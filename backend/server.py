@@ -3722,7 +3722,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.debug(f"RSI calculation error: {e}")
             return 50.0
     
-    def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    def _calculate_macd(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[float, float, float]:
+        """🚨 TEMPORARY DISABLED for CPU debugging"""
+        logger.warning("🚨 MACD calculation temporarily disabled for CPU debugging")
+        return 0.0, 0.0, 0.0  # Neutral MACD
         """Calculate MACD indicator with improved validation and stability"""
         try:
             # Need at least 30+ days for stable MACD (reduced from 50 for more availability)
