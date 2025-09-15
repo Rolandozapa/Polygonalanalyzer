@@ -12,7 +12,8 @@ import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import yfinance as yf
-import ccxt
+# 🚨 CCXT DISABLED: import ccxt - TEMPORARILY DISABLED FOR CPU DEBUG
+# import ccxt
 from dotenv import load_dotenv
 import hashlib
 from collections import defaultdict, deque
