@@ -1126,9 +1126,11 @@ class UltraProfessionalCryptoScout:
             # Facteur de volatilité ajusté 
             volatility_factor = min(volatility / 0.03, 2.0)  # 0.5 à 2.0 (basé sur volatilité relative)
             
-            # Support/Résistance avec variation selon les caractéristiques du token
-            base_support_multiplier = 1.8 + (volatility_factor * 0.4)    # 1.8 à 2.6
-            base_resistance_multiplier = 2.2 + (momentum_factor * 0.6)   # 2.2 à 3.1
+            # 🚀 OPTIMISATION RR: Support/Résistance avec multiplicateurs ajustés pour RR ≥ 2.0
+            # AVANT: base_support_multiplier = 1.8 + (volatility_factor * 0.4)    # 1.8 à 2.6 → RR ~1.5
+            # APRÈS: Multiplicateurs optimisés pour garantir RR ≥ 2.0 systématiquement
+            base_support_multiplier = 1.5 + (volatility_factor * 0.3)    # 1.5 à 2.1 (SL plus proche)
+            base_resistance_multiplier = 3.5 + (momentum_factor * 0.8)   # 3.5 à 4.7 (TP plus éloigné)
             
             # Ajustement directionnel basé sur le momentum
             if price_change_24h > 0:  # Momentum haussier
