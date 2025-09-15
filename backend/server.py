@@ -5194,7 +5194,7 @@ async def force_ia1_analysis(request: dict):
 
 @api_router.post("/run-ia1-cycle")
 async def run_ia1_cycle():
-    """Run a quick IA1 analysis cycle on current opportunities - AVEC PROTECTION ANTI-PARALLÈLE"""
+    """Run a quick IA1 analysis cycle on current opportunities - AVEC PROTECTION ANTI-PARALLÈLE ET ANTI-DOUBLON"""
     global IA1_ANALYSIS_LOCK
     
     if IA1_ANALYSIS_LOCK.locked():
