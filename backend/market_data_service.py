@@ -39,12 +39,14 @@ class RealMarketDataService:
         self.twelvedata_key = os.getenv('TWELVEDATA_KEY')
         self.binance_key = os.getenv('BINANCE_KEY')
         
-        # Initialize CCXT for Binance
-        self.binance = ccxt.binance({
-            'apiKey': self.binance_key,
-            'sandbox': False,  # Set to True for testnet
-            'enableRateLimit': True,
-        })
+        # 🚨 CCXT DISABLED: Initialize CCXT for Binance - TEMPORARILY DISABLED FOR CPU DEBUG
+        # self.binance = ccxt.binance({
+        #     'apiKey': self.binance_key,
+        #     'sandbox': False,  # Set to True for testnet
+        #     'enableRateLimit': True,
+        # })
+        self.binance = None
+        logger.warning("🚨 CCXT Binance integration temporarily disabled to resolve CPU saturation")
         
         # Cache for API responses
         self._cache = {}
