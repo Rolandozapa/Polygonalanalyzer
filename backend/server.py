@@ -2624,9 +2624,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     
                     if high_col and low_col and close_col:
                         stoch_result = self._calculate_stochastic(historical_data[high_col], historical_data[low_col], historical_data[close_col])
-                        if stoch_result and isinstance(stoch_result, tuple) and len(stoch_result) >= 2:
-                            # Stochastic returns (%K, %D)
-                            stochastic_k, stochastic_d = stoch_result
+                        if stoch_result and isinstance(stoch_result, dict):
+                            # Stochastic returns {"k": %K, "d": %D}
+                            stochastic_k = stoch_result.get("k", 50.0)
+                            stochastic_d = stoch_result.get("d", 50.0)
                             logger.info(f"   ✅ Stochastic calculé: K={stochastic_k:.2f}, D={stochastic_d:.2f}")
                         else:
                             stochastic_k, stochastic_d = 50.0, 50.0
