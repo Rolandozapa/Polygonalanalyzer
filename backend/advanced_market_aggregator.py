@@ -685,36 +685,40 @@ class AdvancedMarketAggregator:
         return sorted(endpoints, key=lambda x: x.priority)
     
     def _initialize_exchanges(self) -> Dict[str, Any]:
-        """Initialize CCXT exchanges"""
-        exchanges = {}
+        """🚨 CCXT DISABLED: Initialize CCXT exchanges - TEMPORARILY DISABLED FOR CPU DEBUG"""
+        logger.warning("🚨 CCXT exchange initialization temporarily disabled to resolve CPU saturation")
+        return {}  # Return empty dict instead of initializing exchanges
         
-        try:
-            # Binance
-            if self.binance_key:
-                exchanges['binance'] = ccxt.binance({
-                    'apiKey': self.binance_key,
-                    'sandbox': False,
-                    'enableRateLimit': True,
-                    'timeout': 30000
-                })
-            
-            # Public exchanges (no API key needed)
-            exchanges['bitfinex'] = ccxt.bitfinex({'enableRateLimit': True})
-            exchanges['kraken'] = ccxt.kraken({'enableRateLimit': True})
-            # Fix: coinbasepro is now coinbase in newer ccxt versions
-            try:
-                exchanges['coinbase'] = ccxt.coinbase({'enableRateLimit': True})
-            except AttributeError:
-                # Fallback for older ccxt versions
-                try:
-                    exchanges['coinbase'] = ccxt.coinbasepro({'enableRateLimit': True})
-                except AttributeError:
-                    logger.warning("Neither coinbase nor coinbasepro available in ccxt")
-            
-        except Exception as e:
-            logger.warning(f"Error initializing exchanges: {e}")
-        
-        return exchanges
+        # Original code commented out for CPU debugging:
+        # exchanges = {}
+        # 
+        # try:
+        #     # Binance
+        #     if self.binance_key:
+        #         exchanges['binance'] = ccxt.binance({
+        #             'apiKey': self.binance_key,
+        #             'sandbox': False,
+        #             'enableRateLimit': True,
+        #             'timeout': 30000
+        #         })
+        #     
+        #     # Public exchanges (no API key needed)
+        #     exchanges['bitfinex'] = ccxt.bitfinex({'enableRateLimit': True})
+        #     exchanges['kraken'] = ccxt.kraken({'enableRateLimit': True})
+        #     # Fix: coinbasepro is now coinbase in newer ccxt versions
+        #     try:
+        #         exchanges['coinbase'] = ccxt.coinbase({'enableRateLimit': True})
+        #     except AttributeError:
+        #         # Fallback for older ccxt versions
+        #         try:
+        #             exchanges['coinbase'] = ccxt.coinbasepro({'enableRateLimit': True})
+        #         except AttributeError:
+        #             logger.warning("Neither coinbase nor coinbasepro available in ccxt")
+        #     
+        # except Exception as e:
+        #     logger.warning(f"Error initializing exchanges: {e}")
+        # 
+        # return exchanges
     
     async def get_comprehensive_market_data(self, 
                                           symbols: Optional[List[str]] = None, 
