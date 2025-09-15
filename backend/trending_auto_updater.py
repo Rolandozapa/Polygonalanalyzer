@@ -78,7 +78,10 @@ class TrendingAutoUpdater:
             return
         
         self.is_running = True
-        self.update_task = asyncio.create_task(self._update_loop())
+        # 🚨 TEMPORARY FIX: Disable auto-update loop to reduce CPU load
+        # self.update_task = asyncio.create_task(self._update_loop())
+        self.update_task = None
+        logger.warning("🚨 AUTO-UPDATE DISABLED: Trending update loop temporarily disabled to reduce CPU load")
         logger.info("🔄 Auto-trending updater started - checking every 4 hours")
         
         # 🚨 CORRECTION: Pas de premier update immédiat au startup pour éviter les blocages
