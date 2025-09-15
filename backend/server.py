@@ -1845,6 +1845,133 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 "error": str(e)
             }
     
+    def _estimate_token_count(self, text: str) -> int:
+        """Estimate token count using simple approximation (4 chars ≈ 1 token)"""
+        return len(text) // 4
+
+    def _chunk_prompt_for_llm(self, full_prompt: str, max_tokens: int = 120000) -> List[str]:
+        """
+        Split the prompt into manageable chunks to avoid context window limits
+        
+        Args:
+            full_prompt: The complete prompt text
+            max_tokens: Maximum tokens per chunk (default: 120k to leave buffer)
+            
+        Returns:
+            List of prompt chunks that can be processed sequentially
+        """
+        estimated_tokens = self._estimate_token_count(full_prompt)
+        
+        if estimated_tokens <= max_tokens:
+            logger.info(f"📊 PROMPT SIZE: {estimated_tokens} tokens (within limit)")
+            return [full_prompt]
+        
+        logger.warning(f"🚨 PROMPT TOO LARGE: {estimated_tokens} tokens exceeds {max_tokens} limit")
+        
+        # Split the prompt into logical sections
+        sections = full_prompt.split('\n\n')
+        chunks = []
+        current_chunk = ""
+        
+        # Core context that should be in every chunk
+        core_context = """ADVANCED TECHNICAL ANALYSIS SUMMARY
+You are analyzing a cryptocurrency for trading signals. Provide your analysis in JSON format.
+Required fields: signal (LONG/SHORT/HOLD), confidence (0.0-1.0), reasoning, entry_price, stop_loss_price, take_profit_price, risk_reward_ratio.
+"""
+        
+        for section in sections:
+            # Test if adding this section would exceed the limit
+            test_chunk = current_chunk + "\n\n" + section
+            if self._estimate_token_count(test_chunk) > max_tokens and current_chunk:
+                # Add core context to chunk and save it
+                chunks.append(core_context + "\n\n" + current_chunk)
+                current_chunk = section
+            else:
+                if current_chunk:
+                    current_chunk += "\n\n" + section
+                else:
+                    current_chunk = section
+        
+        # Add the last chunk
+        if current_chunk:
+            chunks.append(core_context + "\n\n" + current_chunk)
+        
+        logger.info(f"📊 CHUNKING RESULT: Split into {len(chunks)} chunks")
+        for i, chunk in enumerate(chunks):
+            tokens = self._estimate_token_count(chunk)
+            logger.info(f"   Chunk {i+1}: {tokens} tokens")
+        
+        return chunks
+
+    async def _process_chunked_analysis(self, chunks: List[str], symbol: str) -> str:
+        """
+        Process multiple prompt chunks and combine the results
+        
+        Args:
+            chunks: List of prompt chunks
+            symbol: Trading symbol being analyzed
+            
+        Returns:
+            Combined analysis result
+        """
+        results = []
+        
+        for i, chunk in enumerate(chunks):
+            try:
+                logger.info(f"🔄 Processing chunk {i+1}/{len(chunks)} for {symbol}")
+                
+                if i > 0:
+                    # Add context from previous results to maintain continuity
+                    context_prompt = f"""
+CONTINUATION ANALYSIS - Part {i+1} of {len(chunks)}
+
+Previous analysis summary: {results[-1][:500]}...
+
+Please continue the analysis based on the following additional data:
+
+{chunk}
+"""
+                    response = await self.chat.send_message(UserMessage(text=context_prompt))
+                else:
+                    response = await self.chat.send_message(UserMessage(text=chunk))
+                
+                results.append(response)
+                logger.info(f"✅ Chunk {i+1} processed: {len(response)} chars")
+                
+                # Small delay between chunks to avoid rate limiting
+                await asyncio.sleep(0.5)
+                
+            except Exception as e:
+                logger.error(f"❌ Error processing chunk {i+1} for {symbol}: {e}")
+                # If a chunk fails, use a fallback response
+                results.append(f"Chunk {i+1} analysis failed: {str(e)}")
+        
+        # Combine all results with a synthesis request
+        combined_results = "\n\n=== CHUNK SEPARATOR ===\n\n".join(results)
+        
+        if len(chunks) > 1:
+            # Request final synthesis
+            synthesis_prompt = f"""
+FINAL SYNTHESIS REQUEST for {symbol}
+
+Based on the following multi-part analysis, provide a single coherent JSON response with your final trading decision:
+
+{combined_results}
+
+Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_price, take_profit_price, risk_reward_ratio.
+"""
+            
+            try:
+                final_response = await self.chat.send_message(UserMessage(text=synthesis_prompt))
+                logger.info(f"✅ Final synthesis completed for {symbol}: {len(final_response)} chars")
+                return final_response
+            except Exception as e:
+                logger.error(f"❌ Synthesis failed for {symbol}: {e}")
+                # Return the first chunk's result as fallback
+                return results[0] if results else "Analysis failed"
+        else:
+            return results[0] if results else "Analysis failed"
+
     async def analyze_opportunity(self, opportunity: MarketOpportunity) -> Optional[TechnicalAnalysis]:
         """Ultra professional technical analysis avec validation multi-sources OHLCV (économie API intelligente)"""
         try:
