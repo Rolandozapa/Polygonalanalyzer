@@ -148,33 +148,35 @@ class EnhancedOHLCVIntegrationTestSuite:
         logger.info("\n🔍 TEST 1: Data Fetching Integration Test")
         
         try:
-            indicators_results = {
+            integration_results = {
                 'total_tests': 0,
-                'indicators_working': 0,
-                'indicators_failing': 0,
-                'indicator_details': {},
-                'failed_indicators': []
+                'successful_integrations': 0,
+                'failed_integrations': 0,
+                'ohlcv_data_quality': {},
+                'data_source_performance': {}
             }
             
-            logger.info("   🚀 Testing all technical indicators for real calculated values...")
+            logger.info("   🚀 Testing Enhanced OHLCV system integration with main server...")
             logger.info("   📊 Expected Results:")
-            logger.info("      - RSI: Real values with meaningful signals (not 'unknown')")
-            logger.info("      - MACD: Real values with bullish/bearish trends (not 'unknown')")
-            logger.info("      - Stochastic: Real values with overbought/oversold signals (not 'unknown')")
-            logger.info("      - MFI: Real values with institutional flow signals (not 'unknown')")
-            logger.info("      - VWAP: Real values with precision signals (not 'unknown')")
+            logger.info("      - Enhanced OHLCV fetcher provides real market data to IA1 analysis")
+            logger.info("      - Multi-source validation working (BingX + Kraken + Yahoo Finance)")
+            logger.info("      - Real OHLCV data instead of fallback values")
+            logger.info("      - Technical indicators get enhanced data for calculations")
             
-            # Test multiple symbols to get comprehensive results
-            for symbol in self.test_symbols[:3]:  # Test first 3 symbols
+            # Test each confirmed working symbol
+            for symbol in self.test_symbols:
                 try:
-                    logger.info(f"   📈 Testing technical indicators for {symbol}...")
+                    logger.info(f"   📈 Testing Enhanced OHLCV integration for {symbol}...")
+                    integration_results['total_tests'] += 1
                     
-                    # Run IA1 cycle to get technical indicators
+                    # Run IA1 cycle to test OHLCV integration
+                    start_time = time.time()
                     response = requests.post(
                         f"{self.api_url}/run-ia1-cycle",
                         json={"symbol": symbol},
                         timeout=60
                     )
+                    response_time = time.time() - start_time
                     
                     if response.status_code == 200:
                         cycle_data = response.json()
@@ -182,120 +184,124 @@ class EnhancedOHLCVIntegrationTestSuite:
                         if cycle_data.get('success'):
                             analysis = cycle_data.get('analysis', {})
                             
-                            # Test each technical indicator
-                            for indicator_name, indicator_config in self.technical_indicators.items():
-                                indicators_results['total_tests'] += 1
-                                field_name = indicator_config['field']
-                                default_values = indicator_config['default_values']
-                                expected_values = indicator_config['expected_values']
-                                
-                                # Get the indicator value from analysis
-                                indicator_value = analysis.get(field_name, "not_found")
-                                
-                                # Initialize indicator details if not exists
-                                if indicator_name not in indicators_results['indicator_details']:
-                                    indicators_results['indicator_details'][indicator_name] = {
-                                        'tests': 0,
-                                        'working': 0,
-                                        'failing': 0,
-                                        'values_found': [],
-                                        'symbols_tested': []
-                                    }
-                                
-                                indicators_results['indicator_details'][indicator_name]['tests'] += 1
-                                indicators_results['indicator_details'][indicator_name]['symbols_tested'].append(symbol)
-                                
-                                # Check if indicator is working (not default/unknown values)
-                                is_working = (
-                                    indicator_value != "not_found" and
-                                    indicator_value not in default_values and
-                                    str(indicator_value).lower() not in [str(v).lower() for v in default_values]
-                                )
-                                
-                                if is_working:
-                                    indicators_results['indicators_working'] += 1
-                                    indicators_results['indicator_details'][indicator_name]['working'] += 1
-                                    indicators_results['indicator_details'][indicator_name]['values_found'].append(indicator_value)
-                                    logger.info(f"      ✅ {indicator_name}: {field_name} = '{indicator_value}' (WORKING)")
-                                else:
-                                    indicators_results['indicators_failing'] += 1
-                                    indicators_results['indicator_details'][indicator_name]['failing'] += 1
-                                    indicators_results['failed_indicators'].append(f"{symbol}:{indicator_name}={indicator_value}")
-                                    logger.warning(f"      ❌ {indicator_name}: {field_name} = '{indicator_value}' (DEFAULT/UNKNOWN)")
+                            # Check for OHLCV data quality indicators
+                            ohlcv_quality_indicators = {
+                                'has_real_prices': False,
+                                'has_volume_data': False,
+                                'has_technical_calculations': False,
+                                'response_time_acceptable': response_time < 30.0,
+                                'data_freshness': False
+                            }
                             
-                            # Also check analysis text for numeric values
-                            analysis_text = analysis.get('analysis', '')
-                            reasoning = analysis.get('reasoning', '')
-                            full_text = f"{analysis_text} {reasoning}".lower()
+                            # Check for real price data (not fallback values like 0.01)
+                            entry_price = analysis.get('entry_price', 0)
+                            current_price = analysis.get('current_price', entry_price)
                             
-                            # Look for numeric indicator values in text
-                            rsi_match = re.search(r'rsi[:\s]*(\d+\.?\d*)', full_text)
-                            macd_match = re.search(r'macd[:\s]*(-?\d+\.?\d*e?-?\d*)', full_text)
-                            stochastic_match = re.search(r'stochastic[:\s]*(\d+\.?\d*)', full_text)
-                            mfi_match = re.search(r'mfi[:\s]*(\d+\.?\d*)', full_text)
-                            vwap_match = re.search(r'vwap[:\s]*(-?\d+\.?\d*)', full_text)
+                            if entry_price > 0.1 and current_price > 0.1:  # Real prices, not fallback
+                                ohlcv_quality_indicators['has_real_prices'] = True
+                                logger.info(f"      ✅ Real price data: Entry=${entry_price:.6f}, Current=${current_price:.6f}")
+                            else:
+                                logger.warning(f"      ❌ Fallback price data: Entry=${entry_price:.6f}, Current=${current_price:.6f}")
                             
-                            logger.info(f"      📊 Numeric values found in analysis:")
-                            if rsi_match:
-                                logger.info(f"         RSI: {rsi_match.group(1)}")
-                            if macd_match:
-                                logger.info(f"         MACD: {macd_match.group(1)}")
-                            if stochastic_match:
-                                logger.info(f"         Stochastic: {stochastic_match.group(1)}%")
-                            if mfi_match:
-                                logger.info(f"         MFI: {mfi_match.group(1)}%")
-                            if vwap_match:
-                                logger.info(f"         VWAP: {vwap_match.group(1)}%")
+                            # Check for volume data in analysis
+                            analysis_text = analysis.get('analysis', '').lower()
+                            reasoning_text = analysis.get('reasoning', '').lower()
+                            full_text = f"{analysis_text} {reasoning_text}"
+                            
+                            if 'volume' in full_text and ('high' in full_text or 'low' in full_text or 'spike' in full_text):
+                                ohlcv_quality_indicators['has_volume_data'] = True
+                                logger.info(f"      ✅ Volume data detected in analysis")
+                            else:
+                                logger.warning(f"      ⚠️ Limited volume data in analysis")
+                            
+                            # Check for technical calculations (RSI, MACD, etc.)
+                            technical_indicators_found = 0
+                            for indicator in ['rsi', 'macd', 'stochastic', 'mfi', 'vwap']:
+                                if indicator in full_text:
+                                    technical_indicators_found += 1
+                            
+                            if technical_indicators_found >= 3:
+                                ohlcv_quality_indicators['has_technical_calculations'] = True
+                                logger.info(f"      ✅ Technical calculations present ({technical_indicators_found}/5 indicators)")
+                            else:
+                                logger.warning(f"      ⚠️ Limited technical calculations ({technical_indicators_found}/5 indicators)")
+                            
+                            # Check data freshness (recent timestamp)
+                            if 'timestamp' in cycle_data:
+                                ohlcv_quality_indicators['data_freshness'] = True
+                                logger.info(f"      ✅ Fresh data with timestamp")
+                            
+                            # Calculate integration success
+                            quality_score = sum(ohlcv_quality_indicators.values()) / len(ohlcv_quality_indicators)
+                            
+                            if quality_score >= 0.8:  # 80% quality threshold
+                                integration_results['successful_integrations'] += 1
+                                logger.info(f"      ✅ Enhanced OHLCV integration successful ({quality_score:.1%} quality)")
+                            else:
+                                integration_results['failed_integrations'] += 1
+                                logger.warning(f"      ❌ Enhanced OHLCV integration issues ({quality_score:.1%} quality)")
+                            
+                            # Store quality data
+                            integration_results['ohlcv_data_quality'][symbol] = {
+                                'quality_score': quality_score,
+                                'indicators': ohlcv_quality_indicators,
+                                'response_time': response_time,
+                                'entry_price': entry_price,
+                                'current_price': current_price
+                            }
+                            
                         else:
+                            integration_results['failed_integrations'] += 1
                             logger.warning(f"      ❌ IA1 cycle failed for {symbol}: {cycle_data.get('error', 'Unknown error')}")
                     else:
+                        integration_results['failed_integrations'] += 1
                         logger.warning(f"      ❌ API call failed for {symbol}: HTTP {response.status_code}")
                     
                     await asyncio.sleep(3)  # Delay between requests
                     
                 except Exception as e:
-                    logger.error(f"   ❌ Error testing {symbol}: {e}")
+                    integration_results['failed_integrations'] += 1
+                    logger.error(f"   ❌ Error testing Enhanced OHLCV integration for {symbol}: {e}")
             
-            # Calculate overall results
-            logger.info(f"   📊 Technical Indicators Test Results:")
-            logger.info(f"      Total indicator tests: {indicators_results['total_tests']}")
-            logger.info(f"      Working indicators: {indicators_results['indicators_working']}")
-            logger.info(f"      Failing indicators: {indicators_results['indicators_failing']}")
+            # Calculate overall integration results
+            logger.info(f"   📊 Enhanced OHLCV Integration Test Results:")
+            logger.info(f"      Total integration tests: {integration_results['total_tests']}")
+            logger.info(f"      Successful integrations: {integration_results['successful_integrations']}")
+            logger.info(f"      Failed integrations: {integration_results['failed_integrations']}")
             
-            # Detailed results per indicator
-            logger.info(f"   📋 Detailed Results by Indicator:")
-            for indicator_name, details in indicators_results['indicator_details'].items():
-                success_rate = details['working'] / details['tests'] if details['tests'] > 0 else 0
-                status = "✅" if success_rate >= 0.8 else "⚠️" if success_rate >= 0.5 else "❌"
-                logger.info(f"      {status} {indicator_name}: {details['working']}/{details['tests']} ({success_rate:.1%})")
-                if details['values_found']:
-                    unique_values = list(set(details['values_found']))
-                    logger.info(f"         Values found: {unique_values}")
-            
-            if indicators_results['failed_indicators']:
-                logger.info(f"   ❌ Failed Indicators:")
-                for failure in indicators_results['failed_indicators'][:10]:  # Show first 10
-                    logger.info(f"      - {failure}")
+            # Detailed quality results
+            logger.info(f"   📋 OHLCV Data Quality by Symbol:")
+            for symbol, quality_data in integration_results['ohlcv_data_quality'].items():
+                quality_score = quality_data['quality_score']
+                response_time = quality_data['response_time']
+                status = "✅" if quality_score >= 0.8 else "⚠️" if quality_score >= 0.6 else "❌"
+                logger.info(f"      {status} {symbol}: {quality_score:.1%} quality, {response_time:.1f}s response")
+                
+                # Show specific quality indicators
+                indicators = quality_data['indicators']
+                for indicator, status in indicators.items():
+                    icon = "✅" if status else "❌"
+                    logger.info(f"         {icon} {indicator.replace('_', ' ').title()}")
             
             # Determine test result
-            if indicators_results['total_tests'] > 0:
-                success_rate = indicators_results['indicators_working'] / indicators_results['total_tests']
+            if integration_results['total_tests'] > 0:
+                success_rate = integration_results['successful_integrations'] / integration_results['total_tests']
                 
                 if success_rate >= 0.9:
-                    self.log_test_result("Technical Indicators Calculation", True, 
-                                       f"Technical indicators working correctly: {success_rate:.1%} success rate ({indicators_results['indicators_working']}/{indicators_results['total_tests']})")
+                    self.log_test_result("Data Fetching Integration", True, 
+                                       f"Enhanced OHLCV integration excellent: {success_rate:.1%} success rate ({integration_results['successful_integrations']}/{integration_results['total_tests']})")
                 elif success_rate >= 0.7:
-                    self.log_test_result("Technical Indicators Calculation", False, 
-                                       f"Most technical indicators working: {success_rate:.1%} success rate ({indicators_results['indicators_working']}/{indicators_results['total_tests']})")
+                    self.log_test_result("Data Fetching Integration", False, 
+                                       f"Enhanced OHLCV integration good: {success_rate:.1%} success rate ({integration_results['successful_integrations']}/{integration_results['total_tests']})")
                 else:
-                    self.log_test_result("Technical Indicators Calculation", False, 
-                                       f"Technical indicators issues: {success_rate:.1%} success rate ({indicators_results['indicators_working']}/{indicators_results['total_tests']})")
+                    self.log_test_result("Data Fetching Integration", False, 
+                                       f"Enhanced OHLCV integration issues: {success_rate:.1%} success rate ({integration_results['successful_integrations']}/{integration_results['total_tests']})")
             else:
-                self.log_test_result("Technical Indicators Calculation", False, 
-                                   "No technical indicators tests could be performed")
+                self.log_test_result("Data Fetching Integration", False, 
+                                   "No Enhanced OHLCV integration tests could be performed")
                 
         except Exception as e:
-            self.log_test_result("Technical Indicators Calculation", False, f"Exception: {str(e)}")
+            self.log_test_result("Data Fetching Integration", False, f"Exception: {str(e)}")
     
     async def test_2_signal_quality_validation(self):
         """Test 2: Signal Quality - Meaningful Values vs Unknown/Neutral"""
