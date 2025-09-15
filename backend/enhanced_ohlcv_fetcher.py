@@ -455,6 +455,108 @@ class EnhancedOHLCVFetcher:
         
         return None
     
+    async def _fetch_cmc_dex_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced CoinMarketCap DEX API - Premium institutional data"""
+        try:
+            if not self.cmc_api_key:
+                return None
+                
+            # CMC uses different symbol format for DEX pairs
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            
+            # Use DEX OHLCV historical endpoint - very valuable for institutional data
+            url = "https://pro-api.coinmarketcap.com/v4/dex/pairs/ohlcv/historical"
+            
+            headers = {
+                'X-CMC_PRO_API_KEY': self.cmc_api_key,
+                'Accept': 'application/json'
+            }
+            
+            # Get historical data for the symbol
+            end_time = datetime.now(timezone.utc)
+            start_time = end_time - timedelta(days=self.lookback_days)
+            
+            params = {
+                'symbol': f"{base_symbol}-USDT",
+                'time_start': start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+                'time_end': end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z'),
+                'interval': 'daily',
+                'count': self.lookback_days
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20)) as session:
+                async with session.get(url, headers=headers, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cmc_dex_data(data, symbol)
+                    else:
+                        logger.debug(f"CMC DEX API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"CMC DEX enhanced fetch error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_bitfinex_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced Bitfinex API implementation using REST API v2"""
+        try:
+            # Convert to Bitfinex format (tBTCUSD format)
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            bitfinex_symbol = f"t{base_symbol}USD"
+            
+            # Bitfinex candles endpoint
+            url = f"https://api-pub.bitfinex.com/v2/candles/trade:1D:{bitfinex_symbol}/hist"
+            
+            # Get historical data
+            end_time = int(datetime.now(timezone.utc).timestamp() * 1000)
+            start_time = int((datetime.now(timezone.utc) - timedelta(days=self.lookback_days)).timestamp() * 1000)
+            
+            params = {
+                'start': start_time,
+                'end': end_time,
+                'limit': self.lookback_days,
+                'sort': 1  # Sort ascending by timestamp
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_bitfinex_data(data, symbol)
+                    else:
+                        logger.debug(f"Bitfinex API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"Bitfinex enhanced fetch error for {symbol}: {e}")
+        
+        return None
+    
+    async def _fetch_cryptocompare_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
+        """Enhanced CryptoCompare API implementation"""
+        try:
+            base_symbol = symbol.replace('USDT', '').replace('USD', '')
+            
+            url = "https://min-api.cryptocompare.com/data/v2/histoday"
+            params = {
+                "fsym": base_symbol,
+                "tsym": "USD",
+                "limit": self.lookback_days,
+                "api_key": self.cryptocompare_key if self.cryptocompare_key else ""
+            }
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+                async with session.get(url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        return self._parse_cryptocompare_enhanced_data(data, symbol)
+                    else:
+                        logger.debug(f"CryptoCompare API returned {response.status} for {symbol}")
+                        
+        except Exception as e:
+            logger.debug(f"CryptoCompare enhanced fetch error for {symbol}: {e}")
+        
+        return None
+
     async def _fetch_kraken_enhanced(self, symbol: str) -> Optional[pd.DataFrame]:
         """Enhanced Kraken API fetching with OHLC endpoint"""
         try:
