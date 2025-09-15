@@ -8692,13 +8692,12 @@ class UltraProfessionalOrchestrator:
             
             # 🔥 CRITICAL FIX: Use market aggregator instead of scout scan for real BingX data
             
-            # Step 1: Get real opportunities from market aggregator (not fallback data)
-            # 🎯 FORCE REFRESH: Clear cache to ensure fresh randomized opportunities
-            advanced_market_aggregator.cache.clear()
-            logger.info("🔄 Forced cache clear for fresh randomized opportunities")
+            # Step 1: Get real opportunities from market aggregator (respecting 4-hour cache)
+            # ✅ SCOUT DISCIPLINE: Respect 4-hour cache to maintain BingX top 50 list consistency
+            # Remove force cache clear to allow proper 4-hour discipline
             
             opportunities = advanced_market_aggregator.get_current_opportunities()
-            logger.info(f"📊 Found {len(opportunities)} real opportunities from BingX")
+            logger.info(f"📊 Found {len(opportunities)} real opportunities from BingX (respecting 4h cache)")
             
             if not opportunities:
                 logger.error("❌ SCOUT SYSTEM FAILURE: No opportunities from BingX scout system")
