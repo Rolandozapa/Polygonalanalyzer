@@ -3102,6 +3102,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # Remove complex multi-timeframe calculations and use simplified approach
             # 🚀 FIX: Use actual calculated indicators instead of fallback values
+            logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={indicators.macd_line}, Signal={indicators.macd_signal}, Histogram={indicators.macd_histogram}")
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": indicators.macd_signal,  # Use working advanced indicators value
