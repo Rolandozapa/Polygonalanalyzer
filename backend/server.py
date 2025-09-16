@@ -2992,21 +2992,21 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     
                     logger.info(f"⚪ HOLD FALLBACK TECHNIQUE {opportunity.symbol}: SL -2%, TP +2%")
             
-            # 🔧 CALCUL RR BASÉ SUR LES PRIX RÉELS CALCULÉS - FORMULES IA2 EXACTES
-            # Utiliser les mêmes formules que IA2 pour cohérence totale
+            # 🔧 CALCUL RR BASÉ SUR LES PRIX ORIGINAUX IA1 - FORMULES IA2 EXACTES
+            # Utiliser les valeurs ORIGINALES avant écrasement par fallbacks
             if ia1_signal.lower() == "long":
-                # LONG: Formule IA2 exacte
-                risk = entry_price - stop_loss_price  # Entry - Stop Loss
-                reward = take_profit_price - entry_price  # Take Profit - Entry
+                # LONG: Formule IA2 exacte avec prix originaux
+                risk = original_entry_price - original_stop_loss  # Entry - Stop Loss
+                reward = original_take_profit - original_entry_price  # Take Profit - Entry
                 ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                logger.info(f"🔢 LONG RR CALCULATION (IA2 formula) {opportunity.symbol}: Entry({entry_price:.6f}) - SL({stop_loss_price:.6f}) = Risk({risk:.6f}), TP({take_profit_price:.6f}) - Entry = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
+                logger.info(f"🔢 LONG RR CALCULATION (ORIGINAL LEVELS) {opportunity.symbol}: Entry({original_entry_price:.6f}) - SL({original_stop_loss:.6f}) = Risk({risk:.6f}), TP({original_take_profit:.6f}) - Entry = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
                 
             elif ia1_signal.lower() == "short":
-                # SHORT: Formule IA2 exacte  
-                risk = stop_loss_price - entry_price  # Stop Loss - Entry
-                reward = entry_price - take_profit_price  # Entry - Take Profit
+                # SHORT: Formule IA2 exacte avec prix originaux
+                risk = original_stop_loss - original_entry_price  # Stop Loss - Entry
+                reward = original_entry_price - original_take_profit  # Entry - Take Profit
                 ia1_risk_reward_ratio = reward / risk if risk > 0 else 1.0
-                logger.info(f"🔢 SHORT RR CALCULATION (IA2 formula) {opportunity.symbol}: SL({stop_loss_price:.6f}) - Entry({entry_price:.6f}) = Risk({risk:.6f}), Entry - TP({take_profit_price:.6f}) = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
+                logger.info(f"🔢 SHORT RR CALCULATION (ORIGINAL LEVELS) {opportunity.symbol}: SL({original_stop_loss:.6f}) - Entry({original_entry_price:.6f}) = Risk({risk:.6f}), Entry - TP({original_take_profit:.6f}) = Reward({reward:.6f}), RR = {ia1_risk_reward_ratio:.2f}")
                 
             else:  # hold
                 # HOLD: RR basé sur les niveaux neutres calculés (formule LONG par défaut)
