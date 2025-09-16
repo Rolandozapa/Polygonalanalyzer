@@ -2593,21 +2593,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             ia1_risk_reward_ratio = 1.0  # Default fallback
             ia1_calculated_levels = {}
             
-            # 🚨 CORRECTION: Obtenir le vrai prix depuis les données OHLCV
-            # Variables pour les prix réels d'IA1
-            real_current_price = opportunity.current_price
-            
-            # Essayer d'obtenir le vrai prix depuis les données OHLCV
-            if not historical_data.empty and len(historical_data) > 0:
-                # 🔧 FIX: Handle both 'Close' and 'close' column names
-                if 'Close' in historical_data.columns:
-                    real_current_price = float(historical_data['Close'].iloc[-1])
-                elif 'close' in historical_data.columns:
-                    real_current_price = float(historical_data['close'].iloc[-1])
-                else:
-                    logger.warning(f"⚠️ No Close/close column found in OHLCV data for {opportunity.symbol}")
-                logger.info(f"💰 PRIX RÉEL OHLCV {opportunity.symbol}: ${real_current_price:.6f} (vs opportunity: ${opportunity.current_price:.6f})")
-            
             entry_price = real_current_price
             stop_loss_price = real_current_price  
             take_profit_price = real_current_price
