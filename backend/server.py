@@ -5473,8 +5473,8 @@ async def force_ia1_analysis(request: dict):
             if analysis:
                 logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
                 
-                # 🎯 Check if should escalate to IA2 (ADDED)
-                if orchestrator._should_send_to_ia2(analysis, target_opportunity):
+                # 🎯 Check if should escalate to IA2 (ADDED with market context)
+                if await orchestrator._should_send_to_ia2(analysis, target_opportunity):
                     logger.info(f"🚀 ESCALATING {symbol} to IA2 after forced analysis")
                     
                     # Get performance stats with fallback
