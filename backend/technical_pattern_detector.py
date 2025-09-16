@@ -286,8 +286,22 @@ class TechnicalPatternDetector:
         return None
     
     async def _fetch_yahoo_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
-        """🚨 DISABLED: Yahoo Finance désactivé - utilise enhanced_ohlcv_fetcher à la place"""
-        logger.debug(f"Yahoo Finance OHLCV disabled for {symbol} - using enhanced_ohlcv_fetcher")
+        """Récupère OHLCV depuis Yahoo Finance"""
+        try:
+            loop = asyncio.get_event_loop()
+            yf_symbol = symbol.replace('USDT', '-USD')
+
+            ticker = await loop.run_in_executor(None, yf.Ticker, yf_symbol)
+            hist = await loop.run_in_executor(None, lambda: ticker.history(period=f"{self.lookback_days}d"))
+
+            if not hist.empty:
+                # Normalise les colonnes
+                hist.columns = ['Open', 'High', 'Low', 'Close', 'Volume']
+                return hist
+
+        except Exception as e:
+            logger.debug(f"Yahoo Finance OHLCV error for {symbol}: {e}")
+
         return None
     
     def _parse_coinapi_ohlcv(self, data: List[Dict]) -> pd.DataFrame:
