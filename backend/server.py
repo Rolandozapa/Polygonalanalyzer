@@ -9175,8 +9175,8 @@ class UltraProfessionalOrchestrator:
                             GLOBAL_ANALYZED_SYMBOLS_CACHE.update(symbols_list[-20:])
                             logger.info(f"🧹 Cache size limit applied: kept 20 most recent symbols")
                         
-                        # Step 3: Check if should escalate to IA2
-                        if self._should_send_to_ia2(analysis, opportunity):
+                        # Step 3: Check if should escalate to IA2 (with market context)
+                        if await self._should_send_to_ia2(analysis, opportunity):
                             logger.info(f"🎯 Escalating {opportunity.symbol} to IA2")
                             
                             # Get performance stats with fallback
