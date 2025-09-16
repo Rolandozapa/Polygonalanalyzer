@@ -17,6 +17,7 @@ class BingXFuturesFetcher:
     
     def __init__(self):
         self.base_url = "https://open-api.bingx.com"
+        self.futures_page_url = "https://bingx.com/en/market/futures/usd-m-perp"  # Official futures page
         self.allowed_quotes = {"USDT"}  # Seuls les USDT pairs
         self.excluded_keywords = {
             "TEST", "BEAR", "BULL", "UP", "DOWN", "LEVERAGE", 
