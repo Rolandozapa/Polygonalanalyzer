@@ -4983,21 +4983,11 @@ You MUST generate your OWN technical levels independent of IA1:
 - **Calculate YOUR OWN entry/stop-loss/take-profit levels**
 - **Compute YOUR OWN Risk-Reward ratio** using your levels
 
-🎯 NEW ADAPTIVE EXECUTION RULES (Market Context Aware):
+🎯 EXECUTION RULES (SIMPLIFIED):
+- **IF YOUR calculated_rr > 2.0**: trade_execution_ready = true
+- **IF YOUR calculated_rr ≤ 2.0**: trade_execution_ready = false
 
-**RULE 1 - MARKET ALIGNED (RR > 1.72:1)**: 
-- **IF confidence > 85% AND RR > 1.72:1 AND market alignment**:
-  - LONG signals when market cap growth > 0% (bullish global market)
-  - SHORT signals when market cap growth < 0% (bearish global market)
-  - trade_execution_ready = true
-
-**RULE 2 - CLASSIC (RR > 2.0:1)**:
-- **IF RR > 2.0:1**: trade_execution_ready = true (regardless of market)
-
-**RULE 3 - HIGH CONFIDENCE OVERRIDE**:
-- **IF confidence > 95%**: trade_execution_ready = true (regardless of RR or market)
-
-**ANTI-CONTRARIAN LOGIC**: Avoid going against strong market trends unless extremely high confidence (>95%)
+Only execute trades with YOUR calculated RR > 2.0:1 for proper risk management.
 
 RESPONSE FORMAT (JSON):
 {{
