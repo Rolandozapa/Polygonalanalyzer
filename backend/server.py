@@ -4896,6 +4896,16 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 
             logger.info(f"🧠 IA2: Sending enhanced strategic prompt to Claude for {symbol}")
             
+            # Get global market context for IA2 decision
+            market_context_str = "Unknown"
+            try:
+                global_market_data = await global_crypto_market_analyzer.get_global_market_data()
+                if global_market_data:
+                    market_cap_24h = global_market_data.market_cap_change_24h
+                    market_context_str = f"{market_cap_24h:+.2f}% (Market {'Bullish' if market_cap_24h > 0 else 'Bearish' if market_cap_24h < 0 else 'Neutral'})"
+            except Exception as e:
+                logger.warning(f"⚠️ Could not get global market context for IA2: {e}")
+            
             # Enhanced strategic prompt for detailed IA2 decisions
             strategic_prompt = f"""You are IA2, the strategic trading decision maker. Based on IA1's comprehensive technical analysis, make a strategic decision.
 
@@ -4905,6 +4915,7 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 - IA1 Signal: {ia1_signal.upper()}
 - IA1 Confidence: {ia1_confidence:.1%}
 - Risk-Reward Ratio: {rr_ratio:.2f}:1
+- 🌍 Global Market: {market_context_str}
 
 🧠 IA1 COMPLETE ANALYSIS SUMMARY:
 {analysis.ia1_reasoning}
