@@ -2600,13 +2600,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🚨 CALCUL MANQUANT DES INDICATEURS TECHNIQUES IA1
             logger.info(f"📊 CALCULATING MISSING TECHNICAL INDICATORS for {opportunity.symbol}")
             
-            # Initialiser avec valeurs par défaut sûres
-            rsi = 50.0
-            macd_signal = 0.0
-            macd_histogram = 0.0
-            stochastic_k = 50.0
-            stochastic_d = 50.0
-            bb_position = 0.0
+            # Initialiser avec valeurs par défaut sûres SEULEMENT pour les indicateurs non encore calculés
+            # NOTE: rsi, macd_signal, macd_histogram, stochastic_k/d sont déjà calculés plus haut
+            if 'rsi' not in locals() or rsi is None:
+                rsi = 50.0
+            if 'bb_position' not in locals() or bb_position is None:
+                bb_position = 0.0
             
             # Calculer les vrais indicateurs si nous avons des données OHLCV
             if not historical_data.empty and len(historical_data) >= 20:
