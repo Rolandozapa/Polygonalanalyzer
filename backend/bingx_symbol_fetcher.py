@@ -252,6 +252,58 @@ class BingXFuturesFetcher:
         logger.error("❌ Both official page and API failed, using expired cache")
         return self.load_from_cache()
     
+    def get_tradable_symbols(self, force_update: bool = False) -> List[str]:
+        """
+        Synchronous wrapper for async symbol fetching
+        """
+        try:
+            # Try to use existing event loop
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If already in async context, create a task
+                import threading
+                result = [None]
+                exception = [None]
+                
+                def run_async():
+                    try:
+                        new_loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(new_loop)
+                        result[0] = new_loop.run_until_complete(self.get_tradable_symbols_async(force_update))
+                        new_loop.close()
+                    except Exception as e:
+                        exception[0] = e
+                
+                thread = threading.Thread(target=run_async)
+                thread.start()
+                thread.join(timeout=60)  # 60 second timeout
+                
+                if exception[0]:
+                    raise exception[0]
+                return result[0] if result[0] else []
+            else:
+                return loop.run_until_complete(self.get_tradable_symbols_async(force_update))
+        except Exception as e:
+            logger.error(f"❌ Error in sync wrapper: {e}")
+            # Fallback to old method
+            return self._fallback_sync_method(force_update)
+    
+    def _fallback_sync_method(self, force_update: bool = False) -> List[str]:
+        """Fallback synchronous method using old API approach"""
+        if not force_update and self.is_cache_valid():
+            cached_symbols = self.load_from_cache()
+            if cached_symbols:
+                return cached_symbols
+        
+        # Use old API method
+        all_symbols = self.get_available_symbols()
+        if all_symbols:
+            tradable_symbols = self.filter_symbols(all_symbols)
+            self.save_to_cache(tradable_symbols)
+            return tradable_symbols
+        
+        return self.load_from_cache()
+    
     def is_symbol_tradable(self, symbol: str) -> bool:
         """Vérifie si un symbole spécifique est tradable sur BingX - Format flexible"""
         tradable_symbols = self.get_tradable_symbols()
