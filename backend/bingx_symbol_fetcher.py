@@ -217,31 +217,40 @@ class BingXFuturesFetcher:
             logger.error(f"❌ Erreur vérification cache: {e}")
             return False
     
-    def get_tradable_symbols(self, force_update: bool = False) -> List[str]:
+    async def get_tradable_symbols_async(self, force_update: bool = False) -> List[str]:
         """
-        Récupère les symboles tradables avec système de cache intelligent
-        force_update: Force la mise à jour depuis l'API même si cache valide
+        🎯 NEW: Récupère symboles depuis la page officielle BingX avec système de cache
+        force_update: Force la mise à jour même si cache valide
         """
         # Utiliser le cache si valide et pas de force update
         if not force_update and self.is_cache_valid():
             cached_symbols = self.load_from_cache()
             if cached_symbols:
+                logger.info(f"📂 Using cached BingX symbols: {len(cached_symbols)} symbols")
                 return cached_symbols
         
-        # Récupérer depuis l'API BingX
-        logger.info("🔄 Mise à jour symboles BingX depuis API...")
-        all_symbols = self.get_available_symbols()
+        # 🎯 PRIMARY: Récupérer depuis la page officielle BingX
+        logger.info("🔄 Fetching from OFFICIAL BingX futures page...")
+        official_symbols = await self.get_official_futures_symbols()
         
-        if not all_symbols:
-            # Fallback sur cache même expiré si API échoue
-            logger.warning("⚠️ API BingX échouée, utilisation cache expiré")
-            return self.load_from_cache()
+        if official_symbols and len(official_symbols) > 10:  # Minimum reasonable number
+            logger.info(f"✅ OFFICIAL SUCCESS: {len(official_symbols)} symbols from BingX page")
+            self.save_to_cache(official_symbols)
+            return official_symbols
         
-        # Filtrer et sauvegarder
-        tradable_symbols = self.filter_symbols(all_symbols)
-        self.save_to_cache(tradable_symbols)
+        # FALLBACK: Utiliser l'ancienne API si le scraping échoue
+        logger.warning("⚠️ Official page scraping failed, trying API fallback...")
+        api_symbols = self.get_available_symbols()
         
-        return tradable_symbols
+        if api_symbols:
+            tradable_symbols = self.filter_symbols(api_symbols)
+            logger.info(f"✅ API FALLBACK: {len(tradable_symbols)} symbols from API")
+            self.save_to_cache(tradable_symbols)
+            return tradable_symbols
+        
+        # LAST RESORT: Utiliser cache expiré si tout échoue
+        logger.error("❌ Both official page and API failed, using expired cache")
+        return self.load_from_cache()
     
     def is_symbol_tradable(self, symbol: str) -> bool:
         """Vérifie si un symbole spécifique est tradable sur BingX - Format flexible"""
