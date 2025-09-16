@@ -2981,8 +2981,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     
                 else:  # hold
                     # HOLD: Niveaux neutres techniques
-                    stop_loss_price = opportunity.current_price * 0.98  # -2% stop loss
-                    take_profit_price = opportunity.current_price * 1.02  # +2% take profit
+                    stop_loss_price = real_current_price * 0.98  # -2% stop loss
+                    take_profit_price = real_current_price * 1.02  # +2% take profit
                     
                     logger.info(f"⚪ HOLD FALLBACK TECHNIQUE {opportunity.symbol}: SL -2%, TP +2%")
             
