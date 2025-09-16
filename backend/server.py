@@ -3250,7 +3250,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 try:
                     # 🚀 CRITICAL FIX: Use calculated technical indicators even in fallback
                     fallback_rsi = rsi if 'rsi' in locals() and rsi != 50.0 else 50.0
-                    fallback_macd = macd_signal if 'macd_signal' in locals() and macd_signal != 0.0 else 0.0
+                    fallback_macd = indicators.macd_line if hasattr(indicators, 'macd_line') and indicators.macd_line != 0.0 else 0.0
                     fallback_stoch_k = stochastic_k if 'stochastic_k' in locals() and stochastic_k != 50.0 else 50.0
                     fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d != 50.0 else 50.0
                     fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position != 0.0 else 0.0
