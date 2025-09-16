@@ -4994,13 +4994,17 @@ RESPONSE FORMAT (JSON):
     
     "calculated_rr": X.XX (YOUR calculated risk-reward ratio using YOUR levels),
     "rr_reasoning": "Detailed explanation of YOUR RR calculation with YOUR specific support/resistance levels and WHY these levels are optimal",
-    "trade_execution_ready": true/false (MUST be true ONLY if calculated_rr > 2.0 AND signal is long/short)
+    "trade_execution_ready": true/false (Apply NEW ADAPTIVE RULES: Rule 1: conf>85% + RR>1.72 + market_aligned, Rule 2: RR>2.0, Rule 3: conf>95%)
 }}
 
-🔥 EXECUTION LOGIC - MANDATORY:
-- **IF calculated_rr > 2.0 AND signal = long/short**: trade_execution_ready = true
-- **IF calculated_rr ≤ 2.0 OR signal = hold**: trade_execution_ready = false
-- **Your RR calculation determines trade execution, not IA1's RR**
+🔥 NEW ADAPTIVE EXECUTION LOGIC:
+**RULE 1**: IF confidence > 85% AND calculated_rr > 1.72 AND market aligned → trade_execution_ready = true
+  - Market aligned: LONG when global market cap positive, SHORT when negative
+**RULE 2**: IF calculated_rr > 2.0 → trade_execution_ready = true  
+**RULE 3**: IF confidence > 95% → trade_execution_ready = true (override)
+**OTHERWISE**: trade_execution_ready = false
+
+Current Global Market Context: Market Cap 24h = [DYNAMIC_MARKET_CONTEXT]
 
 CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
 - **LONG Signal**: Entry near current support, SL below stronger support, TP at resistance levels
