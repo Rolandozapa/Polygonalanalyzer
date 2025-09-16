@@ -3933,6 +3933,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Validation des champs numériques
             cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), 50.0)
             cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), 0.0)
+            cleaned_data["macd_line"] = self._ensure_json_safe(analysis_data.get("macd_line"), 0.0)  # Add MACD line
+            cleaned_data["macd_histogram"] = self._ensure_json_safe(analysis_data.get("macd_histogram"), 0.0)  # Add MACD histogram
+            cleaned_data["macd_trend"] = str(analysis_data.get("macd_trend", "neutral"))  # Add MACD trend
             cleaned_data["stochastic"] = self._ensure_json_safe(analysis_data.get("stochastic"), 50.0)  # Add Stochastic %K
             cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), 50.0)  # Add Stochastic %D
             cleaned_data["bollinger_position"] = self._ensure_json_safe(analysis_data.get("bollinger_position"), 0.0)
