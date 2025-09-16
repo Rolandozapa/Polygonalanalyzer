@@ -120,6 +120,85 @@ class BingXFuturesFetcher:
             logger.error(f"❌ Erreur lecture cache BingX: {e}")
             return []
     
+    async def get_official_futures_symbols(self) -> List[str]:
+        """🎯 NEW: Scrape official BingX futures page for real tradeable symbols"""
+        try:
+            logger.info(f"🔍 Fetching OFFICIAL BingX futures from {self.futures_page_url}")
+            
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                }
+                
+                async with session.get(self.futures_page_url, headers=headers) as response:
+                    if response.status == 200:
+                        html_content = await response.text()
+                        
+                        # Parse HTML to extract trading pairs
+                        soup = BeautifulSoup(html_content, 'html.parser')
+                        
+                        # Look for trading pairs in various possible selectors
+                        trading_pairs = set()
+                        
+                        # Method 1: Look for elements containing USDT symbols
+                        for element in soup.find_all(text=re.compile(r'[A-Z]+USDT')):
+                            matches = re.findall(r'([A-Z]{2,10}USDT)', str(element))
+                            trading_pairs.update(matches)
+                        
+                        # Method 2: Look for data attributes or JSON data
+                        for script in soup.find_all('script'):
+                            if script.string:
+                                matches = re.findall(r'"([A-Z]{2,10}USDT)"', script.string)
+                                trading_pairs.update(matches)
+                        
+                        # Method 3: Look for specific classes/IDs (common in trading interfaces)
+                        for selector in ['.symbol', '.trading-pair', '[data-symbol]', '.pair-name']:
+                            elements = soup.select(selector)
+                            for elem in elements:
+                                text = elem.get_text() or elem.get('data-symbol', '')
+                                if 'USDT' in text:
+                                    match = re.search(r'([A-Z]{2,10}USDT)', text)
+                                    if match:
+                                        trading_pairs.add(match.group(1))
+                        
+                        # Filter and clean the symbols
+                        filtered_symbols = []
+                        for symbol in trading_pairs:
+                            if self._is_valid_symbol(symbol):
+                                filtered_symbols.append(symbol)
+                        
+                        logger.info(f"✅ OFFICIAL BingX: Found {len(filtered_symbols)} valid futures symbols")
+                        logger.info(f"📋 Sample symbols: {sorted(filtered_symbols)[:10]}")
+                        
+                        return sorted(filtered_symbols)
+                    
+                    else:
+                        logger.error(f"❌ Failed to fetch BingX page: HTTP {response.status}")
+                        return []
+                        
+        except Exception as e:
+            logger.error(f"❌ Error scraping BingX official page: {e}")
+            return []
+    
+    def _is_valid_symbol(self, symbol: str) -> bool:
+        """Validate if a symbol should be included"""
+        if not symbol.endswith('USDT'):
+            return False
+            
+        # Remove USDT to get base symbol
+        base = symbol[:-4]
+        
+        # Check excluded keywords
+        for keyword in self.excluded_keywords:
+            if keyword in base.upper():
+                return False
+        
+        # Must be reasonable length
+        if len(base) < 2 or len(base) > 10:
+            return False
+            
+        return True
+    
     def is_cache_valid(self, max_age_hours: int = 6) -> bool:
         """Vérifie si le cache est encore valide"""
         try:
