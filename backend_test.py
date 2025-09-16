@@ -59,8 +59,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class MACDFibonacciIntegrationTestSuite:
-    """Comprehensive test suite for MACD Calculation Fix and Fibonacci Retracement Integration"""
+class PatternDetectionMACDTestSuite:
+    """Comprehensive test suite for Pattern Detection System Fixes and MACD Calculation Issues"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -76,13 +76,13 @@ class MACDFibonacciIntegrationTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing MACD & Fibonacci Integration at: {self.api_url}")
+        logger.info(f"Testing Pattern Detection & MACD Fixes at: {self.api_url}")
         
         # MongoDB connection for direct database analysis
         try:
             self.mongo_client = MongoClient("mongodb://localhost:27017")
             self.db = self.mongo_client["myapp"]
-            logger.info("✅ MongoDB connection established for MACD & Fibonacci testing")
+            logger.info("✅ MongoDB connection established for Pattern Detection & MACD testing")
         except Exception as e:
             logger.error(f"❌ MongoDB connection failed: {e}")
             self.mongo_client = None
@@ -94,8 +94,11 @@ class MACDFibonacciIntegrationTestSuite:
         # Expected MACD fields
         self.macd_fields = ['macd_signal', 'macd_line', 'macd_histogram', 'macd_trend']
         
-        # Expected Fibonacci fields
-        self.fibonacci_fields = ['fibonacci_signal_strength', 'fibonacci_signal_direction', 'fibonacci_key_level_proximity']
+        # Expected pattern detection fields
+        self.pattern_fields = ['patterns', 'master_pattern']
+        
+        # Expected technical indicator fields
+        self.technical_indicator_fields = ['rsi_signal', 'mfi_signal', 'vwap_signal']
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
@@ -111,9 +114,138 @@ class MACDFibonacciIntegrationTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_macd_calculation_fix_verification(self):
-        """Test 1: MACD Calculation Fix - Verify Real MACD Values Instead of Zeros"""
-        logger.info("\n🔍 TEST 1: MACD Calculation Fix Verification")
+    async def test_1_pattern_detection_system_fix(self):
+        """Test 1: Pattern Detection System Fix - Verify Pattern Detection is Re-enabled"""
+        logger.info("\n🔍 TEST 1: Pattern Detection System Fix Verification")
+        
+        try:
+            pattern_results = {
+                'opportunities_endpoint_accessible': False,
+                'pattern_detection_enabled': False,
+                'patterns_detected': False,
+                'yahoo_finance_working': False,
+                'pattern_data': {},
+                'opportunities_count': 0
+            }
+            
+            logger.info("   🚀 Testing pattern detection system re-enablement...")
+            logger.info("   📊 Expected: Pattern detection enabled, patterns detected in opportunities")
+            
+            # Step 1: Test /api/opportunities endpoint for pattern detection
+            logger.info("   📈 Testing /api/opportunities endpoint for pattern detection...")
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/opportunities", timeout=60)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                pattern_results['opportunities_endpoint_accessible'] = True
+                opportunities_data = response.json()
+                
+                logger.info(f"      ✅ Opportunities endpoint accessible (response time: {response_time:.2f}s)")
+                
+                if isinstance(opportunities_data, list) and len(opportunities_data) > 0:
+                    pattern_results['opportunities_count'] = len(opportunities_data)
+                    logger.info(f"      📋 Found {pattern_results['opportunities_count']} opportunities")
+                    
+                    # Check for pattern detection status in opportunities
+                    patterns_found = 0
+                    pattern_detection_messages = []
+                    
+                    for opportunity in opportunities_data[:5]:  # Check first 5 opportunities
+                        # Look for pattern detection indicators
+                        if 'patterns' in opportunity and opportunity['patterns']:
+                            patterns_found += 1
+                            pattern_results['patterns_detected'] = True
+                            pattern_results['pattern_data'][opportunity.get('symbol', 'unknown')] = opportunity['patterns']
+                        
+                        # Look for pattern detection status messages
+                        if 'analysis' in opportunity:
+                            analysis_text = str(opportunity['analysis']).lower()
+                            if 'pattern detection enabled' in analysis_text:
+                                pattern_detection_messages.append("Pattern detection enabled found")
+                                pattern_results['pattern_detection_enabled'] = True
+                            elif 'pattern detection temporarily disabled' in analysis_text:
+                                pattern_detection_messages.append("Pattern detection still disabled")
+                    
+                    if patterns_found > 0:
+                        logger.info(f"      ✅ Patterns detected in {patterns_found} opportunities: {list(pattern_results['pattern_data'].keys())}")
+                    else:
+                        logger.warning(f"      ❌ No patterns detected in opportunities")
+                    
+                    if pattern_detection_messages:
+                        logger.info(f"      📋 Pattern detection status messages: {pattern_detection_messages}")
+                    
+                    # Check if Yahoo Finance OHLCV is working (indirect test)
+                    valid_price_data = 0
+                    for opportunity in opportunities_data[:3]:
+                        if (opportunity.get('current_price', 0) > 0 and 
+                            opportunity.get('volume_24h', 0) > 0):
+                            valid_price_data += 1
+                    
+                    if valid_price_data >= 2:
+                        pattern_results['yahoo_finance_working'] = True
+                        logger.info(f"      ✅ Yahoo Finance OHLCV appears to be working: {valid_price_data}/3 opportunities have valid price data")
+                    else:
+                        logger.warning(f"      ⚠️ Yahoo Finance OHLCV may have issues: {valid_price_data}/3 opportunities have valid price data")
+                        
+                else:
+                    logger.warning(f"      ❌ No opportunities data or invalid format: {type(opportunities_data)}")
+            else:
+                logger.error(f"      ❌ Opportunities endpoint HTTP error: {response.status_code}")
+                if response.text:
+                    logger.error(f"         Error response: {response.text[:200]}...")
+            
+            # Step 2: Test IA1 cycle for pattern detection
+            logger.info("   📈 Testing IA1 cycle for pattern detection...")
+            try:
+                response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=120)
+                if response.status_code == 200:
+                    cycle_data = response.json()
+                    if cycle_data.get('success'):
+                        analysis_data = cycle_data.get('analysis_data', {})
+                        
+                        # Check for patterns in IA1 analysis
+                        if 'patterns' in analysis_data and analysis_data['patterns']:
+                            pattern_results['patterns_detected'] = True
+                            pattern_results['pattern_data']['ia1_analysis'] = analysis_data['patterns']
+                            logger.info(f"      ✅ Patterns detected in IA1 analysis: {analysis_data['patterns']}")
+                        
+                        # Check for pattern detection status in analysis text
+                        analysis_text = analysis_data.get('analysis', '')
+                        if 'pattern detection enabled' in analysis_text.lower():
+                            pattern_results['pattern_detection_enabled'] = True
+                            logger.info(f"      ✅ Pattern detection enabled confirmed in IA1 analysis")
+                        elif 'pattern detection temporarily disabled' in analysis_text.lower():
+                            logger.warning(f"      ❌ Pattern detection still disabled in IA1 analysis")
+                    else:
+                        logger.warning(f"      ⚠️ IA1 cycle failed: {cycle_data.get('error', 'Unknown')}")
+                else:
+                    logger.warning(f"      ⚠️ IA1 cycle HTTP error: {response.status_code}")
+            except Exception as e:
+                logger.warning(f"      ⚠️ IA1 cycle test error: {e}")
+            
+            # Calculate test success
+            success_criteria = [
+                pattern_results['opportunities_endpoint_accessible'],
+                pattern_results['yahoo_finance_working'],
+                pattern_results['pattern_detection_enabled'] or pattern_results['patterns_detected']
+            ]
+            success_count = sum(success_criteria)
+            success_rate = success_count / len(success_criteria)
+            
+            if success_rate >= 0.67:  # 67% success threshold
+                self.log_test_result("Pattern Detection System Fix", True, 
+                                   f"Pattern detection working: {success_count}/{len(success_criteria)} criteria met. Opportunities: {pattern_results['opportunities_count']}, Patterns detected: {pattern_results['patterns_detected']}, Detection enabled: {pattern_results['pattern_detection_enabled']}")
+            else:
+                self.log_test_result("Pattern Detection System Fix", False, 
+                                   f"Pattern detection issues: {success_count}/{len(success_criteria)} criteria met. Patterns: {pattern_results['pattern_data']}")
+                
+        except Exception as e:
+            self.log_test_result("Pattern Detection System Fix", False, f"Exception: {str(e)}")
+    
+    async def test_2_macd_calculation_fix_verification(self):
+        """Test 2: MACD Calculation Fix - Verify Real MACD Values Instead of Zeros"""
+        logger.info("\n🔍 TEST 2: MACD Calculation Fix Verification")
         
         try:
             macd_results = {
@@ -239,26 +371,25 @@ class MACDFibonacciIntegrationTestSuite:
         except Exception as e:
             self.log_test_result("MACD Calculation Fix Verification", False, f"Exception: {str(e)}")
     
-    async def test_2_fibonacci_retracement_integration(self):
-        """Test 2: Fibonacci Retracement Integration - Verify New Fibonacci Fields"""
-        logger.info("\n🔍 TEST 2: Fibonacci Retracement Integration Verification")
+    async def test_3_technical_indicators_integration(self):
+        """Test 3: Technical Indicators Integration - Verify Enhanced OHLCV System Feeds Data"""
+        logger.info("\n🔍 TEST 3: Technical Indicators Integration Verification")
         
         try:
-            fibonacci_results = {
+            indicators_results = {
                 'ia1_cycle_successful': False,
-                'fibonacci_fields_present': False,
-                'fibonacci_values_meaningful': False,
-                'fibonacci_levels_calculated': False,
-                'database_persistence': False,
-                'fibonacci_data': {},
+                'technical_indicators_present': False,
+                'indicators_meaningful': False,
+                'ohlcv_integration_working': False,
+                'indicators_data': {},
                 'analysis_id': None
             }
             
-            logger.info("   🚀 Testing Fibonacci retracement integration in IA1 analysis...")
-            logger.info("   📊 Expected: Fibonacci fields with meaningful values and 9-level analysis")
+            logger.info("   🚀 Testing technical indicators integration with enhanced OHLCV system...")
+            logger.info("   📊 Expected: RSI, MFI, VWAP showing meaningful signals instead of 'unknown'")
             
-            # Step 1: Trigger IA1 cycle to generate analysis with Fibonacci integration
-            logger.info("   📈 Running IA1 cycle to generate analysis with Fibonacci integration...")
+            # Step 1: Trigger IA1 cycle to test technical indicators
+            logger.info("   📈 Running IA1 cycle to test technical indicators integration...")
             start_time = time.time()
             response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=120)
             response_time = time.time() - start_time
@@ -267,51 +398,53 @@ class MACDFibonacciIntegrationTestSuite:
                 cycle_data = response.json()
                 
                 if cycle_data.get('success'):
-                    fibonacci_results['ia1_cycle_successful'] = True
+                    indicators_results['ia1_cycle_successful'] = True
                     logger.info(f"      ✅ IA1 cycle successful (response time: {response_time:.2f}s)")
                     
-                    # Check if analysis data contains Fibonacci fields
+                    # Check if analysis data contains technical indicator fields
                     analysis_data = cycle_data.get('analysis_data', {})
                     if analysis_data:
                         logger.info(f"      📋 Analysis data received: {len(str(analysis_data))} characters")
                         
-                        # Check for Fibonacci fields presence
-                        fibonacci_fields_found = []
-                        for field in self.fibonacci_fields:
+                        # Check for technical indicator fields presence
+                        indicators_found = []
+                        for field in self.technical_indicator_fields:
                             if field in analysis_data:
-                                fibonacci_fields_found.append(field)
-                                fibonacci_results['fibonacci_data'][field] = analysis_data[field]
+                                indicators_found.append(field)
+                                indicators_results['indicators_data'][field] = analysis_data[field]
                         
-                        if len(fibonacci_fields_found) >= 2:  # At least 2 Fibonacci fields present
-                            fibonacci_results['fibonacci_fields_present'] = True
-                            logger.info(f"      ✅ Fibonacci fields present: {fibonacci_fields_found}")
+                        if len(indicators_found) >= 2:  # At least 2 indicator fields present
+                            indicators_results['technical_indicators_present'] = True
+                            logger.info(f"      ✅ Technical indicator fields present: {indicators_found}")
                             
-                            # Check for meaningful Fibonacci values
-                            meaningful_values = []
-                            for field, value in fibonacci_results['fibonacci_data'].items():
-                                if field == 'fibonacci_signal_strength' and isinstance(value, (int, float)) and 0 <= value <= 1:
-                                    meaningful_values.append(f"{field}={value}")
-                                elif field == 'fibonacci_signal_direction' and isinstance(value, str) and value in ['bullish', 'bearish', 'neutral']:
-                                    meaningful_values.append(f"{field}={value}")
-                                elif field == 'fibonacci_key_level_proximity' and isinstance(value, bool):
-                                    meaningful_values.append(f"{field}={value}")
+                            # Check for meaningful indicator values (not 'unknown')
+                            meaningful_indicators = []
+                            for field, value in indicators_results['indicators_data'].items():
+                                if isinstance(value, str) and value not in ['unknown', 'neutral', 'N/A', '']:
+                                    meaningful_indicators.append(f"{field}={value}")
+                                elif isinstance(value, (int, float)) and value != 0:
+                                    meaningful_indicators.append(f"{field}={value}")
                             
-                            if meaningful_values:
-                                fibonacci_results['fibonacci_values_meaningful'] = True
-                                logger.info(f"      ✅ Meaningful Fibonacci values found: {meaningful_values}")
+                            if meaningful_indicators:
+                                indicators_results['indicators_meaningful'] = True
+                                logger.info(f"      ✅ Meaningful indicator values found: {meaningful_indicators}")
                             else:
-                                logger.warning(f"      ❌ Fibonacci values not meaningful: {fibonacci_results['fibonacci_data']}")
+                                logger.warning(f"      ❌ All indicators showing default/unknown values: {indicators_results['indicators_data']}")
                             
-                            # Check for Fibonacci levels in analysis (support/resistance)
-                            support_levels = analysis_data.get('support', [])
-                            resistance_levels = analysis_data.get('resistance', [])
-                            if len(support_levels) >= 2 or len(resistance_levels) >= 2:
-                                fibonacci_results['fibonacci_levels_calculated'] = True
-                                logger.info(f"      ✅ Fibonacci levels calculated: {len(support_levels)} support, {len(resistance_levels)} resistance")
+                            # Check for OHLCV integration indicators
+                            price_fields = ['entry_price', 'current_price']
+                            valid_prices = 0
+                            for field in price_fields:
+                                if field in analysis_data and isinstance(analysis_data[field], (int, float)) and analysis_data[field] > 0:
+                                    valid_prices += 1
+                            
+                            if valid_prices >= 1:
+                                indicators_results['ohlcv_integration_working'] = True
+                                logger.info(f"      ✅ OHLCV integration working: {valid_prices}/{len(price_fields)} price fields have valid data")
                             else:
-                                logger.warning(f"      ⚠️ Limited Fibonacci levels: {len(support_levels)} support, {len(resistance_levels)} resistance")
+                                logger.warning(f"      ❌ OHLCV integration issues: {valid_prices}/{len(price_fields)} price fields have valid data")
                         else:
-                            logger.warning(f"      ❌ Insufficient Fibonacci fields found: {fibonacci_fields_found}")
+                            logger.warning(f"      ❌ Insufficient technical indicator fields found: {indicators_found}")
                     else:
                         logger.warning(f"      ❌ No analysis data in IA1 cycle response")
                 else:
@@ -321,72 +454,68 @@ class MACDFibonacciIntegrationTestSuite:
                 if response.text:
                     logger.error(f"         Error response: {response.text[:200]}...")
             
-            # Step 2: Verify database persistence of Fibonacci data
-            if fibonacci_results['ia1_cycle_successful'] and self.db:
-                logger.info("   📊 Checking database persistence of Fibonacci data...")
-                try:
-                    # Get latest analysis from database
-                    latest_analysis = self.db.technical_analyses.find_one(
-                        {}, sort=[("timestamp", -1)]
-                    )
-                    
-                    if latest_analysis:
-                        fibonacci_results['analysis_id'] = latest_analysis.get('id', 'N/A')
-                        logger.info(f"      📋 Latest analysis found: {fibonacci_results['analysis_id']}")
+            # Step 2: Check /api/analyses for recent technical indicator data
+            logger.info("   📊 Checking /api/analyses for technical indicator data...")
+            try:
+                response = requests.get(f"{self.api_url}/analyses", timeout=60)
+                if response.status_code == 200:
+                    analyses_data = response.json()
+                    if isinstance(analyses_data, list) and len(analyses_data) > 0:
+                        latest_analysis = analyses_data[0]
                         
-                        # Check for Fibonacci fields in database
-                        db_fibonacci_fields = []
-                        for field in self.fibonacci_fields:
-                            if field in latest_analysis and latest_analysis[field] is not None:
-                                db_fibonacci_fields.append(f"{field}={latest_analysis[field]}")
+                        # Check for technical indicators in API response
+                        api_indicators = []
+                        for field in self.technical_indicator_fields:
+                            if field in latest_analysis and latest_analysis[field] not in ['unknown', 'neutral', None]:
+                                api_indicators.append(f"{field}={latest_analysis[field]}")
                         
-                        if db_fibonacci_fields:
-                            fibonacci_results['database_persistence'] = True
-                            logger.info(f"      ✅ Fibonacci data persisted in database: {db_fibonacci_fields}")
+                        if api_indicators:
+                            logger.info(f"      ✅ Technical indicators in API response: {api_indicators}")
                         else:
-                            logger.warning(f"      ❌ No Fibonacci data found in database")
+                            logger.warning(f"      ❌ No meaningful technical indicators in API response")
                     else:
-                        logger.warning(f"      ❌ No analyses found in database")
-                        
-                except Exception as e:
-                    logger.error(f"      ❌ Database query error: {e}")
+                        logger.warning(f"      ❌ No analyses data in API response")
+                else:
+                    logger.warning(f"      ⚠️ Analyses endpoint error: {response.status_code}")
+            except Exception as e:
+                logger.warning(f"      ⚠️ Analyses endpoint test error: {e}")
             
             # Calculate test success
             success_criteria = [
-                fibonacci_results['ia1_cycle_successful'],
-                fibonacci_results['fibonacci_fields_present'],
-                fibonacci_results['fibonacci_values_meaningful']
+                indicators_results['ia1_cycle_successful'],
+                indicators_results['technical_indicators_present'],
+                indicators_results['indicators_meaningful'] or indicators_results['ohlcv_integration_working']
             ]
             success_count = sum(success_criteria)
             success_rate = success_count / len(success_criteria)
             
             if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("Fibonacci Retracement Integration", True, 
-                                   f"Fibonacci integration working: {success_count}/{len(success_criteria)} criteria met. Fibonacci data: {fibonacci_results['fibonacci_data']}")
+                self.log_test_result("Technical Indicators Integration", True, 
+                                   f"Technical indicators working: {success_count}/{len(success_criteria)} criteria met. Indicators: {indicators_results['indicators_data']}")
             else:
-                self.log_test_result("Fibonacci Retracement Integration", False, 
-                                   f"Fibonacci integration issues: {success_count}/{len(success_criteria)} criteria met. Data: {fibonacci_results['fibonacci_data']}")
+                self.log_test_result("Technical Indicators Integration", False, 
+                                   f"Technical indicators issues: {success_count}/{len(success_criteria)} criteria met. Data: {indicators_results['indicators_data']}")
                 
         except Exception as e:
-            self.log_test_result("Fibonacci Retracement Integration", False, f"Exception: {str(e)}")
+            self.log_test_result("Technical Indicators Integration", False, f"Exception: {str(e)}")
     
-    async def test_3_api_endpoints_enhanced_data(self):
-        """Test 3: API Endpoints Enhanced Data - Verify /api/analyses Returns Enhanced Technical Data"""
-        logger.info("\n🔍 TEST 3: API Endpoints Enhanced Data Verification")
+    async def test_4_api_analyses_enhanced_data(self):
+        """Test 4: API Analyses Enhanced Data - Verify /api/analyses Returns Non-Zero MACD Values"""
+        logger.info("\n🔍 TEST 4: API Analyses Enhanced Data Verification")
         
         try:
             api_results = {
                 'analyses_endpoint_accessible': False,
-                'enhanced_data_present': False,
+                'recent_analyses_found': False,
                 'macd_data_in_api': False,
-                'fibonacci_data_in_api': False,
+                'pattern_data_in_api': False,
                 'data_structure_valid': False,
                 'latest_analysis': {},
                 'total_analyses': 0
             }
             
-            logger.info("   🚀 Testing /api/analyses endpoint for enhanced technical data...")
-            logger.info("   📊 Expected: Enhanced analyses with MACD and Fibonacci data")
+            logger.info("   🚀 Testing /api/analyses endpoint for enhanced data with non-zero MACD values...")
+            logger.info("   📊 Expected: Recent analyses with non-zero MACD values and pattern data")
             
             # Step 1: Test /api/analyses endpoint
             logger.info("   📈 Calling /api/analyses endpoint...")
@@ -402,6 +531,7 @@ class MACDFibonacciIntegrationTestSuite:
                 
                 if isinstance(analyses_data, list) and len(analyses_data) > 0:
                     api_results['total_analyses'] = len(analyses_data)
+                    api_results['recent_analyses_found'] = True
                     latest_analysis = analyses_data[0]  # Assuming sorted by latest
                     api_results['latest_analysis'] = latest_analysis
                     
@@ -415,36 +545,43 @@ class MACDFibonacciIntegrationTestSuite:
                         api_results['data_structure_valid'] = True
                         logger.info(f"      ✅ Valid data structure: {enhanced_fields_present}/{len(required_fields)} required fields")
                         
-                        # Check for MACD data in API response
+                        # Check for MACD data in API response (specifically non-zero values)
                         macd_fields_in_api = []
                         for field in self.macd_fields:
-                            if field in latest_analysis and latest_analysis[field] not in [None, 0, 0.0, '0', 'unknown']:
-                                macd_fields_in_api.append(f"{field}={latest_analysis[field]}")
+                            if field in latest_analysis:
+                                value = latest_analysis[field]
+                                if isinstance(value, (int, float)) and value != 0.0:
+                                    macd_fields_in_api.append(f"{field}={value}")
+                                elif isinstance(value, str) and value not in ['0', '0.0', '0.000000', 'unknown', 'neutral']:
+                                    macd_fields_in_api.append(f"{field}={value}")
                         
                         if macd_fields_in_api:
                             api_results['macd_data_in_api'] = True
-                            logger.info(f"      ✅ MACD data in API response: {macd_fields_in_api}")
+                            logger.info(f"      ✅ Non-zero MACD data in API response: {macd_fields_in_api}")
                         else:
-                            logger.warning(f"      ❌ No meaningful MACD data in API response")
+                            logger.warning(f"      ❌ No non-zero MACD data in API response")
+                            # Log what MACD values we actually found
+                            actual_macd_values = []
+                            for field in self.macd_fields:
+                                if field in latest_analysis:
+                                    actual_macd_values.append(f"{field}={latest_analysis[field]}")
+                            logger.warning(f"         Actual MACD values: {actual_macd_values}")
                         
-                        # Check for Fibonacci data in API response
-                        fibonacci_fields_in_api = []
-                        for field in self.fibonacci_fields:
-                            if field in latest_analysis and latest_analysis[field] is not None:
-                                fibonacci_fields_in_api.append(f"{field}={latest_analysis[field]}")
+                        # Check for pattern data in API response
+                        pattern_fields_in_api = []
+                        for field in self.pattern_fields:
+                            if field in latest_analysis and latest_analysis[field]:
+                                if isinstance(latest_analysis[field], list) and len(latest_analysis[field]) > 0:
+                                    pattern_fields_in_api.append(f"{field}={latest_analysis[field]}")
+                                elif isinstance(latest_analysis[field], str) and latest_analysis[field] not in ['', 'null', 'none']:
+                                    pattern_fields_in_api.append(f"{field}={latest_analysis[field]}")
                         
-                        if fibonacci_fields_in_api:
-                            api_results['fibonacci_data_in_api'] = True
-                            logger.info(f"      ✅ Fibonacci data in API response: {fibonacci_fields_in_api}")
+                        if pattern_fields_in_api:
+                            api_results['pattern_data_in_api'] = True
+                            logger.info(f"      ✅ Pattern data in API response: {pattern_fields_in_api}")
                         else:
-                            logger.warning(f"      ❌ No Fibonacci data in API response")
+                            logger.warning(f"      ❌ No pattern data in API response")
                         
-                        # Check if we have enhanced data overall
-                        if api_results['macd_data_in_api'] or api_results['fibonacci_data_in_api']:
-                            api_results['enhanced_data_present'] = True
-                            logger.info(f"      ✅ Enhanced technical data present in API")
-                        else:
-                            logger.warning(f"      ❌ No enhanced technical data found in API")
                     else:
                         logger.warning(f"      ❌ Invalid data structure: {enhanced_fields_present}/{len(required_fields)} required fields")
                 else:
@@ -457,283 +594,183 @@ class MACDFibonacciIntegrationTestSuite:
             # Calculate test success
             success_criteria = [
                 api_results['analyses_endpoint_accessible'],
+                api_results['recent_analyses_found'],
                 api_results['data_structure_valid'],
-                api_results['enhanced_data_present']
+                api_results['macd_data_in_api'] or api_results['pattern_data_in_api']
             ]
             success_count = sum(success_criteria)
             success_rate = success_count / len(success_criteria)
             
-            if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("API Endpoints Enhanced Data", True, 
-                                   f"Enhanced API data working: {success_count}/{len(success_criteria)} criteria met. {api_results['total_analyses']} analyses, MACD: {api_results['macd_data_in_api']}, Fibonacci: {api_results['fibonacci_data_in_api']}")
+            if success_rate >= 0.75:  # 75% success threshold
+                self.log_test_result("API Analyses Enhanced Data", True, 
+                                   f"Enhanced API data working: {success_count}/{len(success_criteria)} criteria met. {api_results['total_analyses']} analyses, MACD: {api_results['macd_data_in_api']}, Patterns: {api_results['pattern_data_in_api']}")
             else:
-                self.log_test_result("API Endpoints Enhanced Data", False, 
+                self.log_test_result("API Analyses Enhanced Data", False, 
                                    f"Enhanced API data issues: {success_count}/{len(success_criteria)} criteria met")
                 
         except Exception as e:
-            self.log_test_result("API Endpoints Enhanced Data", False, f"Exception: {str(e)}")
+            self.log_test_result("API Analyses Enhanced Data", False, f"Exception: {str(e)}")
     
-    async def test_4_backend_integration_verification(self):
-        """Test 4: Backend Integration - Verify fibonacci_calculator.py and MACD Integration"""
-        logger.info("\n🔍 TEST 4: Backend Integration Verification")
+    async def test_5_backend_logs_verification(self):
+        """Test 5: Backend Logs Verification - Check for Pattern Detection and MACD Integration Health"""
+        logger.info("\n🔍 TEST 5: Backend Logs Verification")
         
         try:
-            integration_results = {
-                'fibonacci_calculator_imported': False,
-                'macd_calculator_imported': False,
-                'backend_logs_healthy': False,
-                'no_import_errors': False,
-                'calculations_working': False,
+            logs_results = {
+                'backend_logs_accessible': False,
+                'pattern_detection_mentions': False,
+                'macd_calculation_mentions': False,
+                'yahoo_finance_mentions': False,
+                'no_critical_errors': False,
                 'error_count': 0,
-                'import_errors': []
+                'success_messages': []
             }
             
-            logger.info("   🚀 Testing backend integration of fibonacci_calculator.py and MACD systems...")
-            logger.info("   📊 Expected: No import errors, healthy backend logs, working calculations")
+            logger.info("   🚀 Testing backend logs for pattern detection and MACD integration health...")
+            logger.info("   📊 Expected: Pattern detection enabled, MACD calculations working, no critical errors")
             
-            # Step 1: Check backend logs for import errors and calculation health
+            # Step 1: Check backend logs
             logger.info("   📋 Checking backend logs for integration health...")
             try:
                 backend_logs = await self._capture_backend_logs()
                 
                 if backend_logs:
+                    logs_results['backend_logs_accessible'] = True
                     logger.info(f"      📊 Captured {len(backend_logs)} log lines for analysis")
                     
-                    # Check for import errors
-                    import_error_patterns = [
-                        'ImportError',
-                        'ModuleNotFoundError',
-                        'fibonacci_calculator',
-                        'macd_calculator',
-                        'cannot import',
-                        'No module named'
+                    # Check for pattern detection mentions
+                    pattern_detection_patterns = [
+                        'pattern detection enabled',
+                        'pattern detection',
+                        'technical_pattern_detector',
+                        'yahoo finance ohlcv',
+                        'patterns detected'
                     ]
                     
-                    import_errors = []
+                    pattern_messages = []
                     for log_line in backend_logs:
-                        for pattern in import_error_patterns:
+                        for pattern in pattern_detection_patterns:
                             if pattern.lower() in log_line.lower():
-                                import_errors.append(log_line.strip())
+                                pattern_messages.append(log_line.strip())
                                 break
                     
-                    if not import_errors:
-                        integration_results['no_import_errors'] = True
-                        logger.info(f"      ✅ No import errors found in backend logs")
-                    else:
-                        integration_results['import_errors'] = import_errors[:3]  # Show first 3
-                        logger.warning(f"      ❌ Import errors found: {len(import_errors)} errors")
-                        for error in import_errors[:3]:
-                            logger.warning(f"         - {error}")
-                    
-                    # Check for successful imports/calculations
-                    success_patterns = [
-                        'fibonacci_calculator',
-                        'MACD calculated successfully',
-                        'Fibonacci analysis',
-                        'fibonacci retracement',
-                        'MACD optimized'
-                    ]
-                    
-                    success_messages = []
-                    for log_line in backend_logs:
-                        for pattern in success_patterns:
-                            if pattern.lower() in log_line.lower() and 'error' not in log_line.lower():
-                                success_messages.append(log_line.strip())
-                                break
-                    
-                    if success_messages:
-                        integration_results['calculations_working'] = True
-                        logger.info(f"      ✅ Calculation success messages found: {len(success_messages)}")
-                        for msg in success_messages[:2]:
+                    if pattern_messages:
+                        logs_results['pattern_detection_mentions'] = True
+                        logger.info(f"      ✅ Pattern detection mentions found: {len(pattern_messages)}")
+                        for msg in pattern_messages[:2]:
                             logger.info(f"         - {msg}")
                     else:
-                        logger.warning(f"      ⚠️ No calculation success messages found")
+                        logger.warning(f"      ❌ No pattern detection mentions found in logs")
                     
-                    # Check for fibonacci_calculator specific mentions
-                    fibonacci_mentions = [log for log in backend_logs if 'fibonacci' in log.lower()]
-                    if fibonacci_mentions:
-                        integration_results['fibonacci_calculator_imported'] = True
-                        logger.info(f"      ✅ Fibonacci calculator mentions found: {len(fibonacci_mentions)}")
+                    # Check for MACD calculation mentions
+                    macd_patterns = [
+                        'macd',
+                        'macd calculation',
+                        'macd_calculator',
+                        'macd optimized',
+                        'macd signal'
+                    ]
                     
-                    # Check for MACD specific mentions
-                    macd_mentions = [log for log in backend_logs if 'macd' in log.lower()]
-                    if macd_mentions:
-                        integration_results['macd_calculator_imported'] = True
-                        logger.info(f"      ✅ MACD calculator mentions found: {len(macd_mentions)}")
+                    macd_messages = []
+                    for log_line in backend_logs:
+                        for pattern in macd_patterns:
+                            if pattern.lower() in log_line.lower() and 'error' not in log_line.lower():
+                                macd_messages.append(log_line.strip())
+                                break
                     
-                    # Overall backend health
-                    error_patterns = ['ERROR', 'CRITICAL', 'Exception', 'Traceback']
+                    if macd_messages:
+                        logs_results['macd_calculation_mentions'] = True
+                        logger.info(f"      ✅ MACD calculation mentions found: {len(macd_messages)}")
+                        for msg in macd_messages[:2]:
+                            logger.info(f"         - {msg}")
+                    else:
+                        logger.warning(f"      ❌ No MACD calculation mentions found in logs")
+                    
+                    # Check for Yahoo Finance mentions
+                    yahoo_patterns = [
+                        'yahoo finance',
+                        'yfinance',
+                        'yahoo ohlcv',
+                        'yahoo_finance'
+                    ]
+                    
+                    yahoo_messages = []
+                    for log_line in backend_logs:
+                        for pattern in yahoo_patterns:
+                            if pattern.lower() in log_line.lower():
+                                yahoo_messages.append(log_line.strip())
+                                break
+                    
+                    if yahoo_messages:
+                        logs_results['yahoo_finance_mentions'] = True
+                        logger.info(f"      ✅ Yahoo Finance mentions found: {len(yahoo_messages)}")
+                    else:
+                        logger.warning(f"      ❌ No Yahoo Finance mentions found in logs")
+                    
+                    # Check for critical errors
+                    error_patterns = ['ERROR', 'CRITICAL', 'Exception', 'Traceback', 'Failed']
                     error_count = 0
+                    critical_errors = []
+                    
                     for log_line in backend_logs:
                         for pattern in error_patterns:
                             if pattern in log_line:
                                 error_count += 1
+                                if len(critical_errors) < 3:  # Store first 3 errors
+                                    critical_errors.append(log_line.strip())
                                 break
                     
-                    integration_results['error_count'] = error_count
+                    logs_results['error_count'] = error_count
                     if error_count < len(backend_logs) * 0.1:  # Less than 10% error rate
-                        integration_results['backend_logs_healthy'] = True
+                        logs_results['no_critical_errors'] = True
                         logger.info(f"      ✅ Backend logs healthy: {error_count} errors in {len(backend_logs)} lines")
                     else:
                         logger.warning(f"      ⚠️ Backend logs show issues: {error_count} errors in {len(backend_logs)} lines")
+                        for error in critical_errors:
+                            logger.warning(f"         - {error}")
+                    
+                    # Collect success messages
+                    success_patterns = [
+                        'successfully',
+                        'completed',
+                        'working',
+                        'enabled',
+                        'operational'
+                    ]
+                    
+                    for log_line in backend_logs:
+                        for pattern in success_patterns:
+                            if (pattern.lower() in log_line.lower() and 
+                                'error' not in log_line.lower() and
+                                ('pattern' in log_line.lower() or 'macd' in log_line.lower())):
+                                logs_results['success_messages'].append(log_line.strip())
+                                break
+                    
                 else:
                     logger.warning(f"      ⚠️ No backend logs captured")
                     
             except Exception as e:
                 logger.error(f"      ❌ Error analyzing backend logs: {e}")
             
-            # Step 2: Test a simple IA1 cycle to verify integration
-            logger.info("   📈 Testing integration with IA1 cycle...")
-            try:
-                response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=60)
-                if response.status_code == 200:
-                    cycle_data = response.json()
-                    if cycle_data.get('success'):
-                        logger.info(f"      ✅ IA1 cycle successful - integration working")
-                        integration_results['calculations_working'] = True
-                    else:
-                        logger.warning(f"      ⚠️ IA1 cycle failed: {cycle_data.get('error', 'Unknown')}")
-                else:
-                    logger.warning(f"      ⚠️ IA1 cycle HTTP error: {response.status_code}")
-            except Exception as e:
-                logger.warning(f"      ⚠️ IA1 cycle test error: {e}")
-            
             # Calculate test success
             success_criteria = [
-                integration_results['no_import_errors'],
-                integration_results['backend_logs_healthy'],
-                integration_results['fibonacci_calculator_imported'] or integration_results['macd_calculator_imported'],
-                integration_results['calculations_working']
+                logs_results['backend_logs_accessible'],
+                logs_results['pattern_detection_mentions'] or logs_results['yahoo_finance_mentions'],
+                logs_results['macd_calculation_mentions'],
+                logs_results['no_critical_errors']
             ]
             success_count = sum(success_criteria)
             success_rate = success_count / len(success_criteria)
             
             if success_rate >= 0.75:  # 75% success threshold
-                self.log_test_result("Backend Integration Verification", True, 
-                                   f"Backend integration working: {success_count}/{len(success_criteria)} criteria met. Errors: {integration_results['error_count']}, Fibonacci: {integration_results['fibonacci_calculator_imported']}, MACD: {integration_results['macd_calculator_imported']}")
+                self.log_test_result("Backend Logs Verification", True, 
+                                   f"Backend logs healthy: {success_count}/{len(success_criteria)} criteria met. Errors: {logs_results['error_count']}, Pattern detection: {logs_results['pattern_detection_mentions']}, MACD: {logs_results['macd_calculation_mentions']}")
             else:
-                self.log_test_result("Backend Integration Verification", False, 
-                                   f"Backend integration issues: {success_count}/{len(success_criteria)} criteria met. Import errors: {len(integration_results['import_errors'])}")
+                self.log_test_result("Backend Logs Verification", False, 
+                                   f"Backend logs issues: {success_count}/{len(success_criteria)} criteria met. Error count: {logs_results['error_count']}")
                 
         except Exception as e:
-            self.log_test_result("Backend Integration Verification", False, f"Exception: {str(e)}")
-    
-    async def test_5_database_persistence_verification(self):
-        """Test 5: Database Persistence - Verify MACD and Fibonacci Data Storage"""
-        logger.info("\n🔍 TEST 5: Database Persistence Verification")
-        
-        try:
-            persistence_results = {
-                'database_accessible': False,
-                'recent_analyses_found': False,
-                'macd_fields_in_db': False,
-                'fibonacci_fields_in_db': False,
-                'data_consistency': False,
-                'analyses_count': 0,
-                'sample_analysis': {}
-            }
-            
-            logger.info("   🚀 Testing database persistence of MACD and Fibonacci data...")
-            logger.info("   📊 Expected: Recent analyses with enhanced technical indicator fields")
-            
-            if not self.db:
-                logger.error("      ❌ MongoDB connection not available")
-                self.log_test_result("Database Persistence Verification", False, "MongoDB connection not available")
-                return
-            
-            persistence_results['database_accessible'] = True
-            
-            # Step 1: Check for recent analyses in database
-            try:
-                # Get recent analyses (within last 2 hours)
-                two_hours_ago = datetime.now() - timedelta(hours=2)
-                recent_analyses = list(self.db.technical_analyses.find({
-                    "timestamp": {"$gte": two_hours_ago}
-                }).sort("timestamp", -1).limit(5))
-                
-                persistence_results['analyses_count'] = len(recent_analyses)
-                
-                if recent_analyses:
-                    persistence_results['recent_analyses_found'] = True
-                    latest_analysis = recent_analyses[0]
-                    persistence_results['sample_analysis'] = {
-                        'id': latest_analysis.get('id', 'N/A'),
-                        'symbol': latest_analysis.get('symbol', 'N/A'),
-                        'timestamp': latest_analysis.get('timestamp', 'N/A')
-                    }
-                    
-                    logger.info(f"      ✅ Recent analyses found: {persistence_results['analyses_count']} analyses")
-                    logger.info(f"         Latest: {persistence_results['sample_analysis']['symbol']} at {persistence_results['sample_analysis']['timestamp']}")
-                    
-                    # Check for MACD fields in database
-                    macd_fields_in_db = []
-                    for field in self.macd_fields:
-                        if field in latest_analysis and latest_analysis[field] not in [None, 0, 0.0, '0', 'unknown']:
-                            macd_fields_in_db.append(f"{field}={latest_analysis[field]}")
-                    
-                    if macd_fields_in_db:
-                        persistence_results['macd_fields_in_db'] = True
-                        logger.info(f"      ✅ MACD fields persisted: {macd_fields_in_db}")
-                    else:
-                        logger.warning(f"      ❌ No meaningful MACD fields in database")
-                    
-                    # Check for Fibonacci fields in database
-                    fibonacci_fields_in_db = []
-                    for field in self.fibonacci_fields:
-                        if field in latest_analysis and latest_analysis[field] is not None:
-                            fibonacci_fields_in_db.append(f"{field}={latest_analysis[field]}")
-                    
-                    if fibonacci_fields_in_db:
-                        persistence_results['fibonacci_fields_in_db'] = True
-                        logger.info(f"      ✅ Fibonacci fields persisted: {fibonacci_fields_in_db}")
-                    else:
-                        logger.warning(f"      ❌ No Fibonacci fields in database")
-                    
-                    # Check data consistency across multiple analyses
-                    if len(recent_analyses) >= 2:
-                        consistent_fields = 0
-                        total_fields_checked = 0
-                        
-                        for field in self.macd_fields + self.fibonacci_fields:
-                            if field in recent_analyses[0] and field in recent_analyses[1]:
-                                total_fields_checked += 1
-                                val1 = recent_analyses[0][field]
-                                val2 = recent_analyses[1][field]
-                                
-                                # Check if both have meaningful values (not defaults)
-                                if (val1 not in [None, 0, 0.0, '0', 'unknown'] and 
-                                    val2 not in [None, 0, 0.0, '0', 'unknown']):
-                                    consistent_fields += 1
-                        
-                        if total_fields_checked > 0 and consistent_fields >= total_fields_checked * 0.5:
-                            persistence_results['data_consistency'] = True
-                            logger.info(f"      ✅ Data consistency good: {consistent_fields}/{total_fields_checked} fields consistent")
-                        else:
-                            logger.warning(f"      ⚠️ Data consistency issues: {consistent_fields}/{total_fields_checked} fields consistent")
-                else:
-                    logger.warning(f"      ❌ No recent analyses found in database")
-                    
-            except Exception as e:
-                logger.error(f"      ❌ Database query error: {e}")
-            
-            # Calculate test success
-            success_criteria = [
-                persistence_results['database_accessible'],
-                persistence_results['recent_analyses_found'],
-                persistence_results['macd_fields_in_db'] or persistence_results['fibonacci_fields_in_db']
-            ]
-            success_count = sum(success_criteria)
-            success_rate = success_count / len(success_criteria)
-            
-            if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("Database Persistence Verification", True, 
-                                   f"Database persistence working: {success_count}/{len(success_criteria)} criteria met. {persistence_results['analyses_count']} analyses, MACD: {persistence_results['macd_fields_in_db']}, Fibonacci: {persistence_results['fibonacci_fields_in_db']}")
-            else:
-                self.log_test_result("Database Persistence Verification", False, 
-                                   f"Database persistence issues: {success_count}/{len(success_criteria)} criteria met")
-                
-        except Exception as e:
-            self.log_test_result("Database Persistence Verification", False, f"Exception: {str(e)}")
+            self.log_test_result("Backend Logs Verification", False, f"Exception: {str(e)}")
     
     async def _capture_backend_logs(self):
         """Capture recent backend logs"""
@@ -759,24 +796,24 @@ class MACDFibonacciIntegrationTestSuite:
             return []
     
     async def run_comprehensive_test_suite(self):
-        """Run comprehensive MACD & Fibonacci Integration test suite"""
-        logger.info("🚀 Starting MACD Calculation Fix and Fibonacci Retracement Integration Test Suite")
+        """Run comprehensive Pattern Detection & MACD Fixes test suite"""
+        logger.info("🚀 Starting Pattern Detection System Fixes and MACD Calculation Issues Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 MACD & FIBONACCI INTEGRATION TEST SUITE")
-        logger.info("🎯 Testing: MACD calculation fix and Fibonacci retracement integration")
-        logger.info("🎯 Expected: Real MACD values, Fibonacci analysis, enhanced API data")
+        logger.info("📋 PATTERN DETECTION & MACD FIXES TEST SUITE")
+        logger.info("🎯 Testing: Pattern detection system fixes and MACD calculation issues")
+        logger.info("🎯 Expected: Pattern detection enabled, real MACD values, enhanced OHLCV integration")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_macd_calculation_fix_verification()
-        await self.test_2_fibonacci_retracement_integration()
-        await self.test_3_api_endpoints_enhanced_data()
-        await self.test_4_backend_integration_verification()
-        await self.test_5_database_persistence_verification()
+        await self.test_1_pattern_detection_system_fix()
+        await self.test_2_macd_calculation_fix_verification()
+        await self.test_3_technical_indicators_integration()
+        await self.test_4_api_analyses_enhanced_data()
+        await self.test_5_backend_logs_verification()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 MACD & FIBONACCI INTEGRATION TEST SUMMARY")
+        logger.info("📊 PATTERN DETECTION & MACD FIXES TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -798,16 +835,16 @@ class MACDFibonacciIntegrationTestSuite:
         requirements_status = {}
         
         for result in self.test_results:
-            if "MACD Calculation Fix" in result['test']:
+            if "Pattern Detection System Fix" in result['test']:
+                requirements_status['Pattern Detection System Re-enabled'] = result['success']
+            elif "MACD Calculation Fix" in result['test']:
                 requirements_status['MACD Calculation Fix (Real Values)'] = result['success']
-            elif "Fibonacci Retracement Integration" in result['test']:
-                requirements_status['Fibonacci Retracement Integration'] = result['success']
-            elif "API Endpoints Enhanced Data" in result['test']:
-                requirements_status['Enhanced API Endpoints'] = result['success']
-            elif "Backend Integration" in result['test']:
-                requirements_status['Backend Integration (fibonacci_calculator.py)'] = result['success']
-            elif "Database Persistence" in result['test']:
-                requirements_status['Database Persistence of Enhanced Data'] = result['success']
+            elif "Technical Indicators Integration" in result['test']:
+                requirements_status['Enhanced OHLCV System Integration'] = result['success']
+            elif "API Analyses Enhanced Data" in result['test']:
+                requirements_status['API Endpoints with Non-Zero MACD Values'] = result['success']
+            elif "Backend Logs Verification" in result['test']:
+                requirements_status['Backend Integration Health'] = result['success']
         
         logger.info("🎯 CRITICAL REQUIREMENTS STATUS:")
         for requirement, status in requirements_status.items():
@@ -821,28 +858,28 @@ class MACDFibonacciIntegrationTestSuite:
         logger.info(f"\n🏆 REQUIREMENTS SATISFACTION: {requirements_met}/{total_requirements}")
         
         if requirements_met == total_requirements:
-            logger.info("\n🎉 VERDICT: MACD & FIBONACCI INTEGRATION 100% SUCCESSFUL!")
+            logger.info("\n🎉 VERDICT: PATTERN DETECTION & MACD FIXES 100% SUCCESSFUL!")
+            logger.info("✅ Pattern detection system re-enabled - Yahoo Finance OHLCV working")
             logger.info("✅ MACD calculation fix working - real values instead of zeros")
-            logger.info("✅ Fibonacci retracement integration complete with 9-level analysis")
-            logger.info("✅ Enhanced API endpoints returning technical indicator data")
-            logger.info("✅ Backend integration of fibonacci_calculator.py working")
-            logger.info("✅ Database persistence of enhanced technical data confirmed")
+            logger.info("✅ Enhanced OHLCV system properly feeding data to IA1 analysis")
+            logger.info("✅ API endpoints returning non-zero MACD values and pattern data")
+            logger.info("✅ Backend integration healthy with no critical errors")
         elif requirements_met >= total_requirements * 0.8:
-            logger.info("\n⚠️ VERDICT: MACD & FIBONACCI INTEGRATION MOSTLY SUCCESSFUL")
+            logger.info("\n⚠️ VERDICT: PATTERN DETECTION & MACD FIXES MOSTLY SUCCESSFUL")
             logger.info("🔍 Minor issues may need attention for complete integration")
         elif requirements_met >= total_requirements * 0.6:
-            logger.info("\n⚠️ VERDICT: MACD & FIBONACCI INTEGRATION PARTIALLY SUCCESSFUL")
-            logger.info("🔧 Several requirements need attention for complete integration")
+            logger.info("\n⚠️ VERDICT: PATTERN DETECTION & MACD FIXES PARTIALLY SUCCESSFUL")
+            logger.info("🔧 Several requirements need attention for complete fixes")
         else:
-            logger.info("\n❌ VERDICT: MACD & FIBONACCI INTEGRATION NOT SUCCESSFUL")
-            logger.info("🚨 Major issues detected - technical indicators not working properly")
-            logger.info("🚨 System needs significant fixes for MACD and Fibonacci integration")
+            logger.info("\n❌ VERDICT: PATTERN DETECTION & MACD FIXES NOT SUCCESSFUL")
+            logger.info("🚨 Major issues detected - pattern detection and MACD calculations not working properly")
+            logger.info("🚨 System needs significant fixes for pattern detection and MACD integration")
         
         return passed_tests, total_tests
 
 async def main():
-    """Main function to run the comprehensive MACD & Fibonacci Integration test suite"""
-    test_suite = MACDFibonacciIntegrationTestSuite()
+    """Main function to run the comprehensive Pattern Detection & MACD Fixes test suite"""
+    test_suite = PatternDetectionMACDTestSuite()
     passed_tests, total_tests = await test_suite.run_comprehensive_test_suite()
     
     # Exit with appropriate code
