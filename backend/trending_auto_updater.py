@@ -64,7 +64,7 @@ class TrendingAutoUpdater:
             "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "ETCUSDT", "FILUSDT",
             "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT",
             "ENSUSDT", "OPUSDT", "ARBUSDT", "ATOMUSDT", "ALGOUSDT", "SANDUSDT",
-            "MANAUSDT", "AXSUSDT", "THETAUSDT", "FLOWUSDT", "CHZUSDT", "XTZUSDT",
+            "MANAUSDT", "AXSUSDT", "THETAUSDT", "FLOWUSDT", "CHZUSDT",  # REMOVED XTZUSDT - not available on BingX Futures
             "EGLDUSDT", "HBARUSDT", "VETUSDT", "GRTUSDT", "COMPUSDT", "YFIUSDT",
             "SUSHIUSDT", "BATUSDT"  # Total: 50 symbols
         ]
