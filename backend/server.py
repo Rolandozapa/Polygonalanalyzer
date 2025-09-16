@@ -9410,70 +9410,39 @@ class UltraProfessionalOrchestrator:
 
     async def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """
-        🎯 ADVANCED IA2 ESCALATION LOGIC with Market Context Awareness
+        🎯 SIMPLIFIED IA2 ESCALATION LOGIC - 2 CLEAR PATHS
         
-        NOUVELLE LOGIQUE SOPHISTIQUÉE :
-        1. RR > 1.72:1 + Confiance > 85% + Trend Market Alignment → IA2
-        2. RR > 2.0:1 + Confiance > 70% → IA2 (logique classique)
-        3. Confiance > 95% → IA2 (override haute confiance)
-        
-        MARKET ALIGNMENT LOGIC (anti-contrarian):
-        - LONG accepté si marché global monte (market_cap_24h > 0 OU volume up)
-        - SHORT accepté si marché global baisse (market_cap_24h < 0 OU volume down)
+        VOIE 1: Signal LONG/SHORT + Confiance > 95% → IA2 (High Confidence Override)
+        VOIE 2: Signal LONG/SHORT + RR > 2.0 → IA2 (Good Risk-Reward)
         """
         try:
             ia1_signal = analysis.ia1_signal.lower()
             confidence = analysis.analysis_confidence
             rr_ratio = analysis.risk_reward_ratio
             
-            # Get global market context for trend alignment
-            market_cap_24h = 0.0
-            market_volume_trend = "neutral"
+            # Must be LONG or SHORT signal (not HOLD)
+            if ia1_signal not in ['long', 'short']:
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - HOLD signal (not LONG/SHORT)")
+                return False
             
-            try:
-                global_market_data = await global_crypto_market_analyzer.get_global_market_data()
-                if global_market_data:
-                    market_cap_24h = global_market_data.market_cap_change_24h
-                    # Approximer volume trend basé sur market cap change
-                    market_volume_trend = "up" if market_cap_24h > 1.0 else "down" if market_cap_24h < -1.0 else "neutral"
-            except Exception as e:
-                logger.warning(f"⚠️ Could not get global market data: {e}")
-            
-            # 🎯 LOGIQUE 1 NOUVELLE: RR > 1.72:1 + Confiance > 85% + Market Alignment
-            if (ia1_signal in ['long', 'short'] and confidence > 0.85 and rr_ratio > 1.72):
-                
-                # Check market alignment (anti-contrarian logic)
-                market_aligned = False
-                
-                if ia1_signal == 'long':
-                    # LONG aligned if market going up (market cap or volume up)
-                    market_aligned = (market_cap_24h > 0.0) or (market_volume_trend == "up")
-                    alignment_reason = f"Market Cap: {market_cap_24h:+.2f}%, Volume: {market_volume_trend}"
-                    
-                elif ia1_signal == 'short':
-                    # SHORT aligned if market going down (market cap or volume down)  
-                    market_aligned = (market_cap_24h < 0.0) or (market_volume_trend == "down")
-                    alignment_reason = f"Market Cap: {market_cap_24h:+.2f}%, Volume: {market_volume_trend}"
-                
-                if market_aligned:
-                    logger.info(f"🚀 IA2 ACCEPTED (LOGIQUE NOUVELLE 1.72): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%}, RR {rr_ratio:.2f}:1, Market Aligned ({alignment_reason})")
-                    return True
-                else:
-                    logger.info(f"⚠️ IA2 MARKET CONTRARIAN REJECTED: {opportunity.symbol} - {ia1_signal.upper()} against market trend ({alignment_reason})")
-            
-            # 🎯 LOGIQUE 2 CLASSIQUE: RR > 2.0:1 + Confiance > 70%
-            if ia1_signal in ['long', 'short'] and confidence > 0.70 and rr_ratio > 2.0:
-                logger.info(f"🚀 IA2 ACCEPTED (LOGIQUE CLASSIQUE 2.0): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%}, RR {rr_ratio:.2f}:1")
+            # 🎯 VOIE 1: High Confidence Override (>95%)
+            if confidence > 0.95:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 1 - HIGH CONFIDENCE): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%} (Override)")
                 return True
             
-            # 🎯 LOGIQUE 3 OVERRIDE: Confiance > 95% (sans condition RR ni market)
-            if ia1_signal in ['long', 'short'] and confidence > 0.95:
-                logger.info(f"🚀 IA2 ACCEPTED (LOGIQUE OVERRIDE 95%): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%} (High Confidence Override)")
+            # 🎯 VOIE 2: Good Risk-Reward (>2.0:1)
+            if rr_ratio > 2.0:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 2 - GOOD RR): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%}, RR {rr_ratio:.2f}:1")
                 return True
             
             # Not eligible for IA2
-            reason = f"RR {rr_ratio:.2f}<1.72" if rr_ratio < 1.72 else f"Conf {confidence:.1%}<85%" if confidence < 0.85 else f"Signal {ia1_signal.upper()}"
-            logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {reason}")
+            if confidence <= 0.95 and rr_ratio <= 2.0:
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} Conf {confidence:.1%}<95% AND RR {rr_ratio:.2f}<2.0")
+            elif confidence <= 0.95:
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} Conf {confidence:.1%}<95%")
+            else:
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} RR {rr_ratio:.2f}<2.0")
+            
             return False
             
         except Exception as e:
