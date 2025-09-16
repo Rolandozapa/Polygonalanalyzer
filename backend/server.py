@@ -5015,7 +5015,7 @@ RESPONSE FORMAT (JSON):
 **RULE 3**: IF confidence > 95% → trade_execution_ready = true (override)
 **OTHERWISE**: trade_execution_ready = false
 
-Current Global Market Context: Market Cap 24h = [DYNAMIC_MARKET_CONTEXT]
+Current Global Market Context: Market Cap 24h = {market_context_str}
 
 CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
 - **LONG Signal**: Entry near current support, SL below stronger support, TP at resistance levels
