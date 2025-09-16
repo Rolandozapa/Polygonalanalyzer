@@ -3942,6 +3942,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
             cleaned_data["fibonacci_nearest_level"] = str(analysis_data.get("fibonacci_nearest_level", "61.8"))
             cleaned_data["fibonacci_trend_direction"] = str(analysis_data.get("fibonacci_trend_direction", "neutral"))
+            cleaned_data["fibonacci_signal_strength"] = self._ensure_json_safe(analysis_data.get("fibonacci_signal_strength"), 0.5)
+            cleaned_data["fibonacci_signal_direction"] = str(analysis_data.get("fibonacci_signal_direction", "neutral"))
+            cleaned_data["fibonacci_key_level_proximity"] = self._ensure_json_safe(analysis_data.get("fibonacci_key_level_proximity"), 0.5)
             cleaned_data["analysis_confidence"] = self._ensure_json_safe(analysis_data.get("analysis_confidence"), 0.5)
             
             # Validation des listes avec integration des patterns détectés
