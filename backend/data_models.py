@@ -65,6 +65,9 @@ class TechnicalAnalysis(BaseModel):
     fibonacci_level: float
     fibonacci_nearest_level: str = "61.8"  # Niveau Fibonacci le plus proche
     fibonacci_trend_direction: str = "neutral"  # bullish, bearish, neutral
+    fibonacci_signal_strength: Optional[float] = 0.0  # Fibonacci signal strength (0-1)
+    fibonacci_signal_direction: Optional[str] = "neutral"  # Fibonacci signal direction
+    fibonacci_key_level_proximity: Optional[bool] = False  # Near key Fibonacci level
     support_levels: List[float]
     resistance_levels: List[float]
     patterns_detected: List[str]
