@@ -5129,22 +5129,19 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
                 calculated_rr = rr_ratio
                 rr_reasoning = f"Simple S/R calculation: LONG RR = (TP-Entry)/(Entry-SL), SHORT RR = (Entry-TP)/(SL-Entry) = {rr_ratio:.2f}:1"
             
-            # Adjust TP levels based on Claude's final decision
-            if claude_signal.lower() == "long":
-                final_stop_loss = current_price * 0.97
-                final_tp1 = current_price * 1.025
-                final_tp2 = current_price * 1.045
-                final_tp3 = current_price * 1.07
-            elif claude_signal.lower() == "short":
-                final_stop_loss = current_price * 1.03
-                final_tp1 = current_price * 0.975
-                final_tp2 = current_price * 0.955
-                final_tp3 = current_price * 0.93
-            else:
-                final_stop_loss = current_price * 0.985
-                final_tp1 = current_price * 1.015
-                final_tp2 = current_price * 1.025
-                final_tp3 = current_price * 1.035
+            # 🎯 USE IA2 CALCULATED LEVELS (not hardcoded percentages)
+            # These are the levels calculated by IA2 based on technical analysis
+            final_entry_price = ia2_entry
+            final_stop_loss = ia2_sl
+            final_tp1 = ia2_tp1
+            final_tp2 = ia2_tp2
+            final_tp3 = ia2_tp3
+            
+            logger.info(f"💎 IA2 FINAL LEVELS for {symbol}: Entry=${final_entry_price:.4f}, SL=${final_stop_loss:.4f}, TP1=${final_tp1:.4f}")
+            logger.info(f"   🔧 USING IA2 CALCULATED LEVELS (not hardcoded percentages)")
+            
+            # Use IA2's calculated RR (already calculated above with correct formulas)
+            final_rr = ia2_calculated_rr
             
             # Recalculate RR with final values
             if claude_signal.lower() == "long":
