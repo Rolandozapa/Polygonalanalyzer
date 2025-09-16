@@ -5057,11 +5057,16 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
                 # 🚀 CALCULATE IA2 RR WITH CORRECT FORMULA
                 if claude_signal == "long":
                     ia2_calculated_rr = (ia2_tp1 - ia2_entry) / (ia2_entry - ia2_sl) if (ia2_entry - ia2_sl) != 0 else 0
+                    logger.info(f"🔍 IA2 RR CALCULATION (LONG) for {symbol}: ({ia2_tp1:.4f} - {ia2_entry:.4f}) / ({ia2_entry:.4f} - {ia2_sl:.4f}) = {ia2_calculated_rr:.2f}:1")
                 elif claude_signal == "short":
                     ia2_calculated_rr = (ia2_entry - ia2_tp1) / (ia2_sl - ia2_entry) if (ia2_sl - ia2_entry) != 0 else 0
+                    logger.info(f"🔍 IA2 RR CALCULATION (SHORT) for {symbol}: ({ia2_entry:.4f} - {ia2_tp1:.4f}) / ({ia2_sl:.4f} - {ia2_entry:.4f}) = {ia2_calculated_rr:.2f}:1")
                 else:  # hold
                     # 🎯 FIX: For HOLD, use IA2's calculated RR from JSON instead of defaulting to 0
                     ia2_calculated_rr = calculated_rr  # Use IA2's calculated RR from JSON response
+                    logger.info(f"🔍 IA2 RR CALCULATION (HOLD) for {symbol}: Using IA2 JSON calculated_rr = {ia2_calculated_rr:.2f}:1")
+                
+                logger.info(f"📊 IA2 RR COMPARISON for {symbol}: Our calculation={ia2_calculated_rr:.2f}:1, IA2 JSON={calculated_rr:.2f}:1")
                 
                 # 🎯 AUTO-EXECUTION LOGIC: Use IA2's trade_execution_ready + validation
                 auto_execution = False
