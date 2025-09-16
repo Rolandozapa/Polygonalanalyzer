@@ -3205,6 +3205,20 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             except Exception as e:
                 logger.warning(f"⚠️ AI enhancement failed for IA1 analysis of {opportunity.symbol}: {e}")
             
+            # 🚨 CRITICAL FIX: SAUVEGARDER L'ANALYSE RÉUSSIE EN BASE DE DONNÉES
+            try:
+                analysis_dict = analysis.dict()
+                analysis_dict['timestamp'] = get_paris_time()
+                
+                # Nettoyer les valeurs problématiques pour MongoDB
+                analysis_dict = sanitize_float_values(analysis_dict)
+                
+                await db.technical_analyses.insert_one(analysis_dict)
+                logger.info(f"💾 IA1 analysis successfully saved to database for {opportunity.symbol}")
+                
+            except Exception as save_error:
+                logger.error(f"❌ Failed to save successful IA1 analysis for {opportunity.symbol}: {save_error}")
+            
             return analysis
             
         except Exception as e:
