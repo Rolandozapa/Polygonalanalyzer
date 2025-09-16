@@ -5476,6 +5476,37 @@ async def force_ia1_analysis(request: dict):
             
             if analysis:
                 logger.info(f"✅ FORCED IA1 ANALYSIS SUCCESS for {symbol}")
+                
+                # 🎯 Check if should escalate to IA2 (ADDED)
+                if orchestrator._should_send_to_ia2(analysis, target_opportunity):
+                    logger.info(f"🚀 ESCALATING {symbol} to IA2 after forced analysis")
+                    
+                    # Get performance stats with fallback
+                    try:
+                        perf_stats = ultra_robust_aggregator.get_performance_stats() if hasattr(ultra_robust_aggregator, 'get_performance_stats') else advanced_market_aggregator.get_performance_stats()
+                    except:
+                        perf_stats = {"api_calls": 0, "success_rate": 0.8, "avg_response_time": 0.5}
+                    
+                    # IA2 decision
+                    decision = await orchestrator.ia2.make_decision(target_opportunity, analysis, perf_stats)
+                    if decision:
+                        logger.info(f"✅ IA2 decision: {decision.signal} for {symbol}")
+                        return {
+                            "success": True, 
+                            "message": f"IA1 analysis completed and escalated to IA2 for {symbol}",
+                            "analysis": {
+                                "symbol": analysis.symbol,
+                                "confidence": analysis.analysis_confidence,
+                                "recommendation": analysis.ia1_signal,
+                                "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
+                            },
+                            "ia2_decision": {
+                                "signal": decision.signal.value,
+                                "confidence": decision.confidence,
+                                "escalated": True
+                            }
+                        }
+                
                 return {
                     "success": True, 
                     "message": f"IA1 analysis completed for {symbol}",
