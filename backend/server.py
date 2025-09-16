@@ -2975,6 +2975,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     # SHORT: Niveaux techniques standards indépendants de la confidence
                     stop_loss_price = opportunity.current_price * 1.05  # +5% stop loss (résistance technique)
                     take_profit_price = opportunity.current_price * 0.92  # -8% take profit (support technique)
+                    logger.info(f"🔍 SHORT TP CALCULATION for {opportunity.symbol}: current_price={opportunity.current_price:.6f} * 0.92 = {take_profit_price:.6f}")
                     
                     logger.info(f"🔧 SHORT FALLBACK TECHNIQUE {opportunity.symbol}: SL +5% (résistance), TP -8% (support)")
                     
