@@ -5060,7 +5060,8 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
                 elif claude_signal == "short":
                     ia2_calculated_rr = (ia2_entry - ia2_tp1) / (ia2_sl - ia2_entry) if (ia2_sl - ia2_entry) != 0 else 0
                 else:  # hold
-                    ia2_calculated_rr = 0
+                    # 🎯 FIX: For HOLD, use IA2's calculated RR from JSON instead of defaulting to 0
+                    ia2_calculated_rr = calculated_rr  # Use IA2's calculated RR from JSON response
                 
                 # 🎯 AUTO-EXECUTION LOGIC: Use IA2's trade_execution_ready + validation
                 auto_execution = False
