@@ -35,8 +35,7 @@ class MACDCalculator:
         
     def _calculate_ema(self, prices: pd.Series, period: int) -> pd.Series:
         """
-        Calcul EMA robuste avec gestion des micro-prix
-        Optimisé pour les cryptomonnaies avec des prix très bas
+        Calcul EMA robuste - optimisé pour toutes les gammes de prix crypto
         """
         try:
             if len(prices) < period:
@@ -49,15 +48,10 @@ class MACDCalculator:
                 logger.debug(f"EMA: Insufficient clean data ({len(clean_prices)} < {period})")
                 return pd.Series(dtype=float)
             
-            # Gestion des micro-prix (cryptos < $0.01)
-            if clean_prices.median() < 0.01:
-                # Multiplier par 1000 pour améliorer la précision, puis diviser
-                scaled_prices = clean_prices * 1000
-                ema_scaled = scaled_prices.ewm(span=period, adjust=False).mean()
-                ema = ema_scaled / 1000
-                logger.debug(f"EMA: Applied micro-price scaling for period {period}")
-            else:
-                ema = clean_prices.ewm(span=period, adjust=False).mean()
+            # 🚀 FIXED: Removed problematic micro-price scaling logic
+            # Direct EMA calculation works for all price ranges
+            ema = clean_prices.ewm(span=period, adjust=False).mean()
+            logger.debug(f"EMA: Standard calculation for period {period}, median price: {clean_prices.median():.2f}")
             
             return ema
             
