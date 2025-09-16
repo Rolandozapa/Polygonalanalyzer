@@ -3106,7 +3106,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={indicators.macd_line}, Signal={indicators.macd_signal}, Histogram={indicators.macd_histogram}")
             analysis_data.update({
                 "rsi": rsi,
-                "macd_signal": indicators.macd_signal,  # Use working advanced indicators value
+                "macd_signal": indicators.macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
                 "macd_line": indicators.macd_line,      # Add MACD line for trend analysis
                 "macd_histogram": indicators.macd_histogram,  # Add MACD histogram
                 "macd_trend": ("bullish" if indicators.macd_histogram > 0 else "bearish" if indicators.macd_histogram < 0 else "neutral"),
