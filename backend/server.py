@@ -2991,6 +2991,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     take_profit_price = real_current_price * 1.02  # +2% take profit
                     
                     logger.info(f"⚪ HOLD FALLBACK TECHNIQUE {opportunity.symbol}: SL -2%, TP +2%")
+                
+                # 🎯 PRÉSERVER VALEURS ORIGINALES FALLBACK POUR CALCUL RR
+                original_entry_price = real_current_price  # Use real price
+                original_stop_loss = stop_loss_price  # Fallback calculated levels
+                original_take_profit = take_profit_price  # Fallback calculated levels
             
             # 🔧 CALCUL RR BASÉ SUR LES PRIX ORIGINAUX IA1 - FORMULES IA2 EXACTES
             # Utiliser les valeurs ORIGINALES avant écrasement par fallbacks
