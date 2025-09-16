@@ -187,6 +187,41 @@ class TechnicalPatternDetector:
         logger.warning(f"Failed to get OHLCV data for {symbol} from all sources")
         return None
     
+    async def _fetch_ohlcv_data(self, symbol: str) -> Optional[pd.DataFrame]:
+        """
+        🚀 OPTIMIZED: Utiliser les données OHLCV existantes au lieu de yfinance
+        Évite les appels API redondants et les conflits ThreadPoolExecutor
+        """
+        try:
+            # 🚀 OPTIMIZATION: Utiliser enhanced_ohlcv_fetcher existant
+            from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
+            
+            logger.debug(f"📊 Pattern detector using enhanced OHLCV for {symbol}")
+            
+            # Utiliser les données OHLCV déjà optimisées (35 jours)
+            historical_data = await enhanced_ohlcv_fetcher.fetch_multi_source_ohlcv(
+                symbol, 
+                lookback_days=self.lookback_days
+            )
+            
+            if historical_data is not None and len(historical_data) > 10:
+                # Standardiser les colonnes pour la détection de patterns
+                if 'close' in historical_data.columns:
+                    historical_data = historical_data.rename(columns={
+                        'open': 'Open', 'high': 'High', 'low': 'Low', 
+                        'close': 'Close', 'volume': 'Volume'
+                    })
+                
+                logger.debug(f"✅ Pattern detector got {len(historical_data)} days of OHLCV for {symbol}")
+                return historical_data
+            else:
+                logger.warning(f"⚠️ No OHLCV data available for pattern detection: {symbol}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"❌ Pattern detector OHLCV error for {symbol}: {e}")
+            return None
+    
     async def _fetch_coinapi_ohlcv(self, symbol: str) -> Optional[pd.DataFrame]:
         """Récupère OHLCV depuis CoinAPI"""
         if not self.coinapi_key:
