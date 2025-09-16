@@ -2958,8 +2958,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     logger.info(f"📊 SHORT NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={real_current_price:.6f}, SL={stop_loss_price:.6f} (+{((stop_loss_price/real_current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} ({((take_profit_price/real_current_price)-1)*100:.1f}%)")
                 else:  # hold
                     # Pour HOLD, utiliser des niveaux neutres mais différents
-                    stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.98)
-                    take_profit_price = ia1_calculated_levels.get('primary_resistance', opportunity.current_price * 1.02)
+                    stop_loss_price = ia1_calculated_levels.get('primary_support', real_current_price * 0.98)
+                    take_profit_price = ia1_calculated_levels.get('primary_resistance', real_current_price * 1.02)
             else:
                 # 🚀 NIVEAUX FALLBACK TECHNIQUES - Basés sur l'analyse technique, PAS sur la confidence
                 # Le RR doit être déterminé par les niveaux techniques uniquement
