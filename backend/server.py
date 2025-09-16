@@ -2207,6 +2207,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             TECHNICAL INDICATORS - MULTI-TIMEFRAME PROFESSIONAL ANALYSIS:
             {multi_tf_formatted}
             
+            {fibonacci_formatted}
+            
             🎯 CURRENT SNAPSHOT FOR PRECISE ENTRY/EXIT:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
             MFI: {mfi:.1f} ({'🚨 EXTREME OVERSOLD' if mfi_extreme_oversold else '📉 OVERSOLD' if mfi_oversold else '🚨 EXTREME OVERBOUGHT' if mfi_extreme_overbought else '📈 OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}) | Institution: {institutional_activity.upper()}
