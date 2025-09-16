@@ -2966,8 +2966,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 
                 if ia1_signal.lower() == "long":
                     # LONG: Niveaux techniques standards indépendants de la confidence
-                    stop_loss_price = opportunity.current_price * 0.95  # -5% stop loss (support technique)
-                    take_profit_price = opportunity.current_price * 1.08  # +8% take profit (résistance technique)
+                    stop_loss_price = real_current_price * 0.95  # -5% stop loss (support technique)
+                    take_profit_price = real_current_price * 1.08  # +8% take profit (résistance technique)
                     
                     logger.info(f"🔧 LONG FALLBACK TECHNIQUE {opportunity.symbol}: SL -5% (support), TP +8% (résistance)")
                     
