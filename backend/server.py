@@ -3145,6 +3145,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "multi_timeframe_pattern": multi_tf_indicators.get('decisive_pattern', 'NEUTRAL'),
                 "multi_timeframe_confidence": multi_tf_indicators.get('hierarchy_confidence', 0.5)
             })
+            logger.info(f"🔍 AFTER UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
             
             # 🎯 AJOUTER les niveaux de prix calculés par IA1 si disponibles
             if ia1_calculated_levels:
