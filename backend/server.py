@@ -3253,6 +3253,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d != 50.0 else 50.0
                     fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position != 0.0 else 0.0
                     
+                    # 🚨 DEBUG: Log fallback MACD values
+                    logger.warning(f"🚨 FALLBACK ANALYSIS for {opportunity.symbol}: fallback_macd={fallback_macd:.8f} (original macd_signal={macd_signal if 'macd_signal' in locals() else 'not_found'})")
+                    
                     # 🚀 Use calculated advanced indicators if available
                     fallback_mfi = mfi if 'mfi' in locals() and mfi != 50.0 else 50.0
                     fallback_vwap = vwap if 'vwap' in locals() and vwap != 0.0 else 0.0
