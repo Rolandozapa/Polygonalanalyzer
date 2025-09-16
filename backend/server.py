@@ -2950,12 +2950,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     take_profit_price = base_support
                     
                     # Vérifier que les niveaux sont logiques pour SHORT
-                    if stop_loss_price <= opportunity.current_price:
-                        stop_loss_price = opportunity.current_price * 1.05  # +5% fallback
-                    if take_profit_price >= opportunity.current_price:
-                        take_profit_price = opportunity.current_price * 0.92  # -8% fallback
+                    if stop_loss_price <= real_current_price:
+                        stop_loss_price = real_current_price * 1.05  # +5% fallback
+                    if take_profit_price >= real_current_price:
+                        take_profit_price = real_current_price * 0.92  # -8% fallback
                     
-                    logger.info(f"📊 SHORT NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={opportunity.current_price:.6f}, SL={stop_loss_price:.6f} (+{((stop_loss_price/opportunity.current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} ({((take_profit_price/opportunity.current_price)-1)*100:.1f}%)")
+                    logger.info(f"📊 SHORT NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={real_current_price:.6f}, SL={stop_loss_price:.6f} (+{((stop_loss_price/real_current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} ({((take_profit_price/real_current_price)-1)*100:.1f}%)")
                 else:  # hold
                     # Pour HOLD, utiliser des niveaux neutres mais différents
                     stop_loss_price = ia1_calculated_levels.get('primary_support', opportunity.current_price * 0.98)
