@@ -2683,6 +2683,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     # HOLD: Prix neutres basés sur les niveaux techniques
                     stop_loss_price = primary_support
                     take_profit_price = primary_resistance
+                    
+                # 🎯 PRÉSERVER LES VALEURS ORIGINALES POUR LE CALCUL RR
+                original_entry_price = real_current_price  # Use real price for RR calculation
+                original_stop_loss = stop_loss_price  # IA1 calculated levels
+                original_take_profit = take_profit_price  # IA1 calculated levels
                 
                 logger.info(f"📊 IA1 LEVELS EXTRACTED {opportunity.symbol} ({ia1_signal.upper()}): Entry=${entry_price:.6f} | Support=${primary_support:.6f} | Resistance=${primary_resistance:.6f}")
                 
