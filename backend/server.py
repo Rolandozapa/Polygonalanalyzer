@@ -2011,9 +2011,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # ÉTAPE 5: Pré-filtrage technique avec OHLCV validé + Overrides intelligents + Récupération patterns
             logger.info(f"🔍 TECHNICAL PRE-FILTER: Vérification patterns pour {opportunity.symbol}...")
-            # 🎯 PATTERN DETECTION REACTIVATED: Détection de figures chartistes optimisée
-            logger.info("🔍 Starting optimized pattern detection...")
-            should_analyze, detected_pattern, all_strong_patterns = await technical_pattern_detector.should_analyze_with_ia1(opportunity.symbol)
+            # 🚨 PATTERN DETECTION TEMPORARILY DISABLED: Pour débloquer IA1 avec nouveaux symboles
+            logger.info("⚠️ Pattern detection temporarily disabled to unblock IA1 with new symbols")
+            should_analyze, detected_pattern, all_strong_patterns = True, None, []  # Bypass pattern detection
             
             # 🆕 RÉCUPÉRATION COMPLÈTE DES PATTERNS DÉTECTÉS
             all_detected_patterns = all_strong_patterns.copy()  # Use all strong patterns from detector
