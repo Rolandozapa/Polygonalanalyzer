@@ -3917,7 +3917,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 return default
             if abs(value) == float('inf') or abs(value) > 1e10:
                 return default
-            if not isinstance(value, (int, float)):
+            if not isinstance(value, (int, float, np.number)):  # 🚀 FIX: Include numpy types
                 return default
                 
             return float(value)
