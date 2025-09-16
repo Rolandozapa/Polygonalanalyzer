@@ -5143,19 +5143,6 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
             # Use IA2's calculated RR (already calculated above with correct formulas)
             final_rr = ia2_calculated_rr
             
-            # Recalculate RR with final values
-            if claude_signal.lower() == "long":
-                final_risk = abs(current_price - final_stop_loss)
-                final_reward = abs(final_tp1 - current_price)
-            elif claude_signal.lower() == "short":
-                final_risk = abs(final_stop_loss - current_price)
-                final_reward = abs(current_price - final_tp1)
-            else:
-                final_risk = abs(current_price - final_stop_loss)
-                final_reward = abs(final_tp1 - current_price)
-                
-            final_rr = final_reward / final_risk if final_risk > 0 else 1.0
-            
             # Create final decision with IA2 strategic fields and auto-execution
             decision = TradingDecision(
                 symbol=symbol,
