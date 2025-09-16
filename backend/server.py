@@ -3094,6 +3094,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": indicators.macd_signal,  # Use working advanced indicators value
+                "macd_line": indicators.macd_line,      # Add MACD line for trend analysis
+                "macd_histogram": indicators.macd_histogram,  # Add MACD histogram
+                "macd_trend": ("bullish" if indicators.macd_histogram > 0 else "bearish" if indicators.macd_histogram < 0 else "neutral"),
                 "stochastic": stochastic_k,  # Add Stochastic %K
                 "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
