@@ -3932,6 +3932,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data = {}
             
             # Validation des champs numériques
+            logger.info(f"🔍 MACD VALIDATION for {analysis_data.get('symbol', 'UNKNOWN')}: Raw MACD Signal={analysis_data.get('macd_signal')}, Line={analysis_data.get('macd_line')}, Histogram={analysis_data.get('macd_histogram')}")
             cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), 50.0)
             cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), 0.0)
             cleaned_data["macd_line"] = self._ensure_json_safe(analysis_data.get("macd_line"), 0.0)  # Add MACD line
