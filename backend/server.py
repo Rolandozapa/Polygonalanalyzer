@@ -2086,6 +2086,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             df_with_indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
             indicators = self.advanced_indicators.get_current_indicators(df_with_indicators)
             
+            # 🚨 DEBUG: Log actual MACD values from advanced indicators
+            logger.info(f"🔍 MACD DEBUG for {opportunity.symbol}: Line={indicators.macd_line:.8f}, Signal={indicators.macd_signal:.8f}, Histogram={indicators.macd_histogram:.8f}")
+            
             # 🔥 RÉVOLUTION MULTI-TIMEFRAME - Vision complète comme un trader PRO 🔥
             multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
             multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
