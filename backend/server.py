@@ -3108,11 +3108,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "stochastic": stochastic_k,  # Add Stochastic %K
                 "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
-                "fibonacci_level": fib_data['current_position'],
-                "fibonacci_nearest_level": fib_data['nearest_level'],
-                "fibonacci_trend_direction": fib_data['trend_direction'],
-                "support_levels": self._find_support_levels(historical_data, current_price),
-                "resistance_levels": self._find_resistance_levels(historical_data, current_price),
+                "fibonacci_level": fibonacci_levels.current_level_percentage / 100.0,  # Convert to 0-1 range
+                "fibonacci_nearest_level": fibonacci_levels.nearest_level,
+                "fibonacci_trend_direction": fibonacci_levels.trend_direction,
+                "fibonacci_signal_strength": fibonacci_levels.signal_strength,
+                "fibonacci_signal_direction": fibonacci_levels.signal_direction,
+                "fibonacci_key_level_proximity": fibonacci_levels.key_level_proximity,
+                "support_levels": fibonacci_levels.support_levels,  # Use Fibonacci-derived support levels
+                "resistance_levels": fibonacci_levels.resistance_levels,  # Use Fibonacci-derived resistance levels
                 "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
                 "analysis_confidence": analysis_confidence,
                 "risk_reward_ratio": ia1_risk_reward_ratio,  # 🎯 NOUVEAU: RR basé sur niveaux techniques
