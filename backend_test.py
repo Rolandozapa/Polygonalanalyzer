@@ -1,37 +1,45 @@
 #!/usr/bin/env python3
 """
-MACD CALCULATION FIX AND FIBONACCI RETRACEMENT INTEGRATION TEST SUITE
-Focus: Test MACD calculation fix and Fibonacci retracement integration in trading bot system
+PATTERN DETECTION SYSTEM FIXES AND MACD CALCULATION ISSUES TEST SUITE
+Focus: Test pattern detection system fixes and MACD calculation issues in trading bot system
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **MACD CALCULATION FIX**: 
-   - Previous issue: All IA1 analyses showed "macd_signal": 0
-   - Fix implemented: Changed analysis_data to use indicators.macd_signal instead of fallback values
-   - Expected result: New IA1 analyses should show real MACD values like 209.76, not 0.000000
+1. **PATTERN DETECTION SYSTEM FIX**: 
+   - Previous issue: Yahoo Finance OHLCV was disabled in technical_pattern_detector.py line 289-291
+   - Previous issue: Pattern detection was disabled in server.py line 2015-2017 (now fixed)
+   - Fix implemented: Re-enabled Yahoo Finance OHLCV in technical_pattern_detector.py (_fetch_yahoo_ohlcv method)
+   - Fix implemented: Re-enabled pattern detection in server.py (removed bypass on line 2017)
+   - Expected result: Pattern detection should show "✅ Pattern detection enabled" instead of "⚠️ Pattern detection temporarily disabled"
+   - Expected result: Patterns array should contain detected pattern names instead of being empty
+
+2. **MACD CALCULATION FIX**: 
+   - Previous issue: All IA1 analyses showed MACD values as 0.000000 despite numpy.float64 fix
+   - Fix implemented: Enhanced OHLCV system should properly feed data to IA1 analysis
+   - Expected result: MACD values should show real calculations (e.g., 214.39) instead of 0.000000
    - Test: Check latest analysis for non-zero MACD values (macd_signal, macd_line, macd_histogram, macd_trend)
 
-2. **FIBONACCI RETRACEMENT INTEGRATION**:
-   - New features: Comprehensive Fibonacci analysis with 9 levels
-   - Added fields: fibonacci_signal_strength, fibonacci_signal_direction, fibonacci_key_level_proximity
-   - Expected result: New analyses should contain Fibonacci data with trend analysis and signal calculations
-   - Test: Verify new Fibonacci fields are populated with meaningful values
+3. **TECHNICAL INDICATORS INTEGRATION**:
+   - Previous issue: Enhanced OHLCV system not properly feeding data to IA1 analysis
+   - Fix implemented: Enhanced OHLCV system integration with technical indicators
+   - Expected result: Technical indicators should receive real OHLCV data instead of fallback values
+   - Test: Verify RSI, MACD, MFI, VWAP show meaningful signals instead of 'unknown'
 
-3. **API ENDPOINT TESTING**:
-   - Test /api/run-ia1-cycle to trigger new analysis generation
-   - Test /api/analyses to retrieve latest analyses with MACD and Fibonacci data
-   - Verify database persistence of new technical indicator fields
+4. **KEY ENDPOINTS TO TEST**:
+   - GET /api/opportunities (should show opportunities with pattern detection)
+   - POST /api/run-ia1-cycle (should show real MACD values and detected patterns)
+   - GET /api/analyses (should show recent analyses with non-zero MACD values)
 
-4. **BACKEND INTEGRATION**:
-   - Verify fibonacci_calculator.py is properly imported and working
-   - Check that MACD and Fibonacci calculations integrate without errors
-   - Confirm analysis_data is properly updated with new technical indicators
+5. **CRITICAL FIXES IMPLEMENTED**:
+   - Re-enabled Yahoo Finance OHLCV in technical_pattern_detector.py (_fetch_yahoo_ohlcv method)
+   - Re-enabled pattern detection in server.py (removed bypass on line 2017)
+   - Fixed yfinance duplicate entry in requirements.txt
 
 SUCCESS CRITERIA:
-✅ New IA1 analyses should show real MACD values (not 0.000000)
-✅ MACD fields should contain meaningful values: macd_signal, macd_line, macd_histogram, macd_trend
-✅ Fibonacci fields should be populated: fibonacci_signal_strength, fibonacci_signal_direction, fibonacci_key_level_proximity
-✅ API endpoints should return enhanced technical analysis data
-✅ Database should persist new technical indicator fields correctly
+✅ Pattern detection should show "✅ Pattern detection enabled" instead of "⚠️ Pattern detection temporarily disabled"
+✅ MACD values should show real calculations (e.g., 214.39) instead of 0.000000
+✅ Patterns array should contain detected pattern names instead of being empty
+✅ Technical indicators should show meaningful values instead of 'unknown'
+✅ Enhanced OHLCV system should properly feed data to IA1 analysis
 """
 
 import asyncio
