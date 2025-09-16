@@ -3104,6 +3104,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🚀 FIX: Use actual calculated indicators instead of fallback values
             logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={indicators.macd_line}, Signal={indicators.macd_signal}, Histogram={indicators.macd_histogram}")
             logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={indicators.macd_line} as macd_signal for {opportunity.symbol}")
+            logger.info(f"🔍 BEFORE UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": indicators.macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
