@@ -51,8 +51,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class AntiDuplicateSystemTestSuite:
-    """Comprehensive test suite for Anti-Duplicate System MongoDB Integration"""
+class MACDFibonacciIntegrationTestSuite:
+    """Comprehensive test suite for MACD Calculation Fix and Fibonacci Retracement Integration"""
     
     def __init__(self):
         # Get backend URL from frontend env
@@ -68,13 +68,13 @@ class AntiDuplicateSystemTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Anti-Duplicate System MongoDB Integration at: {self.api_url}")
+        logger.info(f"Testing MACD & Fibonacci Integration at: {self.api_url}")
         
         # MongoDB connection for direct database analysis
         try:
             self.mongo_client = MongoClient("mongodb://localhost:27017")
             self.db = self.mongo_client["myapp"]
-            logger.info("✅ MongoDB connection established for anti-duplicate testing")
+            logger.info("✅ MongoDB connection established for MACD & Fibonacci testing")
         except Exception as e:
             logger.error(f"❌ MongoDB connection failed: {e}")
             self.mongo_client = None
@@ -83,12 +83,11 @@ class AntiDuplicateSystemTestSuite:
         # Test results
         self.test_results = []
         
-        # Test symbols for anti-duplicate testing
-        self.test_symbols = [
-            "BTCUSDT",   # Popular symbol for testing
-            "ETHUSDT",   # Another popular symbol
-            "SOLUSDT",   # Third symbol for diversity testing
-        ]
+        # Expected MACD fields
+        self.macd_fields = ['macd_signal', 'macd_line', 'macd_histogram', 'macd_trend']
+        
+        # Expected Fibonacci fields
+        self.fibonacci_fields = ['fibonacci_signal_strength', 'fibonacci_signal_direction', 'fibonacci_key_level_proximity']
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
@@ -104,718 +103,629 @@ class AntiDuplicateSystemTestSuite:
             'timestamp': datetime.now().isoformat()
         })
     
-    async def test_1_debug_anti_doublon_endpoint(self):
-        """Test 1: Debug Anti-Doublon Endpoint - Cache Status and Database Synchronization"""
-        logger.info("\n🔍 TEST 1: Debug Anti-Doublon Endpoint Test")
+    async def test_1_macd_calculation_fix_verification(self):
+        """Test 1: MACD Calculation Fix - Verify Real MACD Values Instead of Zeros"""
+        logger.info("\n🔍 TEST 1: MACD Calculation Fix Verification")
         
         try:
-            debug_results = {
-                'endpoint_accessible': False,
-                'cache_status_present': False,
-                'database_status_present': False,
-                'synchronization_info_present': False,
-                'cache_size': 0,
-                'db_recent_analyses': 0,
-                'db_recent_decisions': 0
+            macd_results = {
+                'ia1_cycle_successful': False,
+                'macd_fields_present': False,
+                'macd_values_non_zero': False,
+                'macd_signal_meaningful': False,
+                'database_persistence': False,
+                'macd_data': {},
+                'analysis_id': None
             }
             
-            logger.info("   🚀 Testing /api/debug-anti-doublon endpoint...")
-            logger.info("   📊 Expected: Cache status, database synchronization, and comprehensive statistics")
+            logger.info("   🚀 Testing MACD calculation fix in IA1 analysis...")
+            logger.info("   📊 Expected: Real MACD values (not 0.000000) in analysis response")
             
-            # Call debug endpoint
+            # Step 1: Trigger IA1 cycle to generate new analysis with MACD fix
+            logger.info("   📈 Running IA1 cycle to generate analysis with MACD fix...")
             start_time = time.time()
-            response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
+            response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=120)
             response_time = time.time() - start_time
             
             if response.status_code == 200:
-                debug_results['endpoint_accessible'] = True
-                debug_data = response.json()
+                cycle_data = response.json()
                 
-                logger.info(f"      ✅ Debug endpoint accessible (response time: {response_time:.2f}s)")
-                logger.info(f"      📋 Debug response: {json.dumps(debug_data, indent=2)}")
-                
-                # Check for cache status
-                if 'cache_status' in debug_data:
-                    debug_results['cache_status_present'] = True
-                    cache_status = debug_data['cache_status']
-                    debug_results['cache_size'] = cache_status.get('size', 0)
+                if cycle_data.get('success'):
+                    macd_results['ia1_cycle_successful'] = True
+                    logger.info(f"      ✅ IA1 cycle successful (response time: {response_time:.2f}s)")
                     
-                    logger.info(f"      ✅ Cache status present: {debug_results['cache_size']} symbols")
-                    if 'symbols' in cache_status:
-                        symbols = cache_status['symbols'][:5]  # Show first 5
-                        logger.info(f"         Cached symbols: {symbols}")
-                else:
-                    logger.warning(f"      ❌ Cache status missing from debug response")
-                
-                # Check for database status
-                if 'database_status' in debug_data:
-                    debug_results['database_status_present'] = True
-                    db_status = debug_data['database_status']
-                    debug_results['db_recent_analyses'] = db_status.get('recent_analyses_4h', 0)
-                    debug_results['db_recent_decisions'] = db_status.get('recent_decisions_4h', 0)
-                    
-                    logger.info(f"      ✅ Database status present: {debug_results['db_recent_analyses']} analyses, {debug_results['db_recent_decisions']} decisions")
-                    if 'sample_recent_symbols' in db_status:
-                        sample_symbols = db_status['sample_recent_symbols']
-                        logger.info(f"         Sample DB symbols: {sample_symbols}")
-                else:
-                    logger.warning(f"      ❌ Database status missing from debug response")
-                
-                # Check for synchronization info
-                if 'synchronization' in debug_data:
-                    debug_results['synchronization_info_present'] = True
-                    sync_info = debug_data['synchronization']
-                    
-                    logger.info(f"      ✅ Synchronization info present")
-                    logger.info(f"         Cache vs DB ratio: {sync_info.get('cache_vs_db_ratio', 'N/A')}")
-                    logger.info(f"         Message: {sync_info.get('message', 'N/A')}")
-                else:
-                    logger.warning(f"      ❌ Synchronization info missing from debug response")
-                
-            else:
-                logger.error(f"      ❌ Debug endpoint failed: HTTP {response.status_code}")
-                if response.text:
-                    logger.error(f"         Error response: {response.text}")
-            
-            # Calculate test success
-            required_fields = ['endpoint_accessible', 'cache_status_present', 'database_status_present', 'synchronization_info_present']
-            success_count = sum(1 for field in required_fields if debug_results[field])
-            success_rate = success_count / len(required_fields)
-            
-            if success_rate >= 0.75:  # 75% success threshold
-                self.log_test_result("Debug Anti-Doublon Endpoint", True, 
-                                   f"Debug endpoint working: {success_count}/{len(required_fields)} required fields present. Cache: {debug_results['cache_size']} symbols, DB: {debug_results['db_recent_analyses']} analyses")
-            else:
-                self.log_test_result("Debug Anti-Doublon Endpoint", False, 
-                                   f"Debug endpoint issues: {success_count}/{len(required_fields)} required fields present")
-                
-        except Exception as e:
-            self.log_test_result("Debug Anti-Doublon Endpoint", False, f"Exception: {str(e)}")
-    
-    async def test_2_refresh_anti_doublon_cache(self):
-        """Test 2: Refresh Anti-Doublon Cache - Cache Refresh from Database"""
-        logger.info("\n🔍 TEST 2: Refresh Anti-Doublon Cache Test")
-        
-        try:
-            refresh_results = {
-                'endpoint_accessible': False,
-                'refresh_successful': False,
-                'size_change_detected': False,
-                'symbols_added_reported': False,
-                'old_size': 0,
-                'new_size': 0,
-                'symbols_added': 0
-            }
-            
-            logger.info("   🚀 Testing /api/refresh-anti-doublon-cache endpoint...")
-            logger.info("   📊 Expected: Cache refresh from database with size changes reported")
-            
-            # Get initial cache status
-            try:
-                debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                if debug_response.status_code == 200:
-                    debug_data = debug_response.json()
-                    initial_cache_size = debug_data.get('cache_status', {}).get('size', 0)
-                    logger.info(f"      📊 Initial cache size: {initial_cache_size}")
-                else:
-                    initial_cache_size = 0
-            except:
-                initial_cache_size = 0
-            
-            # Call refresh endpoint
-            start_time = time.time()
-            response = requests.post(f"{self.api_url}/refresh-anti-doublon-cache", timeout=30)
-            response_time = time.time() - start_time
-            
-            if response.status_code == 200:
-                refresh_results['endpoint_accessible'] = True
-                refresh_data = response.json()
-                
-                logger.info(f"      ✅ Refresh endpoint accessible (response time: {response_time:.2f}s)")
-                logger.info(f"      📋 Refresh response: {json.dumps(refresh_data, indent=2)}")
-                
-                # Check for successful refresh
-                if refresh_data.get('success'):
-                    refresh_results['refresh_successful'] = True
-                    logger.info(f"      ✅ Cache refresh successful")
-                    
-                    # Check for size information
-                    if 'old_size' in refresh_data and 'new_size' in refresh_data:
-                        refresh_results['old_size'] = refresh_data['old_size']
-                        refresh_results['new_size'] = refresh_data['new_size']
+                    # Check if analysis data contains MACD fields
+                    analysis_data = cycle_data.get('analysis_data', {})
+                    if analysis_data:
+                        logger.info(f"      📋 Analysis data received: {len(str(analysis_data))} characters")
                         
-                        if refresh_results['old_size'] != refresh_results['new_size']:
-                            refresh_results['size_change_detected'] = True
-                            logger.info(f"      ✅ Size change detected: {refresh_results['old_size']} → {refresh_results['new_size']}")
-                        else:
-                            logger.info(f"      ⚪ No size change: {refresh_results['old_size']} → {refresh_results['new_size']}")
-                    
-                    # Check for symbols added information
-                    if 'symbols_added' in refresh_data:
-                        refresh_results['symbols_added_reported'] = True
-                        refresh_results['symbols_added'] = refresh_data['symbols_added']
-                        logger.info(f"      ✅ Symbols added reported: {refresh_results['symbols_added']}")
-                    
-                else:
-                    logger.warning(f"      ❌ Cache refresh failed: {refresh_data.get('error', 'Unknown error')}")
-                
-            else:
-                logger.error(f"      ❌ Refresh endpoint failed: HTTP {response.status_code}")
-                if response.text:
-                    logger.error(f"         Error response: {response.text}")
-            
-            # Verify cache status after refresh
-            await asyncio.sleep(2)  # Wait for refresh to complete
-            try:
-                debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                if debug_response.status_code == 200:
-                    debug_data = debug_response.json()
-                    final_cache_size = debug_data.get('cache_status', {}).get('size', 0)
-                    logger.info(f"      📊 Final cache size after refresh: {final_cache_size}")
-            except:
-                pass
-            
-            # Calculate test success
-            required_fields = ['endpoint_accessible', 'refresh_successful']
-            success_count = sum(1 for field in required_fields if refresh_results[field])
-            success_rate = success_count / len(required_fields)
-            
-            if success_rate >= 1.0:  # 100% success required for refresh
-                self.log_test_result("Refresh Anti-Doublon Cache", True, 
-                                   f"Cache refresh working: {refresh_results['old_size']} → {refresh_results['new_size']} symbols, {refresh_results['symbols_added']} added from DB")
-            else:
-                self.log_test_result("Refresh Anti-Doublon Cache", False, 
-                                   f"Cache refresh issues: {success_count}/{len(required_fields)} required operations successful")
-                
-        except Exception as e:
-            self.log_test_result("Refresh Anti-Doublon Cache", False, f"Exception: {str(e)}")
-    
-    async def test_3_clear_anti_doublon_cache(self):
-        """Test 3: Clear Anti-Doublon Cache - Cache Clearing Functionality"""
-        logger.info("\n🔍 TEST 3: Clear Anti-Doublon Cache Test")
-        
-        try:
-            clear_results = {
-                'endpoint_accessible': False,
-                'clear_successful': False,
-                'cache_emptied': False,
-                'cleared_symbols_reported': False,
-                'old_size': 0,
-                'new_size': 0
-            }
-            
-            logger.info("   🚀 Testing /api/clear-anti-doublon-cache endpoint...")
-            logger.info("   📊 Expected: Cache clearing with size reset to 0")
-            
-            # Get initial cache status
-            try:
-                debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                if debug_response.status_code == 200:
-                    debug_data = debug_response.json()
-                    initial_cache_size = debug_data.get('cache_status', {}).get('size', 0)
-                    logger.info(f"      📊 Initial cache size: {initial_cache_size}")
-                else:
-                    initial_cache_size = 0
-            except:
-                initial_cache_size = 0
-            
-            # Call clear endpoint
-            start_time = time.time()
-            response = requests.post(f"{self.api_url}/clear-anti-doublon-cache", timeout=30)
-            response_time = time.time() - start_time
-            
-            if response.status_code == 200:
-                clear_results['endpoint_accessible'] = True
-                clear_data = response.json()
-                
-                logger.info(f"      ✅ Clear endpoint accessible (response time: {response_time:.2f}s)")
-                logger.info(f"      📋 Clear response: {json.dumps(clear_data, indent=2)}")
-                
-                # Check for successful clear
-                if clear_data.get('success'):
-                    clear_results['clear_successful'] = True
-                    logger.info(f"      ✅ Cache clear successful")
-                    
-                    # Check for size information
-                    if 'old_size' in clear_data and 'new_size' in clear_data:
-                        clear_results['old_size'] = clear_data['old_size']
-                        clear_results['new_size'] = clear_data['new_size']
+                        # Check for MACD fields presence
+                        macd_fields_found = []
+                        for field in self.macd_fields:
+                            if field in analysis_data:
+                                macd_fields_found.append(field)
+                                macd_results['macd_data'][field] = analysis_data[field]
                         
-                        if clear_results['new_size'] == 0:
-                            clear_results['cache_emptied'] = True
-                            logger.info(f"      ✅ Cache emptied: {clear_results['old_size']} → {clear_results['new_size']}")
-                        else:
-                            logger.warning(f"      ❌ Cache not fully emptied: {clear_results['old_size']} → {clear_results['new_size']}")
-                    
-                    # Check for cleared symbols information
-                    if 'cleared_symbols' in clear_data:
-                        clear_results['cleared_symbols_reported'] = True
-                        cleared_symbols = clear_data['cleared_symbols']
-                        logger.info(f"      ✅ Cleared symbols reported: {cleared_symbols[:5]}{'...' if len(cleared_symbols) > 5 else ''}")
-                    
-                else:
-                    logger.warning(f"      ❌ Cache clear failed: {clear_data.get('error', 'Unknown error')}")
-                
-            else:
-                logger.error(f"      ❌ Clear endpoint failed: HTTP {response.status_code}")
-                if response.text:
-                    logger.error(f"         Error response: {response.text}")
-            
-            # Verify cache status after clear
-            await asyncio.sleep(2)  # Wait for clear to complete
-            try:
-                debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                if debug_response.status_code == 200:
-                    debug_data = debug_response.json()
-                    final_cache_size = debug_data.get('cache_status', {}).get('size', 0)
-                    logger.info(f"      📊 Final cache size after clear: {final_cache_size}")
-                    
-                    if final_cache_size == 0:
-                        logger.info(f"      ✅ Cache successfully cleared and verified empty")
-                    else:
-                        logger.warning(f"      ⚠️ Cache not empty after clear: {final_cache_size} symbols remaining")
-            except:
-                pass
-            
-            # Calculate test success
-            required_fields = ['endpoint_accessible', 'clear_successful', 'cache_emptied']
-            success_count = sum(1 for field in required_fields if clear_results[field])
-            success_rate = success_count / len(required_fields)
-            
-            if success_rate >= 1.0:  # 100% success required for clear
-                self.log_test_result("Clear Anti-Doublon Cache", True, 
-                                   f"Cache clear working: {clear_results['old_size']} → {clear_results['new_size']} symbols cleared")
-            else:
-                self.log_test_result("Clear Anti-Doublon Cache", False, 
-                                   f"Cache clear issues: {success_count}/{len(required_fields)} required operations successful")
-                
-        except Exception as e:
-            self.log_test_result("Clear Anti-Doublon Cache", False, f"Exception: {str(e)}")
-    
-    async def test_4_ia1_cycle_anti_duplicate_logic(self):
-        """Test 4: IA1 Cycle Anti-Duplicate Logic - Multiple Calls and Skip Logic"""
-        logger.info("\n🔍 TEST 4: IA1 Cycle Anti-Duplicate Logic Test")
-        
-        try:
-            ia1_results = {
-                'total_calls': 0,
-                'successful_calls': 0,
-                'failed_calls': 0,
-                'parallel_prevention_detected': False,
-                'symbol_diversity_detected': False,
-                'skip_logic_detected': False,
-                'cache_growth_detected': False,
-                'symbols_analyzed': set(),
-                'cache_sizes': []
-            }
-            
-            logger.info("   🚀 Testing /api/run-ia1-cycle anti-duplicate logic...")
-            logger.info("   📊 Expected: Symbol diversity, skip logic, cache growth, parallel prevention")
-            
-            # Clear cache first to start fresh
-            try:
-                clear_response = requests.post(f"{self.api_url}/clear-anti-doublon-cache", timeout=30)
-                if clear_response.status_code == 200:
-                    logger.info("      🧹 Cache cleared for fresh testing")
-            except:
-                pass
-            
-            # Test multiple IA1 cycles
-            for cycle in range(5):  # Test 5 cycles
-                try:
-                    logger.info(f"   📈 Running IA1 cycle {cycle + 1}/5...")
-                    ia1_results['total_calls'] += 1
-                    
-                    # Get cache status before call
-                    try:
-                        debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                        if debug_response.status_code == 200:
-                            debug_data = debug_response.json()
-                            cache_size_before = debug_data.get('cache_status', {}).get('size', 0)
-                            ia1_results['cache_sizes'].append(cache_size_before)
-                            logger.info(f"      📊 Cache size before cycle {cycle + 1}: {cache_size_before}")
-                    except:
-                        cache_size_before = 0
-                    
-                    # Run IA1 cycle
-                    start_time = time.time()
-                    response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=60)
-                    response_time = time.time() - start_time
-                    
-                    if response.status_code == 200:
-                        cycle_data = response.json()
-                        
-                        if cycle_data.get('success'):
-                            ia1_results['successful_calls'] += 1
-                            logger.info(f"      ✅ IA1 cycle {cycle + 1} successful (response time: {response_time:.2f}s)")
+                        if len(macd_fields_found) >= 2:  # At least 2 MACD fields present
+                            macd_results['macd_fields_present'] = True
+                            logger.info(f"      ✅ MACD fields present: {macd_fields_found}")
                             
-                            # Check for opportunities processed
-                            opportunities_processed = cycle_data.get('opportunities_processed', 0)
-                            logger.info(f"         Opportunities processed: {opportunities_processed}")
+                            # Check for non-zero MACD values
+                            non_zero_values = []
+                            for field, value in macd_results['macd_data'].items():
+                                if isinstance(value, (int, float)) and value != 0.0:
+                                    non_zero_values.append(f"{field}={value}")
+                                elif isinstance(value, str) and value not in ['0', '0.0', '0.000000', 'unknown', 'neutral']:
+                                    non_zero_values.append(f"{field}={value}")
                             
-                        else:
-                            # Check if it's a parallel execution prevention
-                            error_msg = cycle_data.get('error', '').lower()
-                            if 'already running' in error_msg or 'parallel' in error_msg:
-                                ia1_results['parallel_prevention_detected'] = True
-                                logger.info(f"      🔒 IA1 cycle {cycle + 1} prevented parallel execution: {cycle_data.get('error')}")
+                            if non_zero_values:
+                                macd_results['macd_values_non_zero'] = True
+                                logger.info(f"      ✅ Non-zero MACD values found: {non_zero_values}")
+                                
+                                # Check for meaningful MACD signal
+                                macd_signal = macd_results['macd_data'].get('macd_signal', 'unknown')
+                                if macd_signal not in ['unknown', 'neutral', '0', 0, 0.0]:
+                                    macd_results['macd_signal_meaningful'] = True
+                                    logger.info(f"      ✅ Meaningful MACD signal: {macd_signal}")
+                                else:
+                                    logger.warning(f"      ⚠️ MACD signal still showing default: {macd_signal}")
                             else:
-                                ia1_results['failed_calls'] += 1
-                                logger.warning(f"      ❌ IA1 cycle {cycle + 1} failed: {cycle_data.get('error')}")
+                                logger.warning(f"      ❌ All MACD values are zero or default: {macd_results['macd_data']}")
+                        else:
+                            logger.warning(f"      ❌ Insufficient MACD fields found: {macd_fields_found}")
                     else:
-                        ia1_results['failed_calls'] += 1
-                        logger.warning(f"      ❌ IA1 cycle {cycle + 1} HTTP error: {response.status_code}")
-                    
-                    # Get cache status after call
-                    await asyncio.sleep(3)  # Wait for processing
-                    try:
-                        debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                        if debug_response.status_code == 200:
-                            debug_data = debug_response.json()
-                            cache_size_after = debug_data.get('cache_status', {}).get('size', 0)
-                            cached_symbols = debug_data.get('cache_status', {}).get('symbols', [])
-                            
-                            logger.info(f"      📊 Cache size after cycle {cycle + 1}: {cache_size_after}")
-                            
-                            # Track symbol diversity
-                            for symbol in cached_symbols:
-                                ia1_results['symbols_analyzed'].add(symbol)
-                            
-                            # Check for cache growth
-                            if cache_size_after > cache_size_before:
-                                ia1_results['cache_growth_detected'] = True
-                                logger.info(f"      📈 Cache growth detected: {cache_size_before} → {cache_size_after}")
-                            
-                            # Show current cached symbols
-                            if cached_symbols:
-                                logger.info(f"         Cached symbols: {cached_symbols[:5]}{'...' if len(cached_symbols) > 5 else ''}")
-                    except:
-                        pass
-                    
-                    # Delay between cycles
-                    await asyncio.sleep(5)
-                    
-                except Exception as e:
-                    ia1_results['failed_calls'] += 1
-                    logger.error(f"   ❌ Error in IA1 cycle {cycle + 1}: {e}")
-            
-            # Check for symbol diversity
-            if len(ia1_results['symbols_analyzed']) >= 2:
-                ia1_results['symbol_diversity_detected'] = True
-                logger.info(f"      ✅ Symbol diversity detected: {len(ia1_results['symbols_analyzed'])} unique symbols")
-                logger.info(f"         Symbols: {list(ia1_results['symbols_analyzed'])}")
-            else:
-                logger.warning(f"      ⚠️ Limited symbol diversity: {len(ia1_results['symbols_analyzed'])} unique symbols")
-            
-            # Check for skip logic by looking at backend logs
-            try:
-                backend_logs = await self._capture_backend_logs()
-                skip_messages = [log for log in backend_logs if 'skip' in log.lower() and ('cache' in log.lower() or '4h' in log.lower())]
-                if skip_messages:
-                    ia1_results['skip_logic_detected'] = True
-                    logger.info(f"      ✅ Skip logic detected in backend logs")
-                    logger.info(f"         Sample skip messages: {skip_messages[:2]}")
+                        logger.warning(f"      ❌ No analysis data in IA1 cycle response")
                 else:
-                    logger.info(f"      ⚪ No skip messages found in backend logs")
-            except:
-                pass
+                    logger.warning(f"      ❌ IA1 cycle failed: {cycle_data.get('error', 'Unknown error')}")
+            else:
+                logger.error(f"      ❌ IA1 cycle HTTP error: {response.status_code}")
+                if response.text:
+                    logger.error(f"         Error response: {response.text[:200]}...")
+            
+            # Step 2: Verify database persistence of MACD data
+            if macd_results['ia1_cycle_successful'] and self.db:
+                logger.info("   📊 Checking database persistence of MACD data...")
+                try:
+                    # Get latest analysis from database
+                    latest_analysis = self.db.technical_analyses.find_one(
+                        {}, sort=[("timestamp", -1)]
+                    )
+                    
+                    if latest_analysis:
+                        macd_results['analysis_id'] = latest_analysis.get('id', 'N/A')
+                        logger.info(f"      📋 Latest analysis found: {macd_results['analysis_id']}")
+                        
+                        # Check for MACD fields in database
+                        db_macd_fields = []
+                        for field in self.macd_fields:
+                            if field in latest_analysis and latest_analysis[field] not in [None, 0, 0.0, '0', 'unknown']:
+                                db_macd_fields.append(f"{field}={latest_analysis[field]}")
+                        
+                        if db_macd_fields:
+                            macd_results['database_persistence'] = True
+                            logger.info(f"      ✅ MACD data persisted in database: {db_macd_fields}")
+                        else:
+                            logger.warning(f"      ❌ No meaningful MACD data found in database")
+                    else:
+                        logger.warning(f"      ❌ No analyses found in database")
+                        
+                except Exception as e:
+                    logger.error(f"      ❌ Database query error: {e}")
             
             # Calculate test success
             success_criteria = [
-                ia1_results['successful_calls'] > 0,
-                ia1_results['cache_growth_detected'],
-                ia1_results['symbol_diversity_detected'] or ia1_results['skip_logic_detected']
+                macd_results['ia1_cycle_successful'],
+                macd_results['macd_fields_present'],
+                macd_results['macd_values_non_zero'] or macd_results['macd_signal_meaningful']
             ]
             success_count = sum(success_criteria)
             success_rate = success_count / len(success_criteria)
             
             if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("IA1 Cycle Anti-Duplicate Logic", True, 
-                                   f"Anti-duplicate logic working: {ia1_results['successful_calls']}/{ia1_results['total_calls']} successful calls, {len(ia1_results['symbols_analyzed'])} unique symbols, cache growth: {ia1_results['cache_growth_detected']}")
+                self.log_test_result("MACD Calculation Fix Verification", True, 
+                                   f"MACD fix working: {success_count}/{len(success_criteria)} criteria met. MACD data: {macd_results['macd_data']}")
             else:
-                self.log_test_result("IA1 Cycle Anti-Duplicate Logic", False, 
-                                   f"Anti-duplicate logic issues: {success_count}/{len(success_criteria)} criteria met")
+                self.log_test_result("MACD Calculation Fix Verification", False, 
+                                   f"MACD fix issues: {success_count}/{len(success_criteria)} criteria met. Data: {macd_results['macd_data']}")
                 
         except Exception as e:
-            self.log_test_result("IA1 Cycle Anti-Duplicate Logic", False, f"Exception: {str(e)}")
+            self.log_test_result("MACD Calculation Fix Verification", False, f"Exception: {str(e)}")
     
-    async def test_5_mongodb_4hour_window_enforcement(self):
-        """Test 5: MongoDB 4-Hour Window Enforcement - Database Integration"""
-        logger.info("\n🔍 TEST 5: MongoDB 4-Hour Window Enforcement Test")
+    async def test_2_fibonacci_retracement_integration(self):
+        """Test 2: Fibonacci Retracement Integration - Verify New Fibonacci Fields"""
+        logger.info("\n🔍 TEST 2: Fibonacci Retracement Integration Verification")
         
         try:
-            mongodb_results = {
-                'database_accessible': False,
-                'recent_analyses_found': False,
-                'recent_decisions_found': False,
-                'timestamp_filtering_working': False,
-                'four_hour_window_enforced': False,
-                'analyses_count_4h': 0,
-                'decisions_count_4h': 0,
-                'total_analyses': 0,
-                'total_decisions': 0
+            fibonacci_results = {
+                'ia1_cycle_successful': False,
+                'fibonacci_fields_present': False,
+                'fibonacci_values_meaningful': False,
+                'fibonacci_levels_calculated': False,
+                'database_persistence': False,
+                'fibonacci_data': {},
+                'analysis_id': None
             }
             
-            logger.info("   🚀 Testing MongoDB 4-hour window enforcement...")
-            logger.info("   📊 Expected: Database queries with 4-hour timestamp filtering")
+            logger.info("   🚀 Testing Fibonacci retracement integration in IA1 analysis...")
+            logger.info("   📊 Expected: Fibonacci fields with meaningful values and 9-level analysis")
+            
+            # Step 1: Trigger IA1 cycle to generate analysis with Fibonacci integration
+            logger.info("   📈 Running IA1 cycle to generate analysis with Fibonacci integration...")
+            start_time = time.time()
+            response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=120)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                cycle_data = response.json()
+                
+                if cycle_data.get('success'):
+                    fibonacci_results['ia1_cycle_successful'] = True
+                    logger.info(f"      ✅ IA1 cycle successful (response time: {response_time:.2f}s)")
+                    
+                    # Check if analysis data contains Fibonacci fields
+                    analysis_data = cycle_data.get('analysis_data', {})
+                    if analysis_data:
+                        logger.info(f"      📋 Analysis data received: {len(str(analysis_data))} characters")
+                        
+                        # Check for Fibonacci fields presence
+                        fibonacci_fields_found = []
+                        for field in self.fibonacci_fields:
+                            if field in analysis_data:
+                                fibonacci_fields_found.append(field)
+                                fibonacci_results['fibonacci_data'][field] = analysis_data[field]
+                        
+                        if len(fibonacci_fields_found) >= 2:  # At least 2 Fibonacci fields present
+                            fibonacci_results['fibonacci_fields_present'] = True
+                            logger.info(f"      ✅ Fibonacci fields present: {fibonacci_fields_found}")
+                            
+                            # Check for meaningful Fibonacci values
+                            meaningful_values = []
+                            for field, value in fibonacci_results['fibonacci_data'].items():
+                                if field == 'fibonacci_signal_strength' and isinstance(value, (int, float)) and 0 <= value <= 1:
+                                    meaningful_values.append(f"{field}={value}")
+                                elif field == 'fibonacci_signal_direction' and isinstance(value, str) and value in ['bullish', 'bearish', 'neutral']:
+                                    meaningful_values.append(f"{field}={value}")
+                                elif field == 'fibonacci_key_level_proximity' and isinstance(value, bool):
+                                    meaningful_values.append(f"{field}={value}")
+                            
+                            if meaningful_values:
+                                fibonacci_results['fibonacci_values_meaningful'] = True
+                                logger.info(f"      ✅ Meaningful Fibonacci values found: {meaningful_values}")
+                            else:
+                                logger.warning(f"      ❌ Fibonacci values not meaningful: {fibonacci_results['fibonacci_data']}")
+                            
+                            # Check for Fibonacci levels in analysis (support/resistance)
+                            support_levels = analysis_data.get('support', [])
+                            resistance_levels = analysis_data.get('resistance', [])
+                            if len(support_levels) >= 2 or len(resistance_levels) >= 2:
+                                fibonacci_results['fibonacci_levels_calculated'] = True
+                                logger.info(f"      ✅ Fibonacci levels calculated: {len(support_levels)} support, {len(resistance_levels)} resistance")
+                            else:
+                                logger.warning(f"      ⚠️ Limited Fibonacci levels: {len(support_levels)} support, {len(resistance_levels)} resistance")
+                        else:
+                            logger.warning(f"      ❌ Insufficient Fibonacci fields found: {fibonacci_fields_found}")
+                    else:
+                        logger.warning(f"      ❌ No analysis data in IA1 cycle response")
+                else:
+                    logger.warning(f"      ❌ IA1 cycle failed: {cycle_data.get('error', 'Unknown error')}")
+            else:
+                logger.error(f"      ❌ IA1 cycle HTTP error: {response.status_code}")
+                if response.text:
+                    logger.error(f"         Error response: {response.text[:200]}...")
+            
+            # Step 2: Verify database persistence of Fibonacci data
+            if fibonacci_results['ia1_cycle_successful'] and self.db:
+                logger.info("   📊 Checking database persistence of Fibonacci data...")
+                try:
+                    # Get latest analysis from database
+                    latest_analysis = self.db.technical_analyses.find_one(
+                        {}, sort=[("timestamp", -1)]
+                    )
+                    
+                    if latest_analysis:
+                        fibonacci_results['analysis_id'] = latest_analysis.get('id', 'N/A')
+                        logger.info(f"      📋 Latest analysis found: {fibonacci_results['analysis_id']}")
+                        
+                        # Check for Fibonacci fields in database
+                        db_fibonacci_fields = []
+                        for field in self.fibonacci_fields:
+                            if field in latest_analysis and latest_analysis[field] is not None:
+                                db_fibonacci_fields.append(f"{field}={latest_analysis[field]}")
+                        
+                        if db_fibonacci_fields:
+                            fibonacci_results['database_persistence'] = True
+                            logger.info(f"      ✅ Fibonacci data persisted in database: {db_fibonacci_fields}")
+                        else:
+                            logger.warning(f"      ❌ No Fibonacci data found in database")
+                    else:
+                        logger.warning(f"      ❌ No analyses found in database")
+                        
+                except Exception as e:
+                    logger.error(f"      ❌ Database query error: {e}")
+            
+            # Calculate test success
+            success_criteria = [
+                fibonacci_results['ia1_cycle_successful'],
+                fibonacci_results['fibonacci_fields_present'],
+                fibonacci_results['fibonacci_values_meaningful']
+            ]
+            success_count = sum(success_criteria)
+            success_rate = success_count / len(success_criteria)
+            
+            if success_rate >= 0.67:  # 67% success threshold
+                self.log_test_result("Fibonacci Retracement Integration", True, 
+                                   f"Fibonacci integration working: {success_count}/{len(success_criteria)} criteria met. Fibonacci data: {fibonacci_results['fibonacci_data']}")
+            else:
+                self.log_test_result("Fibonacci Retracement Integration", False, 
+                                   f"Fibonacci integration issues: {success_count}/{len(success_criteria)} criteria met. Data: {fibonacci_results['fibonacci_data']}")
+                
+        except Exception as e:
+            self.log_test_result("Fibonacci Retracement Integration", False, f"Exception: {str(e)}")
+    
+    async def test_3_api_endpoints_enhanced_data(self):
+        """Test 3: API Endpoints Enhanced Data - Verify /api/analyses Returns Enhanced Technical Data"""
+        logger.info("\n🔍 TEST 3: API Endpoints Enhanced Data Verification")
+        
+        try:
+            api_results = {
+                'analyses_endpoint_accessible': False,
+                'enhanced_data_present': False,
+                'macd_data_in_api': False,
+                'fibonacci_data_in_api': False,
+                'data_structure_valid': False,
+                'latest_analysis': {},
+                'total_analyses': 0
+            }
+            
+            logger.info("   🚀 Testing /api/analyses endpoint for enhanced technical data...")
+            logger.info("   📊 Expected: Enhanced analyses with MACD and Fibonacci data")
+            
+            # Step 1: Test /api/analyses endpoint
+            logger.info("   📈 Calling /api/analyses endpoint...")
+            start_time = time.time()
+            response = requests.get(f"{self.api_url}/analyses", timeout=60)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                api_results['analyses_endpoint_accessible'] = True
+                analyses_data = response.json()
+                
+                logger.info(f"      ✅ Analyses endpoint accessible (response time: {response_time:.2f}s)")
+                
+                if isinstance(analyses_data, list) and len(analyses_data) > 0:
+                    api_results['total_analyses'] = len(analyses_data)
+                    latest_analysis = analyses_data[0]  # Assuming sorted by latest
+                    api_results['latest_analysis'] = latest_analysis
+                    
+                    logger.info(f"      📋 Found {api_results['total_analyses']} analyses, checking latest...")
+                    
+                    # Check for enhanced data structure
+                    required_fields = ['symbol', 'timestamp', 'ia1_signal']
+                    enhanced_fields_present = sum(1 for field in required_fields if field in latest_analysis)
+                    
+                    if enhanced_fields_present >= len(required_fields):
+                        api_results['data_structure_valid'] = True
+                        logger.info(f"      ✅ Valid data structure: {enhanced_fields_present}/{len(required_fields)} required fields")
+                        
+                        # Check for MACD data in API response
+                        macd_fields_in_api = []
+                        for field in self.macd_fields:
+                            if field in latest_analysis and latest_analysis[field] not in [None, 0, 0.0, '0', 'unknown']:
+                                macd_fields_in_api.append(f"{field}={latest_analysis[field]}")
+                        
+                        if macd_fields_in_api:
+                            api_results['macd_data_in_api'] = True
+                            logger.info(f"      ✅ MACD data in API response: {macd_fields_in_api}")
+                        else:
+                            logger.warning(f"      ❌ No meaningful MACD data in API response")
+                        
+                        # Check for Fibonacci data in API response
+                        fibonacci_fields_in_api = []
+                        for field in self.fibonacci_fields:
+                            if field in latest_analysis and latest_analysis[field] is not None:
+                                fibonacci_fields_in_api.append(f"{field}={latest_analysis[field]}")
+                        
+                        if fibonacci_fields_in_api:
+                            api_results['fibonacci_data_in_api'] = True
+                            logger.info(f"      ✅ Fibonacci data in API response: {fibonacci_fields_in_api}")
+                        else:
+                            logger.warning(f"      ❌ No Fibonacci data in API response")
+                        
+                        # Check if we have enhanced data overall
+                        if api_results['macd_data_in_api'] or api_results['fibonacci_data_in_api']:
+                            api_results['enhanced_data_present'] = True
+                            logger.info(f"      ✅ Enhanced technical data present in API")
+                        else:
+                            logger.warning(f"      ❌ No enhanced technical data found in API")
+                    else:
+                        logger.warning(f"      ❌ Invalid data structure: {enhanced_fields_present}/{len(required_fields)} required fields")
+                else:
+                    logger.warning(f"      ❌ No analyses data or invalid format: {type(analyses_data)}")
+            else:
+                logger.error(f"      ❌ Analyses endpoint HTTP error: {response.status_code}")
+                if response.text:
+                    logger.error(f"         Error response: {response.text[:200]}...")
+            
+            # Calculate test success
+            success_criteria = [
+                api_results['analyses_endpoint_accessible'],
+                api_results['data_structure_valid'],
+                api_results['enhanced_data_present']
+            ]
+            success_count = sum(success_criteria)
+            success_rate = success_count / len(success_criteria)
+            
+            if success_rate >= 0.67:  # 67% success threshold
+                self.log_test_result("API Endpoints Enhanced Data", True, 
+                                   f"Enhanced API data working: {success_count}/{len(success_criteria)} criteria met. {api_results['total_analyses']} analyses, MACD: {api_results['macd_data_in_api']}, Fibonacci: {api_results['fibonacci_data_in_api']}")
+            else:
+                self.log_test_result("API Endpoints Enhanced Data", False, 
+                                   f"Enhanced API data issues: {success_count}/{len(success_criteria)} criteria met")
+                
+        except Exception as e:
+            self.log_test_result("API Endpoints Enhanced Data", False, f"Exception: {str(e)}")
+    
+    async def test_4_backend_integration_verification(self):
+        """Test 4: Backend Integration - Verify fibonacci_calculator.py and MACD Integration"""
+        logger.info("\n🔍 TEST 4: Backend Integration Verification")
+        
+        try:
+            integration_results = {
+                'fibonacci_calculator_imported': False,
+                'macd_calculator_imported': False,
+                'backend_logs_healthy': False,
+                'no_import_errors': False,
+                'calculations_working': False,
+                'error_count': 0,
+                'import_errors': []
+            }
+            
+            logger.info("   🚀 Testing backend integration of fibonacci_calculator.py and MACD systems...")
+            logger.info("   📊 Expected: No import errors, healthy backend logs, working calculations")
+            
+            # Step 1: Check backend logs for import errors and calculation health
+            logger.info("   📋 Checking backend logs for integration health...")
+            try:
+                backend_logs = await self._capture_backend_logs()
+                
+                if backend_logs:
+                    logger.info(f"      📊 Captured {len(backend_logs)} log lines for analysis")
+                    
+                    # Check for import errors
+                    import_error_patterns = [
+                        'ImportError',
+                        'ModuleNotFoundError',
+                        'fibonacci_calculator',
+                        'macd_calculator',
+                        'cannot import',
+                        'No module named'
+                    ]
+                    
+                    import_errors = []
+                    for log_line in backend_logs:
+                        for pattern in import_error_patterns:
+                            if pattern.lower() in log_line.lower():
+                                import_errors.append(log_line.strip())
+                                break
+                    
+                    if not import_errors:
+                        integration_results['no_import_errors'] = True
+                        logger.info(f"      ✅ No import errors found in backend logs")
+                    else:
+                        integration_results['import_errors'] = import_errors[:3]  # Show first 3
+                        logger.warning(f"      ❌ Import errors found: {len(import_errors)} errors")
+                        for error in import_errors[:3]:
+                            logger.warning(f"         - {error}")
+                    
+                    # Check for successful imports/calculations
+                    success_patterns = [
+                        'fibonacci_calculator',
+                        'MACD calculated successfully',
+                        'Fibonacci analysis',
+                        'fibonacci retracement',
+                        'MACD optimized'
+                    ]
+                    
+                    success_messages = []
+                    for log_line in backend_logs:
+                        for pattern in success_patterns:
+                            if pattern.lower() in log_line.lower() and 'error' not in log_line.lower():
+                                success_messages.append(log_line.strip())
+                                break
+                    
+                    if success_messages:
+                        integration_results['calculations_working'] = True
+                        logger.info(f"      ✅ Calculation success messages found: {len(success_messages)}")
+                        for msg in success_messages[:2]:
+                            logger.info(f"         - {msg}")
+                    else:
+                        logger.warning(f"      ⚠️ No calculation success messages found")
+                    
+                    # Check for fibonacci_calculator specific mentions
+                    fibonacci_mentions = [log for log in backend_logs if 'fibonacci' in log.lower()]
+                    if fibonacci_mentions:
+                        integration_results['fibonacci_calculator_imported'] = True
+                        logger.info(f"      ✅ Fibonacci calculator mentions found: {len(fibonacci_mentions)}")
+                    
+                    # Check for MACD specific mentions
+                    macd_mentions = [log for log in backend_logs if 'macd' in log.lower()]
+                    if macd_mentions:
+                        integration_results['macd_calculator_imported'] = True
+                        logger.info(f"      ✅ MACD calculator mentions found: {len(macd_mentions)}")
+                    
+                    # Overall backend health
+                    error_patterns = ['ERROR', 'CRITICAL', 'Exception', 'Traceback']
+                    error_count = 0
+                    for log_line in backend_logs:
+                        for pattern in error_patterns:
+                            if pattern in log_line:
+                                error_count += 1
+                                break
+                    
+                    integration_results['error_count'] = error_count
+                    if error_count < len(backend_logs) * 0.1:  # Less than 10% error rate
+                        integration_results['backend_logs_healthy'] = True
+                        logger.info(f"      ✅ Backend logs healthy: {error_count} errors in {len(backend_logs)} lines")
+                    else:
+                        logger.warning(f"      ⚠️ Backend logs show issues: {error_count} errors in {len(backend_logs)} lines")
+                else:
+                    logger.warning(f"      ⚠️ No backend logs captured")
+                    
+            except Exception as e:
+                logger.error(f"      ❌ Error analyzing backend logs: {e}")
+            
+            # Step 2: Test a simple IA1 cycle to verify integration
+            logger.info("   📈 Testing integration with IA1 cycle...")
+            try:
+                response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=60)
+                if response.status_code == 200:
+                    cycle_data = response.json()
+                    if cycle_data.get('success'):
+                        logger.info(f"      ✅ IA1 cycle successful - integration working")
+                        integration_results['calculations_working'] = True
+                    else:
+                        logger.warning(f"      ⚠️ IA1 cycle failed: {cycle_data.get('error', 'Unknown')}")
+                else:
+                    logger.warning(f"      ⚠️ IA1 cycle HTTP error: {response.status_code}")
+            except Exception as e:
+                logger.warning(f"      ⚠️ IA1 cycle test error: {e}")
+            
+            # Calculate test success
+            success_criteria = [
+                integration_results['no_import_errors'],
+                integration_results['backend_logs_healthy'],
+                integration_results['fibonacci_calculator_imported'] or integration_results['macd_calculator_imported'],
+                integration_results['calculations_working']
+            ]
+            success_count = sum(success_criteria)
+            success_rate = success_count / len(success_criteria)
+            
+            if success_rate >= 0.75:  # 75% success threshold
+                self.log_test_result("Backend Integration Verification", True, 
+                                   f"Backend integration working: {success_count}/{len(success_criteria)} criteria met. Errors: {integration_results['error_count']}, Fibonacci: {integration_results['fibonacci_calculator_imported']}, MACD: {integration_results['macd_calculator_imported']}")
+            else:
+                self.log_test_result("Backend Integration Verification", False, 
+                                   f"Backend integration issues: {success_count}/{len(success_criteria)} criteria met. Import errors: {len(integration_results['import_errors'])}")
+                
+        except Exception as e:
+            self.log_test_result("Backend Integration Verification", False, f"Exception: {str(e)}")
+    
+    async def test_5_database_persistence_verification(self):
+        """Test 5: Database Persistence - Verify MACD and Fibonacci Data Storage"""
+        logger.info("\n🔍 TEST 5: Database Persistence Verification")
+        
+        try:
+            persistence_results = {
+                'database_accessible': False,
+                'recent_analyses_found': False,
+                'macd_fields_in_db': False,
+                'fibonacci_fields_in_db': False,
+                'data_consistency': False,
+                'analyses_count': 0,
+                'sample_analysis': {}
+            }
+            
+            logger.info("   🚀 Testing database persistence of MACD and Fibonacci data...")
+            logger.info("   📊 Expected: Recent analyses with enhanced technical indicator fields")
             
             if not self.db:
                 logger.error("      ❌ MongoDB connection not available")
-                self.log_test_result("MongoDB 4-Hour Window Enforcement", False, "MongoDB connection not available")
+                self.log_test_result("Database Persistence Verification", False, "MongoDB connection not available")
                 return
             
-            mongodb_results['database_accessible'] = True
+            persistence_results['database_accessible'] = True
             
-            # Calculate 4-hour cutoff time (similar to paris_time_to_timestamp_filter)
-            from datetime import timezone
-            import pytz
-            
-            PARIS_TZ = pytz.timezone('Europe/Paris')
-            current_time = datetime.now(PARIS_TZ)
-            four_hours_ago = current_time - timedelta(hours=4)
-            
-            logger.info(f"      📅 Current time (Paris): {current_time}")
-            logger.info(f"      📅 4-hour cutoff: {four_hours_ago}")
-            
-            # Test technical_analyses collection
+            # Step 1: Check for recent analyses in database
             try:
-                # Get total count
-                total_analyses = self.db.technical_analyses.count_documents({})
-                mongodb_results['total_analyses'] = total_analyses
+                # Get recent analyses (within last 2 hours)
+                two_hours_ago = datetime.now() - timedelta(hours=2)
+                recent_analyses = list(self.db.technical_analyses.find({
+                    "timestamp": {"$gte": two_hours_ago}
+                }).sort("timestamp", -1).limit(5))
                 
-                # Get recent analyses (within 4 hours)
-                recent_analyses = self.db.technical_analyses.count_documents({
-                    "timestamp": {"$gte": four_hours_ago}
-                })
-                mongodb_results['analyses_count_4h'] = recent_analyses
+                persistence_results['analyses_count'] = len(recent_analyses)
                 
-                if recent_analyses > 0:
-                    mongodb_results['recent_analyses_found'] = True
-                    logger.info(f"      ✅ Recent analyses found: {recent_analyses}/{total_analyses} within 4h")
+                if recent_analyses:
+                    persistence_results['recent_analyses_found'] = True
+                    latest_analysis = recent_analyses[0]
+                    persistence_results['sample_analysis'] = {
+                        'id': latest_analysis.get('id', 'N/A'),
+                        'symbol': latest_analysis.get('symbol', 'N/A'),
+                        'timestamp': latest_analysis.get('timestamp', 'N/A')
+                    }
                     
-                    # Get sample recent analyses
-                    sample_analyses = list(self.db.technical_analyses.find({
-                        "timestamp": {"$gte": four_hours_ago}
-                    }, {"symbol": 1, "timestamp": 1}).limit(5))
+                    logger.info(f"      ✅ Recent analyses found: {persistence_results['analyses_count']} analyses")
+                    logger.info(f"         Latest: {persistence_results['sample_analysis']['symbol']} at {persistence_results['sample_analysis']['timestamp']}")
                     
-                    logger.info(f"         Sample recent analyses:")
-                    for analysis in sample_analyses:
-                        symbol = analysis.get('symbol', 'N/A')
-                        timestamp = analysis.get('timestamp', 'N/A')
-                        logger.info(f"           - {symbol}: {timestamp}")
-                else:
-                    logger.info(f"      ⚪ No recent analyses found: {recent_analyses}/{total_analyses} within 4h")
-                
-            except Exception as e:
-                logger.error(f"      ❌ Error querying technical_analyses: {e}")
-            
-            # Test trading_decisions collection
-            try:
-                # Get total count
-                total_decisions = self.db.trading_decisions.count_documents({})
-                mongodb_results['total_decisions'] = total_decisions
-                
-                # Get recent decisions (within 4 hours)
-                recent_decisions = self.db.trading_decisions.count_documents({
-                    "timestamp": {"$gte": four_hours_ago}
-                })
-                mongodb_results['decisions_count_4h'] = recent_decisions
-                
-                if recent_decisions > 0:
-                    mongodb_results['recent_decisions_found'] = True
-                    logger.info(f"      ✅ Recent decisions found: {recent_decisions}/{total_decisions} within 4h")
+                    # Check for MACD fields in database
+                    macd_fields_in_db = []
+                    for field in self.macd_fields:
+                        if field in latest_analysis and latest_analysis[field] not in [None, 0, 0.0, '0', 'unknown']:
+                            macd_fields_in_db.append(f"{field}={latest_analysis[field]}")
                     
-                    # Get sample recent decisions
-                    sample_decisions = list(self.db.trading_decisions.find({
-                        "timestamp": {"$gte": four_hours_ago}
-                    }, {"symbol": 1, "timestamp": 1}).limit(5))
+                    if macd_fields_in_db:
+                        persistence_results['macd_fields_in_db'] = True
+                        logger.info(f"      ✅ MACD fields persisted: {macd_fields_in_db}")
+                    else:
+                        logger.warning(f"      ❌ No meaningful MACD fields in database")
                     
-                    logger.info(f"         Sample recent decisions:")
-                    for decision in sample_decisions:
-                        symbol = decision.get('symbol', 'N/A')
-                        timestamp = decision.get('timestamp', 'N/A')
-                        logger.info(f"           - {symbol}: {timestamp}")
-                else:
-                    logger.info(f"      ⚪ No recent decisions found: {recent_decisions}/{total_decisions} within 4h")
-                
-            except Exception as e:
-                logger.error(f"      ❌ Error querying trading_decisions: {e}")
-            
-            # Test timestamp filtering effectiveness
-            if mongodb_results['recent_analyses_found'] or mongodb_results['recent_decisions_found']:
-                mongodb_results['timestamp_filtering_working'] = True
-                logger.info(f"      ✅ Timestamp filtering working: Found recent data within 4h window")
-            
-            # Test 4-hour window enforcement by checking if there's a reasonable distribution
-            total_recent = mongodb_results['analyses_count_4h'] + mongodb_results['decisions_count_4h']
-            total_all = mongodb_results['total_analyses'] + mongodb_results['total_decisions']
-            
-            if total_all > 0:
-                recent_percentage = (total_recent / total_all) * 100
-                logger.info(f"      📊 Recent data percentage: {recent_percentage:.1f}% ({total_recent}/{total_all})")
-                
-                # If we have some data and reasonable recent percentage, consider 4h window enforced
-                if total_recent > 0 and recent_percentage <= 50:  # Not all data is recent
-                    mongodb_results['four_hour_window_enforced'] = True
-                    logger.info(f"      ✅ 4-hour window enforcement detected: {recent_percentage:.1f}% recent data")
-                elif total_recent == 0:
-                    logger.info(f"      ⚪ No recent data found - 4h window may be working (no recent activity)")
-                    mongodb_results['four_hour_window_enforced'] = True  # No recent activity is also valid
-                else:
-                    logger.info(f"      ⚠️ High recent data percentage - may indicate recent testing activity")
-            
-            # Calculate test success
-            success_criteria = [
-                mongodb_results['database_accessible'],
-                mongodb_results['timestamp_filtering_working'] or (mongodb_results['analyses_count_4h'] == 0 and mongodb_results['decisions_count_4h'] == 0),
-                mongodb_results['four_hour_window_enforced']
-            ]
-            success_count = sum(success_criteria)
-            success_rate = success_count / len(success_criteria)
-            
-            if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("MongoDB 4-Hour Window Enforcement", True, 
-                                   f"4-hour window enforcement working: {mongodb_results['analyses_count_4h']} analyses, {mongodb_results['decisions_count_4h']} decisions within 4h window")
-            else:
-                self.log_test_result("MongoDB 4-Hour Window Enforcement", False, 
-                                   f"4-hour window enforcement issues: {success_count}/{len(success_criteria)} criteria met")
-                
-        except Exception as e:
-            self.log_test_result("MongoDB 4-Hour Window Enforcement", False, f"Exception: {str(e)}")
-    
-    async def test_6_cache_management_and_persistence(self):
-        """Test 6: Cache Management and Persistence - Intelligent Cleanup and Restoration"""
-        logger.info("\n🔍 TEST 6: Cache Management and Persistence Test")
-        
-        try:
-            cache_mgmt_results = {
-                'cache_persistence_working': False,
-                'intelligent_cleanup_detected': False,
-                'cache_restoration_working': False,
-                'size_limits_enforced': False,
-                'cache_sizes_tracked': [],
-                'max_cache_size_observed': 0,
-                'cleanup_events_detected': 0
-            }
-            
-            logger.info("   🚀 Testing cache management and persistence...")
-            logger.info("   📊 Expected: Intelligent cleanup, size limits, persistence across operations")
-            
-            # Test 1: Cache persistence across refresh operations
-            logger.info("   📋 Testing cache persistence...")
-            
-            # Clear cache and add some data
-            try:
-                clear_response = requests.post(f"{self.api_url}/clear-anti-doublon-cache", timeout=30)
-                await asyncio.sleep(2)
-                
-                # Run a few IA1 cycles to populate cache
-                for i in range(3):
-                    ia1_response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=60)
-                    await asyncio.sleep(3)
-                
-                # Check cache size
-                debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                if debug_response.status_code == 200:
-                    debug_data = debug_response.json()
-                    cache_size_before_refresh = debug_data.get('cache_status', {}).get('size', 0)
-                    cache_mgmt_results['cache_sizes_tracked'].append(cache_size_before_refresh)
+                    # Check for Fibonacci fields in database
+                    fibonacci_fields_in_db = []
+                    for field in self.fibonacci_fields:
+                        if field in latest_analysis and latest_analysis[field] is not None:
+                            fibonacci_fields_in_db.append(f"{field}={latest_analysis[field]}")
                     
-                    logger.info(f"      📊 Cache size before refresh: {cache_size_before_refresh}")
+                    if fibonacci_fields_in_db:
+                        persistence_results['fibonacci_fields_in_db'] = True
+                        logger.info(f"      ✅ Fibonacci fields persisted: {fibonacci_fields_in_db}")
+                    else:
+                        logger.warning(f"      ❌ No Fibonacci fields in database")
                     
-                    # Refresh cache from database
-                    refresh_response = requests.post(f"{self.api_url}/refresh-anti-doublon-cache", timeout=30)
-                    await asyncio.sleep(2)
-                    
-                    # Check cache size after refresh
-                    debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                    if debug_response.status_code == 200:
-                        debug_data = debug_response.json()
-                        cache_size_after_refresh = debug_data.get('cache_status', {}).get('size', 0)
-                        cache_mgmt_results['cache_sizes_tracked'].append(cache_size_after_refresh)
+                    # Check data consistency across multiple analyses
+                    if len(recent_analyses) >= 2:
+                        consistent_fields = 0
+                        total_fields_checked = 0
                         
-                        logger.info(f"      📊 Cache size after refresh: {cache_size_after_refresh}")
+                        for field in self.macd_fields + self.fibonacci_fields:
+                            if field in recent_analyses[0] and field in recent_analyses[1]:
+                                total_fields_checked += 1
+                                val1 = recent_analyses[0][field]
+                                val2 = recent_analyses[1][field]
+                                
+                                # Check if both have meaningful values (not defaults)
+                                if (val1 not in [None, 0, 0.0, '0', 'unknown'] and 
+                                    val2 not in [None, 0, 0.0, '0', 'unknown']):
+                                    consistent_fields += 1
                         
-                        # Check if cache was restored from database
-                        if cache_size_after_refresh > 0:
-                            cache_mgmt_results['cache_persistence_working'] = True
-                            cache_mgmt_results['cache_restoration_working'] = True
-                            logger.info(f"      ✅ Cache persistence working: Restored {cache_size_after_refresh} symbols from database")
+                        if total_fields_checked > 0 and consistent_fields >= total_fields_checked * 0.5:
+                            persistence_results['data_consistency'] = True
+                            logger.info(f"      ✅ Data consistency good: {consistent_fields}/{total_fields_checked} fields consistent")
                         else:
-                            logger.info(f"      ⚪ Cache empty after refresh - may indicate no recent database activity")
-            except Exception as e:
-                logger.error(f"      ❌ Error testing cache persistence: {e}")
-            
-            # Test 2: Size limits and intelligent cleanup
-            logger.info("   📋 Testing cache size limits and cleanup...")
-            
-            try:
-                # Monitor cache sizes over multiple operations
-                for i in range(5):
-                    # Run IA1 cycle
-                    ia1_response = requests.post(f"{self.api_url}/run-ia1-cycle", timeout=60)
-                    await asyncio.sleep(3)
+                            logger.warning(f"      ⚠️ Data consistency issues: {consistent_fields}/{total_fields_checked} fields consistent")
+                else:
+                    logger.warning(f"      ❌ No recent analyses found in database")
                     
-                    # Check cache size
-                    debug_response = requests.get(f"{self.api_url}/debug-anti-doublon", timeout=30)
-                    if debug_response.status_code == 200:
-                        debug_data = debug_response.json()
-                        cache_size = debug_data.get('cache_status', {}).get('size', 0)
-                        cache_mgmt_results['cache_sizes_tracked'].append(cache_size)
-                        
-                        logger.info(f"      📊 Cache size after operation {i+1}: {cache_size}")
-                        
-                        # Track maximum cache size
-                        if cache_size > cache_mgmt_results['max_cache_size_observed']:
-                            cache_mgmt_results['max_cache_size_observed'] = cache_size
-                        
-                        # Check for size limits (should not exceed 30 based on server.py)
-                        if cache_size <= 30:
-                            cache_mgmt_results['size_limits_enforced'] = True
-                        
-                        # Detect cleanup events (size decrease)
-                        if len(cache_mgmt_results['cache_sizes_tracked']) >= 2:
-                            prev_size = cache_mgmt_results['cache_sizes_tracked'][-2]
-                            if cache_size < prev_size:
-                                cache_mgmt_results['cleanup_events_detected'] += 1
-                                cache_mgmt_results['intelligent_cleanup_detected'] = True
-                                logger.info(f"      🧹 Cleanup event detected: {prev_size} → {cache_size}")
-                
-                logger.info(f"      📊 Maximum cache size observed: {cache_mgmt_results['max_cache_size_observed']}")
-                logger.info(f"      📊 Cleanup events detected: {cache_mgmt_results['cleanup_events_detected']}")
-                
             except Exception as e:
-                logger.error(f"      ❌ Error testing cache size limits: {e}")
-            
-            # Test 3: Check backend logs for cleanup messages
-            try:
-                backend_logs = await self._capture_backend_logs()
-                cleanup_messages = [log for log in backend_logs if 'cleanup' in log.lower() or 'cache size' in log.lower()]
-                if cleanup_messages:
-                    cache_mgmt_results['intelligent_cleanup_detected'] = True
-                    logger.info(f"      ✅ Cleanup messages found in backend logs")
-                    logger.info(f"         Sample cleanup messages: {cleanup_messages[:2]}")
-            except:
-                pass
+                logger.error(f"      ❌ Database query error: {e}")
             
             # Calculate test success
             success_criteria = [
-                cache_mgmt_results['cache_persistence_working'] or cache_mgmt_results['cache_restoration_working'],
-                cache_mgmt_results['size_limits_enforced'],
-                cache_mgmt_results['intelligent_cleanup_detected'] or cache_mgmt_results['cleanup_events_detected'] > 0
+                persistence_results['database_accessible'],
+                persistence_results['recent_analyses_found'],
+                persistence_results['macd_fields_in_db'] or persistence_results['fibonacci_fields_in_db']
             ]
             success_count = sum(success_criteria)
             success_rate = success_count / len(success_criteria)
             
             if success_rate >= 0.67:  # 67% success threshold
-                self.log_test_result("Cache Management and Persistence", True, 
-                                   f"Cache management working: Max size {cache_mgmt_results['max_cache_size_observed']}, {cache_mgmt_results['cleanup_events_detected']} cleanup events, persistence: {cache_mgmt_results['cache_persistence_working']}")
+                self.log_test_result("Database Persistence Verification", True, 
+                                   f"Database persistence working: {success_count}/{len(success_criteria)} criteria met. {persistence_results['analyses_count']} analyses, MACD: {persistence_results['macd_fields_in_db']}, Fibonacci: {persistence_results['fibonacci_fields_in_db']}")
             else:
-                self.log_test_result("Cache Management and Persistence", False, 
-                                   f"Cache management issues: {success_count}/{len(success_criteria)} criteria met")
+                self.log_test_result("Database Persistence Verification", False, 
+                                   f"Database persistence issues: {success_count}/{len(success_criteria)} criteria met")
                 
         except Exception as e:
-            self.log_test_result("Cache Management and Persistence", False, f"Exception: {str(e)}")
+            self.log_test_result("Database Persistence Verification", False, f"Exception: {str(e)}")
     
     async def _capture_backend_logs(self):
         """Capture recent backend logs"""
@@ -829,37 +739,36 @@ class AntiDuplicateSystemTestSuite:
             for log_file in log_files:
                 if os.path.exists(log_file):
                     try:
-                        result = subprocess.run(['tail', '-n', '50', log_file], 
+                        result = subprocess.run(['tail', '-n', '100', log_file], 
                                               capture_output=True, text=True, timeout=10)
                         if result.returncode == 0:
                             all_logs.extend(result.stdout.split('\n'))
                     except Exception:
                         pass
             
-            return all_logs
+            return [log for log in all_logs if log.strip()]
         except Exception:
             return []
     
     async def run_comprehensive_test_suite(self):
-        """Run comprehensive Anti-Duplicate System MongoDB Integration test suite"""
-        logger.info("🚀 Starting Anti-Duplicate System MongoDB Integration Test Suite")
+        """Run comprehensive MACD & Fibonacci Integration test suite"""
+        logger.info("🚀 Starting MACD Calculation Fix and Fibonacci Retracement Integration Test Suite")
         logger.info("=" * 80)
-        logger.info("📋 ANTI-DUPLICATE SYSTEM MONGODB INTEGRATION TEST SUITE")
-        logger.info("🎯 Testing: Comprehensive 4-Hour Window Anti-Duplicate System")
-        logger.info("🎯 Expected: Cache management, MongoDB integration, symbol diversity")
+        logger.info("📋 MACD & FIBONACCI INTEGRATION TEST SUITE")
+        logger.info("🎯 Testing: MACD calculation fix and Fibonacci retracement integration")
+        logger.info("🎯 Expected: Real MACD values, Fibonacci analysis, enhanced API data")
         logger.info("=" * 80)
         
         # Run all tests in sequence
-        await self.test_1_debug_anti_doublon_endpoint()
-        await self.test_2_refresh_anti_doublon_cache()
-        await self.test_3_clear_anti_doublon_cache()
-        await self.test_4_ia1_cycle_anti_duplicate_logic()
-        await self.test_5_mongodb_4hour_window_enforcement()
-        await self.test_6_cache_management_and_persistence()
+        await self.test_1_macd_calculation_fix_verification()
+        await self.test_2_fibonacci_retracement_integration()
+        await self.test_3_api_endpoints_enhanced_data()
+        await self.test_4_backend_integration_verification()
+        await self.test_5_database_persistence_verification()
         
         # Summary
         logger.info("\n" + "=" * 80)
-        logger.info("📊 ANTI-DUPLICATE SYSTEM MONGODB INTEGRATION TEST SUMMARY")
+        logger.info("📊 MACD & FIBONACCI INTEGRATION TEST SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in self.test_results if result['success'])
@@ -881,18 +790,16 @@ class AntiDuplicateSystemTestSuite:
         requirements_status = {}
         
         for result in self.test_results:
-            if "Debug Anti-Doublon Endpoint" in result['test']:
-                requirements_status['Anti-Duplicate Cache System Debug'] = result['success']
-            elif "Refresh Anti-Doublon Cache" in result['test']:
-                requirements_status['Cache Refresh from Database'] = result['success']
-            elif "Clear Anti-Doublon Cache" in result['test']:
-                requirements_status['Cache Clearing Functionality'] = result['success']
-            elif "IA1 Cycle Anti-Duplicate Logic" in result['test']:
-                requirements_status['IA1 Cycle Symbol Diversity & Skip Logic'] = result['success']
-            elif "MongoDB 4-Hour Window Enforcement" in result['test']:
-                requirements_status['MongoDB 4-Hour Window Integration'] = result['success']
-            elif "Cache Management and Persistence" in result['test']:
-                requirements_status['Intelligent Cache Management'] = result['success']
+            if "MACD Calculation Fix" in result['test']:
+                requirements_status['MACD Calculation Fix (Real Values)'] = result['success']
+            elif "Fibonacci Retracement Integration" in result['test']:
+                requirements_status['Fibonacci Retracement Integration'] = result['success']
+            elif "API Endpoints Enhanced Data" in result['test']:
+                requirements_status['Enhanced API Endpoints'] = result['success']
+            elif "Backend Integration" in result['test']:
+                requirements_status['Backend Integration (fibonacci_calculator.py)'] = result['success']
+            elif "Database Persistence" in result['test']:
+                requirements_status['Database Persistence of Enhanced Data'] = result['success']
         
         logger.info("🎯 CRITICAL REQUIREMENTS STATUS:")
         for requirement, status in requirements_status.items():
@@ -906,29 +813,28 @@ class AntiDuplicateSystemTestSuite:
         logger.info(f"\n🏆 REQUIREMENTS SATISFACTION: {requirements_met}/{total_requirements}")
         
         if requirements_met == total_requirements:
-            logger.info("\n🎉 VERDICT: ANTI-DUPLICATE SYSTEM MONGODB INTEGRATION 100% SUCCESSFUL!")
-            logger.info("✅ Comprehensive 4-layer anti-duplicate verification system working")
-            logger.info("✅ MongoDB queries with 4-hour window enforcement operational")
-            logger.info("✅ Enhanced cache management with intelligent cleanup functional")
-            logger.info("✅ Cache growth and symbol diversity confirmed (0→4→6→8 pattern)")
-            logger.info("✅ Debug, refresh, and clear cache endpoints fully operational")
-            logger.info("✅ IA1 cycle skip logic preventing duplicate analyses within 4h window")
+            logger.info("\n🎉 VERDICT: MACD & FIBONACCI INTEGRATION 100% SUCCESSFUL!")
+            logger.info("✅ MACD calculation fix working - real values instead of zeros")
+            logger.info("✅ Fibonacci retracement integration complete with 9-level analysis")
+            logger.info("✅ Enhanced API endpoints returning technical indicator data")
+            logger.info("✅ Backend integration of fibonacci_calculator.py working")
+            logger.info("✅ Database persistence of enhanced technical data confirmed")
         elif requirements_met >= total_requirements * 0.8:
-            logger.info("\n⚠️ VERDICT: ANTI-DUPLICATE SYSTEM MOSTLY SUCCESSFUL")
+            logger.info("\n⚠️ VERDICT: MACD & FIBONACCI INTEGRATION MOSTLY SUCCESSFUL")
             logger.info("🔍 Minor issues may need attention for complete integration")
         elif requirements_met >= total_requirements * 0.6:
-            logger.info("\n⚠️ VERDICT: ANTI-DUPLICATE SYSTEM PARTIALLY SUCCESSFUL")
+            logger.info("\n⚠️ VERDICT: MACD & FIBONACCI INTEGRATION PARTIALLY SUCCESSFUL")
             logger.info("🔧 Several requirements need attention for complete integration")
         else:
-            logger.info("\n❌ VERDICT: ANTI-DUPLICATE SYSTEM NOT SUCCESSFUL")
-            logger.info("🚨 Major issues detected - anti-duplicate system not working properly")
-            logger.info("🚨 System needs significant fixes for MongoDB integration")
+            logger.info("\n❌ VERDICT: MACD & FIBONACCI INTEGRATION NOT SUCCESSFUL")
+            logger.info("🚨 Major issues detected - technical indicators not working properly")
+            logger.info("🚨 System needs significant fixes for MACD and Fibonacci integration")
         
         return passed_tests, total_tests
 
 async def main():
-    """Main function to run the comprehensive Anti-Duplicate System MongoDB Integration test suite"""
-    test_suite = AntiDuplicateSystemTestSuite()
+    """Main function to run the comprehensive MACD & Fibonacci Integration test suite"""
+    test_suite = MACDFibonacciIntegrationTestSuite()
     passed_tests, total_tests = await test_suite.run_comprehensive_test_suite()
     
     # Exit with appropriate code
