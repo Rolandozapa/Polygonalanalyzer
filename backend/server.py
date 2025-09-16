@@ -9218,6 +9218,19 @@ class UltraProfessionalOrchestrator:
                             decision = await self.ia2.make_decision(opportunity, analysis, perf_stats)
                             if decision:
                                 logger.info(f"✅ IA2 decision: {decision.signal} for {opportunity.symbol}")
+                                
+                                # 🎯 SAVE IA2 DECISION TO DATABASE
+                                try:
+                                    decision_dict = decision.dict()
+                                    decision_dict['timestamp'] = get_paris_time()
+                                    
+                                    # Save to MongoDB
+                                    await db.trading_decisions.insert_one(decision_dict)
+                                    logger.info(f"💾 IA2 DECISION SAVED: {opportunity.symbol} → {decision.signal.value.upper()} in database")
+                                    
+                                except Exception as save_error:
+                                    logger.error(f"❌ Failed to save IA2 decision for {opportunity.symbol}: {save_error}")
+                                    
                         else:
                             logger.info(f"❌ {opportunity.symbol} not escalated to IA2")
                             
