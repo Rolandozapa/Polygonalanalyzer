@@ -4913,7 +4913,8 @@ CRITICAL: Respond ONLY with valid JSON, no other text."""
 
 📈 TECHNICAL INDICATORS (DETAILED):
 - RSI: {analysis.rsi:.1f}
-- MACD Signal: {analysis.macd_signal:.6f}
+- MACD Line: {analysis.macd_line:.6f} (MACD Signal: {analysis.macd_signal:.6f})
+- MACD Histogram: {analysis.macd_histogram:.6f} | Trend: {analysis.macd_trend}
 - Stochastic %K: {analysis.stochastic:.1f} | %D: {analysis.stochastic_d:.1f}
 - Bollinger Position: {analysis.bollinger_position:.2f}
 - Support Levels: {analysis.support_levels}
