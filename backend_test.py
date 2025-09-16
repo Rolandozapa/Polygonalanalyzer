@@ -1,35 +1,37 @@
 #!/usr/bin/env python3
 """
-ANTI-DUPLICATE SYSTEM MONGODB INTEGRATION TEST SUITE
-Focus: Test Anti-Duplicate System MongoDB Integration with 4-Hour Window Enforcement
+MACD CALCULATION FIX AND FIBONACCI RETRACEMENT INTEGRATION TEST SUITE
+Focus: Test MACD calculation fix and Fibonacci retracement integration in trading bot system
 
 CRITICAL TEST REQUIREMENTS FROM REVIEW REQUEST:
-1. **Anti-Duplicate Cache System**: Test debug, refresh, and clear cache endpoints
-2. **IA1 Cycle Anti-Duplicate Logic**: Test multiple run-ia1-cycle calls for symbol diversity and skip logic
-3. **MongoDB Integration**: Verify 4-hour window enforcement through database queries
-4. **Cache Management**: Test intelligent cache cleanup and persistence functionality
-5. **Error Handling & Edge Cases**: Test behavior with database issues and invalid timestamps
+1. **MACD CALCULATION FIX**: 
+   - Previous issue: All IA1 analyses showed "macd_signal": 0
+   - Fix implemented: Changed analysis_data to use indicators.macd_signal instead of fallback values
+   - Expected result: New IA1 analyses should show real MACD values like 209.76, not 0.000000
+   - Test: Check latest analysis for non-zero MACD values (macd_signal, macd_line, macd_histogram, macd_trend)
 
-ANTI-DUPLICATE SYSTEM ACHIEVEMENTS TO VALIDATE:
-✅ Comprehensive 4-layer anti-duplicate verification system
-✅ MongoDB queries using paris_time_to_timestamp_filter(4)
-✅ Enhanced cache management with populate_cache_from_db() and cleanup functions
-✅ Live testing showing cache growth: 0→4→6→8 symbols with symbol diversity
+2. **FIBONACCI RETRACEMENT INTEGRATION**:
+   - New features: Comprehensive Fibonacci analysis with 9 levels
+   - Added fields: fibonacci_signal_strength, fibonacci_signal_direction, fibonacci_key_level_proximity
+   - Expected result: New analyses should contain Fibonacci data with trend analysis and signal calculations
+   - Test: Verify new Fibonacci fields are populated with meaningful values
 
-SPECIFIC TESTS TO RUN:
-- GET /api/debug-anti-doublon - Verify cache status and database synchronization
-- POST /api/refresh-anti-doublon-cache - Verify cache refresh from database
-- POST /api/clear-anti-doublon-cache - Verify cache clearing functionality
-- POST /api/run-ia1-cycle - Test multiple calls for different symbols and skip logic
-- Test that symbols in cache are skipped (should see SKIP messages in logs)
-- Test that system prevents parallel execution (should return error when already running)
+3. **API ENDPOINT TESTING**:
+   - Test /api/run-ia1-cycle to trigger new analysis generation
+   - Test /api/analyses to retrieve latest analyses with MACD and Fibonacci data
+   - Verify database persistence of new technical indicator fields
+
+4. **BACKEND INTEGRATION**:
+   - Verify fibonacci_calculator.py is properly imported and working
+   - Check that MACD and Fibonacci calculations integrate without errors
+   - Confirm analysis_data is properly updated with new technical indicators
 
 SUCCESS CRITERIA:
-✅ Cache should grow as new symbols are analyzed (showing symbol diversity)
-✅ Same symbols should be skipped within 4-hour window
-✅ Debug endpoint should show cache-to-database synchronization status
-✅ System should prevent duplicate analyses both in-memory and persistent storage
-✅ Cache management should automatically clean expired entries
+✅ New IA1 analyses should show real MACD values (not 0.000000)
+✅ MACD fields should contain meaningful values: macd_signal, macd_line, macd_histogram, macd_trend
+✅ Fibonacci fields should be populated: fibonacci_signal_strength, fibonacci_signal_direction, fibonacci_key_level_proximity
+✅ API endpoints should return enhanced technical analysis data
+✅ Database should persist new technical indicator fields correctly
 """
 
 import asyncio
