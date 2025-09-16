@@ -3155,7 +3155,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
-            logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
+            logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={indicators.macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
+            logger.info(f"   🚀 MACD Details: Line={indicators.macd_line:.6f} | Signal={indicators.macd_signal:.6f} | Histogram={indicators.macd_histogram:.6f}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             logger.info(f"🔍 DEBUG: About to call _validate_analysis_data for {opportunity.symbol}")
