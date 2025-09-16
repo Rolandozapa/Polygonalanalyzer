@@ -2660,7 +2660,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 except Exception as e:
                     logger.error(f"❌ Error calculating technical indicators for {opportunity.symbol}: {e}")
                     
-            logger.info(f"📊 FINAL INDICATORS {opportunity.symbol}: RSI={rsi:.2f}, MACD={macd_signal:.6f}, Stoch={stochastic_k:.2f}, BB={bb_position:.4f}")
+            logger.info(f"📊 FINAL INDICATORS {opportunity.symbol}: RSI={rsi:.2f}, MACD={indicators.macd_line:.6f}, Stoch={stochastic_k:.2f}, BB={bb_position:.4f}")
             
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
