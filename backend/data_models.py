@@ -53,6 +53,8 @@ class TechnicalAnalysis(BaseModel):
     symbol: str
     rsi: float
     macd_signal: float
+    macd_line: Optional[float] = 0.0  # MACD line value
+    macd_histogram: Optional[float] = 0.0  # MACD histogram
     stochastic: float = 50.0  # Stochastic %K
     stochastic_d: float = 50.0  # Stochastic %D  
     bollinger_position: float
