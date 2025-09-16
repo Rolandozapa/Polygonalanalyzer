@@ -2090,6 +2090,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
             multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
             
+            # 🚀 FIBONACCI RETRACEMENT ANALYSIS - Professional level analysis 🚀
+            fibonacci_levels = calculate_fibonacci_retracements(historical_data, lookback_period=20)
+            fibonacci_formatted = fibonacci_calculator.get_fibonacci_for_prompt(fibonacci_levels)
+            logger.info(f"🔢 FIBONACCI calculated for {opportunity.symbol}: {fibonacci_levels.trend_direction} trend, current at {fibonacci_levels.current_level_percentage:.1f}% ({fibonacci_levels.nearest_level})")
+            
             # Extract key values for prompt and analysis
             rsi = indicators.rsi_14
             macd_signal = indicators.macd_signal
