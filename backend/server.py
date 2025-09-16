@@ -3090,9 +3090,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"📊 STREAMLINED VALIDATION: {opportunity.symbol} {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
             
             # Remove complex multi-timeframe calculations and use simplified approach
+            # 🚀 FIX: Use actual calculated indicators instead of fallback values
             analysis_data.update({
                 "rsi": rsi,
-                "macd_signal": macd_signal,
+                "macd_signal": indicators.macd_signal,  # Use working advanced indicators value
                 "stochastic": stochastic_k,  # Add Stochastic %K
                 "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
