@@ -8640,6 +8640,14 @@ async def force_scout_refresh():
         import asyncio
         fresh_cryptos = await trending_auto_updater.fetch_trending_cryptos()
         
+        # 🚨 CRITICAL FIX: Sauvegarder les données fetchées dans trending_auto_updater
+        if fresh_cryptos:
+            trending_auto_updater.current_trending = fresh_cryptos
+            trending_auto_updater.last_update = get_paris_time()
+            logger.info(f"✅ SCOUT DATA SAVED: {len(fresh_cryptos)} cryptos saved to trending_auto_updater")
+        else:
+            logger.warning("⚠️ No fresh cryptos fetched - keeping current_trending as None")
+        
         logger.info(f"🔄 FORCED SCOUT REFRESH: {len(fresh_cryptos)} cryptos selected from TOP 50 after fresh filtering")
         
         return {
