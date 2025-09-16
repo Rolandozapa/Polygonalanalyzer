@@ -31,7 +31,7 @@ class MACDCalculator:
         self.fast_period = fast_period
         self.slow_period = slow_period  
         self.signal_period = signal_period
-        self.min_data_points = max(slow_period + signal_period, 20)  # Minimum réaliste
+        self.min_data_points = max(slow_period + signal_period, 35)  # 26+9 = 35 minimum for MACD
         
     def _calculate_ema(self, prices: pd.Series, period: int) -> pd.Series:
         """
