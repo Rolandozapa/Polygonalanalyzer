@@ -13,7 +13,7 @@
     "macd_histogram", "stoch_k", "stoch_d", "adx", "adx_strength", "plus_di", "minus_di",
     "trend_hierarchy", "ema_cross_signal", "mfi", "mfi_signal", "volume_ratio", "volume_trend",
     "volume_surge", "bb_position", "bb_squeeze", "squeeze_intensity", "atr", "atr_pct",
-    "vwap", "vwap_distance", "sma_20", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
+    "vwap", "vwap_distance", "sma_20", "sma_20_slope", "sma_20_slope_pct", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
     "confidence", "base_confidence", "technical_consistency", "combined_confidence",
     "regime_persistence", "fresh_regime", "stability_score", "regime_transition_alert",
     "confluence_grade", "confluence_score", "combined_multiplier", "should_trade", "above_sma_20"
