@@ -2282,9 +2282,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
-            # ✅ VWAP from TALib
-            vwap_distance = talib_analysis.vwap_distance
-            above_vwap = talib_analysis.above_vwap
+            # ✅ VWAP from TALib - SAFE ACCESS
+            vwap_distance = getattr(talib_analysis, 'vwap_distance', 0.0) if talib_analysis else 0.0
+            above_vwap = getattr(talib_analysis, 'above_vwap', True) if talib_analysis else True
             
             # Ensure vwap_position is numeric (convert from string if needed)
             try:
