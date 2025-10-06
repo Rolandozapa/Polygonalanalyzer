@@ -179,7 +179,7 @@ class DynamicRRIntegrationTestSuite:
                     # Get first 3 available symbols for testing
                     available_symbols = [opp.get('symbol') for opp in opportunities[:10] if opp.get('symbol')]
                     
-                    # Prefer symbols with good volatility for RR testing
+                    # Prefer symbols that might generate different trade types
                     preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
                     test_symbols = []
                     
