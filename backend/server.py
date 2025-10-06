@@ -4305,6 +4305,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
     def _validate_analysis_data(self, analysis_data: dict) -> dict:
         """Valide et nettoie toutes les données d'analyse pour JSON"""
         logger.info(f"🔍 DEBUG: _validate_analysis_data called for {analysis_data.get('symbol', 'UNKNOWN')} with {len(analysis_data)} fields")
+        logger.info(f"🔍 DEBUG VALIDATION: trade_type={analysis_data.get('trade_type', 'MISSING')}, minimum_rr_threshold={analysis_data.get('minimum_rr_threshold', 'MISSING')}")
         try:
             cleaned_data = {}
             
