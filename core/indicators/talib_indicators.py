@@ -635,7 +635,7 @@ class TALibIndicators:
             logger.error(f"Error calculating moving averages: {e}")
             return {
                 'sma_20': current_price, 'sma_50': current_price,
-                'ema_9': current_price, 'ema_21': current_price, 'ema_50': current_price,
+                'ema_9': current_price, 'ema_21': current_price, 'ema_50': current_price, 'ema_200': current_price,
                 'trend_hierarchy': 'NEUTRAL', 'trend_strength_score': 0.5, 'price_vs_emas': 'NEUTRAL'
             }
     
