@@ -14,7 +14,7 @@
     
     "regime_analysis": "🎯 RÉGIME MARCHÉ: {regime} (Confiance ML: {confidence:.1%}, Consistance technique: {technical_consistency:.1%})",
     
-    "technical_data": "📈 DONNÉES TECHNIQUES TALIB:\nRSI 14: {rsi:.1f} [{rsi_zone}] | MACD H: {macd_histogram:.6f} [{macd_trend}] | ADX: {adx:.1f} [{adx_strength}]\nMFI: {mfi:.1f} [{mfi_signal}] | BB Position: {bb_position:.1%} | Squeeze: {bb_squeeze} ({squeeze_intensity})\nVWAP Distance: {vwap_position:+.2f}% | +DI: {plus_di:.1f} | -DI: {minus_di:.1f}",
+    "technical_data": "📈 DONNÉES TECHNIQUES TALIB:\n🎯 MOMENTUM CORE: RSI 14: {rsi:.1f} [{rsi_zone}] | MACD H: {macd_histogram:.6f} [{macd_trend}]\n🆕 MOMENTUM AVANCÉ: WillR: {willr:.1f} [{willr_zone}] | CCI: {cci:.1f} [{cci_zone}] | ROC: {roc:.2f}% [{roc_strength}]\n📊 TREND ANALYSIS: ADX: {adx:.1f} [{adx_strength}] | +DI: {plus_di:.1f} | -DI: {minus_di:.1f}\n🆕 TREND AVANCÉ: Aroon: ↑{aroon_up:.0f} ↓{aroon_down:.0f} ({aroon_signal}) | SAR: {sar:.4f} ({sar_signal}, {sar_distance:+.1f}%)\n💰 FLOW & VOLATILITY: MFI: {mfi:.1f} [{mfi_signal}] | BB Position: {bb_position:.1%} | Squeeze: {bb_squeeze} ({squeeze_intensity})\nVWAP Distance: {vwap_distance:+.2f}%",
     
     "confluence_grade": "🏆 CONFLUENCE: Grade {confluence_grade} (Score: {confluence_score}/100) - Conviction: {conviction_level}",
     
