@@ -2178,16 +2178,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # ÉTAPE 6: Toutes les validations passées - APPEL IA1 justifié
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
-            # Calculate advanced technical indicators with MULTI-TIMEFRAME ANALYSIS 🚀
-            indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
+            # 🚀 CALCULATE SIMPLE WORKING INDICATORS (Replacement for broken AdvancedTechnicalIndicators)
+            from simple_technical_indicators import calculate_all_simple_indicators
+            logger.info(f"📊 Calculating SIMPLE WORKING indicators for {opportunity.symbol}")
             
-            # 🚨 DEBUG: Log actual MACD values from advanced indicators
-            logger.info(f"🔍 MACD DEBUG for {opportunity.symbol}: Line={indicators.macd_line:.8f}, Signal={indicators.macd_signal:.8f}, Histogram={indicators.macd_histogram:.8f}")
+            simple_indicators_data = calculate_all_simple_indicators(historical_data)
             
-            # 🔥 RÉVOLUTION MULTI-TIMEFRAME - Vision complète comme un trader PRO 🔥
-            # multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
-            # multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
-            multi_tf_formatted = "Multi-timeframe analysis temporarily disabled"
+            # 🚨 MULTI-TF DISABLED (will be re-enabled when system is stable)
+            multi_tf_formatted = "Multi-timeframe analysis disabled - using simple direct calculations"
             
             # 🚀 FIBONACCI RETRACEMENT ANALYSIS - Professional level analysis 🚀
             fibonacci_levels = calculate_fibonacci_retracements(historical_data, lookback_period=20)
