@@ -2212,20 +2212,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # ✅ USE REAL MFI from TALib (not VWAP replacement)
             mfi = talib_analysis.mfi  # Real Money Flow Index from TALib
             
-            logger.info(f"✅ ALL INDICATORS EXTRACTED from simple_indicators_data for {opportunity.symbol}")
-            
-            # ✅ SAFE LOGGING - Convert None to string first
-            rsi_str = f"{rsi:.1f}" if rsi is not None else "N/A"
-            macd_str = f"{macd_histogram:.6f}" if macd_histogram is not None else "N/A"  
-            stoch_str = f"{stochastic_k:.1f}" if stochastic_k is not None else "N/A"
-            mfi_str = f"{mfi:.2f}" if mfi is not None else "N/A"
-            bb_str = f"{bb_position:.2f}" if bb_position is not None else "N/A"
-            atr_str = f"{atr:.6f}" if atr is not None else "N/A"
-            vol_str = f"{volume_ratio:.2f}" if volume_ratio is not None else "N/A"
-            
-            logger.info(f"   📊 RSI: {rsi_str}, MACD: {macd_str}, Stoch: {stoch_str}")
-            logger.info(f"   📊 VWAP-based MFI: {mfi_str}%, BB Position: {bb_str}")
-            logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr_str}, Volume Ratio: {vol_str}")
+            logger.info(f"✅ ALL PROFESSIONAL INDICATORS EXTRACTED from TALib for {opportunity.symbol}")
+            logger.info(f"   📊 RSI: {rsi:.1f} [{talib_analysis.rsi_zone}], MACD H: {macd_histogram:.6f} [{talib_analysis.macd_trend}]")
+            logger.info(f"   📊 Real MFI: {mfi:.1f} [{talib_analysis.mfi_signal}], BB Pos: {bb_position:.2f}")
+            logger.info(f"   📊 ADX (Wilder): {adx:.1f} [{talib_analysis.adx_strength}], ATR: {atr:.6f}, Vol: {volume_ratio:.2f}")
+            logger.info(f"   🎯 Regime: {talib_analysis.regime} (Confidence: {talib_analysis.confidence:.1%})")
+            logger.info(f"   🏆 Confluence: {talib_analysis.confluence_grade} (Score: {talib_analysis.confluence_score}) - {talib_analysis.conviction_level}")
             # BB bands (already extracted above)
             bb_upper = simple_indicators_data.get('bb_upper')
             bb_middle = simple_indicators_data.get('bb_middle')
