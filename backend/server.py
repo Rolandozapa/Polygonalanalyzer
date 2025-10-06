@@ -2176,8 +2176,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
             # Calculate advanced technical indicators with MULTI-TIMEFRAME ANALYSIS 🚀
-            df_with_indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
-            indicators = self.advanced_indicators.get_current_indicators(df_with_indicators)
+            indicators = self.advanced_indicators.calculate_all_indicators(historical_data)
             
             # 🚨 DEBUG: Log actual MACD values from advanced indicators
             logger.info(f"🔍 MACD DEBUG for {opportunity.symbol}: Line={indicators.macd_line:.8f}, Signal={indicators.macd_signal:.8f}, Histogram={indicators.macd_histogram:.8f}")
