@@ -1288,7 +1288,7 @@ class AdvancedMarketAggregator:
             
             logger.info("🔄 BRIDGE: get_current_opportunities() called - fetching REAL BingX trending data")
             
-            # Use cached opportunities if available and recent
+            # Use cached opportunities if available, recent, and contain REAL data only
             current_time_timestamp = time.time()
             current_time = datetime.now(timezone.utc)  # Pour les datetime operations
             cache_key = "current_opportunities"
@@ -1296,8 +1296,20 @@ class AdvancedMarketAggregator:
             if (cache_key in self.cache and 
                 current_time_timestamp - self.cache[cache_key].get('timestamp', 0) < self.cache_ttl):
                 cached_opportunities = self.cache[cache_key]['data']
-                logger.info(f"✅ CACHE HIT: Returning {len(cached_opportunities)} cached opportunities")
-                return cached_opportunities
+                
+                # 🚨 VALIDATE: Reject cached opportunities with fake data
+                has_fake_data = any(
+                    opp.current_price == 1.0 or 
+                    (opp.volume_24h == 1000000 and opp.price_change_24h == 2.5)
+                    for opp in cached_opportunities
+                )
+                
+                if has_fake_data:
+                    logger.warning(f"❌ CACHE REJECTED: Contains fake data (price=1.0 or volume=1M+change=2.5%) - invalidating cache")
+                    del self.cache[cache_key]  # Clear fake data cache
+                else:
+                    logger.info(f"✅ CACHE HIT: Returning {len(cached_opportunities)} VALIDATED real data opportunities")
+                    return cached_opportunities
             
             # 🚀 NEW: Get trending data from trending_auto_updater if available
             opportunities = []
