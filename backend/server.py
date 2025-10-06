@@ -1804,6 +1804,10 @@ class UltraProfessionalIA1TechnicalAnalyst:
         rsi = analysis.rsi
         stochastic = analysis.stochastic
         
+        # Initialize defaults
+        strength = 0.3
+        pattern = "H1_NEUTRAL"
+        
         # 1H overbought/oversold analysis - NULL SAFE
         if rsi is not None and stochastic is not None:
             if rsi > 75 and stochastic > 80:
@@ -1817,10 +1821,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
                 pattern = "H1_BULLISH_MOMENTUM"
             elif rsi < 40:
                 strength = 0.5
-                pattern = "H1_BEARISH_MOMENTUM" 
-        else:
-            strength = 0.3
-            pattern = "H1_NEUTRAL"
+                pattern = "H1_BEARISH_MOMENTUM"
         
         return {
             "strength": strength,
