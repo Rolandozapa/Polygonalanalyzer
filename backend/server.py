@@ -951,7 +951,7 @@ class TrailingStopManager:
     
     def _calculate_new_trailing_sl(self, trailing_stop: TrailingStopLoss, tp_crossed: str, tp_levels: Dict[str, float]) -> float:
         """Calculate new trailing stop loss position"""
-        tp_price = tp_levels[tp_crossed.lower()]
+        tp_price = tp_levels[str(tp_crossed).lower()]
         trailing_distance = tp_price * (trailing_stop.trailing_percentage / 100.0)
         
         if trailing_stop.direction == "LONG":
