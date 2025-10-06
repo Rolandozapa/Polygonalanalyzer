@@ -269,11 +269,30 @@ class TrendingAutoUpdater:
                         if data.get('code') == 0 and 'data' in data:
                             trending_list = []
                             
+                            # 🎯 PRIORITY PROCESSING: Process top 25 market cap symbols first
+                            priority_symbols = []  # Top 25 market cap
+                            extended_symbols = []  # Other symbols for backup
+                            
                             for ticker_data in data['data']:
                                 try:
                                     symbol = ticker_data.get('symbol', '').replace('-', '')
                                     if not symbol.endswith('USDT'):
                                         continue
+                                    
+                                    # Separate top 25 market cap symbols from others
+                                    if symbol in self.bingx_top_25_futures:
+                                        priority_symbols.append(ticker_data)
+                                    else:
+                                        extended_symbols.append(ticker_data)
+                                except (ValueError, KeyError):
+                                    continue
+                            
+                            logger.info(f"🎯 BingX FILTERING: Found {len(priority_symbols)} top-25 symbols, {len(extended_symbols)} extended symbols")
+                            
+                            # Process priority symbols (top 25 market cap) with relaxed filters
+                            for ticker_data in priority_symbols:
+                                try:
+                                    symbol = ticker_data.get('symbol', '').replace('-', '')
                                     
                                     price_change_pct = float(ticker_data.get('priceChangePercent', 0))
                                     volume = float(ticker_data.get('volume', 0))
