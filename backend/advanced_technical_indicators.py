@@ -1,1516 +1,1755 @@
+"""
+ADVANCED TECHNICAL INDICATORS SYSTEM
+Calcul avancé des indicateurs techniques pour l'entraînement IA
+RSI, MACD, Stochastic, Bollinger Bands + indicateurs composites
+"""
+
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
-from enum import Enum
+from datetime import datetime
 import logging
-from collections import deque
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class MarketRegimeDetailed(Enum):
-    """Régimes de marché détaillés pour l'IA"""
-    TRENDING_UP_STRONG = "TRENDING_UP_STRONG"
-    TRENDING_UP_MODERATE = "TRENDING_UP_MODERATE"
-    TRENDING_DOWN_STRONG = "TRENDING_DOWN_STRONG"
-    TRENDING_DOWN_MODERATE = "TRENDING_DOWN_MODERATE"
-    RANGING_TIGHT = "RANGING_TIGHT"
-    RANGING_WIDE = "RANGING_WIDE"
-    CONSOLIDATION = "CONSOLIDATION"
-    BREAKOUT_BULLISH = "BREAKOUT_BULLISH"
-    BREAKOUT_BEARISH = "BREAKOUT_BEARISH"
-    VOLATILE = "VOLATILE"
+@dataclass
+class TechnicalIndicators:
+    """Structure complète des indicateurs techniques"""
+    # RSI
+    rsi_14: float = 0.0
+    rsi_9: float = 0.0  # RSI plus réactif
+    rsi_21: float = 0.0  # RSI plus lisse
+    rsi_divergence: bool = False
+    rsi_overbought: bool = False  # RSI > 70
+    rsi_oversold: bool = False    # RSI < 30
+    
+    # MACD
+    macd_line: float = 0.0
+    macd_signal: float = 0.0
+    macd_histogram: float = 0.0
+    macd_bullish_crossover: bool = False
+    macd_bearish_crossover: bool = False
+    macd_above_zero: bool = False
+    
+    # Stochastic
+    stoch_k: float = 0.0
+    stoch_d: float = 0.0
+    stoch_overbought: bool = False  # %K > 80
+    stoch_oversold: bool = False    # %K < 20
+    stoch_bullish_crossover: bool = False  # %K crosses above %D
+    stoch_bearish_crossover: bool = False  # %K crosses below %D
+    
+    # Bollinger Bands
+    bb_upper: float = 0.0
+    bb_middle: float = 0.0  # SMA 20
+    bb_lower: float = 0.0
+    bb_width: float = 0.0   # (Upper - Lower) / Middle
+    bb_position: float = 0.0  # (Price - Lower) / (Upper - Lower)
+    bb_squeeze: bool = False  # BB width < historical average
+    bb_expansion: bool = False  # BB width > historical average
+    
+    # Moving Averages
+    sma_20: float = 0.0
+    sma_50: float = 0.0
+    sma_200: float = 0.0
+    ema_12: float = 0.0
+    ema_26: float = 0.0
+    
+    # Volume Indicators
+    volume_sma: float = 0.0
+    volume_ratio: float = 0.0  # Current volume / Average volume
+    obv: float = 0.0  # On Balance Volume
+    
+    # VWAP & Deviation Bands
+    vwap: float = 0.0
+    vwap_upper_1std: float = 0.0  # VWAP + 1 standard deviation
+    vwap_lower_1std: float = 0.0  # VWAP - 1 standard deviation
+    vwap_upper_2std: float = 0.0  # VWAP + 2 standard deviations
+    vwap_lower_2std: float = 0.0  # VWAP - 2 standard deviations
+    vwap_position: float = 0.0    # (Price - VWAP) / VWAP * 100 (percentage above/below VWAP)
+    vwap_overbought: bool = False  # Price > VWAP + 1 std dev
+    vwap_oversold: bool = False    # Price < VWAP - 1 std dev
+    vwap_extreme_overbought: bool = False  # Price > VWAP + 2 std dev
+    vwap_extreme_oversold: bool = False    # Price < VWAP - 2 std dev
+    vwap_trend: str = "neutral"    # "bullish", "bearish", "neutral" based on price vs VWAP
+    
+    # Money Flow Index (MFI) - The Volume-Weighted RSI Beast 🔥
+    mfi: float = 50.0             # Money Flow Index (0-100)
+    mfi_overbought: bool = False  # MFI > 80 (distribution phase)
+    mfi_oversold: bool = False    # MFI < 20 (accumulation phase)
+    mfi_extreme_overbought: bool = False  # MFI > 90 (extreme distribution)
+    mfi_extreme_oversold: bool = False    # MFI < 10 (extreme accumulation)
+    mfi_trend: str = "neutral"    # "bullish", "bearish", "neutral"
+    mfi_divergence: bool = False  # Price vs MFI divergence (powerful reversal signal)
+    money_flow_ratio: float = 1.0 # Positive/Negative money flow ratio
+    institutional_activity: str = "neutral"  # "accumulation", "distribution", "neutral"
+    
+    # Multi EMA/SMA Trend Hierarchy - THE MISSING PIECE 🎯
+    ema_9: float = 0.0            # Fast trend (9-period EMA)
+    ema_21: float = 0.0           # Medium trend (21-period EMA)
+    sma_50: float = 0.0           # Slow trend (50-period SMA)
+    ema_200: float = 0.0          # Long-term trend (200-period EMA)
+    trend_hierarchy: str = "neutral"  # "strong_bull", "weak_bull", "neutral", "weak_bear", "strong_bear"
+    trend_momentum: str = "neutral"   # "accelerating", "steady", "decelerating"
+    price_vs_emas: str = "mixed"      # "above_all", "above_fast", "below_fast", "below_all"
+    ema_cross_signal: str = "neutral" # "golden_cross", "death_cross", "neutral"
+    trend_strength_score: float = 0.5 # 0-1 score based on EMA hierarchy alignment
+    
+    # Composite Indicators
+    trend_strength: float = 0.0  # 0-1 score based on multiple indicators
+    momentum_score: float = 0.0  # 0-1 score for momentum
+    volatility_score: float = 0.0  # 0-1 score for volatility
+    signal_confidence: float = 0.0  # Overall confidence 0-1
 
 @dataclass
-class RegimeMetrics:
-    """Métriques enrichies pour un régime"""
-    regime: MarketRegimeDetailed
-    confidence: float
-    persistence: int
-    technical_consistency: float
-    combined_confidence: float
-    stability_score: float
+class IndicatorSignal:
+    """Signal généré par les indicateurs techniques"""
+    signal_type: str  # "bullish", "bearish", "neutral"
+    strength: float   # 0-1
+    confidence: float # 0-1
+    timeframe: str    # "short", "medium", "long"
+    supporting_indicators: List[str]
+    conflicting_indicators: List[str]
+    reasoning: str
 
-class AdvancedRegimeDetector:
-    """
-    Détecteur avancé de régimes de marché - VERSION CORRIGÉE
-    """
+class AdvancedTechnicalIndicators:
+    """Calculateur avancé d'indicateurs techniques avec support MULTI-TIMEFRAME 🚀"""
     
-    def __init__(self, lookback_period: int = 50, history_size: int = 200):
-        self.lookback_period = lookback_period
-        self.regime_history = deque(maxlen=history_size)
-        self.current_regime = None
-        self.regime_start_bar = 0
-        self.bar_count = 0
-    
-    def detect_detailed_regime(self, df: pd.DataFrame) -> Dict:
-        """
-        Détection détaillée du régime de marché avec scoring CORRIGÉ
-        """
-        if len(df) < self.lookback_period:
-            return self._get_default_regime()
+    def __init__(self):
+        self.lookback_periods = {
+            'short': 14,
+            'medium': 50,
+            'long': 200
+        }
         
+        # 🔥 TIMEFRAMES POUR ANALYSE PROFESSIONNELLE 🔥
+        self.timeframes = {
+            'now': 1,           # Valeurs actuelles
+            '5min': 5,          # 5 minutes ago  
+            '1h': 60,           # 1 heure ago (60 min)
+            '4h': 240,          # 4 heures ago (240 min)
+            '1d': 1440,         # 1 jour ago (1440 min)
+            '5d': 7200,         # 5 jours ago (7200 min)
+            '14d': 20160        # 14 jours ago (20160 min)
+        }
+        logger.info("Advanced Technical Indicators system initialized")
+    
+    def calculate_all_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule tous les indicateurs techniques sur un DataFrame OHLCV"""
         try:
-            # Calcul des indicateurs de régime
-            indicators = self._calculate_regime_indicators(df)
+            df = df.copy()
             
-            # Classification du régime
-            regime, base_confidence, scores = self._classify_regime(indicators)
+            # Ensure we have required columns
+            required_cols = ['Open', 'High', 'Low', 'Close', 'Volume']
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            if missing_cols:
+                logger.error(f"Missing columns: {missing_cols}")
+                return df
             
-            # Calcul de la consistency technique (NOUVEAU)
-            technical_consistency = self._calculate_technical_consistency(indicators)
+            # RSI (Multiple periods)
+            df = self._calculate_rsi(df)
             
-            # Calcul de la persistence du régime (NOUVEAU)
-            persistence = self._calculate_regime_persistence(regime)
+            # MACD
+            df = self._calculate_macd(df)
             
-            # Confiance combinée selon la formule du prompt (CORRIGÉ)
-            combined_confidence = 0.7 * base_confidence + 0.3 * technical_consistency
+            # Stochastic
+            df = self._calculate_stochastic(df)
             
-            # Score de stabilité (NOUVEAU)
-            stability_score = self._calculate_stability_score()
+            # Bollinger Bands
+            df = self._calculate_bollinger_bands(df)
             
-            # Ajustement de confiance basé sur la stabilité
-            final_confidence = combined_confidence * (0.9 + 0.1 * stability_score)
-            final_confidence = min(1.0, final_confidence)
+            # Moving Averages
+            df = self._calculate_moving_averages(df)
             
-            # Mise à jour de l'historique
-            self._update_regime_history(regime)
+            # Multi EMA/SMA Trend Hierarchy - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+            df = self._calculate_multi_ema_sma(df)
             
-            # Détection de transition (NOUVEAU)
-            regime_transition = self._detect_regime_transition()
+            # Volume Indicators
+            df = self._calculate_volume_indicators(df)
             
-            return {
-                'regime': regime.value,
-                'confidence': round(final_confidence, 3),
-                'base_confidence': round(base_confidence, 3),
-                'technical_consistency': round(technical_consistency, 3),
-                'combined_confidence': round(combined_confidence, 3),
-                'regime_persistence': persistence,
-                'stability_score': round(stability_score, 3),
-                'regime_transition_alert': regime_transition,
-                'scores': {k.value: round(v, 2) for k, v in scores.items()},
-                'indicators': indicators,
-                'interpretation': self._interpret_regime(regime, final_confidence),
-                'trading_implications': self._get_trading_implications(regime, persistence, final_confidence),
-                'ml_confidence_multiplier': self._get_ml_confidence_multiplier(final_confidence),
-                'regime_multiplier': self._get_regime_multiplier(regime),
-                'fresh_regime': persistence < 15
-            }
+            # VWAP & Deviation Bands
+            df = self._calculate_vwap_bands(df)
+            
+            # Money Flow Index (MFI) - Volume-weighted RSI for institutional detection
+            df = self._calculate_mfi(df)
+            
+            # Composite Indicators
+            df = self._calculate_composite_indicators(df)
+            
+            # Signal Detection
+            df = self._detect_technical_signals(df)
+            
+            logger.info(f"Calculated technical indicators for {len(df)} periods")
+            return df
             
         except Exception as e:
-            logger.error(f"Erreur détection régime détaillé: {e}")
-            return self._get_default_regime()
+            logger.error(f"Error calculating technical indicators: {e}")
+            return df
     
-    def _calculate_regime_indicators(self, df: pd.DataFrame) -> Dict:
-        """Calcule tous les indicateurs pour la classification de régime"""
+    def _calculate_rsi(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule RSI avec plusieurs périodes"""
+        for period in [9, 14, 21]:
+            delta = df['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+            rs = gain / loss
+            df[f'rsi_{period}'] = 100 - (100 / (1 + rs))
         
-        close_prices = df['close']
-        high_prices = df['high']
-        low_prices = df['low']
+        # RSI signals
+        df['rsi_overbought'] = df['rsi_14'] > 70
+        df['rsi_oversold'] = df['rsi_14'] < 30
         
-        indicators = {}
+        # RSI Divergence (simplified)
+        df['rsi_divergence'] = self._detect_rsi_divergence(df)
         
-        # 1. INDICATEURS DE TREND
-        # ADX - Force de la tendance (CORRIGÉ)
-        indicators['adx'] = self._calculate_adx_proper(df, 14)
-        indicators['adx_strength'] = 'STRONG' if indicators['adx'] > 25 else 'WEAK' if indicators['adx'] < 20 else 'MODERATE'
-        
-        # Pente des moyennes mobiles
-        sma_20 = close_prices.rolling(20).mean()
-        sma_50 = close_prices.rolling(50).mean()
-        indicators['sma_20_slope'] = self._calculate_slope(sma_20.tail(10))
-        indicators['sma_50_slope'] = self._calculate_slope(sma_50.tail(20))
-        
-        # Position vs moyennes
-        indicators['above_sma_20'] = (close_prices.iloc[-1] > sma_20.iloc[-1])
-        indicators['above_sma_50'] = (close_prices.iloc[-1] > sma_50.iloc[-1])
-        
-        # Distance relative aux moyennes (NOUVEAU)
-        indicators['distance_sma_20'] = ((close_prices.iloc[-1] / sma_20.iloc[-1]) - 1) * 100
-        indicators['distance_sma_50'] = ((close_prices.iloc[-1] / sma_50.iloc[-1]) - 1) * 100
-        
-        # 2. INDICATEURS DE RANGE/CONSOLIDATION
-        # Volatilité
-        atr = self._calculate_atr(df, 14)
-        indicators['atr_pct'] = (atr.iloc[-1] / close_prices.iloc[-1]) * 100
-        
-        # Ratio de volatilité (CORRIGÉ)
-        atr_50 = self._calculate_atr(df, 50)
-        indicators['volatility_ratio'] = atr.iloc[-1] / atr_50.iloc[-1] if atr_50.iloc[-1] > 0 else 1.0
-        
-        # Bollinger Bands Width
-        bb_width = self._calculate_bb_width(df, 20)
-        indicators['bb_width_pct'] = bb_width.iloc[-1] * 100
-        indicators['bb_squeeze'] = bb_width.iloc[-1] < 0.02  # Squeeze si largeur < 2%
-        
-        # Degré de squeeze (NOUVEAU)
-        if indicators['bb_squeeze']:
-            indicators['squeeze_intensity'] = 'EXTREME' if bb_width.iloc[-1] < 0.01 else 'TIGHT'
-        else:
-            indicators['squeeze_intensity'] = 'NONE'
-        
-        # Range des prix
-        high_20 = high_prices.rolling(20).max()
-        low_20 = low_prices.rolling(20).min()
-        indicators['range_pct'] = ((high_20.iloc[-1] - low_20.iloc[-1]) / close_prices.iloc[-1]) * 100
-        
-        # 3. INDICATEURS DE MOMENTUM
-        rsi = self._calculate_rsi(close_prices, 14)
-        indicators['rsi'] = rsi.iloc[-1]
-        indicators['rsi_trend'] = self._calculate_slope(rsi.tail(10))
-        
-        # Zones RSI (NOUVEAU)
-        if indicators['rsi'] > 70:
-            indicators['rsi_zone'] = 'OVERBOUGHT'
-        elif indicators['rsi'] < 30:
-            indicators['rsi_zone'] = 'OVERSOLD'
-        elif 40 <= indicators['rsi'] <= 60:
-            indicators['rsi_zone'] = 'NEUTRAL'
-        else:
-            indicators['rsi_zone'] = 'NORMAL'
-        
-        # MACD
-        macd, macd_signal = self._calculate_macd(close_prices)
-        indicators['macd_histogram'] = (macd - macd_signal).iloc[-1]
-        indicators['macd_trend'] = self._calculate_slope((macd - macd_signal).tail(10))
-        
-        # 4. INDICATEURS DE VOLUME
-        volume_sma = df['volume'].rolling(20).mean()
-        indicators['volume_ratio'] = df['volume'].iloc[-1] / volume_sma.iloc[-1] if volume_sma.iloc[-1] > 0 else 1.0
-        indicators['volume_trend'] = self._calculate_slope(df['volume'].tail(10))
-        
-        return indicators
+        return df
     
-    def _calculate_technical_consistency(self, indicators: Dict) -> float:
+    def _calculate_macd(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule MACD complet"""
+        # MACD Line
+        ema_12 = df['Close'].ewm(span=12).mean()
+        ema_26 = df['Close'].ewm(span=26).mean()
+        df['macd_line'] = ema_12 - ema_26
+        
+        # Signal Line
+        df['macd_signal'] = df['macd_line'].ewm(span=9).mean()
+        
+        # Histogram
+        df['macd_histogram'] = df['macd_line'] - df['macd_signal']
+        
+        # MACD Signals
+        df['macd_bullish_crossover'] = (
+            (df['macd_line'] > df['macd_signal']) & 
+            (df['macd_line'].shift(1) <= df['macd_signal'].shift(1))
+        )
+        
+        df['macd_bearish_crossover'] = (
+            (df['macd_line'] < df['macd_signal']) & 
+            (df['macd_line'].shift(1) >= df['macd_signal'].shift(1))
+        )
+        
+        df['macd_above_zero'] = df['macd_line'] > 0
+        
+        return df
+    
+    def _calculate_stochastic(self, df: pd.DataFrame, k_period: int = 14, d_period: int = 3) -> pd.DataFrame:
+        """Calcule Stochastic Oscillator"""
+        # %K calculation
+        low_min = df['Low'].rolling(window=k_period).min()
+        high_max = df['High'].rolling(window=k_period).max()
+        df['stoch_k'] = 100 * (df['Close'] - low_min) / (high_max - low_min)
+        
+        # %D calculation (SMA of %K)
+        df['stoch_d'] = df['stoch_k'].rolling(window=d_period).mean()
+        
+        # Stochastic signals
+        df['stoch_overbought'] = df['stoch_k'] > 80
+        df['stoch_oversold'] = df['stoch_k'] < 20
+        
+        # Crossover signals
+        df['stoch_bullish_crossover'] = (
+            (df['stoch_k'] > df['stoch_d']) & 
+            (df['stoch_k'].shift(1) <= df['stoch_d'].shift(1))
+        )
+        
+        df['stoch_bearish_crossover'] = (
+            (df['stoch_k'] < df['stoch_d']) & 
+            (df['stoch_k'].shift(1) >= df['stoch_d'].shift(1))
+        )
+        
+        return df
+    
+    def _calculate_bollinger_bands(self, df: pd.DataFrame, period: int = 20, std_dev: float = 2) -> pd.DataFrame:
+        """Calcule Bollinger Bands complets"""
+        # Middle Band (SMA)
+        df['bb_middle'] = df['Close'].rolling(window=period).mean()
+        
+        # Standard deviation
+        bb_std = df['Close'].rolling(window=period).std()
+        
+        # Upper and Lower Bands
+        df['bb_upper'] = df['bb_middle'] + (bb_std * std_dev)
+        df['bb_lower'] = df['bb_middle'] - (bb_std * std_dev)
+        
+        # Bollinger Band Width
+        df['bb_width'] = (df['bb_upper'] - df['bb_lower']) / df['bb_middle']
+        
+        # Price position within bands
+        df['bb_position'] = (df['Close'] - df['bb_lower']) / (df['bb_upper'] - df['bb_lower'])
+        
+        # Bollinger Band Squeeze/Expansion
+        bb_width_sma = df['bb_width'].rolling(window=20).mean()
+        df['bb_squeeze'] = df['bb_width'] < bb_width_sma * 0.8
+        df['bb_expansion'] = df['bb_width'] > bb_width_sma * 1.2
+        
+        return df
+    
+    def _calculate_moving_averages(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule moyennes mobiles"""
+        df['sma_20'] = df['Close'].rolling(window=20).mean()
+        df['sma_50'] = df['Close'].rolling(window=50).mean()
+        df['sma_200'] = df['Close'].rolling(window=200).mean()
+        df['ema_12'] = df['Close'].ewm(span=12).mean()
+        df['ema_26'] = df['Close'].ewm(span=26).mean()
+        
+        return df
+    
+    def _calculate_multi_ema_sma(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Calcule la cohérence entre indicateurs techniques
-        NOUVELLE IMPLÉMENTATION selon le prompt
-        """
-        consistency_score = 0.0
-        max_score = 0.0
-        
-        # 1. Cohérence de tendance (poids: 35%)
-        trend_score = 0.0
-        trend_max = 3.5
-        
-        # SMA alignment
-        if indicators['sma_20_slope'] > 0 and indicators['above_sma_20']:
-            trend_score += 1.0
-        elif indicators['sma_20_slope'] < 0 and not indicators['above_sma_20']:
-            trend_score += 1.0
-        
-        # Distance aux moyennes cohérente
-        if abs(indicators['distance_sma_20']) < 10:  # Pas trop éloigné
-            trend_score += 0.5
-        
-        # ADX confirme la tendance
-        if indicators['adx'] > 25:
-            trend_score += 1.0
-        elif indicators['adx'] > 20:
-            trend_score += 0.5
-        
-        # Alignement SMA 20/50
-        if (indicators['sma_20_slope'] > 0 and indicators['sma_50_slope'] > 0) or \
-           (indicators['sma_20_slope'] < 0 and indicators['sma_50_slope'] < 0):
-            trend_score += 1.0
-        
-        consistency_score += trend_score
-        max_score += trend_max
-        
-        # 2. Cohérence de momentum (poids: 35%)
-        momentum_score = 0.0
-        momentum_max = 3.5
-        
-        # RSI et MACD alignés
-        if indicators['rsi_trend'] > 0 and indicators['macd_histogram'] > 0:
-            momentum_score += 1.5
-        elif indicators['rsi_trend'] < 0 and indicators['macd_histogram'] < 0:
-            momentum_score += 1.5
-        
-        # RSI dans zone normale (pas extrême)
-        if indicators['rsi_zone'] in ['NEUTRAL', 'NORMAL']:
-            momentum_score += 1.0
-        elif indicators['rsi_zone'] in ['OVERBOUGHT', 'OVERSOLD']:
-            momentum_score += 0.3  # Pénalité légère
-        
-        # Tendance MACD cohérente
-        if abs(indicators['macd_trend']) > 0.01:
-            momentum_score += 1.0
-        
-        consistency_score += momentum_score
-        max_score += momentum_max
-        
-        # 3. Cohérence de volume (poids: 15%)
-        volume_score = 0.0
-        volume_max = 1.5
-        
-        # Volume confirme la direction
-        if indicators['volume_ratio'] > 1.0 and indicators['volume_trend'] > 0:
-            volume_score += 1.0
-        elif indicators['volume_ratio'] < 1.0 and indicators['volume_trend'] < 0:
-            volume_score += 0.5
-        
-        # Volume pas anormalement élevé (stabilité)
-        if 0.8 <= indicators['volume_ratio'] <= 2.0:
-            volume_score += 0.5
-        
-        consistency_score += volume_score
-        max_score += volume_max
-        
-        # 4. Cohérence de volatilité (poids: 15%)
-        volatility_score = 0.0
-        volatility_max = 1.5
-        
-        # Volatilité stable
-        if 0.8 <= indicators['volatility_ratio'] <= 1.2:
-            volatility_score += 1.0
-        elif 0.6 <= indicators['volatility_ratio'] <= 1.5:
-            volatility_score += 0.5
-        
-        # Volatilité appropriée au régime
-        if indicators['atr_pct'] < 5.0:  # Volatilité normale
-            volatility_score += 0.5
-        
-        consistency_score += volatility_score
-        max_score += volatility_max
-        
-        # Score final normalisé
-        final_consistency = consistency_score / max_score if max_score > 0 else 0.5
-        
-        return min(1.0, final_consistency)
-    
-    def _calculate_regime_persistence(self, current_regime: MarketRegimeDetailed) -> int:
-        """
-        Calcule depuis combien de barres le régime actuel persiste
-        NOUVELLE IMPLÉMENTATION
-        """
-        if not self.regime_history:
-            return 0
-        
-        if current_regime != self.current_regime:
-            # Changement de régime
-            self.current_regime = current_regime
-            self.regime_start_bar = self.bar_count
-            return 0
-        
-        # Même régime, calculer la persistence
-        persistence = self.bar_count - self.regime_start_bar
-        return persistence
-    
-    def _calculate_stability_score(self) -> float:
-        """
-        Calcule le score de stabilité basé sur l'historique des régimes
-        NOUVELLE IMPLÉMENTATION
-        """
-        if len(self.regime_history) < 10:
-            return 0.5  # Score neutre si pas assez d'historique
-        
-        # Compter les changements de régime sur les 20 dernières barres
-        recent_history = list(self.regime_history)[-20:]
-        changes = sum(1 for i in range(1, len(recent_history)) 
-                     if recent_history[i] != recent_history[i-1])
-        
-        # Score inversement proportionnel aux changements
-        # 0 changements = 1.0, 10+ changements = 0.0
-        stability = max(0.0, 1.0 - (changes / 10.0))
-        
-        return stability
-    
-    def _detect_regime_transition(self) -> str:
-        """
-        Détecte si un changement de régime est imminent
-        NOUVELLE IMPLÉMENTATION
-        """
-        if len(self.regime_history) < 5:
-            return "INSUFFICIENT_DATA"
-        
-        recent = list(self.regime_history)[-5:]
-        
-        # Si les 5 derniers sont identiques = stable
-        if len(set(recent)) == 1:
-            return "STABLE"
-        
-        # Si les 3 derniers sont différents = changement imminent
-        if len(set(recent[-3:])) == 3:
-            return "IMMINENT_CHANGE"
-        
-        # Si les 2 derniers sont différents du reste = early warning
-        if recent[-1] != recent[-2] or recent[-2] != recent[-3]:
-            return "EARLY_WARNING"
-        
-        return "STABLE"
-    
-    def _update_regime_history(self, regime: MarketRegimeDetailed):
-        """Met à jour l'historique des régimes"""
-        self.regime_history.append(regime)
-        self.bar_count += 1
-    
-    def _classify_regime(self, indicators: Dict) -> Tuple[MarketRegimeDetailed, float, Dict]:
-        """Classifie le régime de marché avec scoring AMÉLIORÉ"""
-        
-        scores = {regime: 0.0 for regime in MarketRegimeDetailed}
-        
-        # SCORING POUR TREND UP (calibré)
-        if indicators['adx'] > 25 and indicators['sma_20_slope'] > 0.001:
-            if indicators['above_sma_20'] and indicators['above_sma_50']:
-                scores[MarketRegimeDetailed.TRENDING_UP_STRONG] += 4.0
-                # Bonus pour momentum fort
-                if indicators['rsi'] > 55 and indicators['macd_histogram'] > 0:
-                    scores[MarketRegimeDetailed.TRENDING_UP_STRONG] += 1.5
-            else:
-                scores[MarketRegimeDetailed.TRENDING_UP_MODERATE] += 3.0
-        elif indicators['sma_20_slope'] > 0.0005 and indicators['above_sma_20']:
-            scores[MarketRegimeDetailed.TRENDING_UP_MODERATE] += 2.5
-        
-        # SCORING POUR TREND DOWN (calibré)
-        if indicators['adx'] > 25 and indicators['sma_20_slope'] < -0.001:
-            if not indicators['above_sma_20'] and not indicators['above_sma_50']:
-                scores[MarketRegimeDetailed.TRENDING_DOWN_STRONG] += 4.0
-                # Bonus pour momentum fort
-                if indicators['rsi'] < 45 and indicators['macd_histogram'] < 0:
-                    scores[MarketRegimeDetailed.TRENDING_DOWN_STRONG] += 1.5
-            else:
-                scores[MarketRegimeDetailed.TRENDING_DOWN_MODERATE] += 3.0
-        elif indicators['sma_20_slope'] < -0.0005 and not indicators['above_sma_20']:
-            scores[MarketRegimeDetailed.TRENDING_DOWN_MODERATE] += 2.5
-        
-        # SCORING POUR RANGING/CONSOLIDATION (calibré)
-        if indicators['adx'] < 20:
-            if indicators['bb_squeeze'] and indicators['range_pct'] < 3:
-                scores[MarketRegimeDetailed.CONSOLIDATION] += 4.5
-                # Bonus si volume déclinant
-                if indicators['volume_ratio'] < 0.9:
-                    scores[MarketRegimeDetailed.CONSOLIDATION] += 1.0
-            elif indicators['range_pct'] < 5:
-                scores[MarketRegimeDetailed.RANGING_TIGHT] += 3.5
-            else:
-                scores[MarketRegimeDetailed.RANGING_WIDE] += 2.5
-        
-        # SCORING POUR BREAKOUT (amélioré)
-        if indicators['squeeze_intensity'] in ['EXTREME', 'TIGHT']:
-            # Breakout haussier
-            if indicators['macd_histogram'] > 0 and indicators['volume_ratio'] > 1.5:
-                scores[MarketRegimeDetailed.BREAKOUT_BULLISH] += 4.0
-                if indicators['rsi'] > 50:
-                    scores[MarketRegimeDetailed.BREAKOUT_BULLISH] += 1.0
-            # Breakout baissier
-            elif indicators['macd_histogram'] < 0 and indicators['volume_ratio'] > 1.5:
-                scores[MarketRegimeDetailed.BREAKOUT_BEARISH] += 4.0
-                if indicators['rsi'] < 50:
-                    scores[MarketRegimeDetailed.BREAKOUT_BEARISH] += 1.0
-        
-        # SCORING POUR VOLATILE (calibré)
-        if indicators['volatility_ratio'] > 1.5 and indicators['atr_pct'] > 4.0:
-            scores[MarketRegimeDetailed.VOLATILE] += 3.0
-            if indicators['adx'] < 25:
-                scores[MarketRegimeDetailed.VOLATILE] += 1.5
-        
-        # Sélection du régime gagnant
-        best_regime, best_score = max(scores.items(), key=lambda x: x[1])
-        total_score = sum(scores.values())
-        
-        # Confiance basée sur la dominance du meilleur score
-        if total_score > 0:
-            base_confidence = best_score / total_score
-            # Bonus si le score est absolument élevé
-            if best_score > 4.0:
-                base_confidence = min(1.0, base_confidence * 1.1)
-        else:
-            base_confidence = 0.1
-        
-        return best_regime, base_confidence, scores
-    
-    def _get_ml_confidence_multiplier(self, confidence: float) -> float:
-        """Retourne le multiplicateur ML selon la confiance"""
-        if confidence >= 0.9:
-            return 1.3
-        elif confidence >= 0.8:
-            return 1.15
-        elif confidence >= 0.7:
-            return 1.0
-        elif confidence >= 0.6:
-            return 0.8
-        else:
-            return 0.5
-    
-    def _get_regime_multiplier(self, regime: MarketRegimeDetailed) -> float:
-        """Retourne le multiplicateur de position selon le régime"""
-        multipliers = {
-            MarketRegimeDetailed.TRENDING_UP_STRONG: 1.3,
-            MarketRegimeDetailed.BREAKOUT_BULLISH: 1.25,
-            MarketRegimeDetailed.TRENDING_UP_MODERATE: 1.15,
-            MarketRegimeDetailed.CONSOLIDATION: 0.9,
-            MarketRegimeDetailed.RANGING_TIGHT: 0.8,
-            MarketRegimeDetailed.RANGING_WIDE: 0.7,
-            MarketRegimeDetailed.VOLATILE: 0.6,
-            MarketRegimeDetailed.TRENDING_DOWN_STRONG: 0.3,
-            MarketRegimeDetailed.TRENDING_DOWN_MODERATE: 0.5,
-            MarketRegimeDetailed.BREAKOUT_BEARISH: 0.3
-        }
-        return multipliers.get(regime, 1.0)
-    
-    def _calculate_adx_proper(self, df: pd.DataFrame, period: int = 14) -> float:
-        """
-        Calcul ADX correct selon Wilder
-        CORRIGÉ - Implémentation complète
+        🚀 CALCULE MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+        Professional-grade trend analysis with multiple EMAs and SMAs for ULTIMATE precision
         """
         try:
-            high = df['high']
-            low = df['low']
-            close = df['close']
+            # === FAST TREND EMAs (Ultra-reactive for momentum detection) ===
+            df['ema_9'] = df['Close'].ewm(span=9).mean()       # Lightning-fast trend changes
+            df['ema_21'] = df['Close'].ewm(span=21).mean()     # Medium-term momentum
             
-            # True Range
-            tr1 = high - low
-            tr2 = abs(high - close.shift())
-            tr3 = abs(low - close.shift())
-            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-            atr = tr.ewm(span=period, adjust=False).mean()
+            # === SLOW TREND & STRUCTURAL LEVELS ===
+            df['sma_50'] = df['Close'].rolling(window=50).mean()     # Institutional level
+            df['ema_200'] = df['Close'].ewm(span=200).mean()         # Major trend determinant
             
-            # Directional Movement
-            up_move = high - high.shift()
-            down_move = low.shift() - low
+            # === TREND HIERARCHY ANALYSIS ===
+            # Perfect hierarchy: Price > EMA9 > EMA21 > SMA50 > EMA200 (STRONG BULL)
+            # Inverse: Price < EMA9 < EMA21 < SMA50 < EMA200 (STRONG BEAR)
             
-            plus_dm = np.where((up_move > down_move) & (up_move > 0), up_move, 0)
-            minus_dm = np.where((down_move > up_move) & (down_move > 0), down_move, 0)
+            df['trend_hierarchy'] = 'neutral'
+            df['trend_momentum'] = 'neutral'
+            df['price_vs_emas'] = 'mixed'
+            df['ema_cross_signal'] = 'neutral'
+            df['trend_strength_score'] = 0.5
             
-            plus_dm_series = pd.Series(plus_dm, index=df.index).ewm(span=period, adjust=False).mean()
-            minus_dm_series = pd.Series(minus_dm, index=df.index).ewm(span=period, adjust=False).mean()
+            for i in range(len(df)):
+                # Need enough data for EMA200 - use dynamic check
+                if i < min(200, len(df) * 0.8):  # Use 80% of data or 200, whichever is smaller
+                    continue
+                    
+                price = df['Close'].iloc[i]
+                ema9 = df['ema_9'].iloc[i]
+                ema21 = df['ema_21'].iloc[i]
+                sma50 = df['sma_50'].iloc[i]
+                ema200 = df['ema_200'].iloc[i]
+                
+                # Skip if any EMA is NaN
+                if pd.isna(ema9) or pd.isna(ema21) or pd.isna(sma50) or pd.isna(ema200):
+                    continue
+                
+                # === PRICE VS EMAs CLASSIFICATION ===
+                emas_above_price = sum([
+                    price > ema9,
+                    price > ema21, 
+                    price > sma50,
+                    price > ema200
+                ])
+                
+                if emas_above_price == 4:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'above_all'
+                elif emas_above_price >= 2:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'above_fast'
+                elif emas_above_price == 1:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'below_fast'
+                else:
+                    df.loc[df.index[i], 'price_vs_emas'] = 'below_all'
+                
+                # === TREND HIERARCHY STRENGTH ===
+                # Perfect bull alignment: EMA9 > EMA21 > SMA50 > EMA200
+                bull_alignment_score = 0
+                if ema9 > ema21: bull_alignment_score += 0.25
+                if ema21 > sma50: bull_alignment_score += 0.25  
+                if sma50 > ema200: bull_alignment_score += 0.25
+                if price > ema9: bull_alignment_score += 0.25
+                
+                df.loc[df.index[i], 'trend_strength_score'] = bull_alignment_score
+                
+                # === TREND HIERARCHY CLASSIFICATION ===
+                if bull_alignment_score >= 0.8:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'strong_bull'
+                elif bull_alignment_score >= 0.6:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'weak_bull'
+                elif bull_alignment_score <= 0.2:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'strong_bear'
+                elif bull_alignment_score <= 0.4:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'weak_bear'
+                else:
+                    df.loc[df.index[i], 'trend_hierarchy'] = 'neutral'
             
-            # Directional Indicators
-            plus_di = 100 * (plus_dm_series / atr)
-            minus_di = 100 * (minus_dm_series / atr)
+            # === MOMENTUM ANALYSIS (Rate of Change in EMAs) ===
+            df['ema9_slope'] = df['ema_9'].pct_change(periods=3) * 100  # 3-period slope
+            df['ema21_slope'] = df['ema_21'].pct_change(periods=5) * 100  # 5-period slope
             
-            # DX et ADX
-            dx = 100 * abs(plus_di - minus_di) / (plus_di + minus_di).replace(0, 0.01)
-            adx = dx.ewm(span=period, adjust=False).mean()
+            # Momentum classification based on EMA slopes
+            momentum_conditions = (
+                (df['ema9_slope'] > 0.1) & (df['ema21_slope'] > 0.05)  # Both EMAs rising
+            )
+            deceleration_conditions = (
+                (df['ema9_slope'] < -0.1) & (df['ema21_slope'] < -0.05)  # Both EMAs falling
+            )
             
-            return min(100, max(0, adx.iloc[-1])) if len(adx) > 0 else 0.0
+            df.loc[momentum_conditions, 'trend_momentum'] = 'accelerating'
+            df.loc[deceleration_conditions, 'trend_momentum'] = 'decelerating'
+            # Default 'neutral' for others
+            
+            # === GOLDEN CROSS / DEATH CROSS DETECTION ===
+            # Golden Cross: EMA9 crosses ABOVE EMA21 (Bullish)
+            # Death Cross: EMA9 crosses BELOW EMA21 (Bearish)
+            golden_cross = (df['ema_9'] > df['ema_21']) & (df['ema_9'].shift(1) <= df['ema_21'].shift(1))
+            death_cross = (df['ema_9'] < df['ema_21']) & (df['ema_9'].shift(1) >= df['ema_21'].shift(1))
+            
+            df.loc[golden_cross & (df['trend_strength_score'] > 0.5), 'ema_cross_signal'] = 'golden_cross'
+            df.loc[death_cross & (df['trend_strength_score'] < 0.5), 'ema_cross_signal'] = 'death_cross'
+            
+            # === DYNAMIC SUPPORT/RESISTANCE LEVELS ===
+            # EMAs act as dynamic S/R - closer EMAs = stronger S/R
+            df['ema_support_resistance'] = df[['ema_9', 'ema_21', 'sma_50']].mean(axis=1)
+            
+            # Clean up temporary columns
+            df.drop(['ema9_slope', 'ema21_slope', 'ema_support_resistance'], axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ MULTI EMA/SMA TREND HIERARCHY calculated - CONFLUENCE BEAST IS NOW COMPLETE! 🚀")
+            return df
             
         except Exception as e:
-            logger.warning(f"Erreur calcul ADX: {e}, retour valeur par défaut")
-            return 20.0
+            logger.error(f"Error calculating Multi EMA/SMA: {e}")
+            # Set safe defaults
+            for col in ['ema_9', 'ema_21', 'sma_50', 'ema_200']:
+                df[col] = df.get('Close', 0)
+            
+            df['trend_hierarchy'] = 'neutral'
+            df['trend_momentum'] = 'neutral' 
+            df['price_vs_emas'] = 'mixed'
+            df['ema_cross_signal'] = 'neutral'
+            df['trend_strength_score'] = 0.5
+            
+            return df
     
-    def _interpret_regime(self, regime: MarketRegimeDetailed, confidence: float) -> str:
-        """Interprétation humaine du régime"""
-        interpretations = {
-            MarketRegimeDetailed.TRENDING_UP_STRONG: f"Tendance haussière FORTE (confiance: {confidence:.1%}) - Idéal pour positions longues",
-            MarketRegimeDetailed.TRENDING_UP_MODERATE: f"Tendance haussière MODÉRÉE (confiance: {confidence:.1%}) - Bon pour longs avec gestion de risque",
-            MarketRegimeDetailed.TRENDING_DOWN_STRONG: f"Tendance baissière FORTE (confiance: {confidence:.1%}) - Idéal pour positions courtes",
-            MarketRegimeDetailed.TRENDING_DOWN_MODERATE: f"Tendance baissière MODÉRÉE (confiance: {confidence:.1%}) - Bon pour courts avec gestion de risque",
-            MarketRegimeDetailed.RANGING_TIGHT: f"RANGE SERRÉ (confiance: {confidence:.1%}) - Stratégies de range trading",
-            MarketRegimeDetailed.RANGING_WIDE: f"RANGE LARGE (confiance: {confidence:.1%}) - Breakout trading possible",
-            MarketRegimeDetailed.CONSOLIDATION: f"CONSOLIDATION (confiance: {confidence:.1%}) - Accumulation, breakout imminent",
-            MarketRegimeDetailed.BREAKOUT_BULLISH: f"BREAKOUT HAUSSIER (confiance: {confidence:.1%}) - Entrée longue sur confirmation",
-            MarketRegimeDetailed.BREAKOUT_BEARISH: f"BREAKOUT BAISSIER (confiance: {confidence:.1%}) - Entrée courte sur confirmation",
-            MarketRegimeDetailed.VOLATILE: f"MARCHÉ VOLATILE (confiance: {confidence:.1%}) - Risque élevé, position sizing réduit"
-        }
-        return interpretations.get(regime, f"Régime {regime.value} (confiance: {confidence:.1%})")
-    
-    def _get_trading_implications(self, regime: MarketRegimeDetailed, persistence: int, confidence: float) -> List[str]:
-        """Retourne les implications trading avec contexte de persistence"""
+    def _calculate_volume_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule indicateurs de volume"""
+        # Volume SMA
+        df['volume_sma'] = df['Volume'].rolling(window=20).mean()
+        df['volume_ratio'] = df['Volume'] / df['volume_sma']
         
-        base_implications = {
-            MarketRegimeDetailed.TRENDING_UP_STRONG: [
-                "Positions longues favorisées",
-                "Achat sur retracements",
-                "Stop-loss éloignés",
-                "Target élevés"
-            ],
-            MarketRegimeDetailed.TRENDING_UP_MODERATE: [
-                "Positions longues modérées",
-                "Gestion de risque importante",
-                "Stop-loss serrés",
-                "Targets modérés"
-            ],
-            MarketRegimeDetailed.TRENDING_DOWN_STRONG: [
-                "Positions courtes favorisées",
-                "Vente sur rebonds",
-                "Stop-loss éloignés",
-                "Target élevés"
-            ],
-            MarketRegimeDetailed.TRENDING_DOWN_MODERATE: [
-                "Positions courtes modérées",
-                "Gestion de risque importante",
-                "Stop-loss serrés",
-                "Targets modérés"
-            ],
-            MarketRegimeDetailed.RANGING_TIGHT: [
-                "Range trading",
-                "Achat support, vente résistance",
-                "Éviter le breakout trading",
-                "Position sizing réduit"
-            ],
-            MarketRegimeDetailed.RANGING_WIDE: [
-                "Range trading modéré",
-                "Breakout trading possible",
-                "Stop-loss importants",
-                "Surveiller les breakouts"
-            ],
-            MarketRegimeDetailed.CONSOLIDATION: [
-                "Accumulation",
-                "Préparer breakout",
-                "Position sizing réduit",
-                "Éviter les positions directionnelles"
-            ],
-            MarketRegimeDetailed.BREAKOUT_BULLISH: [
-                "Entrée longue sur confirmation",
-                "Stop-loss sous le breakout",
-                "Target basé sur range précédent",
-                "Vérifier le volume"
-            ],
-            MarketRegimeDetailed.BREAKOUT_BEARISH: [
-                "Entrée courte sur confirmation",
-                "Stop-loss au-dessus du breakout",
-                "Target basé sur range précédent",
-                "Vérifier le volume"
-            ],
-            MarketRegimeDetailed.VOLATILE: [
-                "Risque élevé",
-                "Position sizing réduit",
-                "Stop-loss serrés obligatoires",
-                "Trading à court terme seulement"
-            ]
-        }
-        
-        implications = base_implications.get(regime, ["Stratégie standard recommandée"]).copy()
-        
-        # Ajout de contexte basé sur persistence
-        if persistence < 15:
-            implications.insert(0, f"RÉGIME FRAIS ({persistence} barres) - Momentum maximum")
-        elif persistence > 40:
-            if confidence > 0.7:
-                implications.insert(0, f"RÉGIME MATURE ({persistence} barres) - Resserrer stops")
+        # On Balance Volume (OBV)
+        df['obv'] = 0.0
+        for i in range(1, len(df)):
+            if df['Close'].iloc[i] > df['Close'].iloc[i-1]:
+                df.loc[df.index[i], 'obv'] = df['obv'].iloc[i-1] + df['Volume'].iloc[i]
+            elif df['Close'].iloc[i] < df['Close'].iloc[i-1]:
+                df.loc[df.index[i], 'obv'] = df['obv'].iloc[i-1] - df['Volume'].iloc[i]
             else:
-                implications.insert(0, f"RÉGIME MATURE ({persistence} barres) - Préparer reversal")
+                df.loc[df.index[i], 'obv'] = df['obv'].iloc[i-1]
         
-        # Ajout de contexte basé sur confiance
-        if confidence < 0.6:
-            implications.append("ATTENTION: Confiance faible - réduire tailles positions")
-        elif confidence > 0.85:
-            implications.append("CONVICTION HAUTE - Sizing agressif possible")
-        
-        return implications
+        return df
     
-    def _calculate_slope(self, series: pd.Series) -> float:
-        """Calcule la pente d'une série"""
-        if len(series) < 2:
-            return 0.0
-        x = np.arange(len(series))
-        y = series.values
-        if np.isnan(y).any():
-            return 0.0
-        slope = np.polyfit(x, y, 1)[0]
-        return slope
+    def _calculate_vwap_bands(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule VWAP avec bandes de déviation standard pour améliorer la précision des signaux"""
+        try:
+            # Calculate typical price (HLC/3)
+            df['typical_price'] = (df['High'] + df['Low'] + df['Close']) / 3
+            
+            # Calculate VWAP (Volume Weighted Average Price)
+            # VWAP = Sum(Typical Price * Volume) / Sum(Volume)
+            df['price_volume'] = df['typical_price'] * df['Volume']
+            df['cumulative_price_volume'] = df['price_volume'].expanding().sum()
+            df['cumulative_volume'] = df['Volume'].expanding().sum()
+            df['vwap'] = df['cumulative_price_volume'] / df['cumulative_volume']
+            
+            # Calculate rolling VWAP for better responsiveness (20-period)
+            df['vwap_20'] = (df['typical_price'] * df['Volume']).rolling(window=20).sum() / df['Volume'].rolling(window=20).sum()
+            
+            # Use the rolling VWAP as main VWAP for better signals
+            df['vwap'] = df['vwap_20'].fillna(df['vwap'])
+            
+            # Calculate standard deviation of (typical_price - vwap)
+            df['vwap_deviation'] = df['typical_price'] - df['vwap']
+            df['vwap_std'] = df['vwap_deviation'].rolling(window=20).std()
+            
+            # Calculate VWAP bands (1 and 2 standard deviations)
+            df['vwap_upper_1std'] = df['vwap'] + df['vwap_std']
+            df['vwap_lower_1std'] = df['vwap'] - df['vwap_std']
+            df['vwap_upper_2std'] = df['vwap'] + (2 * df['vwap_std'])
+            df['vwap_lower_2std'] = df['vwap'] - (2 * df['vwap_std'])
+            
+            # Calculate position relative to VWAP (percentage)
+            df['vwap_position'] = ((df['Close'] - df['vwap']) / df['vwap']) * 100
+            
+            # VWAP signals for overbought/oversold conditions
+            df['vwap_overbought'] = df['Close'] > df['vwap_upper_1std']
+            df['vwap_oversold'] = df['Close'] < df['vwap_lower_1std']
+            df['vwap_extreme_overbought'] = df['Close'] > df['vwap_upper_2std']
+            df['vwap_extreme_oversold'] = df['Close'] < df['vwap_lower_2std']
+            
+            # VWAP trend determination
+            df['vwap_trend'] = 'neutral'
+            df.loc[df['Close'] > df['vwap'] * 1.002, 'vwap_trend'] = 'bullish'  # 0.2% above VWAP
+            df.loc[df['Close'] < df['vwap'] * 0.998, 'vwap_trend'] = 'bearish'  # 0.2% below VWAP
+            
+            # Clean up temporary columns
+            df.drop(['typical_price', 'price_volume', 'cumulative_price_volume', 
+                    'cumulative_volume', 'vwap_20', 'vwap_deviation', 'vwap_std'], 
+                   axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ VWAP with standard deviation bands calculated successfully")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error calculating VWAP bands: {e}")
+            # Set default values if calculation fails
+            for col in ['vwap', 'vwap_upper_1std', 'vwap_lower_1std', 'vwap_upper_2std', 
+                       'vwap_lower_2std', 'vwap_position']:
+                df[col] = df.get('Close', 0)
+            for col in ['vwap_overbought', 'vwap_oversold', 'vwap_extreme_overbought', 'vwap_extreme_oversold']:
+                df[col] = False
+            df['vwap_trend'] = 'neutral'
+            return df
     
-    def _calculate_atr(self, df: pd.DataFrame, period: int) -> pd.Series:
-        """Calcule l'ATR"""
-        high_low = df['high'] - df['low']
-        high_close = abs(df['high'] - df['close'].shift())
-        low_close = abs(df['low'] - df['close'].shift())
-        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        return true_range.rolling(period).mean()
-    
-    def _calculate_bb_width(self, df: pd.DataFrame, period: int) -> pd.Series:
-        """Largeur des Bollinger Bands en %"""
-        sma = df['close'].rolling(period).mean()
-        std = df['close'].rolling(period).std()
-        upper = sma + 2 * std
-        lower = sma - 2 * std
-        return (upper - lower) / sma
-    
-    def _calculate_rsi(self, prices: pd.Series, period: int) -> pd.Series:
-        """Calcule le RSI"""
-        delta = prices.diff()
-        gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
-        rs = gain / loss.replace(0, 0.001)
-        rsi = 100 - (100 / (1 + rs))
-        return rsi.fillna(50)
-    
-    def _calculate_macd(self, prices: pd.Series) -> Tuple[pd.Series, pd.Series]:
-        """Calcule le MACD"""
-        ema_12 = prices.ewm(span=12).mean()
-        ema_26 = prices.ewm(span=26).mean()
-        macd = ema_12 - ema_26
-        macd_signal = macd.ewm(span=9).mean()
-        return macd, macd_signal
-    
-    def _get_default_regime(self) -> Dict:
-        return {
-            'regime': MarketRegimeDetailed.VOLATILE.value,
-            'confidence': 0.1,
-            'base_confidence': 0.1,
-            'technical_consistency': 0.1,
-            'combined_confidence': 0.1,
-            'regime_persistence': 0,
-            'stability_score': 0.0,
-            'regime_transition_alert': 'INSUFFICIENT_DATA',
-            'scores': {},
-            'indicators': {},
-            'interpretation': "Données insuffisantes pour l'analyse",
-            'trading_implications': ["Attendre plus de données avant de trader"],
-            'ml_confidence_multiplier': 0.5,
-            'regime_multiplier': 1.0,
-            'fresh_regime': False
-        }
-
-
-# =============================================================================
-# POSITION SIZING CALCULATOR
-# =============================================================================
-
-class PositionSizingCalculator:
-    """
-    Calculateur de taille de position basé sur le régime ML
-    NOUVELLE IMPLÉMENTATION selon le prompt
-    """
-    
-    def __init__(self, base_capital: float, base_risk_pct: float = 1.0):
-        self.base_capital = base_capital
-        self.base_risk_pct = base_risk_pct
-    
-    def calculate_position_size(self, 
-                               regime_info: Dict,
-                               entry_price: float,
-                               stop_loss_price: float) -> Dict:
+    def _calculate_mfi(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Calcule la taille de position optimale
-        Formule: capital * base_risk * regime_mult * momentum_mult * bb_mult * ml_confidence_mult
+        Calcule Money Flow Index (MFI) - RSI pondéré par le volume
+        🔥 DÉTECTION D'ACCUMULATION/DISTRIBUTION INSTITUTIONNELLE 🔥
         """
-        
-        # Risk per trade en dollars
-        risk_per_trade = self.base_capital * (self.base_risk_pct / 100)
-        
-        # Multiplicateurs
-        regime_mult = regime_info['regime_multiplier']
-        ml_confidence_mult = regime_info['ml_confidence_multiplier']
-        
-        # Momentum multiplier (basé sur les indicateurs)
-        momentum_mult = self._calculate_momentum_multiplier(regime_info['indicators'])
-        
-        # BB squeeze multiplier
-        bb_mult = self._calculate_bb_multiplier(regime_info)
-        
-        # Multiplicateur combiné
-        combined_multiplier = regime_mult * ml_confidence_mult * momentum_mult * bb_mult
-        
-        # Risk ajusté
-        adjusted_risk = risk_per_trade * combined_multiplier
-        
-        # Calcul de la taille de position
-        price_risk = abs(entry_price - stop_loss_price)
-        position_size_units = adjusted_risk / price_risk if price_risk > 0 else 0
-        position_size_dollars = position_size_units * entry_price
-        
-        # Calcul du % de capital
-        position_size_pct = (position_size_dollars / self.base_capital) * 100
-        
-        return {
-            'position_size_units': round(position_size_units, 4),
-            'position_size_dollars': round(position_size_dollars, 2),
-            'position_size_pct': round(position_size_pct, 2),
-            'risk_dollars': round(adjusted_risk, 2),
-            'risk_pct': round((adjusted_risk / self.base_capital) * 100, 2),
-            'regime_multiplier': round(regime_mult, 2),
-            'ml_confidence_multiplier': round(ml_confidence_mult, 2),
-            'momentum_multiplier': round(momentum_mult, 2),
-            'bb_multiplier': round(bb_mult, 2),
-            'combined_multiplier': round(combined_multiplier, 2),
-            'price_risk': round(price_risk, 4),
-            'risk_reward_ratio': self._calculate_risk_reward(entry_price, stop_loss_price, regime_info)
-        }
+        try:
+            # Typical Price (HLC/3) - Prix représentatif pour chaque période
+            df['typical_price'] = (df['High'] + df['Low'] + df['Close']) / 3
+            
+            # Raw Money Flow = Typical Price * Volume (flux monétaire brut)
+            df['raw_money_flow'] = df['typical_price'] * df['Volume']
+            
+            # Identifier les périodes de hausse/baisse des prix
+            df['price_direction'] = df['typical_price'].diff()
+            
+            # Money Flow Positif (quand prix monte) et Négatif (quand prix baisse)
+            df['positive_money_flow'] = np.where(df['price_direction'] > 0, df['raw_money_flow'], 0)
+            df['negative_money_flow'] = np.where(df['price_direction'] < 0, df['raw_money_flow'], 0)
+            
+            # Calculer les sommes sur période glissante (14 périodes par défaut)
+            period = 14
+            df['positive_mf_sum'] = df['positive_money_flow'].rolling(window=period).sum()
+            df['negative_mf_sum'] = df['negative_money_flow'].rolling(window=period).sum()
+            
+            # Money Flow Ratio = Positive MF / Negative MF
+            df['money_flow_ratio'] = df['positive_mf_sum'] / (df['negative_mf_sum'] + 1e-10)  # Éviter division par 0
+            
+            # Money Flow Index = 100 - (100 / (1 + Money Flow Ratio))
+            df['mfi'] = 100 - (100 / (1 + df['money_flow_ratio']))
+            
+            # MFI signals et zones critiques
+            df['mfi_overbought'] = df['mfi'] > 80       # Distribution zone
+            df['mfi_oversold'] = df['mfi'] < 20         # Accumulation zone  
+            df['mfi_extreme_overbought'] = df['mfi'] > 90  # Extreme distribution
+            df['mfi_extreme_oversold'] = df['mfi'] < 10    # Extreme accumulation
+            
+            # MFI trend determination
+            df['mfi_trend'] = 'neutral'
+            df.loc[df['mfi'] > 55, 'mfi_trend'] = 'bullish'    # Au-dessus de 55 = trend haussier
+            df.loc[df['mfi'] < 45, 'mfi_trend'] = 'bearish'    # En-dessous de 45 = trend baissier
+            
+            # Détection d'activité institutionnelle basée sur MFI + Volume
+            df['institutional_activity'] = 'neutral'
+            
+            # Accumulation institutionnelle (MFI bas + volume élevé)
+            high_volume_threshold = df['Volume'].rolling(20).quantile(0.8)
+            accumulation_conditions = (df['mfi'] < 30) & (df['Volume'] > high_volume_threshold)
+            df.loc[accumulation_conditions, 'institutional_activity'] = 'accumulation'
+            
+            # Distribution institutionnelle (MFI haut + volume élevé)  
+            distribution_conditions = (df['mfi'] > 70) & (df['Volume'] > high_volume_threshold)
+            df.loc[distribution_conditions, 'institutional_activity'] = 'distribution'
+            
+            # Détection de divergences MFI/Prix (signal de retournement puissant)
+            df['mfi_divergence'] = self._detect_mfi_divergence(df)
+            
+            # Nettoyage des colonnes temporaires
+            df.drop(['typical_price', 'raw_money_flow', 'price_direction', 
+                    'positive_money_flow', 'negative_money_flow', 
+                    'positive_mf_sum', 'negative_mf_sum'], 
+                   axis=1, inplace=True, errors='ignore')
+            
+            logger.info("✅ MFI (Money Flow Index) calculated successfully - Institutional activity detection active! 🔥")
+            return df
+            
+        except Exception as e:
+            logger.error(f"Error calculating MFI: {e}")
+            # Set safe defaults if calculation fails
+            df['mfi'] = 50.0
+            df['money_flow_ratio'] = 1.0
+            for col in ['mfi_overbought', 'mfi_oversold', 'mfi_extreme_overbought', 
+                       'mfi_extreme_oversold', 'mfi_divergence']:
+                df[col] = False
+            df['mfi_trend'] = 'neutral'
+            df['institutional_activity'] = 'neutral'
+            return df
     
-    def _calculate_momentum_multiplier(self, indicators: Dict) -> float:
-        """Calcule le multiplicateur de momentum selon le prompt"""
+    def _detect_mfi_divergence(self, df: pd.DataFrame) -> pd.Series:
+        """Détecte les divergences entre MFI et prix - signaux de retournement ultra-puissants"""
+        divergence = pd.Series(False, index=df.index)
         
-        # RSI Quality
-        rsi = indicators.get('rsi', 50)
-        rsi_trend = indicators.get('rsi_trend', 0)
+        if len(df) < 20:
+            return divergence
         
-        if 45 <= rsi <= 60 and rsi_trend > 0:
-            rsi_quality = 1.0
-        elif 40 <= rsi <= 65:
-            rsi_quality = 0.8
-        elif 30 <= rsi <= 70:
-            rsi_quality = 0.6
-        elif 70 <= rsi <= 80 and rsi_trend > 0:
-            rsi_quality = 0.4
+        # Recherche de divergences sur les 15 dernières périodes
+        for i in range(15, len(df)):
+            price_window = df['Close'].iloc[i-15:i+1]
+            mfi_window = df['mfi'].iloc[i-15:i+1]
+            
+            if len(price_window) > 10 and len(mfi_window) > 10:
+                # Divergence haussière: Prix fait un plus bas mais MFI fait un plus haut
+                # (Institutions accumulent malgré baisse des prix)
+                if (price_window.iloc[-1] < price_window.iloc[0] and 
+                    mfi_window.iloc[-1] > mfi_window.iloc[0]):
+                    divergence.iloc[i] = True
+                
+                # Divergence baissière: Prix fait un plus haut mais MFI fait un plus bas  
+                # (Institutions distribuent malgré hausse des prix)
+                elif (price_window.iloc[-1] > price_window.iloc[0] and 
+                      mfi_window.iloc[-1] < mfi_window.iloc[0]):
+                    divergence.iloc[i] = True
+        
+        return divergence
+    
+    def _calculate_composite_indicators(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Calcule indicateurs composites avec MULTI EMA/SMA CONFLUENCE! 🚀"""
+        # Trend Strength (0-1) - NOW WITH EMA/SMA HIERARCHY POWER!
+        trend_signals = []
+        
+        # Price vs MA trend signals
+        if 'sma_20' in df.columns and 'sma_50' in df.columns:
+            trend_signals.append((df['Close'] > df['sma_20']).astype(int))
+            trend_signals.append((df['sma_20'] > df['sma_50']).astype(int))
+            if 'sma_200' in df.columns:
+                trend_signals.append((df['sma_50'] > df['sma_200']).astype(int))
+        
+        # MACD trend signal
+        if 'macd_above_zero' in df.columns:
+            trend_signals.append(df['macd_above_zero'].astype(int))
+        
+        # VWAP trend signal (enhanced precision)
+        if 'vwap_trend' in df.columns:
+            vwap_bullish = (df['vwap_trend'] == 'bullish').astype(int)
+            trend_signals.append(vwap_bullish)
+        
+        # MFI trend signal (volume-weighted institutional sentiment) 🔥
+        if 'mfi_trend' in df.columns:
+            mfi_bullish = (df['mfi_trend'] == 'bullish').astype(int)
+            trend_signals.append(mfi_bullish * 1.2)  # Higher weight for MFI (institutional money detection)
+        
+        # 🚀 MULTI EMA/SMA TREND HIERARCHY SIGNALS (THE CONFLUENCE BEAST!) 🚀
+        if 'trend_hierarchy' in df.columns:
+            # Convert trend hierarchy to numerical score
+            hierarchy_scores = df['trend_hierarchy'].map({
+                'strong_bull': 1.0,
+                'weak_bull': 0.75,
+                'neutral': 0.5,
+                'weak_bear': 0.25,
+                'strong_bear': 0.0
+            }).fillna(0.5)
+            trend_signals.append(hierarchy_scores * 1.3)  # HIGHEST WEIGHT - EMA hierarchy is KING!
+        
+        # EMA Golden/Death Cross signals (POWERFUL momentum shifts)
+        if 'ema_cross_signal' in df.columns:
+            golden_cross_signal = (df['ema_cross_signal'] == 'golden_cross').astype(int) * 1.0
+            death_cross_signal = (df['ema_cross_signal'] == 'death_cross').astype(int) * -1.0
+            cross_signal = golden_cross_signal + death_cross_signal + 0.5  # Convert to 0-1 scale
+            trend_signals.append(cross_signal * 1.1)  # High weight for cross signals
+        
+        # Price vs EMAs positioning (Multi-level confirmation)
+        if 'price_vs_emas' in df.columns:
+            price_ema_scores = df['price_vs_emas'].map({
+                'above_all': 1.0,     # Price above all EMAs = STRONG BULL
+                'above_fast': 0.7,    # Price above fast EMAs = MODERATE BULL
+                'below_fast': 0.3,    # Price below fast EMAs = MODERATE BEAR
+                'below_all': 0.0,     # Price below all EMAs = STRONG BEAR
+                'mixed': 0.5          # Mixed positioning = NEUTRAL
+            }).fillna(0.5)
+            trend_signals.append(price_ema_scores * 1.0)  # Strong weight for price positioning
+        
+        if trend_signals:
+            df['trend_strength'] = np.mean(trend_signals, axis=0)
         else:
-            rsi_quality = 0.2
+            df['trend_strength'] = 0.5
         
-        # MACD Quality
-        macd_hist = indicators.get('macd_histogram', 0)
-        macd_trend = indicators.get('macd_trend', 0)
+        # Momentum Score (0-1) - ENHANCED WITH EMA MOMENTUM!
+        momentum_signals = []
         
-        if macd_hist > 0 and macd_trend > 0:
-            macd_quality = 1.0
-        elif macd_hist > 0:
-            macd_quality = 0.8
-        elif abs(macd_hist) < 0.1:
-            macd_quality = 0.6
-        elif macd_hist < 0 and macd_trend > 0:
-            macd_quality = 0.4
+        if 'rsi_14' in df.columns:
+            # RSI momentum (50 = neutral, >50 = bullish momentum)
+            momentum_signals.append((df['rsi_14'] - 50) / 50)
+        
+        if 'macd_histogram' in df.columns:
+            # MACD histogram momentum
+            macd_norm = df['macd_histogram'] / df['macd_histogram'].rolling(20).std()
+            momentum_signals.append(np.tanh(macd_norm))  # Normalize to -1,1
+        
+        if 'stoch_k' in df.columns:
+            # Stochastic momentum
+            momentum_signals.append((df['stoch_k'] - 50) / 50)
+        
+        # VWAP momentum signal (position relative to VWAP)
+        if 'vwap_position' in df.columns:
+            # Normalize VWAP position to -1,1 range (clamp extreme values)
+            vwap_momentum = np.clip(df['vwap_position'] / 3.0, -1, 1)  # 3% = full momentum
+            momentum_signals.append(vwap_momentum)
+        
+        # MFI momentum signal (institutional money flow momentum) 🚀
+        if 'mfi' in df.columns:
+            # Convert MFI (0-100) to momentum (-1 to 1)
+            mfi_momentum = (df['mfi'] - 50) / 50  # 50 = neutral, >50 = bullish, <50 = bearish
+            momentum_signals.append(mfi_momentum * 1.3)  # Higher weight - institutions move first!
+        
+        # 🎯 EMA TREND MOMENTUM SIGNALS (Rate of change in trend!) 🎯
+        if 'trend_momentum' in df.columns:
+            # Convert trend momentum to numerical score
+            momentum_scores = df['trend_momentum'].map({
+                'accelerating': 0.8,   # Strong positive momentum
+                'steady': 0.0,         # Neutral momentum
+                'decelerating': -0.8,  # Strong negative momentum
+                'neutral': 0.0         # Default neutral
+            }).fillna(0.0)
+            momentum_signals.append(momentum_scores * 1.2)  # High weight for EMA momentum
+        
+        # EMA Trend Strength Score boost (Direct trend strength)
+        if 'trend_strength_score' in df.columns:
+            # Convert 0-1 trend strength to -1,1 momentum (centered at 0.5)
+            ema_trend_momentum = (df['trend_strength_score'] - 0.5) * 2  # Convert to -1,1
+            momentum_signals.append(ema_trend_momentum * 1.1)  # Strong weight for pure trend strength
+        
+        if momentum_signals:
+            df['momentum_score'] = np.mean(momentum_signals, axis=0)
+            df['momentum_score'] = (df['momentum_score'] + 1) / 2  # Convert to 0-1
         else:
-            macd_quality = 0.2
+            df['momentum_score'] = 0.5
         
-        # BB Quality
-        bb_squeeze = indicators.get('bb_squeeze', False)
-        squeeze_intensity = indicators.get('squeeze_intensity', 'NONE')
-        
-        if squeeze_intensity == 'EXTREME':
-            bb_quality = 1.0
-        elif squeeze_intensity == 'TIGHT' or bb_squeeze:
-            bb_quality = 0.8
-        elif indicators.get('bb_width_pct', 2) < 4:
-            bb_quality = 0.6
-        elif indicators.get('bb_width_pct', 2) < 8:
-            bb_quality = 0.4
+        # Volatility Score (0-1)
+        if 'bb_width' in df.columns:
+            bb_width_percentile = df['bb_width'].rolling(50).rank(pct=True)
+            df['volatility_score'] = bb_width_percentile
         else:
-            bb_quality = 0.2
+            # Fallback: use price volatility
+            price_volatility = df['Close'].pct_change().rolling(20).std()
+            vol_percentile = price_volatility.rolling(50).rank(pct=True)
+            df['volatility_score'] = vol_percentile
         
-        # Moyenne pondérée
-        momentum_mult = 0.33 * (rsi_quality + macd_quality + bb_quality)
-        
-        # Normalisation entre 0.6 et 1.3
-        return 0.6 + (momentum_mult * 0.7)
+        return df
     
-    def _calculate_bb_multiplier(self, regime_info: Dict) -> float:
-        """Calcule le multiplicateur Bollinger selon le prompt"""
+    def _detect_rsi_divergence(self, df: pd.DataFrame) -> pd.Series:
+        """Détecte les divergences RSI (version simplifiée)"""
+        divergence = pd.Series(False, index=df.index)
         
-        indicators = regime_info['indicators']
-        bb_squeeze = indicators.get('bb_squeeze', False)
-        squeeze_intensity = indicators.get('squeeze_intensity', 'NONE')
-        confidence = regime_info.get('confidence', 0.5)
-        volume_ratio = indicators.get('volume_ratio', 1.0)
-        atr_pct = indicators.get('atr_pct', 2.0)
-        sma_20_slope = indicators.get('sma_20_slope', 0)
-        above_sma_20 = indicators.get('above_sma_20', False)
-        persistence = regime_info.get('regime_persistence', 0)
+        if len(df) < 20:
+            return divergence
         
-        # ML_EXTREME_SQUEEZE
-        if bb_squeeze and squeeze_intensity == 'EXTREME' and confidence > 0.85 and volume_ratio > 2.0:
-            return 1.4
+        # Look for divergence in last 10 periods
+        for i in range(10, len(df)):
+            # Bullish divergence: price makes lower low, RSI makes higher low
+            price_window = df['Close'].iloc[i-10:i+1]
+            rsi_window = df['rsi_14'].iloc[i-10:i+1]
+            
+            if len(price_window) > 5 and len(rsi_window) > 5:
+                price_min_idx = price_window.idxmin()
+                rsi_min_idx = rsi_window.idxmin()
+                
+                # Simple divergence check
+                if (price_window.iloc[-1] < price_window.iloc[0] and 
+                    rsi_window.iloc[-1] > rsi_window.iloc[0]):
+                    divergence.iloc[i] = True
         
-        # ML_TIGHT_SQUEEZE
-        if bb_squeeze and confidence > 0.7:
-            return 1.2
-        
-        # BAND_WALK_ML_CONFIRMED
-        if abs(sma_20_slope) > 0.003 and above_sma_20 and persistence < 20:
-            return 1.25
-        
-        # ML_HIGH_VOLATILITY
-        if atr_pct > 3.0 or regime_info['regime'] == 'VOLATILE':
-            return 0.6
-        
-        # Défaut
-        return 1.0
+        return divergence
     
-    def _calculate_risk_reward(self, entry: float, stop: float, regime_info: Dict) -> str:
-        """Calcule le ratio risque/récompense suggéré"""
+    def _detect_technical_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Détecte les signaux techniques composites AVEC CONFLUENCE EMA/SMA! 🚀"""
+        df['signal_confidence'] = 0.5  # Default neutral
         
-        regime = regime_info['regime']
+        # Calculate signal confidence based on indicator alignment
+        bullish_signals = 0
+        bearish_signals = 0
+        total_signals = 0
         
-        if 'TRENDING' in regime and 'STRONG' in regime:
-            return "1:3 ou plus"
-        elif 'BREAKOUT' in regime:
-            return "1:2 - 1:2.5"
-        elif 'RANGING' in regime:
-            return "1:1 - 1:1.5"
-        else:
-            return "1:2"
-
-
-# =============================================================================
-# TRADE ANALYZER - Analyse complète de setup
-# =============================================================================
-
-class TradeAnalyzer:
-    """
-    Analyseur complet de setup de trade selon le prompt
-    """
+        # RSI signals
+        if 'rsi_14' in df.columns:
+            total_signals += 1
+            rsi_signal = (df['rsi_14'] - 50) / 50  # -1 to 1
+            bullish_signals += (rsi_signal > 0).astype(int)
+            bearish_signals += (rsi_signal < 0).astype(int)
+        
+        # MACD signals
+        if 'macd_histogram' in df.columns:
+            total_signals += 1
+            bullish_signals += (df['macd_histogram'] > 0).astype(int)
+            bearish_signals += (df['macd_histogram'] < 0).astype(int)
+        
+        # VWAP signals (enhanced precision for entries/exits)
+        if 'vwap_position' in df.columns and 'vwap_overbought' in df.columns:
+            total_signals += 2  # Weight VWAP more heavily
+            
+            # VWAP trend signal
+            vwap_bullish = (df['vwap_trend'] == 'bullish').astype(int)
+            vwap_bearish = (df['vwap_trend'] == 'bearish').astype(int)
+            bullish_signals += vwap_bullish
+            bearish_signals += vwap_bearish
+            
+            # VWAP mean reversion signal (contrarian when extreme)
+            extreme_oversold = df['vwap_extreme_oversold'].astype(int)
+            extreme_overbought = df['vwap_extreme_overbought'].astype(int)
+            bullish_signals += extreme_oversold  # Buy when extremely oversold
+            bearish_signals += extreme_overbought  # Sell when extremely overbought
+        
+        # MFI signals (INSTITUTIONAL MONEY DETECTION) 🔥💰
+        if 'mfi' in df.columns and 'mfi_overbought' in df.columns:
+            total_signals += 3  # Weight MFI HEAVILY - institutions move markets!
+            
+            # MFI overbought/oversold (stronger than regular RSI due to volume weighting)
+            mfi_oversold_signal = df['mfi_oversold'].astype(int)
+            mfi_overbought_signal = df['mfi_overbought'].astype(int)
+            bullish_signals += mfi_oversold_signal * 1.5  # Higher weight
+            bearish_signals += mfi_overbought_signal * 1.5
+            
+            # MFI extreme levels (ULTRA-STRONG signals)
+            mfi_extreme_oversold = df['mfi_extreme_oversold'].astype(int)
+            mfi_extreme_overbought = df['mfi_extreme_overbought'].astype(int)
+            bullish_signals += mfi_extreme_oversold * 2.0  # MAXIMUM weight - institutions loading up!
+            bearish_signals += mfi_extreme_overbought * 2.0  # MAXIMUM weight - institutions dumping!
+            
+            # MFI divergence (HOLY GRAIL signal - price vs institutional money flow)
+            if 'mfi_divergence' in df.columns:
+                mfi_divergence_signal = df['mfi_divergence'].astype(int)
+                # Divergence can be bullish or bearish - add complexity based on MFI level
+                bullish_divergence = mfi_divergence_signal & (df['mfi'] < 50)  # Divergence + MFI < 50 = bullish
+                bearish_divergence = mfi_divergence_signal & (df['mfi'] > 50)  # Divergence + MFI > 50 = bearish
+                bullish_signals += bullish_divergence.astype(int) * 2.5  # HOLY GRAIL weight
+                bearish_signals += bearish_divergence.astype(int) * 2.5
+        
+        # 🚀🚀🚀 MULTI EMA/SMA SIGNALS - THE CONFLUENCE BEAST FINAL BOSS! 🚀🚀🚀
+        if 'trend_hierarchy' in df.columns:
+            total_signals += 4  # MAXIMUM WEIGHT - EMA hierarchy is the KING of trend detection!
+            
+            # Trend Hierarchy Signals (STRONGEST trend confirmation possible)
+            strong_bull_signal = (df['trend_hierarchy'] == 'strong_bull').astype(int)
+            weak_bull_signal = (df['trend_hierarchy'] == 'weak_bull').astype(int)
+            strong_bear_signal = (df['trend_hierarchy'] == 'strong_bear').astype(int)
+            weak_bear_signal = (df['trend_hierarchy'] == 'weak_bear').astype(int)
+            
+            bullish_signals += strong_bull_signal * 3.0   # NUCLEAR bullish weight
+            bullish_signals += weak_bull_signal * 1.5     # Strong bullish weight
+            bearish_signals += strong_bear_signal * 3.0   # NUCLEAR bearish weight
+            bearish_signals += weak_bear_signal * 1.5     # Strong bearish weight
+            
+            # Golden Cross / Death Cross signals (LEGENDARY momentum shift indicators)
+            if 'ema_cross_signal' in df.columns:
+                golden_cross_signal = (df['ema_cross_signal'] == 'golden_cross').astype(int)
+                death_cross_signal = (df['ema_cross_signal'] == 'death_cross').astype(int)
+                bullish_signals += golden_cross_signal * 2.0  # LEGENDARY bullish momentum
+                bearish_signals += death_cross_signal * 2.0   # LEGENDARY bearish momentum
+            
+            # Price vs EMAs positioning (Multi-layer trend confirmation)
+            if 'price_vs_emas' in df.columns:
+                above_all_emas = (df['price_vs_emas'] == 'above_all').astype(int)
+                above_fast_emas = (df['price_vs_emas'] == 'above_fast').astype(int)
+                below_fast_emas = (df['price_vs_emas'] == 'below_fast').astype(int)
+                below_all_emas = (df['price_vs_emas'] == 'below_all').astype(int)
+                
+                bullish_signals += above_all_emas * 2.0      # STRONG bullish positioning
+                bullish_signals += above_fast_emas * 1.0     # Moderate bullish positioning
+                bearish_signals += below_fast_emas * 1.0     # Moderate bearish positioning
+                bearish_signals += below_all_emas * 2.0      # STRONG bearish positioning
+            
+            # EMA Trend Momentum signals (Rate of change confirmation)
+            if 'trend_momentum' in df.columns:
+                accelerating_signal = (df['trend_momentum'] == 'accelerating').astype(int)
+                decelerating_signal = (df['trend_momentum'] == 'decelerating').astype(int)
+                bullish_signals += accelerating_signal * 1.5  # Acceleration = bullish momentum
+                bearish_signals += decelerating_signal * 1.5  # Deceleration = bearish momentum
+        
+        # Stochastic signals
+        if 'stoch_k' in df.columns:
+            total_signals += 1
+            stoch_signal = (df['stoch_k'] - 50) / 50
+            bullish_signals += (stoch_signal > 0).astype(int)
+            bearish_signals += (stoch_signal < 0).astype(int)
+        
+        # Bollinger Bands signals
+        if 'bb_position' in df.columns:
+            total_signals += 1
+            bb_signal = (df['bb_position'] - 0.5) * 2  # -1 to 1
+            bullish_signals += (bb_signal > 0).astype(int)
+            bearish_signals += (bb_signal < 0).astype(int)
+        
+        if total_signals > 0:
+            # Calculate confidence based on signal alignment
+            signal_alignment = abs(bullish_signals - bearish_signals) / total_signals
+            df['signal_confidence'] = 0.5 + (signal_alignment * 0.5)
+        
+        return df
     
-    def __init__(self, detector: AdvancedRegimeDetector):
-        self.detector = detector
-    
-    def analyze_trade_setup(self, df: pd.DataFrame) -> Dict:
-        """
-        Analyse complète d'un setup de trade avec grading
-        """
+    def get_current_indicators(self, df: pd.DataFrame) -> TechnicalIndicators:
+        """Extrait les indicateurs actuels (dernière ligne)"""
+        if len(df) == 0:
+            return TechnicalIndicators()
         
-        # Détection du régime
-        regime_info = self.detector.detect_detailed_regime(df)
+        last_row = df.iloc[-1]
         
-        # Grading du setup
-        grade, score = self._calculate_confluence_grade(regime_info)
-        
-        # Implications de trading
-        trade_implications = self._get_detailed_trade_implications(regime_info, grade)
-        
-        return {
-            'confluence_grade': grade,
-            'confluence_score': score,
-            'regime_info': regime_info,
-            'trade_implications': trade_implications,
-            'position_sizing_recommendation': self._get_position_sizing_recommendation(grade, regime_info),
-            'stop_loss_strategy': self._get_stop_loss_strategy(regime_info),
-            'profit_targets': self._get_profit_targets(regime_info),
-            'trade_management': self._get_trade_management(regime_info, grade),
-            'should_trade': score >= 65,
-            'conviction_level': self._get_conviction_level(score)
-        }
-    
-    def _calculate_confluence_grade(self, regime_info: Dict) -> Tuple[str, int]:
-        """
-        Calcule le grade de confluence selon le système du prompt
-        """
-        
-        score = 0
-        indicators = regime_info['indicators']
-        confidence = regime_info['confidence']
-        persistence = regime_info['regime_persistence']
-        
-        # 1. MANDATORY ML REGIME (base requirement)
-        mandatory_met = (
-            confidence > 0.65 and
-            (indicators['adx'] > 18 or indicators['bb_squeeze']) and
-            indicators['volume_ratio'] > 1.0
+        return TechnicalIndicators(
+            # RSI
+            rsi_14=last_row.get('rsi_14', 50.0),
+            rsi_9=last_row.get('rsi_9', 50.0),
+            rsi_21=last_row.get('rsi_21', 50.0),
+            rsi_divergence=last_row.get('rsi_divergence', False),
+            rsi_overbought=last_row.get('rsi_overbought', False),
+            rsi_oversold=last_row.get('rsi_oversold', False),
+            
+            # MACD
+            macd_line=last_row.get('macd_line', 0.0),
+            macd_signal=last_row.get('macd_signal', 0.0),
+            macd_histogram=last_row.get('macd_histogram', 0.0),
+            macd_bullish_crossover=last_row.get('macd_bullish_crossover', False),
+            macd_bearish_crossover=last_row.get('macd_bearish_crossover', False),
+            macd_above_zero=last_row.get('macd_above_zero', False),
+            
+            # Stochastic
+            stoch_k=last_row.get('stoch_k', 50.0),
+            stoch_d=last_row.get('stoch_d', 50.0),
+            stoch_overbought=last_row.get('stoch_overbought', False),
+            stoch_oversold=last_row.get('stoch_oversold', False),
+            stoch_bullish_crossover=last_row.get('stoch_bullish_crossover', False),
+            stoch_bearish_crossover=last_row.get('stoch_bearish_crossover', False),
+            
+            # Bollinger Bands
+            bb_upper=last_row.get('bb_upper', 0.0),
+            bb_middle=last_row.get('bb_middle', 0.0),
+            bb_lower=last_row.get('bb_lower', 0.0),
+            bb_width=last_row.get('bb_width', 0.0),
+            bb_position=last_row.get('bb_position', 0.5),
+            bb_squeeze=last_row.get('bb_squeeze', False),
+            bb_expansion=last_row.get('bb_expansion', False),
+            
+            # Moving Averages
+            sma_20=last_row.get('sma_20', 0.0),
+            sma_50=last_row.get('sma_50', 0.0),
+            sma_200=last_row.get('sma_200', 0.0),
+            ema_12=last_row.get('ema_12', 0.0),
+            ema_26=last_row.get('ema_26', 0.0),
+            
+            # Volume
+            volume_sma=last_row.get('volume_sma', 0.0),
+            volume_ratio=last_row.get('volume_ratio', 1.0),
+            obv=last_row.get('obv', 0.0),
+            
+            # VWAP & Deviation Bands
+            vwap=last_row.get('vwap', 0.0),
+            vwap_upper_1std=last_row.get('vwap_upper_1std', 0.0),
+            vwap_lower_1std=last_row.get('vwap_lower_1std', 0.0),
+            vwap_upper_2std=last_row.get('vwap_upper_2std', 0.0),
+            vwap_lower_2std=last_row.get('vwap_lower_2std', 0.0),
+            vwap_position=last_row.get('vwap_position', 0.0),
+            vwap_overbought=last_row.get('vwap_overbought', False),
+            vwap_oversold=last_row.get('vwap_oversold', False),
+            vwap_extreme_overbought=last_row.get('vwap_extreme_overbought', False),
+            vwap_extreme_oversold=last_row.get('vwap_extreme_oversold', False),
+            vwap_trend=last_row.get('vwap_trend', 'neutral'),
+            
+            # Money Flow Index (MFI) - Institutional Money Detection 🔥
+            mfi=last_row.get('mfi', 50.0),
+            mfi_overbought=last_row.get('mfi_overbought', False),
+            mfi_oversold=last_row.get('mfi_oversold', False),
+            mfi_extreme_overbought=last_row.get('mfi_extreme_overbought', False),
+            mfi_extreme_oversold=last_row.get('mfi_extreme_oversold', False),
+            mfi_trend=last_row.get('mfi_trend', 'neutral'),
+            mfi_divergence=last_row.get('mfi_divergence', False),
+            money_flow_ratio=last_row.get('money_flow_ratio', 1.0),
+            institutional_activity=last_row.get('institutional_activity', 'neutral'),
+            
+            # Multi EMA/SMA Trend Hierarchy - THE MISSING PIECE 🎯
+            ema_9=last_row.get('ema_9', 0.0),
+            ema_21=last_row.get('ema_21', 0.0),
+            ema_200=last_row.get('ema_200', 0.0),
+            trend_hierarchy=last_row.get('trend_hierarchy', 'neutral'),
+            trend_momentum=last_row.get('trend_momentum', 'neutral'),
+            price_vs_emas=last_row.get('price_vs_emas', 'mixed'),
+            ema_cross_signal=last_row.get('ema_cross_signal', 'neutral'),
+            trend_strength_score=last_row.get('trend_strength_score', 0.5),
+            
+            # Composite
+            trend_strength=last_row.get('trend_strength', 0.5),
+            momentum_score=last_row.get('momentum_score', 0.5),
+            volatility_score=last_row.get('volatility_score', 0.5),
+            signal_confidence=last_row.get('signal_confidence', 0.5)
         )
+    
+    def generate_trading_signal(self, indicators: TechnicalIndicators) -> IndicatorSignal:
+        """Génère un signal de trading basé sur les indicateurs"""
+        supporting_indicators = []
+        conflicting_indicators = []
+        bullish_score = 0
+        bearish_score = 0
+        confidence_factors = []
         
-        if not mandatory_met:
-            return "C_ML_WAIT", 50
+        # RSI Analysis
+        if indicators.rsi_oversold:
+            bullish_score += 2
+            supporting_indicators.append("RSI Oversold")
+            confidence_factors.append(0.8)
+        elif indicators.rsi_overbought:
+            bearish_score += 2
+            supporting_indicators.append("RSI Overbought")
+            confidence_factors.append(0.8)
+        elif indicators.rsi_14 > 55:
+            bullish_score += 1
+            supporting_indicators.append("RSI Bullish")
+            confidence_factors.append(0.6)
+        elif indicators.rsi_14 < 45:
+            bearish_score += 1
+            supporting_indicators.append("RSI Bearish")
+            confidence_factors.append(0.6)
         
-        score += 40  # Base score pour mandatory
+        # MACD Analysis
+        if indicators.macd_bullish_crossover:
+            bullish_score += 2
+            supporting_indicators.append("MACD Bullish Crossover")
+            confidence_factors.append(0.8)
+        elif indicators.macd_bearish_crossover:
+            bearish_score += 2
+            supporting_indicators.append("MACD Bearish Crossover")
+            confidence_factors.append(0.8)
+        elif indicators.macd_histogram > 0:
+            bullish_score += 1
+            supporting_indicators.append("MACD Positive")
+            confidence_factors.append(0.6)
+        elif indicators.macd_histogram < 0:
+            bearish_score += 1
+            supporting_indicators.append("MACD Negative")
+            confidence_factors.append(0.6)
         
-        # 2. MOMENTUM CONFIRMATION (compter conditions remplies)
-        momentum_conditions = [
-            40 <= indicators['rsi'] <= 65,
-            indicators['macd_histogram'] * indicators['macd_trend'] > 0,
-            indicators['bb_squeeze'] or abs(indicators['sma_20_slope']) > 0.001,
-            indicators['sma_20_slope'] > 0,
-            indicators['volume_trend'] > 0,
-            indicators['above_sma_20']
-        ]
+        # Stochastic Analysis
+        if indicators.stoch_bullish_crossover and indicators.stoch_oversold:
+            bullish_score += 2
+            supporting_indicators.append("Stoch Bullish from Oversold")
+            confidence_factors.append(0.9)
+        elif indicators.stoch_bearish_crossover and indicators.stoch_overbought:
+            bearish_score += 2
+            supporting_indicators.append("Stoch Bearish from Overbought")
+            confidence_factors.append(0.9)
         
-        momentum_count = sum(momentum_conditions)
-        score += momentum_count * 5  # 5 points par condition
+        # Bollinger Bands Analysis
+        if indicators.bb_position < 0.1:
+            bullish_score += 1
+            supporting_indicators.append("BB Oversold")
+            confidence_factors.append(0.7)
+        elif indicators.bb_position > 0.9:
+            bearish_score += 1
+            supporting_indicators.append("BB Overbought")
+            confidence_factors.append(0.7)
         
-        # 3. HIGH CONVICTION TRIGGERS
-        high_conviction_triggers = []
+        # Trend and Momentum
+        if indicators.trend_strength > 0.7:
+            bullish_score += 1
+            supporting_indicators.append("Strong Uptrend")
+            confidence_factors.append(0.8)
+        elif indicators.trend_strength < 0.3:
+            bearish_score += 1
+            supporting_indicators.append("Strong Downtrend")
+            confidence_factors.append(0.8)
         
-        # ML_BREAKOUT_SQUEEZE
-        if (indicators['bb_squeeze'] and confidence > 0.75 and 
-            indicators['volume_ratio'] > 1.8):
-            high_conviction_triggers.append('ML_BREAKOUT_SQUEEZE')
-            score += 15
-        
-        # ML_TREND_ACCELERATION
-        if (indicators['adx'] > 25 and abs(indicators['sma_20_slope']) > 0.002 and 
-            confidence > 0.8):
-            high_conviction_triggers.append('ML_TREND_ACCELERATION')
-            score += 15
-        
-        # ML_FRESH_REGIME
-        if persistence < 10 and confidence > 0.85:
-            high_conviction_triggers.append('ML_FRESH_REGIME')
-            score += 20
-        
-        # ML_VOLUME_SURGE
-        if (indicators['volume_ratio'] > 2.0 and indicators['volume_trend'] > 0.1):
-            high_conviction_triggers.append('ML_VOLUME_SURGE')
-            score += 10
-        
-        # Détermination du grade
-        if score >= 90 and confidence > 0.85 and len(high_conviction_triggers) > 0:
-            return "A++_ML_PERFECT_STORM", min(100, score)
-        elif score >= 80 and confidence > 0.75 and len(high_conviction_triggers) > 0:
-            return "A+_ML_EXCELLENT", score
-        elif score >= 75 and confidence > 0.7 and momentum_count >= 3:
-            return "A_ML_STRONG", score
-        elif score >= 70 and confidence > 0.65 and momentum_count >= 2:
-            return "B+_SOLID", score
-        elif score >= 65 and momentum_count >= 2:
-            return "B_GOOD", score
-        elif score >= 50:
-            return "C_ML_WAIT", score
+        # Determine signal
+        total_score = bullish_score + bearish_score
+        if total_score == 0:
+            signal_type = "neutral"
+            strength = 0.5
+        elif bullish_score > bearish_score:
+            signal_type = "bullish"
+            strength = min(bullish_score / (total_score + 2), 1.0)
         else:
-            return "D_ML_AVOID", score
-    
-    def _get_position_sizing_recommendation(self, grade: str, regime_info: Dict) -> Dict:
-        """Recommandations de taille de position selon le grade"""
+            signal_type = "bearish"
+            strength = min(bearish_score / (total_score + 2), 1.0)
         
-        size_ranges = {
-            "A++_ML_PERFECT_STORM": {"min": 100, "max": 120, "recommended": 110},
-            "A+_ML_EXCELLENT": {"min": 90, "max": 100, "recommended": 95},
-            "A_ML_STRONG": {"min": 80, "max": 90, "recommended": 85},
-            "B+_SOLID": {"min": 70, "max": 80, "recommended": 75},
-            "B_GOOD": {"min": 60, "max": 70, "recommended": 65},
-            "C_ML_WAIT": {"min": 0, "max": 0, "recommended": 0},
-            "D_ML_AVOID": {"min": 0, "max": 0, "recommended": 0}
-        }
+        # Calculate confidence
+        confidence = np.mean(confidence_factors) if confidence_factors else 0.5
+        confidence *= indicators.signal_confidence  # Adjust by composite confidence
         
-        sizing = size_ranges.get(grade, {"min": 0, "max": 0, "recommended": 0})
-        
-        # Ajustement pour régime mature
-        if regime_info['regime_persistence'] > 40:
-            sizing = {
-                "min": int(sizing["min"] * 0.8),
-                "max": int(sizing["max"] * 0.8),
-                "recommended": int(sizing["recommended"] * 0.8)
-            }
-        
-        return {
-            **sizing,
-            "base_risk_pct": "1.0%",
-            "notes": self._get_sizing_notes(grade, regime_info)
-        }
-    
-    def _get_sizing_notes(self, grade: str, regime_info: Dict) -> List[str]:
-        """Notes additionnelles pour le sizing"""
-        notes = []
-        
-        if regime_info['regime_persistence'] < 15:
-            notes.append("Régime frais - sizing agressif justifié")
-        elif regime_info['regime_persistence'] > 40:
-            notes.append("Régime mature - réduire sizing de 20%")
-        
-        if regime_info['confidence'] < 0.6:
-            notes.append("Confiance faible - éviter trade ou sizing minimal")
-        elif regime_info['confidence'] > 0.85:
-            notes.append("Confiance très haute - sizing agressif possible")
-        
-        if regime_info['regime_transition_alert'] == 'IMMINENT_CHANGE':
-            notes.append("ATTENTION: Changement de régime imminent - réduire exposition")
-        
-        return notes
-    
-    def _get_stop_loss_strategy(self, regime_info: Dict) -> Dict:
-        """Stratégie de stop loss selon le régime"""
-        
-        regime = regime_info['regime']
-        indicators = regime_info['indicators']
-        
-        strategies = {
-            'TRENDING_UP_STRONG': {
-                'placement': 'below_sma_20_or_lower_bollinger',
-                'type': 'trailing',
-                'trail_method': 'sma_20_with_ml_confirmation',
-                'tighten_at': 'regime_persistence > 20 bars'
-            },
-            'TRENDING_UP_MODERATE': {
-                'placement': 'below_recent_swing_low',
-                'type': 'trailing',
-                'trail_method': 'conservative_trail',
-                'tighten_at': 'profit > 1.5x risk'
-            },
-            'BREAKOUT_BULLISH': {
-                'placement': 'below_breakout_level',
-                'type': 'tight_stop',
-                'trail_method': 'aggressive_after_1.5x_atr',
-                'tighten_at': 'immediately after entry confirmation'
-            },
-            'RANGING_TIGHT': {
-                'placement': 'outside_range_extremes',
-                'type': 'fixed',
-                'trail_method': 'no_trailing',
-                'tighten_at': 'never'
-            },
-            'CONSOLIDATION': {
-                'placement': 'outside_consolidation_box',
-                'type': 'fixed',
-                'trail_method': 'no_trailing',
-                'tighten_at': 'on_breakout_confirmation'
-            },
-            'VOLATILE': {
-                'placement': 'wide_stop_2x_atr',
-                'type': 'fixed',
-                'trail_method': 'no_trailing',
-                'tighten_at': 'never'
-            }
-        }
-        
-        strategy = strategies.get(regime, {
-            'placement': 'below_sma_20',
-            'type': 'standard',
-            'trail_method': 'standard',
-            'tighten_at': 'profit > 2x risk'
-        })
-        
-        # Ajustements ML
-        if regime_info['confidence'] > 0.8:
-            strategy['ml_adjustment'] = 'wider_initial_stop_higher_conviction'
-        elif regime_info['confidence'] < 0.65:
-            strategy['ml_adjustment'] = 'tighter_stop_lower_conviction'
-        
-        return strategy
-    
-    def _get_profit_targets(self, regime_info: Dict) -> Dict:
-        """Cibles de profit selon le régime"""
-        
-        regime = regime_info['regime']
-        confidence = regime_info['confidence']
-        
-        targets = {
-            'TRENDING_UP_STRONG': {
-                'target_1': 'previous_swing_high',
-                'target_2': 'bollinger_upper_extended',
-                'target_3': 'fibonacci_1.618',
-                'scaling': '30% @ T1, 40% @ T2, 30% runner',
-                'ml_extension': '20%' if confidence > 0.8 else '0%'
-            },
-            'BREAKOUT_BULLISH': {
-                'target_1': '1.5x_range_measured_move',
-                'target_2': '2.0x_range_extended',
-                'target_3': 'momentum_exhaustion',
-                'scaling': '50% @ T1, 30% @ T2, 20% runner',
-                'ml_extension': '30%' if regime_info['fresh_regime'] else '10%'
-            },
-            'RANGING_TIGHT': {
-                'target_1': 'opposite_range_boundary',
-                'target_2': 'none',
-                'target_3': 'none',
-                'scaling': '70% @ T1, 30% runner',
-                'ml_extension': '0%'
-            }
-        }
-        
-        return targets.get(regime, {
-            'target_1': 'previous_resistance',
-            'target_2': 'extended_target',
-            'target_3': 'none',
-            'scaling': '50% @ T1, 50% @ T2',
-            'ml_extension': '0%'
-        })
-    
-    def _get_trade_management(self, regime_info: Dict, grade: str) -> Dict:
-        """Playbook de gestion de trade"""
-        
-        regime = regime_info['regime']
-        
-        playbooks = {
-            'BREAKOUT_BULLISH': {
-                'entry': 'breakout_confirmation_high_ml_confidence',
-                'stop': 'below_breakout_level_tight',
-                'targets': '1.5-2.0x range extended',
-                'hold_time': '4-12 hours (fresh regime)',
-                'management': 'aggressive_trail_after_T1',
-                'ml_edge': 'exploit_fresh_regime_momentum'
-            },
-            'TRENDING_UP_STRONG': {
-                'entry': 'pullback_to_sma_20_ml_confirmed',
-                'stop': 'below_sma_20_or_swing_low',
-                'targets': 'previous_high_then_extended',
-                'hold_time': '12-48 hours (trend persistence)',
-                'management': 'trail_with_sma_20_ml_confirmation',
-                'ml_edge': 'ride_strong_trend_ml_confirmed'
-            }
-        }
-        
-        return playbooks.get(regime, {
-            'entry': 'wait_for_confirmation',
-            'stop': 'below_support',
-            'targets': 'previous_resistance',
-            'hold_time': '6-24 hours',
-            'management': 'standard_management',
-            'ml_edge': 'none'
-        })
-    
-    def _get_detailed_trade_implications(self, regime_info: Dict, grade: str) -> List[str]:
-        """Implications détaillées de trading"""
-        
-        implications = regime_info['trading_implications'].copy()
-        
-        # Ajout basé sur le grade
-        if grade.startswith('A'):
-            implications.insert(0, f"GRADE {grade} - Setup haute qualité")
-        elif grade.startswith('B'):
-            implications.insert(0, f"GRADE {grade} - Setup acceptable")
+        # Determine timeframe
+        if indicators.volatility_score > 0.7:
+            timeframe = "short"
+        elif indicators.volatility_score < 0.3:
+            timeframe = "long"
         else:
-            implications.insert(0, f"GRADE {grade} - NE PAS TRADER")
+            timeframe = "medium"
         
-        return implications
-    
-    def _get_conviction_level(self, score: int) -> str:
-        """Niveau de conviction global"""
-        if score >= 90:
-            return "TRÈS HAUTE"
-        elif score >= 80:
-            return "HAUTE"
-        elif score >= 70:
-            return "MOYENNE-HAUTE"
-        elif score >= 65:
-            return "MOYENNE"
-        else:
-            return "FAIBLE - ÉVITER"
-
-
-# =============================================================================
-# DÉMONSTRATION COMPLÈTE
-# =============================================================================
-
-def demonstrate_complete_system():
-    """Démonstration du système complet corrigé"""
-    
-    # Génération de données réalistes
-    np.random.seed(42)
-    n_points = 2000
-    dates = pd.date_range('2023-01-01', periods=n_points, freq='1H')
-    
-    # Simulation de différents régimes
-    prices = [100.0]
-    
-    for i in range(1, n_points):
-        current_regime = (i // 300) % 4
+        # Generate reasoning
+        reasoning = f"Signal {signal_type} avec {len(supporting_indicators)} indicateurs confirmant. "
+        reasoning += f"Force: {strength:.1%}, Confiance: {confidence:.1%}. "
+        reasoning += f"Indicateurs: {', '.join(supporting_indicators[:3])}"
         
-        if current_regime == 0:
-            change = np.random.normal(0.001, 0.005)
-        elif current_regime == 1:
-            change = np.random.normal(-0.0005, 0.008)
-        elif current_regime == 2:
-            change = np.random.normal(0, 0.003)
-        else:
-            change = np.random.normal(0, 0.0015)
-        
-        new_price = prices[-1] * (1 + change)
-        prices.append(new_price)
-    
-    df = pd.DataFrame({
-        'open': prices,
-        'high': [p * (1 + abs(np.random.normal(0, 0.01))) for p in prices],
-        'low': [p * (1 - abs(np.random.normal(0, 0.01))) for p in prices],
-        'close': prices,
-        'volume': np.random.uniform(1000, 5000, n_points)
-    }, index=dates)
-    
-    print("=" * 80)
-    print("SYSTÈME DE DÉTECTION DE RÉGIME ML - VERSION CORRIGÉE ET COMPLÈTE")
-    print("=" * 80)
-    
-    # Initialisation
-    detector = AdvancedRegimeDetector(lookback_period=50, history_size=200)
-    analyzer = TradeAnalyzer(detector)
-    position_calculator = PositionSizingCalculator(base_capital=10000, base_risk_pct=1.0)
-    
-    # Analyse en temps réel
-    print("\n📊 ANALYSE DES RÉGIMES RÉCENTS:")
-    print("-" * 80)
-    
-    for offset in [200, 100, 50, 10]:
-        window = df.iloc[-offset-200:-offset] if offset > 10 else df.iloc[-200:]
-        regime_info = detector.detect_detailed_regime(window)
-        
-        print(f"\nPériode -{offset} barres:")
-        print(f"  Régime: {regime_info['regime']:25}")
-        print(f"  Confiance: {regime_info['confidence']:6.1%}")
-        print(f"  Confiance combinée: {regime_info['combined_confidence']:6.1%}")
-        print(f"  Technical consistency: {regime_info['technical_consistency']:6.1%}")
-        print(f"  Persistence: {regime_info['regime_persistence']} barres")
-        print(f"  Transition alert: {regime_info['regime_transition_alert']}")
-    
-    # Analyse complète du setup actuel
-    print("\n" + "=" * 80)
-    print("🎯 ANALYSE COMPLÈTE DU SETUP ACTUEL")
-    print("=" * 80)
-    
-    trade_analysis = analyzer.analyze_trade_setup(df.tail(200))
-    
-    print(f"\n📈 CONFLUENCE GRADE: {trade_analysis['confluence_grade']}")
-    print(f"Score: {trade_analysis['confluence_score']}/100")
-    print(f"Conviction: {trade_analysis['conviction_level']}")
-    print(f"Devrait trader: {'✅ OUI' if trade_analysis['should_trade'] else '❌ NON'}")
-    
-    print(f"\n🎯 RÉGIME DÉTECTÉ:")
-    regime_info = trade_analysis['regime_info']
-    print(f"  Régime: {regime_info['regime']}")
-    print(f"  Confiance finale: {regime_info['confidence']:.1%}")
-    print(f"  Interprétation: {regime_info['interpretation']}")
-    
-    print(f"\n📊 MÉTRIQUES CLÉS:")
-    indicators = regime_info['indicators']
-    print(f"  ADX: {indicators.get('adx', 0):.1f} ({indicators.get('adx_strength', 'N/A')})")
-    print(f"  RSI: {indicators.get('rsi', 0):.1f} ({indicators.get('rsi_zone', 'N/A')})")
-    print(f"  MACD Histogram: {indicators.get('macd_histogram', 0):.4f}")
-    print(f"  Volatilité (ATR%): {indicators.get('atr_pct', 0):.2f}%")
-    print(f"  BB Squeeze: {'✅ OUI' if indicators.get('bb_squeeze') else '❌ NON'} "
-          f"({indicators.get('squeeze_intensity', 'NONE')})")
-    print(f"  Volume Ratio: {indicators.get('volume_ratio', 0):.2f}x")
-    print(f"  SMA 20 Slope: {indicators.get('sma_20_slope', 0):.6f}")
-    
-    print(f"\n💡 IMPLICATIONS TRADING:")
-    for implication in trade_analysis['trade_implications']:
-        print(f"  • {implication}")
-    
-    # Position Sizing
-    print(f"\n💰 RECOMMANDATIONS POSITION SIZING:")
-    sizing_rec = trade_analysis['position_sizing_recommendation']
-    print(f"  Range: {sizing_rec['min']}-{sizing_rec['max']}% du sizing normal")
-    print(f"  Recommandé: {sizing_rec['recommended']}% du sizing normal")
-    print(f"  Base Risk: {sizing_rec['base_risk_pct']}")
-    if sizing_rec.get('notes'):
-        print(f"  Notes:")
-        for note in sizing_rec['notes']:
-            print(f"    - {note}")
-    
-    # Exemple de calcul concret
-    if trade_analysis['should_trade']:
-        entry_price = df['close'].iloc[-1]
-        stop_loss = entry_price * 0.98  # 2% stop pour exemple
-        
-        position_calc = position_calculator.calculate_position_size(
-            regime_info, entry_price, stop_loss
+        return IndicatorSignal(
+            signal_type=signal_type,
+            strength=strength,
+            confidence=confidence,
+            timeframe=timeframe,
+            supporting_indicators=supporting_indicators,
+            conflicting_indicators=conflicting_indicators,
+            reasoning=reasoning
         )
-        
-        print(f"\n💵 CALCUL POSITION CONCRÈTE:")
-        print(f"  Capital: $10,000")
-        print(f"  Prix d'entrée: ${entry_price:.2f}")
-        print(f"  Stop Loss: ${stop_loss:.2f}")
-        print(f"  Risque par unité: ${position_calc['price_risk']:.4f}")
-        print(f"  Position size: {position_calc['position_size_units']:.4f} unités")
-        print(f"  Valeur position: ${position_calc['position_size_dollars']:,.2f}")
-        print(f"  % du capital: {position_calc['position_size_pct']:.2f}%")
-        print(f"  Risque total: ${position_calc['risk_dollars']:.2f} ({position_calc['risk_pct']:.2f}%)")
-        print(f"\n  Multiplicateurs appliqués:")
-        print(f"    - Régime: {position_calc['regime_multiplier']}x")
-        print(f"    - ML Confidence: {position_calc['ml_confidence_multiplier']}x")
-        print(f"    - Momentum: {position_calc['momentum_multiplier']}x")
-        print(f"    - Bollinger: {position_calc['bb_multiplier']}x")
-        print(f"    - COMBINÉ: {position_calc['combined_multiplier']}x")
-        print(f"  Risk/Reward suggéré: {position_calc['risk_reward_ratio']}")
     
-    # Stop Loss Strategy
-    print(f"\n🛡️ STRATÉGIE STOP LOSS:")
-    stop_strategy = trade_analysis['stop_loss_strategy']
-    print(f"  Placement: {stop_strategy['placement']}")
-    print(f"  Type: {stop_strategy['type']}")
-    print(f"  Méthode trail: {stop_strategy['trail_method']}")
-    print(f"  Resserrer à: {stop_strategy['tighten_at']}")
-    if 'ml_adjustment' in stop_strategy:
-        print(f"  Ajustement ML: {stop_strategy['ml_adjustment']}")
-    
-    # Profit Targets
-    print(f"\n🎯 CIBLES DE PROFIT:")
-    profit_targets = trade_analysis['profit_targets']
-    print(f"  Target 1: {profit_targets.get('target_1', 'N/A')}")
-    print(f"  Target 2: {profit_targets.get('target_2', 'N/A')}")
-    print(f"  Target 3: {profit_targets.get('target_3', 'N/A')}")
-    print(f"  Scaling: {profit_targets.get('scaling', 'N/A')}")
-    print(f"  Extension ML: {profit_targets.get('ml_extension', '0%')}")
-    
-    # Trade Management
-    print(f"\n📋 PLAYBOOK DE GESTION:")
-    management = trade_analysis['trade_management']
-    print(f"  Entrée: {management.get('entry', 'N/A')}")
-    print(f"  Stop: {management.get('stop', 'N/A')}")
-    print(f"  Targets: {management.get('targets', 'N/A')}")
-    print(f"  Durée de hold: {management.get('hold_time', 'N/A')}")
-    print(f"  Gestion: {management.get('management', 'N/A')}")
-    print(f"  Edge ML: {management.get('ml_edge', 'N/A')}")
-    
-    # Performance attendue
-    print(f"\n📈 PERFORMANCE ATTENDUE:")
-    grade = trade_analysis['confluence_grade']
-    expected_wr = {
-        'A++_ML_PERFECT_STORM': '88-94%',
-        'A+_ML_EXCELLENT': '80-88%',
-        'A_ML_STRONG': '75-80%',
-        'B+_SOLID': '70-75%',
-        'B_GOOD': '65-70%'
-    }
-    print(f"  Win Rate attendu: {expected_wr.get(grade, 'N/A')}")
-    
-    # Analyse historique des régimes
-    print(f"\n📊 ANALYSE HISTORIQUE DES RÉGIMES:")
-    print(f"  Taille historique: {len(detector.regime_history)}")
-    
-    if len(detector.regime_history) > 0:
-        regime_counts = {}
-        for regime in detector.regime_history:
-            regime_counts[regime.value] = regime_counts.get(regime.value, 0) + 1
-        
-        print(f"  Distribution:")
-        for regime, count in sorted(regime_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
-            pct = (count / len(detector.regime_history)) * 100
-            print(f"    - {regime}: {count} ({pct:.1f}%)")
-    
-    # Validation système
-    print(f"\n✅ VALIDATION DU SYSTÈME:")
-    print(f"  ✓ Détection de régime ML fonctionnelle")
-    print(f"  ✓ Calcul de confiance combinée (ML + technique)")
-    print(f"  ✓ Persistence de régime trackée")
-    print(f"  ✓ Technical consistency calculée")
-    print(f"  ✓ ADX corrigé (méthode Wilder)")
-    print(f"  ✓ Système de grading A++ à D")
-    print(f"  ✓ Position sizing dynamique")
-    print(f"  ✓ Stop loss adaptatif")
-    print(f"  ✓ Profit targets intelligents")
-    print(f"  ✓ Détection de transition de régime")
-    
-    print(f"\n{'='*80}")
-    print(f"✅ SYSTÈME COMPLET OPÉRATIONNEL")
-    print(f"{'='*80}")
-    
-    return detector, analyzer, position_calculator, trade_analysis
-
-
-# =============================================================================
-# PIPELINE ML POUR ENTRAÎNEMENT (Optionnel)
-# =============================================================================
-
-class RegimeTrainingDataGenerator:
-    """
-    Générateur de données d'entraînement pour modèle ML
-    """
-    
-    def __init__(self, detector: AdvancedRegimeDetector, sequence_length: int = 30):
-        self.detector = detector
-        self.sequence_length = sequence_length
-        self.regime_mapping = {
-            regime.value: idx for idx, regime in enumerate(MarketRegimeDetailed)
-        }
-    
-    def create_training_dataset(self, df: pd.DataFrame) -> Dict[str, np.ndarray]:
+    def get_vwap_enhanced_signal(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
         """
-        Crée un dataset pour entraîner un modèle ML
+        Génère des signaux VWAP améliorés pour une meilleure précision des entrées/sorties
+        Utilisable par IA1 et IA2 pour des signaux plus sensibles et précis
         """
-        logger.info("Création du dataset d'entraînement...")
-        
-        X_sequences = []
-        y_regimes = []
-        y_confidences = []
-        regime_infos = []
-        
-        # Pour chaque fenêtre possible
-        for i in range(self.sequence_length + 50, len(df) - 1):
-            # Fenêtre pour features
-            window_data = df.iloc[i-self.sequence_length:i]
-            
-            # Fenêtre pour régime cible
-            target_window = df.iloc[i-50:i+1]
-            
-            # Détection du régime
-            regime_info = self.detector.detect_detailed_regime(target_window)
-            
-            # Features
-            features = self._extract_features(window_data)
-            
-            X_sequences.append(features)
-            y_regimes.append(self.regime_mapping[regime_info['regime']])
-            y_confidences.append(regime_info['confidence'])
-            regime_infos.append(regime_info)
-        
-        X = np.array(X_sequences)
-        y = np.array(y_regimes)
-        confidences = np.array(y_confidences)
-        
-        logger.info(f"Dataset créé: {X.shape} échantillons, {len(np.unique(y))} classes")
-        
-        return {
-            'X': X,
-            'y': y,
-            'confidences': confidences,
-            'regime_infos': regime_infos,
-            'class_names': [regime.value for regime in MarketRegimeDetailed],
-            'feature_names': self._get_feature_names()
+        vwap_signals = {
+            'signal_type': 'neutral',
+            'strength': 0.0,
+            'confidence': 0.0,
+            'entry_precision': 'low',
+            'risk_reward_potential': 1.0,
+            'mean_reversion_opportunity': False,
+            'trend_continuation_opportunity': False,
+            'support_resistance_level': indicators.vwap,
+            'recommended_action': 'hold',
+            'reasoning': []
         }
+        
+        reasoning = []
+        strength_factors = []
+        
+        # 1. VWAP Trend Analysis (Higher Weight)
+        if indicators.vwap_trend == 'bullish':
+            vwap_signals['trend_continuation_opportunity'] = True
+            strength_factors.append(0.3)  # Strong positive factor
+            reasoning.append(f"Prix {indicators.vwap_position:.1f}% au-dessus VWAP - tendance haussière")
+        elif indicators.vwap_trend == 'bearish':
+            vwap_signals['trend_continuation_opportunity'] = True
+            strength_factors.append(-0.3)  # Strong negative factor
+            reasoning.append(f"Prix {indicators.vwap_position:.1f}% en-dessous VWAP - tendance baissière")
+        
+        # 2. Mean Reversion Analysis (Extreme Levels)
+        if indicators.vwap_extreme_oversold:
+            vwap_signals['mean_reversion_opportunity'] = True
+            vwap_signals['signal_type'] = 'bullish'
+            vwap_signals['recommended_action'] = 'buy'
+            vwap_signals['entry_precision'] = 'high'
+            vwap_signals['risk_reward_potential'] = 2.5  # High RR potential
+            strength_factors.append(0.5)  # Very strong reversal signal
+            reasoning.append("EXTREME OVERSOLD vs VWAP (>2σ) - fort potentiel de rebond")
+        elif indicators.vwap_extreme_overbought:
+            vwap_signals['mean_reversion_opportunity'] = True
+            vwap_signals['signal_type'] = 'bearish'
+            vwap_signals['recommended_action'] = 'sell'
+            vwap_signals['entry_precision'] = 'high'
+            vwap_signals['risk_reward_potential'] = 2.5  # High RR potential
+            strength_factors.append(-0.5)  # Very strong reversal signal
+            reasoning.append("EXTREME OVERBOUGHT vs VWAP (>2σ) - fort potentiel de correction")
+        
+        # 3. Standard Deviation Band Analysis
+        elif indicators.vwap_oversold and not indicators.vwap_extreme_oversold:
+            vwap_signals['signal_type'] = 'bullish'
+            vwap_signals['entry_precision'] = 'medium'
+            vwap_signals['risk_reward_potential'] = 1.8
+            strength_factors.append(0.25)
+            reasoning.append("Oversold vs VWAP (1σ) - opportunité d'achat modérée")
+        elif indicators.vwap_overbought and not indicators.vwap_extreme_overbought:
+            vwap_signals['signal_type'] = 'bearish'
+            vwap_signals['entry_precision'] = 'medium'
+            vwap_signals['risk_reward_potential'] = 1.8
+            strength_factors.append(-0.25)
+            reasoning.append("Overbought vs VWAP (1σ) - opportunité de vente modérée")
+        
+        # 4. VWAP as Dynamic Support/Resistance
+        price_vwap_distance = abs(indicators.vwap_position)
+        if price_vwap_distance < 0.5:  # Very close to VWAP
+            vwap_signals['support_resistance_level'] = indicators.vwap
+            if indicators.vwap_trend != 'neutral':
+                vwap_signals['entry_precision'] = 'high'
+                reasoning.append(f"Prix près du VWAP ({price_vwap_distance:.2f}%) - niveau clé de S/R")
+        
+        # 5. Volume-Price Analysis Enhancement
+        if hasattr(indicators, 'volume_ratio') and indicators.volume_ratio > 1.5:
+            # High volume enhances VWAP signal reliability
+            volume_boost = min(0.2, (indicators.volume_ratio - 1) * 0.1)
+            if strength_factors:
+                if strength_factors[-1] > 0:
+                    strength_factors.append(volume_boost)
+                else:
+                    strength_factors.append(-volume_boost)
+                reasoning.append(f"Volume élevé ({indicators.volume_ratio:.1f}x) confirme signal VWAP")
+        
+        # Calculate final strength and confidence
+        if strength_factors:
+            total_strength = np.mean(strength_factors)
+            vwap_signals['strength'] = min(1.0, abs(total_strength))
+            vwap_signals['confidence'] = min(0.95, vwap_signals['strength'] * 1.2)
+            
+            if total_strength > 0.1:
+                vwap_signals['signal_type'] = 'bullish'
+                if total_strength > 0.3:
+                    vwap_signals['recommended_action'] = 'strong_buy'
+                else:
+                    vwap_signals['recommended_action'] = 'buy'
+            elif total_strength < -0.1:
+                vwap_signals['signal_type'] = 'bearish'
+                if total_strength < -0.3:
+                    vwap_signals['recommended_action'] = 'strong_sell'
+                else:
+                    vwap_signals['recommended_action'] = 'sell'
+        
+        vwap_signals['reasoning'] = reasoning
+        
+        return vwap_signals
     
-    def _extract_features(self, df: pd.DataFrame) -> np.ndarray:
-        """Extrait les features pour ML"""
+    def get_mfi_vwap_combo_signal(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🔥 COMBO ULTRA-PUISSANT: MFI + VWAP = DÉTECTION INSTITUTIONNELLE + PRECISION 🔥
+        Cette méthode combine la détection d'activité institutionnelle (MFI) avec la précision d'entrée (VWAP)
+        pour générer des signaux de TRADING ABSOLUMENT DEVASTATEURS ! 💰
+        """
+        combo_signals = {
+            'signal_type': 'neutral',
+            'strength': 0.0,
+            'confidence': 0.0,
+            'institutional_confirmation': False,
+            'precision_entry': False,
+            'risk_reward_potential': 1.0,
+            'signal_quality': 'low',  # low, medium, high, GODLIKE
+            'recommended_action': 'hold',
+            'entry_precision_level': 'VWAP',  # VWAP level to watch
+            'institutional_signal': 'neutral',
+            'combo_strength': 'weak',  # weak, medium, strong, NUCLEAR
+            'reasoning': []
+        }
         
-        features = []
+        reasoning = []
+        strength_factors = []
         
-        # Trend features
-        sma_10 = df['close'].rolling(10).mean()
-        sma_20 = df['close'].rolling(20).mean()
-        features.append(self._calculate_slope(sma_10))
-        features.append(self._calculate_slope(sma_20))
-        features.append((df['close'].iloc[-1] / sma_20.iloc[-1] - 1) * 100)
+        # === 1. DÉTECTION INSTITUTIONNELLE (MFI) === 
+        institutional_signal = 'neutral'
+        institutional_strength = 0.0
         
-        # Volatility features
-        returns = df['close'].pct_change()
-        features.append(returns.std() * 100)
-        atr = self.detector._calculate_atr(df, 14)
-        features.append(atr.iloc[-1] / df['close'].iloc[-1] * 100)
+        if indicators.mfi_extreme_oversold:
+            institutional_signal = 'STRONG_BUY'
+            institutional_strength = 0.8
+            reasoning.append(f"🚨 INSTITUTIONS ACCUMULENT MASSIVEMENT (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_extreme_overbought:
+            institutional_signal = 'STRONG_SELL'
+            institutional_strength = -0.8
+            reasoning.append(f"🚨 INSTITUTIONS DISTRIBUENT MASSIVEMENT (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_oversold:
+            institutional_signal = 'BUY'
+            institutional_strength = 0.5
+            reasoning.append(f"💰 Accumulation institutionnelle (MFI: {indicators.mfi:.1f})")
+        elif indicators.mfi_overbought:
+            institutional_signal = 'SELL' 
+            institutional_strength = -0.5
+            reasoning.append(f"💸 Distribution institutionnelle (MFI: {indicators.mfi:.1f})")
         
-        # Range features
-        high_20 = df['high'].rolling(20).max()
-        low_20 = df['low'].rolling(20).min()
-        features.append((high_20.iloc[-1] - low_20.iloc[-1]) / df['close'].iloc[-1] * 100)
+        # === 2. PRECISION D'ENTRÉE (VWAP) ===
+        vwap_precision = 'low'
+        vwap_strength = 0.0
         
-        # Momentum features
-        rsi = self.detector._calculate_rsi(df['close'], 14)
-        features.append(rsi.iloc[-1])
+        if indicators.vwap_extreme_oversold:
+            vwap_precision = 'GODLIKE'
+            vwap_strength = 0.7
+            reasoning.append(f"⚡ ENTRY PRECISION MAXIMALE - Prix {indicators.vwap_position:.1f}% sous VWAP (>2σ)")
+        elif indicators.vwap_extreme_overbought:
+            vwap_precision = 'GODLIKE'
+            vwap_strength = -0.7
+            reasoning.append(f"⚡ EXIT PRECISION MAXIMALE - Prix {indicators.vwap_position:.1f}% sur VWAP (>2σ)")
+        elif indicators.vwap_oversold:
+            vwap_precision = 'high'
+            vwap_strength = 0.4
+            reasoning.append(f"🎯 Entrée précise proche VWAP support ({indicators.vwap_position:.1f}%)")
+        elif indicators.vwap_overbought:
+            vwap_precision = 'high'
+            vwap_strength = -0.4
+            reasoning.append(f"🎯 Exit précis proche VWAP résistance ({indicators.vwap_position:.1f}%)")
         
-        macd, macd_signal = self.detector._calculate_macd(df['close'])
-        features.append((macd - macd_signal).iloc[-1])
+        # === 3. COMBO MAGIQUE - CONFLUENCE INSTITUTIONNELLE + PRECISION === 
+        if institutional_strength != 0 and vwap_strength != 0:
+            # Les signaux vont dans la même direction = CONFLUENCE PUISSANTE
+            if (institutional_strength > 0 and vwap_strength > 0) or (institutional_strength < 0 and vwap_strength < 0):
+                combo_signals['institutional_confirmation'] = True
+                combo_signals['precision_entry'] = True
+                
+                # Calcul de la force combinée (multiplicateur de confluence)
+                combined_strength = (abs(institutional_strength) + abs(vwap_strength)) * 1.3  # Bonus confluence
+                final_strength = combined_strength if institutional_strength > 0 else -combined_strength
+                
+                # Détermination de la qualité du signal
+                if combined_strength > 1.0:
+                    combo_signals['signal_quality'] = 'GODLIKE'
+                    combo_signals['combo_strength'] = 'NUCLEAR'
+                    combo_signals['risk_reward_potential'] = 3.5
+                    reasoning.append("🚀 CONFLUENCE NUCLEAIRE: Institutions + VWAP = SIGNAL DEVASTATEUR!")
+                elif combined_strength > 0.7:
+                    combo_signals['signal_quality'] = 'high'
+                    combo_signals['combo_strength'] = 'strong'
+                    combo_signals['risk_reward_potential'] = 2.8
+                    reasoning.append("💎 CONFLUENCE FORTE: Signal institutionnel confirmé par VWAP")
+                else:
+                    combo_signals['signal_quality'] = 'medium'
+                    combo_signals['combo_strength'] = 'medium'
+                    combo_signals['risk_reward_potential'] = 2.2
+                
+                # Direction du signal
+                if final_strength > 0:
+                    combo_signals['signal_type'] = 'bullish'
+                    combo_signals['recommended_action'] = 'strong_buy' if combined_strength > 1.0 else 'buy'
+                else:
+                    combo_signals['signal_type'] = 'bearish'
+                    combo_signals['recommended_action'] = 'strong_sell' if combined_strength > 1.0 else 'sell'
+                
+                combo_signals['strength'] = min(1.0, combined_strength)
+                combo_signals['confidence'] = min(0.98, combined_strength * 0.85)
+                
+        # === 4. SIGNAUX SPÉCIAUX ===
         
-        # Volume features
-        features.append(df['volume'].iloc[-1] / df['volume'].rolling(20).mean().iloc[-1])
+        # Divergence MFI (HOLY GRAIL) + VWAP support/resistance
+        if indicators.mfi_divergence:
+            divergence_boost = 0.3
+            if indicators.mfi < 50 and indicators.vwap_position < 0:  # Divergence haussière + sous VWAP
+                strength_factors.append(divergence_boost)
+                reasoning.append("👑 HOLY GRAIL: Divergence MFI haussière + VWAP support")
+            elif indicators.mfi > 50 and indicators.vwap_position > 0:  # Divergence baissière + sur VWAP
+                strength_factors.append(-divergence_boost)
+                reasoning.append("👑 HOLY GRAIL: Divergence MFI baissière + VWAP résistance")
         
-        # ADX
-        features.append(self.detector._calculate_adx_proper(df, 14))
+        # Activité institutionnelle massive avec volume
+        if indicators.institutional_activity == 'accumulation' and indicators.vwap_trend == 'bullish':
+            strength_factors.append(0.4)
+            reasoning.append("🏦 INSTITUTIONS ACCUMULENT + VWAP haussier = BUY THE DIP")
+        elif indicators.institutional_activity == 'distribution' and indicators.vwap_trend == 'bearish':
+            strength_factors.append(-0.4)
+            reasoning.append("🏦 INSTITUTIONS DISTRIBUENT + VWAP baissier = SELL THE RALLY")
         
-        return np.array(features)
+        # === 5. FINALISATION DU SIGNAL ===
+        if strength_factors and not combo_signals['institutional_confirmation']:
+            # Signaux moins forts mais valides
+            total_strength = np.mean(strength_factors)
+            combo_signals['strength'] = min(1.0, abs(total_strength))
+            combo_signals['confidence'] = min(0.85, combo_signals['strength'] * 0.9)
+            
+            if total_strength > 0.2:
+                combo_signals['signal_type'] = 'bullish'
+                combo_signals['recommended_action'] = 'buy'
+            elif total_strength < -0.2:
+                combo_signals['signal_type'] = 'bearish'
+                combo_signals['recommended_action'] = 'sell'
+        
+        combo_signals['institutional_signal'] = institutional_signal
+        combo_signals['entry_precision_level'] = indicators.vwap
+        combo_signals['reasoning'] = reasoning
+        
+        return combo_signals
     
-    def _calculate_slope(self, series: pd.Series) -> float:
-        """Calcule la pente"""
-        if len(series) < 2:
-            return 0.0
-        x = np.arange(len(series))
-        y = series.values
-        if np.isnan(y).any():
-            return 0.0
-        return np.polyfit(x, y, 1)[0]
-    
-    def _get_feature_names(self) -> List[str]:
-        """Noms des features"""
-        return [
-            'sma_10_slope',
-            'sma_20_slope',
-            'distance_sma_20_pct',
-            'volatility_std',
-            'atr_pct',
-            'range_20_pct',
-            'rsi_14',
-            'macd_histogram',
-            'volume_ratio',
-            'adx_14'
-        ]
+    def detect_ema_market_regime(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🎯 DÉTECTION RÉGIME MARCHÉ EMA/SMA - META-INDICATEUR POUR BIAIS DIRECTIONNEL
+        Cette méthode détermine le RÉGIME GLOBAL (buy/sell) qui doit influencer toute l'analyse IA
+        """
+        regime_analysis = {
+            'market_regime': 'neutral',
+            'regime_strength': 0.5,
+            'regime_bias': 'none',
+            'regime_confidence': 0.5,
+            'directional_filter': 'both',  # 'long_only', 'short_only', 'both'
+            'regime_factors': [],
+            'regime_warnings': [],
+            'suggested_strategy': 'neutral'
+        }
+        
+        regime_factors = []
+        regime_score = 0.5  # Start neutral
+        
+        # === 1. TREND HIERARCHY REGIME ===
+        if indicators.trend_hierarchy == 'strong_bull':
+            regime_score += 0.3
+            regime_factors.append("Perfect bullish EMA hierarchy")
+            regime_analysis['directional_filter'] = 'long_preferred'
+        elif indicators.trend_hierarchy == 'weak_bull':
+            regime_score += 0.15
+            regime_factors.append("Moderate bullish EMA structure")
+            regime_analysis['directional_filter'] = 'long_bias'
+        elif indicators.trend_hierarchy == 'strong_bear':
+            regime_score -= 0.3
+            regime_factors.append("Perfect bearish EMA hierarchy")
+            regime_analysis['directional_filter'] = 'short_preferred'
+        elif indicators.trend_hierarchy == 'weak_bear':
+            regime_score -= 0.15
+            regime_factors.append("Moderate bearish EMA structure")
+            regime_analysis['directional_filter'] = 'short_bias'
+        
+        # === 2. GOLDEN/DEATH CROSS MOMENTUM REGIME ===
+        if indicators.ema_cross_signal == 'golden_cross':
+            regime_score += 0.2
+            regime_factors.append("Golden Cross momentum shift")
+            if regime_analysis['directional_filter'] == 'both':
+                regime_analysis['directional_filter'] = 'long_momentum'
+        elif indicators.ema_cross_signal == 'death_cross':
+            regime_score -= 0.2
+            regime_factors.append("Death Cross momentum shift")
+            if regime_analysis['directional_filter'] == 'both':
+                regime_analysis['directional_filter'] = 'short_momentum'
+        
+        # === 3. PRICE POSITIONING REGIME ===
+        if indicators.price_vs_emas == 'above_all':
+            regime_score += 0.15
+            regime_factors.append("Price above all EMAs (institutional support)")
+        elif indicators.price_vs_emas == 'above_fast':
+            regime_score += 0.1
+            regime_factors.append("Price above fast EMAs (short-term support)")
+        elif indicators.price_vs_emas == 'below_fast':
+            regime_score -= 0.1
+            regime_factors.append("Price below fast EMAs (short-term resistance)")
+        elif indicators.price_vs_emas == 'below_all':
+            regime_score -= 0.15
+            regime_factors.append("Price below all EMAs (institutional resistance)")
+        
+        # === 4. RECENT MOMENTUM OVERRIDE ===
+        # Strong recent performance can override neutral EMA positioning
+        # This captures emerging trends not yet reflected in slower EMAs
+        if hasattr(indicators, 'recent_momentum'):
+            recent_performance = getattr(indicators, 'recent_momentum', 0)
+        else:
+            # Calculate recent momentum as proxy (price vs EMA9 + EMA21)
+            if indicators.ema_9 > 0 and indicators.ema_21 > 0:
+                price_vs_fast_emas = (current_price / ((indicators.ema_9 + indicators.ema_21) / 2) - 1) * 100
+                if price_vs_fast_emas > 3.0:  # More than 3% above fast EMAs
+                    regime_score += 0.15
+                    regime_factors.append(f"Strong recent momentum (+{price_vs_fast_emas:.1f}% vs fast EMAs)")
+                elif price_vs_fast_emas < -3.0:
+                    regime_score -= 0.15
+                    regime_factors.append(f"Weak recent momentum ({price_vs_fast_emas:.1f}% vs fast EMAs)")
+        
+        # === 5. TREND STRENGTH MULTIPLIER ===
+        strength_multiplier = indicators.trend_strength_score
+        regime_score = 0.5 + (regime_score - 0.5) * strength_multiplier
+        
+        # === 6. CLASSIFY MARKET REGIME (ADJUSTED THRESHOLDS) ===
+        regime_analysis['regime_strength'] = abs(regime_score - 0.5) * 2  # Convert to 0-1
+        
+        if regime_score >= 0.75:  # Lowered from 0.8
+            regime_analysis['market_regime'] = 'strong_buy'
+            regime_analysis['regime_bias'] = 'bullish'
+            regime_analysis['suggested_strategy'] = 'buy_dips'
+            regime_analysis['directional_filter'] = 'long_only'
+        elif regime_score >= 0.58:  # Lowered from 0.65
+            regime_analysis['market_regime'] = 'buy'
+            regime_analysis['regime_bias'] = 'bullish'
+            regime_analysis['suggested_strategy'] = 'long_bias'
+            regime_analysis['directional_filter'] = 'long_preferred'
+        elif regime_score <= 0.25:  # Lowered from 0.2
+            regime_analysis['market_regime'] = 'strong_sell'
+            regime_analysis['regime_bias'] = 'bearish'
+            regime_analysis['suggested_strategy'] = 'sell_rallies'
+            regime_analysis['directional_filter'] = 'short_only'
+        elif regime_score <= 0.42:  # Lowered from 0.35
+            regime_analysis['market_regime'] = 'sell'
+            regime_analysis['regime_bias'] = 'bearish'
+            regime_analysis['suggested_strategy'] = 'short_bias'
+            regime_analysis['directional_filter'] = 'short_preferred'
+        else:
+            regime_analysis['market_regime'] = 'neutral'
+            regime_analysis['regime_bias'] = 'mixed'
+            regime_analysis['suggested_strategy'] = 'wait'
+            regime_analysis['directional_filter'] = 'both'
+        
+        # === 6. CONFIDENCE BASED ON CLARITY ===
+        regime_analysis['regime_confidence'] = min(0.95, regime_analysis['regime_strength'] + 0.3)
+        
+        regime_analysis['regime_factors'] = regime_factors
+        
+        return regime_analysis
 
-
-# =============================================================================
-# MAIN
-# =============================================================================
-
-if __name__ == "__main__":
-    # Exécution de la démonstration complète
-    detector, analyzer, position_calculator, trade_analysis = demonstrate_complete_system()
+    def get_ema_sma_trend_analysis(self, indicators: TechnicalIndicators, current_price: float) -> Dict[str, Any]:
+        """
+        🎯 ANALYSE COMPLÈTE EMA/SMA TREND HIERARCHY - CONFLUENCE MATRIX FINAL PIECE! 🎯
+        Fournit une analyse détaillée de la hiérarchie des tendances EMA/SMA pour IA1 et IA2
+        """
+        ema_analysis = {
+            'trend_direction': 'neutral',
+            'trend_strength': 'weak',
+            'momentum_state': 'neutral',
+            'price_positioning': 'mixed',
+            'cross_signals': 'none',
+            'support_resistance_levels': [],
+            'confidence_score': 0.5,
+            'risk_reward_potential': 1.0,
+            'trend_probability': 0.5,
+            'recommended_strategy': 'wait',
+            'key_levels': {},
+            'trend_analysis': [],
+            'confluence_factors': []
+        }
+        
+        analysis_points = []
+        confluence_factors = []
+        confidence_factors = []
+        
+        # === 1. TREND HIERARCHY ANALYSIS ===
+        if indicators.trend_hierarchy != 'neutral':
+            if indicators.trend_hierarchy == 'strong_bull':
+                ema_analysis['trend_direction'] = 'strong_bullish'
+                ema_analysis['trend_strength'] = 'very_strong'
+                ema_analysis['confidence_score'] = 0.9
+                ema_analysis['trend_probability'] = 0.85
+                ema_analysis['recommended_strategy'] = 'buy_dips'
+                analysis_points.append("🚀 STRONG BULL HIERARCHY: Price > EMA9 > EMA21 > SMA50 > EMA200")
+                confluence_factors.append("Perfect bull hierarchy alignment")
+            elif indicators.trend_hierarchy == 'weak_bull':
+                ema_analysis['trend_direction'] = 'bullish'
+                ema_analysis['trend_strength'] = 'moderate'
+                ema_analysis['confidence_score'] = 0.7
+                ema_analysis['trend_probability'] = 0.68
+                ema_analysis['recommended_strategy'] = 'cautious_buy'
+                analysis_points.append("📈 WEAK BULL HIERARCHY: Partial bullish EMA alignment")
+                confluence_factors.append("Moderate bullish EMA structure")
+            elif indicators.trend_hierarchy == 'strong_bear':
+                ema_analysis['trend_direction'] = 'strong_bearish'
+                ema_analysis['trend_strength'] = 'very_strong'
+                ema_analysis['confidence_score'] = 0.9
+                ema_analysis['trend_probability'] = 0.15
+                ema_analysis['recommended_strategy'] = 'sell_rallies'
+                analysis_points.append("💥 STRONG BEAR HIERARCHY: Price < EMA9 < EMA21 < SMA50 < EMA200")
+                confluence_factors.append("Perfect bear hierarchy alignment")
+            elif indicators.trend_hierarchy == 'weak_bear':
+                ema_analysis['trend_direction'] = 'bearish'
+                ema_analysis['trend_strength'] = 'moderate'
+                ema_analysis['confidence_score'] = 0.7
+                ema_analysis['trend_probability'] = 0.32
+                ema_analysis['recommended_strategy'] = 'cautious_sell'
+                analysis_points.append("📉 WEAK BEAR HIERARCHY: Partial bearish EMA alignment")
+                confluence_factors.append("Moderate bearish EMA structure")
+        
+        # === 2. PRICE POSITIONING ANALYSIS ===
+        positioning_analysis = {
+            'above_all': ('🟢 MAXIMUM BULLISH POSITIONING', 'Above all EMAs = institutional support', 0.9),
+            'above_fast': ('🟡 MODERATE BULLISH POSITIONING', 'Above fast EMAs = short-term bullish', 0.7),
+            'below_fast': ('🟠 MODERATE BEARISH POSITIONING', 'Below fast EMAs = short-term bearish', 0.3),
+            'below_all': ('🔴 MAXIMUM BEARISH POSITIONING', 'Below all EMAs = institutional resistance', 0.1),
+            'mixed': ('⚪ MIXED POSITIONING', 'Conflicting EMA signals', 0.5)
+        }
+        
+        if indicators.price_vs_emas in positioning_analysis:
+            description, explanation, prob_adjustment = positioning_analysis[indicators.price_vs_emas]
+            ema_analysis['price_positioning'] = indicators.price_vs_emas
+            ema_analysis['trend_probability'] *= prob_adjustment
+            analysis_points.append(f"{description}: {explanation}")
+            confluence_factors.append(f"Price positioning: {indicators.price_vs_emas}")
+        
+        # === 3. GOLDEN/DEATH CROSS ANALYSIS ===
+        if indicators.ema_cross_signal != 'neutral':
+            if indicators.ema_cross_signal == 'golden_cross':
+                ema_analysis['cross_signals'] = 'golden_cross'
+                ema_analysis['momentum_state'] = 'accelerating_bull'
+                ema_analysis['risk_reward_potential'] = 2.5
+                analysis_points.append("⚡ GOLDEN CROSS: EMA9 crossed above EMA21 - MOMENTUM SHIFT!")
+                confluence_factors.append("Golden Cross momentum signal")
+                confidence_factors.append(0.8)
+            elif indicators.ema_cross_signal == 'death_cross':
+                ema_analysis['cross_signals'] = 'death_cross'
+                ema_analysis['momentum_state'] = 'accelerating_bear'
+                ema_analysis['risk_reward_potential'] = 2.5
+                analysis_points.append("💥 DEATH CROSS: EMA9 crossed below EMA21 - MOMENTUM SHIFT!")
+                confluence_factors.append("Death Cross momentum signal")
+                confidence_factors.append(0.8)
+        
+        # === 4. TREND MOMENTUM ANALYSIS ===
+        if indicators.trend_momentum != 'neutral':
+            momentum_analysis = {
+                'accelerating': ('🚀 ACCELERATING', 'EMAs spreading apart = increasing momentum', 0.8),
+                'decelerating': ('🛑 DECELERATING', 'EMAs converging = decreasing momentum', 0.3),
+            }
+            
+            if indicators.trend_momentum in momentum_analysis:
+                description, explanation, momentum_confidence = momentum_analysis[indicators.trend_momentum]
+                ema_analysis['momentum_state'] = indicators.trend_momentum
+                analysis_points.append(f"{description}: {explanation}")
+                confluence_factors.append(f"Trend momentum: {indicators.trend_momentum}")
+                confidence_factors.append(momentum_confidence)
+        
+        # === 5. DYNAMIC SUPPORT/RESISTANCE LEVELS ===
+        key_levels = {}
+        support_resistance = []
+        
+        if indicators.ema_9 > 0:
+            key_levels['ema_9'] = indicators.ema_9
+            support_resistance.append(f"EMA9: ${indicators.ema_9:.4f} (Ultra-fast S/R)")
+        
+        if indicators.ema_21 > 0:
+            key_levels['ema_21'] = indicators.ema_21
+            support_resistance.append(f"EMA21: ${indicators.ema_21:.4f} (Fast S/R)")
+        
+        if indicators.sma_50 > 0:
+            key_levels['sma_50'] = indicators.sma_50
+            support_resistance.append(f"SMA50: ${indicators.sma_50:.4f} (Institutional S/R)")
+        
+        if indicators.ema_200 > 0:
+            key_levels['ema_200'] = indicators.ema_200
+            support_resistance.append(f"EMA200: ${indicators.ema_200:.4f} (Major trend S/R)")
+        
+        ema_analysis['key_levels'] = key_levels
+        ema_analysis['support_resistance_levels'] = support_resistance
+        
+        # === 6. TREND STRENGTH SCORE INTEGRATION ===
+        if indicators.trend_strength_score != 0.5:
+            strength_percentage = indicators.trend_strength_score * 100
+            if strength_percentage > 80:
+                ema_analysis['trend_strength'] = 'very_strong'
+                analysis_points.append(f"💪 VERY STRONG TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage > 60:
+                ema_analysis['trend_strength'] = 'strong'
+                analysis_points.append(f"💪 STRONG TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage < 20:
+                ema_analysis['trend_strength'] = 'very_weak'
+                analysis_points.append(f"📉 VERY WEAK TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+            elif strength_percentage < 40:
+                ema_analysis['trend_strength'] = 'weak'
+                analysis_points.append(f"📉 WEAK TREND: {strength_percentage:.0f}% EMA hierarchy alignment")
+        
+        # === 7. CONFLUENCE CALCULATION ===
+        if confidence_factors:
+            ema_analysis['confidence_score'] = min(0.95, np.mean(confidence_factors))
+        
+        # Risk/Reward Potential based on trend clarity
+        if ema_analysis['trend_strength'] in ['very_strong', 'strong'] and ema_analysis['cross_signals'] != 'none':
+            ema_analysis['risk_reward_potential'] = 3.0
+        elif ema_analysis['trend_direction'] in ['strong_bullish', 'strong_bearish']:
+            ema_analysis['risk_reward_potential'] = 2.5
+        elif ema_analysis['cross_signals'] != 'none':
+            ema_analysis['risk_reward_potential'] = 2.0
+        
+        ema_analysis['trend_analysis'] = analysis_points
+        ema_analysis['confluence_factors'] = confluence_factors
+        
+        return ema_analysis
     
-    print(f"\n{'='*80}")
-    print("🎓 UTILISATION DU SYSTÈME:")
-    print(f"{'='*80}")
-    print("""
-1. DÉTECTION DE RÉGIME:
-   regime_info = detector.detect_detailed_regime(df)
-   
-2. ANALYSE DE TRADE:
-   trade_analysis = analyzer.analyze_trade_setup(df)
-   
-3. CALCUL POSITION SIZE:
-   position = position_calculator.calculate_position_size(
-       regime_info, entry_price, stop_loss_price
-   )
-   
-4. DÉCISION DE TRADE:
-   if trade_analysis['should_trade'] and trade_analysis['confluence_score'] >= 75:
-       # Executer le trade avec les paramètres recommandés
-       pass
+    def get_latest_indicators(self, df: pd.DataFrame) -> TechnicalIndicators:
+        """
+        Extrait les indicateurs les plus récents du DataFrame calculé
+        Alias pour get_current_indicators pour compatibilité multi-timeframe
+        """
+        return self.get_current_indicators(df)
 
-5. GÉNÉRATION DONNÉES ML (optionnel):
-   data_gen = RegimeTrainingDataGenerator(detector)
-   dataset = data_gen.create_training_dataset(df)
-    """)
+    def get_scientific_indicators(self, df: pd.DataFrame) -> TechnicalIndicators:
+        """
+        🔬 INDICATEURS TECHNIQUES SCIENTIFIQUES
+        Calculs précis sur données OHLCV quotidiennes de qualité
+        PAS de simulation multi-timeframe - pure science mathématique
+        """
+        # Utiliser les calculs existants qui sont scientifiquement corrects
+        df_with_indicators = self.calculate_all_indicators(df.copy())
+        return self.get_latest_indicators(df_with_indicators)
+
+    def get_multi_timeframe_indicators(self, df: pd.DataFrame) -> Dict[str, TechnicalIndicators]:
+        """
+        🚀 RÉVOLUTION MULTI-TIMEFRAME: Calcule tous les indicateurs sur TOUS les timeframes
+        Comme un trader professionnel qui regarde Daily, 4H, 1H, 5min pour ses décisions !
+        """
+        multi_tf_indicators = {}
+        
+        try:
+            # S'assurer qu'on a assez de données pour tous les timeframes
+            if len(df) < 300:  # Au moins 300 périodes pour avoir 14 jours de données
+                logger.warning(f"⚠️ Pas assez de données pour multi-timeframe: {len(df)} périodes")
+                # Fallback sur timeframes courts seulement
+                available_timeframes = {k: v for k, v in self.timeframes.items() if v <= len(df) // 2}
+            else:
+                available_timeframes = self.timeframes
+            
+            logger.info(f"🔍 MULTI-TIMEFRAME ANALYSIS: Calculating indicators for {len(available_timeframes)} timeframes")
+            
+            for tf_name, periods_back in available_timeframes.items():
+                try:
+                    if tf_name == 'now':
+                        # Timeframe actuel - utilise toute la data
+                        tf_df = df.copy()
+                    else:
+                        # Timeframes historiques - décale les données
+                        if periods_back >= len(df):
+                            continue  # Skip si pas assez de données
+                        
+                        # Prendre un snapshot des données à ce moment dans le passé
+                        end_idx = len(df) - periods_back
+                        tf_df = df.iloc[:end_idx + 50].copy()  # +50 pour avoir assez de données pour les calculs
+                        
+                        if len(tf_df) < 50:  # Minimum pour calculer les indicateurs
+                            continue
+                    
+                    # Calculer tous les indicateurs pour ce timeframe
+                    tf_df_with_indicators = self.calculate_all_indicators(tf_df)
+                    
+                    if len(tf_df_with_indicators) > 0:
+                        # Extraire les dernières valeurs (plus récentes pour ce timeframe)
+                        tf_indicators = self.get_latest_indicators(tf_df_with_indicators)
+                        multi_tf_indicators[tf_name] = tf_indicators
+                        
+                        logger.debug(f"✅ {tf_name}: RSI={tf_indicators.rsi_14:.1f}, MFI={tf_indicators.mfi:.1f}, VWAP=${tf_indicators.vwap:.4f}")
+                    
+                except Exception as e:
+                    logger.error(f"Error calculating {tf_name} indicators: {e}")
+                    continue
+            
+            logger.info(f"🎯 MULTI-TIMEFRAME SUCCESS: {len(multi_tf_indicators)} timeframes calculated")
+            return multi_tf_indicators
+            
+        except Exception as e:
+            logger.error(f"Error in multi-timeframe calculation: {e}")
+            # Fallback to current timeframe only
+            try:
+                current_indicators = self.get_latest_indicators(self.calculate_all_indicators(df))
+                return {'now': current_indicators}
+            except:
+                # Ultimate fallback - empty dict
+                return {}
     
-    print(f"\n{'='*80}")
-    print("✅ SYSTÈME PRÊT POUR PRODUCTION")
-    print(f"{'='*80}")
+    def format_multi_timeframe_for_prompt(self, multi_tf_indicators: Dict[str, TechnicalIndicators]) -> str:
+        """
+        🎯 Formate les indicateurs multi-timeframe pour le prompt IA1
+        Structure hiérarchique: Long terme → Court terme (comme un trader pro)
+        """
+        try:
+            if not multi_tf_indicators:
+                return "⚠️ Multi-timeframe data not available"
+            
+            # Ordre hiérarchique pour analyse professionnelle
+            timeframe_order = ['14d', '5d', '1d', '4h', '1h', '5min', 'now']
+            available_tfs = [tf for tf in timeframe_order if tf in multi_tf_indicators]
+            
+            if not available_tfs:
+                return "⚠️ No timeframe data available"
+            
+            formatted_lines = []
+            formatted_lines.append("🔍 MULTI-TIMEFRAME PROFESSIONAL ANALYSIS:")
+            
+            for tf in available_tfs:
+                indicators = multi_tf_indicators[tf]
+                
+                # Nom du timeframe plus lisible
+                tf_names = {
+                    '14d': '📅 14-DAY TREND',
+                    '5d': '📈 5-DAY MOMENTUM', 
+                    '1d': '📊 DAILY STRUCTURE',
+                    '4h': '⏰ 4H INTERMEDIATE',
+                    '1h': '🕐 1H SHORT-TERM',
+                    '5min': '⚡ 5MIN PRECISION',
+                    'now': '🎯 CURRENT LEVELS'
+                }
+                
+                # Indicateurs clés formatés
+                rsi_status = "OVERSOLD" if indicators.rsi_14 < 30 else "OVERBOUGHT" if indicators.rsi_14 > 70 else "NEUTRAL"
+                mfi_status = "ACCUMULATION" if indicators.mfi < 30 else "DISTRIBUTION" if indicators.mfi > 70 else "NEUTRAL"
+                vwap_status = "ABOVE" if indicators.vwap_position > 0 else "BELOW"
+                
+                # Ligne formatée pour ce timeframe
+                tf_line = f"{tf_names.get(tf, tf.upper())}: RSI {indicators.rsi_14:.1f}({rsi_status}) | MFI {indicators.mfi:.1f}({mfi_status}) | VWAP {vwap_status}({indicators.vwap_position:+.1f}%)"
+                
+                # Ajouter des signaux spéciaux pour timeframes clés
+                if tf in ['14d', '5d'] and (indicators.mfi < 20 or indicators.mfi > 80):
+                    tf_line += f" | 🚨 INSTITUTIONAL {'LOADING' if indicators.mfi < 20 else 'DUMPING'}"
+                elif tf == 'now' and (indicators.vwap_extreme_oversold or indicators.vwap_extreme_overbought):
+                    tf_line += f" | 🎯 PRECISION {'ENTRY' if indicators.vwap_extreme_oversold else 'EXIT'}"
+                
+                formatted_lines.append(tf_line)
+            
+            return '\n            '.join(formatted_lines)
+            
+        except Exception as e:
+            logger.error(f"Error formatting multi-timeframe data: {e}")
+            return "⚠️ Error formatting multi-timeframe analysis"
+
+# Instance globale
+advanced_technical_indicators = AdvancedTechnicalIndicators()
