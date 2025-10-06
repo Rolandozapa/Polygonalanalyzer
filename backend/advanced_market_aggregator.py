@@ -1432,10 +1432,10 @@ class AdvancedMarketAggregator:
                     # Créer l'opportunité avec données BingX RÉELLES uniquement
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
-                        current_price=current_price,  # Prix depuis BingX API ou prix fallback
-                        volume_24h=crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0,
-                        price_change_24h=crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
-                        volatility=abs(crypto.price_change) if hasattr(crypto, 'price_change') and crypto.price_change else 0.0,
+                        current_price=current_price,  # Prix depuis BingX API RÉEL uniquement
+                        volume_24h=volume,
+                        price_change_24h=price_change,
+                        volatility=abs(price_change),
                         market_cap=crypto.market_cap if hasattr(crypto, 'market_cap') and crypto.market_cap else 0,
                         market_cap_rank=crypto.rank if hasattr(crypto, 'rank') and crypto.rank else 999,
                         data_sources=["bingx_scout_filtered"],
