@@ -2226,12 +2226,36 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_extreme_overbought = vwap_distance_num > 3.0
             vwap_extreme_oversold = vwap_distance_num < -3.0
             
-            # 🔧 CALCULATE MFI-equivalent from VWAP and volume (for compatibility)
-            # Use VWAP distance and volume to simulate MFI behavior
-            mfi = 50.0 + (vwap_distance_num * 10)  # Convert VWAP distance to MFI-like scale
-            mfi = max(0, min(100, mfi))  # Clamp to 0-100 range
-            mfi_overbought = mfi > 80
-            mfi_oversold = mfi < 20
+            # 🚀 REAL MFI CALCULATION - NO SIMULATED VALUES
+            # Calculate actual Money Flow Index using real volume and price data
+            try:
+                if len(historical_data) >= 14:  # Need minimum 14 periods for MFI
+                    # Calculate typical price (HLC/3)
+                    typical_price = (historical_data['high'] + historical_data['low'] + historical_data['close']) / 3
+                    money_flow = typical_price * historical_data['volume']
+                    
+                    # Calculate positive and negative money flow over 14 periods
+                    positive_flow = money_flow[typical_price > typical_price.shift(1)].rolling(14).sum()
+                    negative_flow = money_flow[typical_price < typical_price.shift(1)].rolling(14).sum()
+                    
+                    mfi = 100 - (100 / (1 + (positive_flow / negative_flow)))
+                    mfi = mfi.iloc[-1] if not mfi.empty else None
+                else:
+                    mfi = None  # ❌ NO FALLBACK - Real calculation or None
+                
+                if mfi is not None:
+                    mfi_overbought = mfi > 80
+                    mfi_oversold = mfi < 20
+                else:
+                    mfi_overbought = False
+                    mfi_oversold = False
+                    logger.warning(f"⚠️ MFI calculation failed for {opportunity.symbol} - insufficient data")
+                    
+            except Exception as e:
+                logger.error(f"❌ MFI calculation error for {opportunity.symbol}: {e}")
+                mfi = None
+                mfi_overbought = False
+                mfi_oversold = False
             mfi_extreme_overbought = mfi > 90
             mfi_extreme_oversold = mfi < 10
             institutional_activity = ('distribution' if mfi > 80 else 'accumulation' if mfi < 20 else 'neutral')
