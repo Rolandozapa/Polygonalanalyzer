@@ -6148,11 +6148,15 @@ async def force_ia1_analysis(request: dict):
                         from data_models import MarketOpportunity
                         import uuid
                         
+                        # Calculate volatility from price data
+                        volatility = abs(price_change_24h) if price_change_24h else 2.0
+                        
                         target_opportunity = MarketOpportunity(
                             id=f"{symbol}_{int(get_paris_time().timestamp())}",
                             symbol=symbol,
                             current_price=current_price,
                             price_change_24h=price_change_24h,
+                            volatility=volatility,
                             volume_24h=fallback_data['Volume'].iloc[-1] if 'Volume' in fallback_data.columns else 1000000,
                             market_cap=0.0,  # Will be populated by analysis
                             market_cap_rank=None,
