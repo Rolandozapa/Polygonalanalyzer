@@ -142,11 +142,46 @@ class ProfessionalIndicatorsTALib:
             
             logger.info(f"🔬 Calculating professional indicators for {symbol} with {len(df)} bars")
             
-            # Préparer les données
-            high = df['high'].values.astype(np.float64)
-            low = df['low'].values.astype(np.float64)
-            close = df['close'].values.astype(np.float64)
-            volume = df.get('volume', pd.Series([100000] * len(df))).values.astype(np.float64)
+            # 🔧 ADAPTIVE COLUMN MAPPING - Handle different OHLCV column names
+            logger.info(f"   📊 DataFrame columns: {df.columns.tolist()}")
+            
+            # Auto-detect column names (case insensitive)
+            column_mapping = {}
+            for standard_col in ['high', 'low', 'close', 'open', 'volume']:
+                for df_col in df.columns:
+                    if standard_col.lower() in df_col.lower():
+                        column_mapping[standard_col] = df_col
+                        break
+                
+                # Fallback patterns
+                if standard_col not in column_mapping:
+                    if standard_col == 'close' and 'Close' in df.columns:
+                        column_mapping['close'] = 'Close'
+                    elif standard_col == 'high' and 'High' in df.columns:
+                        column_mapping['high'] = 'High'
+                    elif standard_col == 'low' and 'Low' in df.columns:
+                        column_mapping['low'] = 'Low'
+                    elif standard_col == 'volume' and 'Volume' in df.columns:
+                        column_mapping['volume'] = 'Volume'
+            
+            logger.info(f"   🔧 Column mapping detected: {column_mapping}")
+            
+            # Extract data with proper column mapping
+            try:
+                high = df[column_mapping.get('high', df.columns[1])].values.astype(np.float64)  # Fallback to 2nd column
+                low = df[column_mapping.get('low', df.columns[2])].values.astype(np.float64)   # Fallback to 3rd column  
+                close = df[column_mapping.get('close', df.columns[3])].values.astype(np.float64) # Fallback to 4th column
+                
+                if 'volume' in column_mapping:
+                    volume = df[column_mapping['volume']].values.astype(np.float64)
+                else:
+                    volume = np.array([100000] * len(df), dtype=np.float64)  # Default volume
+                    logger.warning(f"   ⚠️ No volume column found, using default 100K volume")
+                    
+            except Exception as col_error:
+                logger.error(f"   ❌ Column extraction failed: {col_error}")
+                logger.error(f"   📊 Available columns: {df.columns.tolist()}")
+                raise col_error
             
             current_price = float(close[-1])
             
