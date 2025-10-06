@@ -2482,10 +2482,10 @@ MOMENTUM CONDITIONS (Need minimum 2/6):
 6. Above SMA 20: {{above_sma_20}} ({{above_sma_20_check}})
 
 HIGH CONVICTION TRIGGERS:
-🔥 ML_BREAKOUT_SQUEEZE: {{bb_squeeze and confidence > 0.75 and volume_ratio > 1.8}}
-🔥 ML_TREND_ACCELERATION: {{adx > 25 and abs(sma_20_slope) > 0.002 and confidence > 0.8}}
-🔥 ML_FRESH_REGIME: {{regime_persistence < 10 and confidence > 0.85}}
-🔥 ML_VOLUME_SURGE: {{volume_ratio > 2.0 and volume_trend > 0.1}}
+🔥 ML_BREAKOUT_SQUEEZE: {{ml_breakout_squeeze}}
+🔥 ML_TREND_ACCELERATION: {{ml_trend_acceleration}}
+🔥 ML_FRESH_REGIME: {{ml_fresh_regime}}
+🔥 ML_VOLUME_SURGE: {{ml_volume_surge}}
 
 CONFLUENCE GRADE: {{confluence_grade}}
 CONFLUENCE SCORE: {{confluence_score}}/100
