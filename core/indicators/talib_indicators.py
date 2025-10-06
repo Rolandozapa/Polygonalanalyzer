@@ -783,6 +783,9 @@ class TALibIndicators:
         
         consistency_score += 0.15 * volatility_score
         
+        # Debug logging for consistency calculation
+        logger.debug(f"🔬 Technical Consistency Breakdown: Trend={trend_score:.2f} (35%), Momentum={momentum_score:.2f} (35%), Volume={volume_score:.2f} (15%), Volatility={volatility_score:.2f} (15%) → Total={consistency_score:.2f}")
+        
         return min(1.0, max(0.0, consistency_score))
     
     def _calculate_confluence_grade(self, regime_result: RegimeDetectionResult, 
