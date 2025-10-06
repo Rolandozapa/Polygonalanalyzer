@@ -589,6 +589,7 @@ class TALibIndicators:
             ema_9 = talib.EMA(close, timeperiod=9)
             ema_21 = talib.EMA(close, timeperiod=21)
             ema_50 = talib.EMA(close, timeperiod=50)
+            ema_200 = talib.EMA(close, timeperiod=200)
             
             # Get latest values
             sma_20_val = float(sma_20[-1]) if not np.isnan(sma_20[-1]) else current_price
@@ -596,6 +597,7 @@ class TALibIndicators:
             ema_9_val = float(ema_9[-1]) if not np.isnan(ema_9[-1]) else current_price
             ema_21_val = float(ema_21[-1]) if not np.isnan(ema_21[-1]) else current_price
             ema_50_val = float(ema_50[-1]) if not np.isnan(ema_50[-1]) else current_price
+            ema_200_val = float(ema_200[-1]) if not np.isnan(ema_200[-1]) else current_price
             
             # Trend hierarchy
             if ema_9_val > ema_21_val > ema_50_val:
