@@ -2523,6 +2523,15 @@ If {{regime}} == "TRENDING_UP_STRONG" or "BREAKOUT_BULLISH":
     → Stop: Below SMA 20 or recent swing low
     → Targets: Previous highs + Fibonacci extensions
 
+TRADE TYPE SELECTION LOGIC:
+Based on regime and volatility, select appropriate strategy:
+- SCALP: VOLATILE regimes, quick 5-15min trades (RR > 1.0)
+- INTRADAY: BREAKOUT regimes, 1-4 hour positions (RR > 1.5) 
+- SWING: TRENDING regimes, 1-7 day positions (RR > 2.0)
+- POSITION: TRENDING_STRONG regimes, 1-4 week positions (RR > 2.5)
+
+Current regime {{regime}} suggests: [SELECT APPROPRIATE TRADE TYPE]
+
 If {{regime}} == "CONSOLIDATION" or "RANGING":  
     → Range trading approach
     → Entry: Range boundaries with volume confirmation
