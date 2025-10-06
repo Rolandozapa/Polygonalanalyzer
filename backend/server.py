@@ -2976,7 +2976,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     # LONG: Entry = current, SL = support, TP = resistance
                     stop_loss_price = primary_support
                     take_profit_price = primary_resistance
-                elif ia1_signal.lower() == 'short':
+                elif str(ia1_signal).lower() == 'short':
                     # SHORT: Entry = current, SL = resistance, TP = support  
                     stop_loss_price = primary_resistance
                     take_profit_price = primary_support
@@ -3029,7 +3029,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                             # Pour RR = 2.5:1, Risk = (Target - Entry) / 2.5
                             target_risk = (primary_resistance - real_current_price) / 2.5
                             primary_support = real_current_price - target_risk
-                        elif ia1_signal.lower() == 'short':
+                        elif str(ia1_signal).lower() == 'short':
                             # SHORT: Target = support, calculer resistance pour RR > 2.0
                             primary_support = extracted_target
                             # Pour RR = 2.5:1, Risk = (Entry - Target) / 2.5
@@ -3057,7 +3057,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 if str(ia1_signal).lower() == 'long':
                     stop_loss_price = primary_support
                     take_profit_price = primary_resistance
-                elif ia1_signal.lower() == 'short':
+                elif str(ia1_signal).lower() == 'short':
                     stop_loss_price = primary_resistance
                     take_profit_price = primary_support
                 else:  # hold
