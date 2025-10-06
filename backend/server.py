@@ -3351,8 +3351,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🚀 FIX: Use actual calculated indicators from simple_indicators_data
             logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={macd_line}, Signal={macd_signal}, Histogram={macd_histogram}")
             logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={macd_line} as macd_signal for {opportunity.symbol}")
-            logger.info(f"🔍 BEFORE UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
-            
             # 🔍 DEBUG: TALib indicators system active
             logger.info(f"🔍 DEBUG TALIB INDICATORS for {opportunity.symbol}: All indicators calculated by TALib system")
             logger.info(f"🔍 DEBUG: Using TALib regime: {talib_analysis.regime}, confidence: {talib_analysis.confidence:.1%}")
@@ -3373,56 +3371,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 DEBUG EXTRACTED VALUES from IA1 JSON: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             logger.info(f"🎯 ADAPTIVE RR THRESHOLD: {trade_type_value} → MinRR {min_rr_value} (from mapping: {min_rr_mapping})")
             
-            analysis_data.update({
-                "rsi": rsi,
-                "macd_signal": macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
-                "macd_line": macd_line,      # Add MACD line for trend analysis
-                "macd_histogram": macd_histogram,  # Add MACD histogram
-                "macd_trend": ("bullish" if macd_histogram and macd_histogram > 0 else "bearish" if macd_histogram and macd_histogram < 0 else "neutral"),
-                "stochastic": stochastic_k,  # Add Stochastic %K
-                "stochastic_d": stochastic_d,  # Add Stochastic %D
-                "bollinger_position": bb_position,
-                "fibonacci_level": fibonacci_levels.current_level_percentage / 100.0,  # Convert to 0-1 range
-                "fibonacci_nearest_level": fibonacci_levels.nearest_level,
-                "fibonacci_trend_direction": fibonacci_levels.trend_direction,
-                "fibonacci_signal_strength": fibonacci_levels.signal_strength,
-                "fibonacci_signal_direction": fibonacci_levels.signal_direction,
-                "fibonacci_key_level_proximity": fibonacci_levels.key_level_proximity,
-                "support_levels": fibonacci_levels.support_levels,  # Use Fibonacci-derived support levels
-                "resistance_levels": fibonacci_levels.resistance_levels,  # Use Fibonacci-derived resistance levels
-                "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
-                "analysis_confidence": analysis_confidence,
-                "risk_reward_ratio": ia1_risk_reward_ratio,  # 🎯 NOUVEAU: RR basé sur niveaux techniques
-                "ia1_reasoning": reasoning,  # 🎯 SYSTÈME SIMPLIFIÉ: Reasoning IA1 direct sans Multi-RR
-                "ia1_signal": ia1_signal,  # Use extracted IA1 recommendation
-                "market_sentiment": self._determine_market_sentiment(opportunity),
-                "data_sources": opportunity.data_sources,
-                # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
-                "volume_ratio": volume_ratio,
-                "volume_signal": ('surge' if volume_surge else str(volume_trend).lower()),
-                "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)",
-                "vwap_price": vwap,
-                "vwap_position": vwap_position,
-                "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
-                "vwap_trend": vwap_trend,
-                "ema_hierarchy": trend_hierarchy,
-                "ema_position": price_vs_emas,
-                "ema_cross_signal": ema_cross_signal,
-                "ema_strength": trend_strength_score,
-                "multi_timeframe_dominant": 'DAILY',  # Simplified - multi_tf_indicators disabled
-                "multi_timeframe_pattern": 'NEUTRAL',  # Simplified - multi_tf_indicators disabled
-                "multi_timeframe_confidence": 0.5,  # Simplified - multi_tf_indicators disabled
-                # 🎯 DYNAMIC RR INTEGRATION FIELDS (Phase 1)  
-                "trade_type": trade_type_value,
-                "minimum_rr_threshold": min_rr_value,
-                "trade_duration_estimate": duration_value,
-                "optimal_timeframe": '4H/1D'
-            })
-            logger.info(f"🔍 AFTER UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
-            
-            # 🎯 AJOUTER les niveaux de prix calculés par IA1 si disponibles
-            if ia1_calculated_levels:
-                analysis_data.update(ia1_calculated_levels)
+            # ✅ Data now handled by externalized prompts, no need for analysis_data dictionary
             
             # 🔧 AJOUTER LES PRIX ET INDICATEURS CALCULÉS DANS ANALYSIS_DATA
             analysis_data.update({
