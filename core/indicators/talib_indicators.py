@@ -135,18 +135,29 @@ class TALibIndicators:
             TechnicalAnalysisComplete with all calculated indicators
         """
         try:
-            # Validate data
-            if not self.validate_data(df):
+            logger.info(f"🔬 Calculating ALL TALib indicators for {symbol} with {len(df)} bars")
+            logger.info(f"   📊 Original columns: {list(df.columns)}")
+            
+            # Normalize DataFrame to standard OHLCV format
+            from .base_indicator import IndicatorUtils
+            normalized_df = IndicatorUtils.normalize_data(df)
+            
+            if normalized_df is None or len(normalized_df) == 0:
+                logger.error(f"❌ Data normalization failed for {symbol}")
                 return self._create_minimal_analysis(df, symbol)
             
-            logger.info(f"🔬 Calculating ALL TALib indicators for {symbol} with {len(df)} bars")
+            logger.info(f"   ✅ Normalized columns: {list(normalized_df.columns)}")
             
-            # Extract OHLCV arrays
-            open_prices = df['open'].values.astype(np.float64)
-            high_prices = df['high'].values.astype(np.float64)
-            low_prices = df['low'].values.astype(np.float64)
-            close_prices = df['close'].values.astype(np.float64)
-            volume = df['volume'].values.astype(np.float64)
+            # Validate normalized data
+            if not self.validate_data(normalized_df):
+                return self._create_minimal_analysis(normalized_df, symbol)
+            
+            # Extract OHLCV arrays from normalized data
+            open_prices = normalized_df['open'].values.astype(np.float64)
+            high_prices = normalized_df['high'].values.astype(np.float64)
+            low_prices = normalized_df['low'].values.astype(np.float64)
+            close_prices = normalized_df['close'].values.astype(np.float64)
+            volume = normalized_df['volume'].values.astype(np.float64)
             
             current_price = float(close_prices[-1])
             
