@@ -3395,7 +3395,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "sma_20": sma_20 or real_current_price,  # Real SMA 20 from TALib
                 "sma_50": sma_50 or real_current_price,  # Real SMA 50 from TALib  
                 "ema_9": ema_9 or real_current_price,    # Real EMA 9 from TALib
-                "ema_21": ema_21,  # Real EMA 21 from TALib
+                "ema_21": ema_21 or real_current_price,  # Real EMA 21 from TALib
                 "ema_200": ema_200, # Real EMA 200 from TALib
                 
                 # Volume and advanced indicators
