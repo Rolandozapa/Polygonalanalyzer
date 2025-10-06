@@ -4297,7 +4297,7 @@ async def main():
     logger.info("=" * 80)
     
     # Initialize test suite
-    test_suite = IA2RRCalculationReasoningTestSuite()
+    test_suite = DynamicRRIntegrationTestSuite()
     
     try:
         # Run IA2-specific tests in sequence
