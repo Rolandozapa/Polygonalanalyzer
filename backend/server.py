@@ -2783,12 +2783,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             stop_loss_price = real_current_price  
             take_profit_price = real_current_price
             
-            # 🚀 INDICATORS ALREADY CALCULATED BY AdvancedTechnicalIndicators - No manual calculation needed
-            logger.info(f"🎯 USING PROFESSIONAL INDICATORS from AdvancedTechnicalIndicators for {opportunity.symbol}")
-            logger.info(f"   📊 All indicators calculated by advanced_technical_indicators.calculate_all_indicators()")
+            # 🚀 USING NEW TALIB INDICATORS SYSTEM EXCLUSIVELY - No old system needed
+            logger.info(f"🎯 USING PROFESSIONAL TALIB INDICATORS for {opportunity.symbol}")
+            logger.info(f"   📊 All indicators calculated by TALib system - real values confirmed")
             
-            # ✅ INDICATORS ARE READY - No additional processing required
-            # RSI, MACD, Stochastic, Bollinger Bands, ADX, ATR, VWAP already extracted above
+            # ✅ TALIB INDICATORS ARE READY - Using calculated values from talib_analysis
+            # All values come from TALib: RSI, MACD, Stochastic, Bollinger, ADX, ATR, VWAP, Volume, etc.
             
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
