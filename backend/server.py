@@ -3511,12 +3511,23 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
             })
             
+            # 🔍 DEBUG: Check indicators object attributes before extraction
+            logger.info(f"🔍 DEBUG INDICATORS OBJECT for {opportunity.symbol}: {type(indicators)}")
+            logger.info(f"🔍 DEBUG: hasattr trade_type: {hasattr(indicators, 'trade_type')}")
+            logger.info(f"🔍 DEBUG: hasattr minimum_rr_threshold: {hasattr(indicators, 'minimum_rr_threshold')}")
+            
+            trade_type_value = getattr(indicators, 'trade_type', 'SWING')
+            min_rr_value = getattr(indicators, 'minimum_rr_threshold', 2.0)
+            duration_value = getattr(indicators, 'trade_duration_estimate', '1-7 days')
+            
+            logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
+            
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
             logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={indicators.macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
             logger.info(f"   🚀 MACD Details: Line={indicators.macd_line:.6f} | Signal={indicators.macd_signal:.6f} | Histogram={indicators.macd_histogram:.6f}")
-            logger.info(f"   🎯 DYNAMIC RR: TradeType={getattr(indicators, 'trade_type', 'SWING')} | MinRR={getattr(indicators, 'minimum_rr_threshold', 2.0)} | Duration={getattr(indicators, 'trade_duration_estimate', '1-7 days')}")
+            logger.info(f"   🎯 DYNAMIC RR: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             logger.info(f"🔍 DEBUG: About to call _validate_analysis_data for {opportunity.symbol}")
