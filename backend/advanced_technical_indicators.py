@@ -930,6 +930,12 @@ class AdvancedTechnicalIndicators:
             ema_200 = close.ewm(span=200).mean().iloc[-1] if len(close) >= 200 else close.iloc[-1]
             sma_50 = close.rolling(50).mean().iloc[-1] if len(close) >= 50 else close.iloc[-1]
             
+            # 12. Trend hierarchy analysis
+            current_price = close.iloc[-1]
+            trend_hierarchy, trend_momentum, price_vs_emas, ema_cross_signal, trend_strength_score = self._calculate_trend_hierarchy(
+                current_price, ema_9, ema_21, ema_50, ema_200, sma_50
+            )
+            
             # 12. Trade Type Recommendation (NEW)
             trade_type, duration, timeframe, min_rr = self._determine_trade_type(
                 regime_data, adx, volatility_ratio, atr_pct, indicators
