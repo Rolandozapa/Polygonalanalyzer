@@ -99,6 +99,13 @@ class TechnicalIndicators:
     ema_200: float = 0.0
     sma_50: float = 0.0
     
+    # Trend hierarchy analysis
+    trend_hierarchy: str = "neutral"
+    trend_momentum: str = "neutral"
+    price_vs_emas: str = "mixed"
+    ema_cross_signal: str = "none"
+    trend_strength_score: float = 0.5
+    
     # Trade Type Recommendation (NEW)
     trade_type: str = "SWING"  # SCALP, INTRADAY, SWING, POSITION
     trade_duration_estimate: str = "1-3 days"
