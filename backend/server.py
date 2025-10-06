@@ -2664,7 +2664,15 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                 'should_trade': getattr(talib_analysis, 'should_trade', False),
                 
                 # Current opportunity data
-                'opportunity': opportunity
+                'opportunity': opportunity,
+                
+                # Pre-calculated condition results for template
+                'rsi_40_65_check': '✓' if 40 <= (getattr(talib_analysis, 'rsi_14', 50)) <= 65 else '✗',
+                'macd_directional_check': '✓' if abs(getattr(talib_analysis, 'macd_histogram', 0)) > 0.000001 else '✗',
+                'bb_squeeze_check': '✓' if (talib_analysis.bb_squeeze if hasattr(talib_analysis, 'bb_squeeze') else False) or abs((bb_position or 0.5) - 0.5) > 0.3 else '✗',
+                'sma_slope_check': '✓' if abs(sma_20_slope) > 0.001 else '✗',
+                'volume_trend_check': '✓' if (volume_trend or 0) > 0 else '✗',
+                'above_sma_20_check': '✓' if above_sma_20 else '✗'
             }
             
             # ✅ FORMAT PROMPT WITH ALL TALIB VARIABLES (SIMPLIFIED VERSION)
