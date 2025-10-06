@@ -312,49 +312,46 @@ class DynamicRRIntegrationTestSuite:
                     logger.info(f"      ⏳ Waiting 10 seconds before next analysis...")
                     await asyncio.sleep(10)
             
-            # Capture backend logs to check for RR Calculator integration
-            logger.info("   📋 Capturing backend logs to check for RR Calculator integration...")
+            # Capture backend logs to check for field name usage
+            logger.info("   📋 Capturing backend logs to check for field name usage...")
             
             try:
                 backend_logs = await self._capture_backend_logs()
                 if backend_logs:
-                    # Look for RR Calculator specific logs
-                    optimized_rr_logs = []
-                    atr_calculation_logs = []
-                    support_resistance_logs = []
-                    import_success_logs = []
+                    # Look for new field name usage in logs
+                    trade_type_logs = []
+                    minimum_rr_threshold_logs = []
+                    old_field_logs = []
+                    validation_logs = []
                     
                     for log_line in backend_logs:
                         log_lower = log_line.lower()
                         
-                        if 'optimized rr calculation' in log_lower:
-                            optimized_rr_logs.append(log_line.strip())
+                        if 'trade_type' in log_lower and 'recommended_trade_type' not in log_lower:
+                            trade_type_logs.append(log_line.strip())
                         
-                        if 'atr' in log_lower and ('calculation' in log_lower or 'value' in log_lower):
-                            atr_calculation_logs.append(log_line.strip())
+                        if 'minimum_rr_threshold' in log_lower:
+                            minimum_rr_threshold_logs.append(log_line.strip())
                         
-                        if any(term in log_lower for term in ['support', 'resistance', 'pivot', 'levels']):
-                            support_resistance_logs.append(log_line.strip())
+                        if any(old_field in log_lower for old_field in ['recommended_trade_type', 'minimum_rr_for_trade_type']):
+                            old_field_logs.append(log_line.strip())
                         
-                        if 'risk_reward_calculator' in log_lower and 'import' in log_lower:
-                            import_success_logs.append(log_line.strip())
-                    
-                    rr_integration_results['optimized_rr_calculations'] = len(optimized_rr_logs)
-                    rr_integration_results['atr_calculations_found'] = len(atr_calculation_logs)
-                    rr_integration_results['support_resistance_levels'] = len(support_resistance_logs)
-                    rr_integration_results['rr_calculator_import_success'] = len(import_success_logs) > 0
+                        if '_validate_analysis_data' in log_lower:
+                            validation_logs.append(log_line.strip())
                     
                     logger.info(f"      📊 Backend logs analysis:")
-                    logger.info(f"         - Optimized RR calculations: {len(optimized_rr_logs)}")
-                    logger.info(f"         - ATR calculations: {len(atr_calculation_logs)}")
-                    logger.info(f"         - Support/Resistance levels: {len(support_resistance_logs)}")
-                    logger.info(f"         - Import success: {len(import_success_logs) > 0}")
+                    logger.info(f"         - trade_type mentions: {len(trade_type_logs)}")
+                    logger.info(f"         - minimum_rr_threshold mentions: {len(minimum_rr_threshold_logs)}")
+                    logger.info(f"         - Old field mentions: {len(old_field_logs)}")
+                    logger.info(f"         - Validation logs: {len(validation_logs)}")
                     
                     # Show sample logs
-                    if optimized_rr_logs:
-                        logger.info(f"      📋 Sample OPTIMIZED RR log: {optimized_rr_logs[0]}")
-                    if atr_calculation_logs:
-                        logger.info(f"      📋 Sample ATR log: {atr_calculation_logs[0]}")
+                    if trade_type_logs:
+                        logger.info(f"      📋 Sample trade_type log: {trade_type_logs[0]}")
+                    if minimum_rr_threshold_logs:
+                        logger.info(f"      📋 Sample minimum_rr_threshold log: {minimum_rr_threshold_logs[0]}")
+                    if old_field_logs:
+                        logger.warning(f"      ⚠️ Old field usage detected: {old_field_logs[0]}")
                         
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
