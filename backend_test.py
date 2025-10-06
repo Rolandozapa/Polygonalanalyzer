@@ -157,9 +157,9 @@ class ExternalizedPromptMigrationTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_1_field_name_validation(self):
-        """Test 1: Field Name Validation - Verify TechnicalAnalysis model accepts new field names"""
-        logger.info("\n🔍 TEST 1: Field Name Validation")
+    async def test_1_prompt_loading_verification(self):
+        """Test 1: Prompt Loading Verification - Test that externalized prompts are loaded correctly"""
+        logger.info("\n🔍 TEST 1: Prompt Loading Verification")
         
         try:
             field_validation_results = {
