@@ -2340,8 +2340,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             {'- 🚀 PERFECT EMA HIERARCHY: Strong trend confirmation for ' + ('LONG' if trend_hierarchy in ['strong_bull', 'weak_bull'] else 'SHORT' if trend_hierarchy in ['strong_bear', 'weak_bear'] else 'HOLD') if trend_hierarchy != 'neutral' else ''}
             
             🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION:
-            1. MFI (Institutional): {mfi:.1f} - {'ACCUMULATION' if mfi < 30 else 'DISTRIBUTION' if mfi > 70 else 'NEUTRAL'}
-            2. VWAP (Precision): {vwap_position:+.1f}% - {'OVERSOLD' if vwap_oversold else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}
+            1. VWAP (Precision): {vwap_distance:+.1f}% - {'OVERSOLD' if vwap_oversold else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}
+            2. Volume (Flow): {volume_ratio:.1f}x - {'SURGE' if volume_surge else 'INCREASING' if volume_trend == 'INCREASING' else 'DECREASING' if volume_trend == 'DECREASING' else 'NEUTRAL'}
             3. RSI (Momentum): {rsi:.1f} - {'OVERSOLD' if rsi < 30 else 'OVERBOUGHT' if rsi > 70 else 'NEUTRAL'}
             4. Multi-Timeframe: Available above
             5. Volume: {institutional_activity.upper()}
