@@ -3600,7 +3600,7 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                 "data_sources": opportunity.data_sources,
                 # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
                 "volume_ratio": volume_ratio,
-                "volume_signal": ('surge' if volume_surge else volume_trend.lower()),
+                "volume_signal": ('surge' if volume_surge else str(volume_trend).lower()),
                 "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)",
                 "vwap_price": vwap,
                 "vwap_position": vwap_position,
