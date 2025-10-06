@@ -2434,7 +2434,7 @@ Volume Ratio: {{volume_ratio:.1f}}x | Trend: {{volume_trend}}
 Volume Surge: {{volume_surge}}
 
 🎯 BOLLINGER BANDS & VOLATILITY:
-BB Position: {{bb_position:.1%}} | Squeeze: {{bb_squeeze}}
+BB Position: {{bb_position:.1%}} | Squeeze: {{bb_squeeze_str}}
 Squeeze Intensity: {{squeeze_intensity}}
 ATR: {{atr:.6f}} ({{atr_pct:.2f}}%)
 
