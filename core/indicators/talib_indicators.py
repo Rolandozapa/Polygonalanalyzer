@@ -10,7 +10,7 @@ import talib
 import logging
 from typing import Dict, Any, Optional, Tuple, List
 from dataclasses import dataclass
-from .base_indicator import BaseIndicator, TechnicalAnalysisComplete, IndicatorResult
+from .base_indicator import TechnicalAnalysisComplete, IndicatorResult
 
 logger = logging.getLogger(__name__)
 
