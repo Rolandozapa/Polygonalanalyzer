@@ -92,6 +92,13 @@ class TechnicalIndicators:
     trend_alignment: str = "MIXED"
     timeframe_score: float = 0.5
     
+    # EMAs for trend analysis
+    ema_9: float = 0.0
+    ema_21: float = 0.0
+    ema_50: float = 0.0
+    ema_200: float = 0.0
+    sma_50: float = 0.0
+    
     # Trade Type Recommendation (NEW)
     trade_type: str = "SWING"  # SCALP, INTRADAY, SWING, POSITION
     trade_duration_estimate: str = "1-3 days"
