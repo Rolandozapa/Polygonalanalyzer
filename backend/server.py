@@ -2942,8 +2942,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 reasoning += f"\nEntry: ${real_current_price:.6f} → Target: [Calculating...]"
                 reasoning += f"\n⚠️ This {detected_pattern.pattern_type.value} pattern supports IA1's {final_direction.upper()} strategic decision."
             
-            # 🚀 UTILISER LE JSON IA1 COMPLET + enrichir avec calculs techniques
-            analysis_data = ia1_complete_json.copy()  # Commencer avec IA1 JSON complet
+            # 🚀 ENRICHIR analysis_data avec les données IA1 JSON
+            analysis_data.update(ia1_complete_json)  # Ajouter les données IA1 JSON
             
             # Enrichir avec calculs techniques précis
             fib_data = self._calculate_fibonacci_levels(historical_data)
