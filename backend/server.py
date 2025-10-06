@@ -6159,16 +6159,16 @@ async def force_ia2_escalation(request: dict):
         
         if should_escalate:
             # Force IA2 decision
-            logger.info(f"✅ ESCALATING {symbol} to IA2 (confidence: {analysis_data['analysis_confidence']:.2%})")
+            logger.info(f"✅ ESCALATING {symbol} to IA2 (confidence: {analysis_confidence:.2%})")
             decision = await orchestrator.ia2.make_decision(opportunity, analysis_obj)
             
             return {
                 "success": True, 
                 "message": f"IA2 escalation completed for {symbol}",
                 "analysis": {
-                    "confidence": analysis_data['analysis_confidence'],
-                    "signal": analysis_data['ia1_signal'],
-                    "rr": analysis_data['risk_reward_ratio']
+                    "confidence": analysis_confidence,
+                    "signal": ia1_signal,
+                    "rr": ia1_risk_reward_ratio
                 },
                 "escalated": True
             }
@@ -6177,9 +6177,9 @@ async def force_ia2_escalation(request: dict):
                 "success": False, 
                 "message": f"Analysis for {symbol} does not meet IA2 escalation criteria",
                 "analysis": {
-                    "confidence": analysis_data['analysis_confidence'],
-                    "signal": analysis_data['ia1_signal'],
-                    "rr": analysis_data['risk_reward_ratio']
+                    "confidence": analysis_confidence,
+                    "signal": ia1_signal,
+                    "rr": ia1_risk_reward_ratio
                 },
                 "escalated": False
             }
