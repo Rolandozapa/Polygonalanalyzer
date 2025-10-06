@@ -2406,209 +2406,82 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO
             global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
             
-            # 🚀 NEW IA1 v6.0 PROMPT - CRYPTO ML REGIME ANALYST
-            prompt = f"""
-═══════════════════════════════════════════════════════════════════════════════
-🤖 CRYPTO ML REGIME QUANTITATIVE ANALYST v6.0 - PRODUCTION READY
-═══════════════════════════════════════════════════════════════════════════════
-
-ANALYSIS TARGET: {opportunity.symbol}
-Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
-Current Price: ${opportunity.current_price:,.4f}
-24h Change: {opportunity.price_change_24h:+.2f}% | Volume: ${opportunity.volume_24h:,.0f}
-
-{global_market_context}
-
-══════════════════════════════════════════════════════════════════════════════
-📊 TECHNICAL INDICATORS SNAPSHOT (TALib Professional Grade)
-══════════════════════════════════════════════════════════════════════════════
-
-🎯 MOMENTUM INDICATORS:
-RSI (14): {{rsi:.1f}} - Zone: {{rsi_zone}} | Trend: {{rsi_interpretation}}
-MACD: Line={{macd_line:.6f}}, Signal={{macd_signal:.6f}}, Histogram={{macd_histogram:.6f}}
-Stochastic: %K={{stoch_k:.1f}}, %D={{stoch_d:.1f}}
-
-🎯 TREND STRENGTH:
-ADX (Wilder): {{adx:.1f}} - Strength: {{adx_strength}}
-+DI: {{plus_di:.1f}} | -DI: {{minus_di:.1f}}
-Trend Hierarchy: {{trend_hierarchy}} | EMA Cross: {{ema_cross_signal}}
-
-🎯 VOLUME & MONEY FLOW:
-MFI: {{mfi:.1f}} - Signal: {{mfi_signal}}
-Volume Ratio: {{volume_ratio:.1f}}x | Trend: {{volume_trend}}
-Volume Surge: {{volume_surge}}
-
-🎯 BOLLINGER BANDS & VOLATILITY:
-BB Position: {{bb_position:.1%}} | Squeeze: {{bb_squeeze_str}}
-Squeeze Intensity: {{squeeze_intensity}}
-ATR: {{atr:.6f}} ({{atr_pct:.2f}}%)
-
-🎯 VWAP & MOVING AVERAGES:
-VWAP: ${{vwap:.4f}} | Distance: {{vwap_distance:+.2f}}%
-SMA 20: ${{sma_20:.4f}} | SMA 50: ${{sma_50:.4f}}
-EMA 9: ${{ema_9:.4f}} | EMA 21: ${{ema_21:.4f}} | EMA 200: ${{ema_200:.4f}}
-
-══════════════════════════════════════════════════════════════════════════════
-🧠 ML REGIME DETECTION & CONFIDENCE ANALYSIS
-══════════════════════════════════════════════════════════════════════════════
-
-CURRENT REGIME: {{regime}}
-ML Confidence: {{confidence:.1%}} (Base: {{base_confidence:.1%}})
-Technical Consistency: {{technical_consistency:.1%}}
-Combined Confidence: {{combined_confidence:.1%}}
-
-REGIME PERSISTENCE: {{regime_persistence}} bars
-Regime Status: {{fresh_regime}} regime
-Stability Score: {{stability_score:.1%}}
-Transition Alert: {{regime_transition_alert}}
-
-REGIME IMPLICATIONS:
-- Position Sizing Multiplier: {{regime_multiplier:.2f}}x
-- ML Confidence Multiplier: {{ml_confidence_multiplier:.2f}}x
-- Momentum Quality Multiplier: {{momentum_multiplier:.2f}}x
-- BB Squeeze Multiplier: {{bb_multiplier:.2f}}x
-- **Combined Multiplier: {{combined_multiplier:.2f}}x**
-
-══════════════════════════════════════════════════════════════════════════════
-🎯 CONFLUENCE GRADING SYSTEM (A++ to D)
-══════════════════════════════════════════════════════════════════════════════
-
-MANDATORY REQUIREMENTS CHECK:
-✓ Regime Confidence: {{confidence:.1%}} (Min: 65%)
-✓ Trend Strength: ADX {{adx:.1f}} or BB Squeeze {{bb_squeeze_str}} (Min: ADX>18 OR Squeeze=True)
-✓ Volume Confirmation: {{volume_ratio:.1f}}x (Min: >1.0x)
-
-MOMENTUM CONDITIONS (Need minimum 2/6):
-1. RSI 40-65 Zone: {{rsi:.1f}} ({{rsi_40_65_check}})
-2. MACD Histogram Directional: {{macd_histogram:.6f}} ({{macd_directional_check}})
-3. BB Squeeze/Band Walk: {{bb_squeeze}} ({{bb_squeeze_check}})
-4. SMA 20 Slope Directional: {{sma_20_slope:.6f}} ({{sma_slope_check}})
-5. Volume Trend Positive: {{volume_trend}} ({{volume_trend_check}})
-6. Above SMA 20: {{above_sma_20}} ({{above_sma_20_check}})
-
-HIGH CONVICTION TRIGGERS:
-🔥 ML_BREAKOUT_SQUEEZE: {{ml_breakout_squeeze}}
-🔥 ML_TREND_ACCELERATION: {{ml_trend_acceleration}}
-🔥 ML_FRESH_REGIME: {{ml_fresh_regime}}
-🔥 ML_VOLUME_SURGE: {{ml_volume_surge}}
-
-CONFLUENCE GRADE: {{confluence_grade}}
-CONFLUENCE SCORE: {{confluence_score}}/100
-CONVICTION LEVEL: {{conviction_level}}
-SHOULD TRADE: {{should_trade}}
-
-══════════════════════════════════════════════════════════════════════════════
-🎯 POSITION SIZING & RISK MANAGEMENT
-══════════════════════════════════════════════════════════════════════════════
-
-POSITION SIZING CALCULATION:
-Base Risk: 1.0% of capital
-Regime Multiplier: {{regime_multiplier:.2f}}x ({{regime}})
-ML Confidence Multiplier: {{ml_confidence_multiplier:.2f}}x ({{confidence:.1%}} confidence)
-Momentum Quality: {{momentum_multiplier:.2f}}x
-BB Squeeze Factor: {{bb_multiplier:.2f}}x
-**TOTAL POSITION SIZE: {{combined_multiplier:.2f}}x of base risk**
-
-RISK LIMITS BY GRADE:
-- A++: Maximum 1.5% risk
-- A+: Maximum 1.2% risk  
-- A: Maximum 1.0% risk
-- B+: Maximum 0.8% risk
-- B: Maximum 0.6% risk
-- C/D: DO NOT TRADE
-
-══════════════════════════════════════════════════════════════════════════════
-🎯 TRADING DECISION FRAMEWORK
-══════════════════════════════════════════════════════════════════════════════
-
-REGIME-BASED DECISION LOGIC:
-If {{regime}} == "TRENDING_UP_STRONG" or "BREAKOUT_BULLISH":
-    → Strong LONG bias with aggressive sizing
-    → Entry: Pullbacks to EMA 21 or VWAP support
-    → Stop: Below SMA 20 or recent swing low
-    → Targets: Previous highs + Fibonacci extensions
-
-TRADE TYPE SELECTION LOGIC:
-Based on regime and volatility, select appropriate strategy:
-- SCALP: VOLATILE regimes, quick 5-15min trades (RR > 1.0)
-- INTRADAY: BREAKOUT regimes, 1-4 hour positions (RR > 1.5) 
-- SWING: TRENDING regimes, 1-7 day positions (RR > 2.0)
-- POSITION: TRENDING_STRONG regimes, 1-4 week positions (RR > 2.5)
-
-Current regime {{regime}} suggests: [SELECT APPROPRIATE TRADE TYPE]
-
-If {{regime}} == "CONSOLIDATION" or "RANGING":  
-    → Range trading approach
-    → Entry: Range boundaries with volume confirmation
-    → Stop: Outside range + buffer
-    → Targets: Opposite range boundary
-
-If {{regime}} == "VOLATILE":
-    → Reduce position size significantly
-    → Wider stops (2x ATR minimum)
-    → Quick profit taking
-
-MULTI-TIMEFRAME VALIDATION:
-Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
-Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}
-Pattern Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0)*100:.0f}%
-
-MOMENTUM ALIGNMENT CHECK:
-Current 24h momentum: {opportunity.price_change_24h:+.1f}%
-If momentum conflicts with signal → Reduce confidence by 30-50%
-
-══════════════════════════════════════════════════════════════════════════════
-🎯 MANDATORY OUTPUT FORMAT
-══════════════════════════════════════════════════════════════════════════════
-
-Based on the comprehensive ML regime analysis above, provide your trading decision in this EXACT JSON format:
-
-```json
-{{
-    "signal": "LONG or SHORT or HOLD",
-    "confidence": 0.XX,
-    "reasoning": "ML REGIME ANALYSIS: Market regime {{regime}} detected with {{confidence:.1%}} combined confidence (Base: {{base_confidence:.1%}}, Technical Consistency: {{technical_consistency:.1%}}). REGIME PERSISTENCE: {{regime_persistence}} bars - {{fresh_regime}} regime status with {{stability_score:.1%}} stability. TRANSITION ALERT: {{regime_transition_alert}}. CONFLUENCE ANALYSIS: Grade {{confluence_grade}} with {{confluence_score}}/100 points ({{conviction_level}} conviction). KEY INDICATORS: RSI {{rsi:.1f}} ({{rsi_zone}}), ADX {{adx:.1f}} ({{adx_strength}}), MACD {{macd_histogram:+.6f}}, BB Squeeze {{bb_squeeze_str}}, Volume {{volume_ratio:.1f}}x. POSITION SIZING: {{combined_multiplier:.2f}}x multiplier from regime ({{regime_multiplier:.2f}}x) + ML confidence ({{ml_confidence_multiplier:.2f}}x) + momentum ({{momentum_multiplier:.2f}}x) + BB factor ({{bb_multiplier:.2f}}x). DECISION RATIONALE: [Explain final decision based on regime + confluence + risk management]",
-    "entry_price": {opportunity.current_price:.6f},
-    "stop_loss_price": "[CALCULATE using regime-specific stop strategy]",
-    "take_profit_price": "[CALCULATE using regime-specific target strategy]",
-    "calculated_rr": "[CALCULATE risk-reward ratio]",
-    "rr_reasoning": "[EXPLAIN calculation methodology]",
-    "trade_type": "[SCALP/INTRADAY/SWING/POSITION based on regime and timeframe]",
-    "trade_duration_estimate": "[Duration estimate for the trade]",
-    "confluence_grade": "{{confluence_grade}}",
-    "confluence_score": {{confluence_score}},
-    "regime": "{{regime}}",
-    "regime_confidence": {{confidence}},
-    "position_multiplier": {{combined_multiplier}},
-    "should_trade": {{should_trade}}
-}}
-```
-
-══════════════════════════════════════════════════════════════════════════════
-🚨 CRITICAL RULES - NEVER VIOLATE
-══════════════════════════════════════════════════════════════════════════════
-
-ALWAYS:
-- Respect ML regime confidence thresholds (minimum 60%)
-- Calculate technical consistency for combined confidence
-- Track regime persistence for fresh/mature detection
-- Use corrected ADX (Wilder method) values provided
-- Adjust position size based on ALL multipliers
-- Grade every setup A++ to D before trading
-- Validate momentum conditions (minimum 2/6 required)
-
-NEVER:
-- Trade against ML regime trend without A+ setup
-- Trade with confidence < 60%
-- Trade with confluence grade < B
-- Ignore regime persistence warnings (>40 bars = caution)
-- Trade during IMMINENT_CHANGE transition alert
-- Exceed maximum position risk limits per grade
-
-═══════════════════════════════════════════════════════════════════════════════
-END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
-═══════════════════════════════════════════════════════════════════════════════
-            """
+            # 🚀 PREPARE VARIABLES FOR EXTERNALIZED IA1 v6.0 PROMPT
+            prompt_variables = {
+                # Basic info
+                'symbol': opportunity.symbol,
+                'market_cap': market_cap_str,
+                'market_cap_rank': opportunity.market_cap_rank or 'N/A',
+                'current_price': opportunity.current_price,
+                'price_change_24h': opportunity.price_change_24h,
+                'volume_24h': opportunity.volume_24h,
+                'global_market_context': global_market_context,
+                
+                # Technical indicators
+                'rsi': rsi or 50.0,
+                'rsi_zone': getattr(talib_analysis, 'rsi_zone', 'NEUTRAL'),
+                'rsi_interpretation': rsi_interpretation,
+                'macd_line': macd_line or 0.0,
+                'macd_signal': macd_signal or 0.0,
+                'macd_histogram': macd_histogram or 0.0,
+                'stoch_k': getattr(talib_analysis, 'stoch_k', 50.0),
+                'stoch_d': getattr(talib_analysis, 'stoch_d', 50.0),
+                
+                # Trend indicators
+                'adx': adx or 25.0,
+                'adx_strength': getattr(talib_analysis, 'adx_strength', 'MODERATE'),
+                'plus_di': getattr(talib_analysis, 'plus_di', 25.0),
+                'minus_di': getattr(talib_analysis, 'minus_di', 25.0),
+                'trend_hierarchy': getattr(talib_analysis, 'trend_hierarchy', 'NEUTRAL'),
+                'ema_cross_signal': ema_cross_signal or 'NEUTRAL',
+                
+                # Volume and flow
+                'mfi': mfi or 50.0,
+                'mfi_signal': getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
+                'volume_ratio': volume_ratio or 1.0,
+                'volume_trend': volume_trend or 0.0,
+                'volume_surge': volume_surge or False,
+                
+                # Bollinger and volatility
+                'bb_position': bb_position or 0.5,
+                'bb_squeeze': bb_squeeze_str,
+                'squeeze_intensity': getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
+                'atr': getattr(talib_analysis, 'atr', 0.02),
+                'atr_pct': getattr(talib_analysis, 'atr_pct', 2.0),
+                
+                # Price levels
+                'vwap': vwap or opportunity.current_price,
+                'vwap_distance': vwap_distance or 0.0,
+                'sma_20': sma_20 or opportunity.current_price,
+                'sma_50': sma_50 or opportunity.current_price,
+                'ema_9': ema_9 or opportunity.current_price,
+                'ema_21': ema_21 or opportunity.current_price,
+                'ema_200': ema_200 or opportunity.current_price,
+                
+                # ML regime
+                'regime': getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
+                'confidence': getattr(talib_analysis, 'confidence', 0.5),
+                'base_confidence': base_confidence,
+                'technical_consistency': getattr(talib_analysis, 'technical_consistency', 0.5),
+                'combined_confidence': combined_confidence,
+                'regime_persistence': regime_persistence,
+                'fresh_regime': fresh_regime,
+                'stability_score': stability_score,
+                'regime_transition_alert': regime_transition_alert,
+                
+                # Confluence
+                'confluence_grade': getattr(talib_analysis, 'confluence_grade', 'C'),
+                'confluence_score': getattr(talib_analysis, 'confluence_score', 50),
+                'combined_multiplier': combined_multiplier,
+                'should_trade': getattr(talib_analysis, 'should_trade', False)
+            }
+            
+            # 🚀 USE EXTERNALIZED IA1 v6.0 PROMPT
+            formatted_prompt = prompt_manager.format_prompt('ia1_v6_advanced', prompt_variables)
+            
+            if not formatted_prompt:
+                logger.error(f"❌ Failed to load externalized IA1 prompt, falling back to basic prompt")
+                formatted_prompt = f"Analyze {opportunity.symbol} at ${opportunity.current_price:.4f} and provide trading recommendation in JSON format."
             
             # ✅ CREATE ANALYSIS DATA FOR IA1 v6.0 PROMPT FORMATTING
             analysis_data = {
