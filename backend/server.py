@@ -3856,7 +3856,7 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             # 1. DÉTERMINER LA DIRECTION PROBABLE
             direction = "long"  # Default
             if detected_pattern and hasattr(detected_pattern, 'trading_direction'):
-                direction = detected_pattern.trading_direction.lower()
+                direction = str(detected_pattern.trading_direction).lower()
             else:
                 # Simple trend analysis basé sur les données récentes
                 recent_prices = historical_data['Close'].tail(5)
