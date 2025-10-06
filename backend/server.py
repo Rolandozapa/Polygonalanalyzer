@@ -181,8 +181,7 @@ from enhanced_market_scoring import enhanced_market_scoring, EnhancedMarketScori
 
 # ✨ NEW TALIB INDICATORS SYSTEM - Professional Integration
 import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'core')))
+sys.path.insert(0, '/app/core')
 from indicators.talib_indicators import TALibIndicators, get_talib_indicators
 from macd_calculator import calculate_macd_optimized, macd_calculator
 from fibonacci_calculator import fibonacci_calculator, calculate_fibonacci_retracements
