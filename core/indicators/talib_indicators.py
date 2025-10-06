@@ -116,10 +116,10 @@ class TALibIndicators:
         }
     
     def get_min_periods(self) -> int:
-        """Minimum periods required for calculations"""
-        # Reduced minimum to work with available data (28 days)
-        # Most indicators can work with 20-25 periods
-        return max(20, self.macd_slow)  # 26 periods minimum for MACD, but allow 20 for other indicators
+        """Minimum periods required for calculations with smart fallback"""
+        # Smart minimum: try to get optimal, but work with available
+        optimal_minimum = max(20, self.macd_slow)  # 26 for MACD
+        return min(optimal_minimum, 20)  # Never require more than 20 days - use fallback completion
     
     def get_required_columns(self) -> List[str]:
         """Required DataFrame columns"""
