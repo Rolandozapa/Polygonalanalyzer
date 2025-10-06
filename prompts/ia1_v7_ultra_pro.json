@@ -10,7 +10,7 @@
   "required_variables": [
     "symbol", "market_cap", "market_cap_rank", "current_price", "price_change_24h", "volume_24h",
     "global_market_context", "rsi", "rsi_zone", "rsi_interpretation", "macd_line", "macd_signal", 
-    "macd_histogram", "stoch_k", "stoch_d", "adx", "adx_strength", "plus_di", "minus_di",
+    "macd_histogram", "stoch_k", "stoch_d", "willr", "willr_zone", "cci", "cci_zone", "roc", "roc_strength", "adx", "adx_strength", "plus_di", "minus_di", "aroon_up", "aroon_down", "aroon_diff", "aroon_signal", "sar", "sar_signal", "sar_distance",
     "trend_hierarchy", "ema_cross_signal", "mfi", "mfi_signal", "volume_ratio", "volume_trend",
     "volume_surge", "bb_position", "bb_squeeze", "squeeze_intensity", "atr", "atr_pct",
     "vwap", "vwap_distance", "sma_20", "sma_20_slope", "sma_20_slope_pct", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
