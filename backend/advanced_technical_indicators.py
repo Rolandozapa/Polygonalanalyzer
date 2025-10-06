@@ -964,7 +964,12 @@ class AdvancedTechnicalIndicators:
                 
                 # Multi-timeframe
                 trend_alignment=trend_alignment,
-                timeframe_score=tf_score
+                timeframe_score=tf_score,
+                
+                # Trade Type Recommendation
+                recommended_trade_type=trade_type,
+                trade_duration_estimate=duration,
+                optimal_timeframe=timeframe
             )
             
         except Exception as e:
