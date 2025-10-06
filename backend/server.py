@@ -3550,14 +3550,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "macd_line": macd_line,    # Keep MACD line for completeness
                 
                 # 🚀 NEW IA1 v6.0 Variables for Enhanced Prompt Reasoning  
-                "regime": talib_analysis.regime,
-                "confidence": talib_analysis.confidence,
-                "technical_consistency": talib_analysis.technical_consistency,
-                "rsi_zone": talib_analysis.rsi_zone,
-                "rsi_interpretation": self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone) if hasattr(self, '_get_rsi_interpretation') else f"RSI {talib_analysis.rsi_14:.1f} in {talib_analysis.rsi_zone} zone",
-                "macd_trend": talib_analysis.macd_trend,
-                "macd_direction": "bullish" if talib_analysis.macd_histogram > 0 else "bearish" if talib_analysis.macd_histogram < 0 else "neutral",
-                "adx_strength": talib_analysis.adx_strength,
+                "regime": getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
+                "confidence": getattr(talib_analysis, 'confidence', 0.5),
+                "technical_consistency": getattr(talib_analysis, 'technical_consistency', 0.5),
+                "rsi_zone": getattr(talib_analysis, 'rsi_zone', 'NEUTRAL'),
+                "rsi_interpretation": self._get_rsi_interpretation(getattr(talib_analysis, 'rsi_14', 50.0), getattr(talib_analysis, 'rsi_zone', 'NEUTRAL')),
+                "macd_trend": getattr(talib_analysis, 'macd_trend', 'NEUTRAL'),
+                "macd_direction": "bullish" if getattr(talib_analysis, 'macd_histogram', 0.0) > 0 else "bearish" if getattr(talib_analysis, 'macd_histogram', 0.0) < 0 else "neutral",
+                "adx_strength": getattr(talib_analysis, 'adx_strength', 'MODERATE'),
                 "plus_di": talib_analysis.plus_di,
                 "minus_di": talib_analysis.minus_di,
                 "mfi_signal": talib_analysis.mfi_signal,
