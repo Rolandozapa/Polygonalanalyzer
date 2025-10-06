@@ -2182,8 +2182,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 MACD DEBUG for {opportunity.symbol}: Line={indicators.macd_line:.8f}, Signal={indicators.macd_signal:.8f}, Histogram={indicators.macd_histogram:.8f}")
             
             # 🔥 RÉVOLUTION MULTI-TIMEFRAME - Vision complète comme un trader PRO 🔥
-            multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
-            multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+            # multi_tf_indicators = self.advanced_indicators.get_multi_timeframe_indicators(historical_data)
+            # multi_tf_formatted = self.advanced_indicators.format_multi_timeframe_for_prompt(multi_tf_indicators)
+            multi_tf_formatted = "Multi-timeframe analysis temporarily disabled"
             
             # 🚀 FIBONACCI RETRACEMENT ANALYSIS - Professional level analysis 🚀
             fibonacci_levels = calculate_fibonacci_retracements(historical_data, lookback_period=20)
