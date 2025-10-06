@@ -2194,10 +2194,29 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             fibonacci_formatted = fibonacci_calculator.get_fibonacci_for_prompt(fibonacci_levels)
             logger.info(f"🔢 FIBONACCI calculated for {opportunity.symbol}: {fibonacci_levels.trend_direction} trend, current at {fibonacci_levels.current_level_percentage:.1f}% ({fibonacci_levels.nearest_level})")
             
-            # Extract key values for prompt and analysis
+            # ✅ EXTRACT ALL INDICATORS from AdvancedTechnicalIndicators (no manual calculation needed)
             rsi = indicators.rsi_14
             macd_signal = indicators.macd_signal
+            macd_line = indicators.macd_line
             macd_histogram = indicators.macd_histogram
+            stochastic_k = indicators.stoch_k
+            stochastic_d = indicators.stoch_d
+            bb_position = indicators.bb_position
+            adx = indicators.adx
+            atr = indicators.atr
+            vwap = indicators.vwap
+            vwap_position = indicators.vwap_distance  # ✅ Use VWAP distance instead of MFI
+            volume_ratio = indicators.volume_ratio
+            volume_trend = indicators.volume_trend
+            volume_surge = indicators.volume_surge
+            
+            # ✅ USE VWAP DISTANCE AS MFI REPLACEMENT (no separate MFI calculation needed)
+            mfi = vwap_position  # VWAP distance serves as volume-price momentum indicator
+            
+            logger.info(f"✅ ALL INDICATORS EXTRACTED from AdvancedTechnicalIndicators for {opportunity.symbol}")
+            logger.info(f"   📊 RSI: {rsi:.1f}, MACD: {macd_histogram:.6f}, Stoch: {stochastic_k:.1f}")
+            logger.info(f"   📊 VWAP-based MFI: {mfi:.2f}%, BB Position: {bb_position:.2f}")
+            logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr:.6f}, Volume Ratio: {volume_ratio:.2f}")
             stochastic_k = indicators.stoch_k
             stochastic_d = indicators.stoch_d
             bb_upper = indicators.bb_upper
