@@ -93,6 +93,7 @@ class TechnicalIndicators:
     recommended_trade_type: str = "SWING"  # SCALP, INTRADAY, SWING, POSITION
     trade_duration_estimate: str = "1-3 days"
     optimal_timeframe: str = "4H"  # Optimal chart timeframe for this setup
+    minimum_rr_for_trade_type: float = 2.0  # Minimum RR required for this trade type
 
 
 @dataclass
