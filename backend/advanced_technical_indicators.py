@@ -1090,7 +1090,7 @@ class AdvancedTechnicalIndicators:
                               atr_pct: float, indicators: Dict) -> Tuple[str, str, str, float]:
         """
         Determine optimal trade type based on market conditions
-        Returns: (trade_type, duration_estimate, optimal_timeframe)
+        Returns: (trade_type, duration_estimate, optimal_timeframe, minimum_rr)
         
         Trade Types:
         - SCALP: Very short-term (minutes to hours), high volatility, fresh regimes
