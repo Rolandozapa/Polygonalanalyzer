@@ -2474,7 +2474,7 @@ MANDATORY REQUIREMENTS CHECK:
 ✓ Volume Confirmation: {{volume_ratio:.1f}}x (Min: >1.0x)
 
 MOMENTUM CONDITIONS (Need minimum 2/6):
-1. RSI 40-65 Zone: {{rsi:.1f}} ({'✓' if 40 <= rsi <= 65 else '✗'})
+1. RSI 40-65 Zone: {{rsi:.1f}} ({{rsi_40_65_check}})
 2. MACD Histogram Directional: {{macd_histogram:.6f}} ({'✓' if abs(macd_histogram) > 0.000001 else '✗'})
 3. BB Squeeze/Band Walk: {{bb_squeeze}} ({'✓' if bb_squeeze or abs(bb_position - 0.5) > 0.3 else '✗'})
 4. SMA 20 Slope Directional: {{sma_20_slope:.6f}} ({'✓' if abs(sma_20_slope) > 0.001 else '✗'})
