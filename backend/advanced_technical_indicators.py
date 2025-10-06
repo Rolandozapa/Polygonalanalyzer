@@ -1076,6 +1076,148 @@ class AdvancedTechnicalIndicators:
         vwap = (typical_price * df['volume']).sum() / df['volume'].sum()
         return float(vwap)
     
+    def _determine_trade_type(self, regime_data: Dict, adx: float, volatility_ratio: float,
+                              atr_pct: float, indicators: Dict) -> Tuple[str, str, str]:
+        """
+        Determine optimal trade type based on market conditions
+        Returns: (trade_type, duration_estimate, optimal_timeframe)
+        
+        Trade Types:
+        - SCALP: Very short-term (minutes to hours), high volatility, fresh regimes
+        - INTRADAY: Same-day trades (hours), moderate conditions
+        - SWING: Multi-day trades (1-7 days), trending markets
+        - POSITION: Long-term (weeks+), strong established trends
+        """
+        
+        regime = regime_data.get('regime', 'RANGING_TIGHT')
+        persistence = regime_data.get('regime_persistence', 0)
+        fresh_regime = regime_data.get('fresh_regime', False)
+        confidence = regime_data.get('confidence', 0.5)
+        
+        # Scoring system for trade type
+        scalp_score = 0
+        intraday_score = 0
+        swing_score = 0
+        position_score = 0
+        
+        # 1. VOLATILITY ANALYSIS
+        if volatility_ratio > 1.5 and atr_pct > 3.0:
+            # High volatility = scalping opportunities
+            scalp_score += 3
+            intraday_score += 2
+        elif 1.2 < volatility_ratio <= 1.5:
+            # Moderate volatility = intraday/swing
+            intraday_score += 2
+            swing_score += 2
+        elif volatility_ratio < 1.0 and atr_pct < 2.0:
+            # Low volatility = swing/position
+            swing_score += 2
+            position_score += 2
+        
+        # 2. ADX (TREND STRENGTH)
+        if adx > 30:
+            # Very strong trend = swing/position
+            swing_score += 3
+            position_score += 3
+        elif 25 <= adx <= 30:
+            # Strong trend = swing
+            swing_score += 4
+            position_score += 1
+        elif 20 <= adx < 25:
+            # Moderate trend = intraday/swing
+            intraday_score += 2
+            swing_score += 2
+        else:  # adx < 20
+            # Weak trend = scalp/intraday
+            scalp_score += 2
+            intraday_score += 2
+        
+        # 3. REGIME TYPE
+        if 'BREAKOUT' in regime:
+            # Breakouts = scalp/intraday for quick profits
+            scalp_score += 3
+            intraday_score += 4
+        elif 'TRENDING' in regime and 'STRONG' in regime:
+            # Strong trends = swing/position
+            swing_score += 4
+            position_score += 2
+        elif 'TRENDING' in regime and 'MODERATE' in regime:
+            # Moderate trends = intraday/swing
+            intraday_score += 3
+            swing_score += 3
+        elif 'RANGING' in regime:
+            # Ranging = scalp/intraday
+            scalp_score += 3
+            intraday_score += 3
+        elif 'CONSOLIDATION' in regime:
+            # Consolidation = wait or scalp
+            scalp_score += 2
+        elif 'VOLATILE' in regime:
+            # Volatile = scalp only
+            scalp_score += 5
+        
+        # 4. REGIME PERSISTENCE
+        if fresh_regime or persistence < 15:
+            # Fresh regime = capture early momentum (scalp/intraday)
+            scalp_score += 2
+            intraday_score += 3
+        elif 15 <= persistence < 40:
+            # Developing regime = intraday/swing
+            intraday_score += 2
+            swing_score += 3
+        elif persistence >= 40 and confidence > 0.7:
+            # Mature strong regime = swing/position
+            swing_score += 2
+            position_score += 3
+        elif persistence >= 40 and confidence <= 0.7:
+            # Mature weakening = exit or scalp
+            scalp_score += 1
+        
+        # 5. BOLLINGER BAND SQUEEZE
+        bb_squeeze = indicators.get('bb_squeeze', False)
+        if bb_squeeze:
+            # Squeeze = prepare for breakout (scalp/intraday)
+            scalp_score += 2
+            intraday_score += 2
+        
+        # 6. VOLUME SURGE
+        volume_surge = indicators.get('volume_surge', False)
+        if volume_surge:
+            # Volume spike = short-term opportunity
+            scalp_score += 2
+            intraday_score += 2
+        
+        # Determine winner
+        scores = {
+            'SCALP': scalp_score,
+            'INTRADAY': intraday_score,
+            'SWING': swing_score,
+            'POSITION': position_score
+        }
+        
+        trade_type = max(scores, key=scores.get)
+        max_score = scores[trade_type]
+        
+        # Default to SWING if scores too low or tied
+        if max_score < 3:
+            trade_type = 'SWING'
+        
+        # Determine duration and optimal timeframe
+        if trade_type == 'SCALP':
+            duration = "5min - 2 hours"
+            timeframe = "1M/5M"
+        elif trade_type == 'INTRADAY':
+            duration = "2 hours - 24 hours"
+            timeframe = "15M/1H"
+        elif trade_type == 'SWING':
+            duration = "1-7 days"
+            timeframe = "4H/1D"
+        else:  # POSITION
+            duration = "1-4 weeks"
+            timeframe = "1D/1W"
+        
+        return trade_type, duration, timeframe
+    
     def _calculate_trend_alignment(self, df: pd.DataFrame) -> Tuple[str, float]:
         """Calculate multi-timeframe trend alignment"""
         close = df['close']
