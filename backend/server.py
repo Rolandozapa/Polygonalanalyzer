@@ -5434,13 +5434,12 @@ class UltraProfessionalIA2DecisionAgent:
                 tp2 = entry_price * 1.03
                 tp3 = entry_price * 1.04
                 
-            # 🔧 SAFE LOGGING to avoid f-string format errors
-            try:
-                vwap_safe = float(vwap_position) if vwap_position is not None else 0.0
-                mfi_safe = float(mfi_value) if mfi_value is not None else 50.0
-                logger.info(f"🎯 IA2 PROVIDING CONFLUENCE DATA to IA2 {symbol}: VWAP={vwap_safe:+.1f}%, MFI={mfi_safe:.1f}, EMA={ema_hierarchy}")
-            except (ValueError, TypeError):
-                logger.info(f"🎯 IA2 PROVIDING CONFLUENCE DATA to IA2 {symbol}: VWAP={vwap_position}, MFI={mfi_value}, EMA={ema_hierarchy}")
+            # ✅ STRICT LOGGING - Show real values or None, no fallbacks
+            logger.info(f"🎯 IA2 CONFLUENCE DATA for {symbol}: VWAP={vwap_position}, MFI={mfi_value}, EMA={ema_hierarchy}")
+            if vwap_position is None:
+                logger.warning(f"⚠️ VWAP position not calculated for {symbol}")
+            if mfi_value is None:
+                logger.warning(f"⚠️ MFI value not calculated for {symbol}")
             
             # Store IA1 signal strength for Claude override logic
             ia1_signal_strength = 0
