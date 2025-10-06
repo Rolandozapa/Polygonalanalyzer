@@ -2323,8 +2323,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             🎯 CURRENT SNAPSHOT FOR PRECISE ENTRY/EXIT:
             RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
-            MFI: {mfi:.1f} ({'🚨 EXTREME OVERSOLD' if mfi_extreme_oversold else '📉 OVERSOLD' if mfi_oversold else '🚨 EXTREME OVERBOUGHT' if mfi_extreme_overbought else '📈 OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}) | Institution: {institutional_activity.upper()}
-            VWAP: ${vwap:.4f} | Position: {vwap_position:+.2f}% | Trend: {vwap_trend.upper()} {'🎯 EXTREME PRECISION' if vwap_extreme_oversold or vwap_extreme_overbought else '🎯 HIGH PRECISION' if vwap_oversold or vwap_overbought else ''}
+            VWAP: ${vwap:.4f} | Position: {vwap_position} | Distance: {vwap_distance:+.2f}% | Trend: {vwap_trend.upper()} {'🎯 EXTREME PRECISION' if vwap_extreme_oversold or vwap_extreme_overbought else '🎯 HIGH PRECISION' if vwap_oversold or vwap_overbought else ''}
             🚀 EMA/SMA HIERARCHY: {trend_hierarchy.upper()} | Price vs EMAs: {price_vs_emas.upper()} | Cross: {ema_cross_signal.upper()} | Strength: {trend_strength_score:.0f}%
             📊 EMAs: 9=${ema_9:.4f} | 21=${ema_21:.4f} | SMA50=${sma_50:.4f} | EMA200=${ema_200:.4f}
             Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
