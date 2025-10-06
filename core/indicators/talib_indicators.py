@@ -225,6 +225,14 @@ class TALibIndicators:
                 macd_histogram=momentum_indicators['macd_histogram'],
                 macd_trend=momentum_indicators['macd_trend'],
                 
+                # 🆕 NOUVEAUX INDICATEURS MOMENTUM
+                willr=momentum_indicators['willr'],
+                willr_zone=momentum_indicators['willr_zone'],
+                cci=momentum_indicators['cci'],
+                cci_zone=momentum_indicators['cci_zone'],
+                roc=momentum_indicators['roc'],
+                roc_strength=momentum_indicators['roc_strength'],
+                
                 # ADX
                 adx=trend_indicators['adx'],
                 plus_di=trend_indicators['plus_di'],
