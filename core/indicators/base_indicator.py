@@ -84,7 +84,9 @@ class TechnicalAnalysisComplete:
     # Market regime
     regime: str = "CONSOLIDATION"
     confidence: float = 0.5
+    base_confidence: float = 0.5  # Base ML confidence component
     technical_consistency: float = 0.5
+    combined_confidence: float = 0.5  # Combined confidence score
     
     # Confluence
     confluence_grade: str = "C"
