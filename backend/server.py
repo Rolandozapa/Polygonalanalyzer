@@ -2381,231 +2381,197 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🌍 RÉCUPÉRATION DU CONTEXTE GLOBAL DU MARCHÉ CRYPTO
             global_market_context = await global_crypto_market_analyzer.get_market_context_for_ias()
             
+            # 🚀 NEW IA1 v6.0 PROMPT - CRYPTO ML REGIME ANALYST
             prompt = f"""
-            ADVANCED TECHNICAL ANALYSIS WITH CHARTIST PATTERNS - {opportunity.symbol}
-            
-            {global_market_context}
-            
-            MARKET DATA:
-            Price: ${opportunity.current_price:,.2f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
-            Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
-            
-            TECHNICAL INDICATORS - MULTI-TIMEFRAME PROFESSIONAL ANALYSIS:
-            {multi_tf_formatted}
-            
-            {fibonacci_formatted}
-            
-            🎯 CURRENT SNAPSHOT FOR PRECISE ENTRY/EXIT:
-            RSI: {rsi:.1f} | MACD: {macd_histogram:.4f} | Stochastic: {stochastic_k:.1f}%K, {stochastic_d:.1f}%D | BB Position: {bb_position:.2f}
-            VWAP: ${vwap:.4f} | Position: {vwap_position} | Distance: {vwap_distance:+.2f}% | Trend: {str(vwap_trend).upper() if vwap_trend is not None else 'NEUTRAL'} {'🎯 EXTREME PRECISION' if vwap_extreme_oversold or vwap_extreme_overbought else '🎯 HIGH PRECISION' if vwap_oversold or vwap_overbought else ''}
-            🚀 EMA/SMA HIERARCHY: {str(trend_hierarchy).upper() if trend_hierarchy is not None else 'NEUTRAL'} | Price vs EMAs: {str(price_vs_emas).upper() if price_vs_emas is not None else 'NEUTRAL'} | Cross: {str(ema_cross_signal).upper() if ema_cross_signal is not None else 'NEUTRAL'} | Strength: {trend_strength_score:.0f}%
-            📊 EMAs: 9=${ema_9:.4f} | 21=${ema_21:.4f} | SMA50=${sma_50:.4f} | EMA200=${ema_200:.4f}
-            Support: ${self._find_support_levels(historical_data, current_price)[0] if self._find_support_levels(historical_data, current_price) else current_price * 0.95:.2f} | Resistance: ${self._find_resistance_levels(historical_data, current_price)[0] if self._find_resistance_levels(historical_data, current_price) else current_price * 1.05:.2f}
-            
-            🏦 RR CALCULATION PRECISION WITH 6-INDICATOR CONFLUENCE:
-            - Use VWAP (${vwap:.4f}) as key support/resistance level for MORE PRECISE entry/exit points
-            - Use EMA HIERARCHY for dynamic S/R: EMA21 (${ema_21:.4f}) as primary S/R, SMA50 (${sma_50:.4f}) as institutional level
-            - For LONG: Consider EMA21/VWAP as dynamic support, EMA200/SMA50 as resistance targets
-            - For SHORT: Consider EMA21/VWAP as dynamic resistance, EMA200/SMA50 as support targets
-            - VWAP extreme levels ({vwap_distance:+.1f}%) indicate price strength/weakness - adjust RR accordingly
-            - EMA CROSS SIGNALS: {'🚀 GOLDEN CROSS - Bullish momentum shift' if ema_cross_signal == 'golden_cross' else '💥 DEATH CROSS - Bearish momentum shift' if ema_cross_signal == 'death_cross' else 'No cross signal'}
-            {'- 🎯 VWAP EXTREME OVERSOLD: Excellent LONG entry precision near VWAP support' if vwap_extreme_oversold else ''}
-            {'- 🎯 VWAP EXTREME OVERBOUGHT: Excellent SHORT entry precision near VWAP resistance' if vwap_extreme_overbought else ''}
-            {'- 🚀 PERFECT EMA HIERARCHY: Strong trend confirmation for ' + ('LONG' if trend_hierarchy in ['strong_bull', 'weak_bull'] else 'SHORT' if trend_hierarchy in ['strong_bear', 'weak_bear'] else 'HOLD') if trend_hierarchy != 'neutral' else ''}
-            
-            🔥 6-INDICATOR CONFLUENCE MATRIX VALIDATION:
-            1. VWAP (Precision): {vwap_distance:+.1f}% - {'OVERSOLD' if vwap_oversold else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}
-            2. Volume (Flow): {volume_ratio:.1f}x - {'SURGE' if volume_surge else 'INCREASING' if volume_trend == 'INCREASING' else 'DECREASING' if volume_trend == 'DECREASING' else 'NEUTRAL'}
-            3. RSI (Momentum): {rsi:.1f} - {'OVERSOLD' if rsi < 30 else 'OVERBOUGHT' if rsi > 70 else 'NEUTRAL'}
-            4. Multi-Timeframe: Available above
-            5. Volume: {str(volume_trend).upper() if volume_trend is not None else 'NEUTRAL'} ({volume_ratio:.1f}x)
-            6. EMA HIERARCHY: {str(trend_hierarchy).upper() if trend_hierarchy is not None else 'NEUTRAL'} ({trend_strength_score:.0f}% strength)
-            
-            CONFLUENCE REQUIREMENT: Need 4+/6 indicators aligned for STRONG signal
-            
-            📊 **BALANCED QUALITY STANDARDS WITH PRECISION TOOLS**:
-            - Minimum Confidence: 70% (balanced - multi-timeframe removes bad signals)
-            - Minimum Risk-Reward: 2.0:1 (balanced - VWAP precision allows realistic targets)
-            - Preferred: Volume surge confirmation OR VWAP extreme positioning
-            - Required: Multi-timeframe confluence OR strong traditional indicators
-            - Philosophy: QUALITY through better analysis, not artificial barriers
-            
-            🎯 MULTI-TIMEFRAME HIERARCHICAL ANALYSIS:
-            Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
-            Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}
-            Hierarchy Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0):.1%}
-            Daily Context: {timeframe_analysis.get('daily_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('daily_trend', {}).get('strength', 0.0):.1%})
-            4H Context: {timeframe_analysis.get('h4_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('h4_trend', {}).get('strength', 0.0):.1%})
-            1H Context: {timeframe_analysis.get('h1_trend', {}).get('pattern', 'Unknown')} (Strength: {timeframe_analysis.get('h1_trend', {}).get('strength', 0.0):.1%})
-            {f"⚠️ ANTI-MOMENTUM RISK: {timeframe_analysis.get('anti_momentum_risk', 'NONE')}" if timeframe_analysis.get('anti_momentum_risk') else "✅ Momentum Alignment: OK"}
-            
-            ⚠️ STREAMLINED MULTI-TIMEFRAME DECISION RULES:
-            
-            🎯 PRIMARY RULE: Use DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} as main direction
-            - Dominant pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')} ({timeframe_analysis.get('hierarchy_confidence', 0.0)*100:.0f}% confidence)
-            - Current momentum: {opportunity.price_change_24h:.1f}% (Factor this into your confidence)
-            
-            🎯 CONFIDENCE ADJUSTMENT RULE:
-            - If your signal ALIGNS with momentum >3%: BOOST confidence by 10-15%
-            - If your signal OPPOSES momentum >5%: CHECK for technical extremes (RSI >75/<25, Stoch >80/<20)
-            - With extremes: Maintain confidence (legitimate reversal)
-            - Without extremes: REDUCE confidence by 20-40% (risky counter-momentum)
-            
-            📊 CURRENT TECHNICAL STATE:
-            RSI: {rsi:.1f}, Stochastic: {stochastic_k:.1f}, BB Position: {bb_position:.2f}
-            Momentum vs Signal Assessment: {"Alignment favorable" if abs(opportunity.price_change_24h) < 3 else "Check for reversal signals"}
-            
-            💡 DECISION GUIDANCE: Your analysis will be further validated by sophisticated systems, so focus on CLEAR directional bias with appropriate confidence.
-            
-            📊 FIBONACCI RETRACEMENT LEVELS:
-            Current Position: {fib_data['current_position']:.1%} | Nearest Level: {fib_data['nearest_level']}% | Trend: {fib_data['trend_direction'].upper()}
-            Key Levels: 23.6%=${fib_data['levels']['23.6']:.4f} | 38.2%=${fib_data['levels']['38.2']:.4f} | 50%=${fib_data['levels']['50.0']:.4f} | 61.8%=${fib_data['levels']['61.8']:.4f} | 78.6%=${fib_data['levels']['78.6']:.4f}
-            
-            🎯 DETECTED CHARTIST PATTERNS ({len(all_detected_patterns)} patterns detected):
-            {pattern_details if pattern_details else "No significant chartist patterns detected"}
-            
-            CRITICAL PATTERN ANALYSIS REQUIREMENTS:
-            1. You MUST analyze ALL {len(all_detected_patterns)} detected patterns individually by name
-            2. Explain how EACH pattern influences your technical assessment
-            3. Show pattern confluence - how do multiple patterns work together or conflict
-            4. Use pattern-specific terminology for each pattern
-            5. Integrate pattern targets and breakout levels from ALL patterns
-            6. Your confidence should reflect the strength of pattern confluence
-            7. In your JSON response, list ALL patterns in the 'patterns' array
-            
-            📈 HISTORICAL CONTEXT & PRICE ACTION:
-            Recent 10 days: {historical_data['Close'].tail(10).tolist()}
-            Weekly highs (4 weeks): {[historical_data['High'].iloc[i:i+7].max() for i in range(max(0, len(historical_data)-28), len(historical_data), 7)]}
-            Weekly lows (4 weeks): {[historical_data['Low'].iloc[i:i+7].min() for i in range(max(0, len(historical_data)-28), len(historical_data), 7)]}
-            30-day price range: ${historical_data['Low'].tail(30).min():.4f} - ${historical_data['High'].tail(30).max():.4f}
-            Current position in 30-day range: {((opportunity.current_price - historical_data['Low'].tail(30).min()) / (historical_data['High'].tail(30).max() - historical_data['Low'].tail(30).min()) * 100):.1f}%
-            Average volume (30d): ${historical_data['Volume'].tail(30).mean():,.0f} vs Current: ${opportunity.volume_24h:,.0f}
-            
-            🏗️ KEY HISTORICAL LEVELS:
-            - Recent swing highs: {sorted(historical_data['High'].tail(20).nlargest(3).tolist(), reverse=True)}
-            - Recent swing lows: {sorted(historical_data['Low'].tail(20).nsmallest(3).tolist())}
-            - Volume-weighted avg price (7d): ${(historical_data['Close'].tail(7) * historical_data['Volume'].tail(7)).sum() / historical_data['Volume'].tail(7).sum():.4f}
-            
-            📊 MARKET BEHAVIOR ANALYSIS:
-            - Price volatility (30d): {historical_data['Close'].tail(30).pct_change().std() * 100:.2f}% daily avg
-            - Trend direction (14d): {'BULLISH' if historical_data['Close'].tail(14).iloc[-1] > historical_data['Close'].tail(14).iloc[0] else 'BEARISH'} ({((historical_data['Close'].tail(14).iloc[-1] / historical_data['Close'].tail(14).iloc[0] - 1) * 100):+.1f}%)
-            - Support test count: {len([x for x in historical_data['Low'].tail(30) if abs(x - historical_data['Low'].tail(30).min()) / historical_data['Low'].tail(30).min() < 0.02])} times near 30d low
-            - Resistance test count: {len([x for x in historical_data['High'].tail(30) if abs(x - historical_data['High'].tail(30).max()) / historical_data['High'].tail(30).max() < 0.02])} times near 30d high
+═══════════════════════════════════════════════════════════════════════════════
+🤖 CRYPTO ML REGIME QUANTITATIVE ANALYST v6.0 - PRODUCTION READY
+═══════════════════════════════════════════════════════════════════════════════
 
-            ROLE: Vous êtes un analyste technique expert professionnel.
-            
-            MANDATORY INSTRUCTIONS: 
-            1. ANALYZE STEP-BY-STEP: Examinez chaque indicateur technique individuellement puis leur confluence
-            2. EXPLAIN YOUR REASONING: Détaillez comment CHAQUE indicateur influence votre décision
-            3. SHOW YOUR WORK: Expliquez les calculs de support/résistance et RR
-            4. THINK OUT LOUD: Verbalisez votre processus d'analyse dans le champ "reasoning"
-            
-            CRITICAL: Le champ "reasoning" doit contenir votre analyse détaillée étape par étape.
-            
-            🎯 CRITICAL RR CALCULATION WITH TECHNICAL LEVELS:
-            
-            NIVEAU TECHNIQUES DISPONIBLES:
-            - VWAP: ${vwap:.6f} (support/resistance dynamique)
-            - EMA21: ${ema_21:.6f} (trend support/resistance)
-            - SMA50: ${sma_50:.6f} (résistance institutionnelle)
-            - Prix actuel: ${opportunity.current_price:.6f}
-            
-            FORMULES RR OBLIGATOIRES:
-            - LONG RR = (Take_Profit - Entry_Price) / (Entry_Price - Stop_Loss)
-            - SHORT RR = (Entry_Price - Take_Profit) / (Stop_Loss - Entry_Price)
-            
-            EXEMPLE CONCRET LONG:
-            Entry: ${opportunity.current_price:.6f} (prix actuel)
-            Stop-Loss: ${min(vwap, ema_21):.6f} (min entre VWAP et EMA21)
-            Take-Profit: ${sma_50:.6f} (SMA50 comme résistance)
-            RR = ({sma_50:.6f} - {opportunity.current_price:.6f}) / ({opportunity.current_price:.6f} - {min(vwap, ema_21):.6f}) = {((sma_50 - opportunity.current_price) / (opportunity.current_price - min(vwap, ema_21))):.2f}
-            
-            VOUS DEVEZ calculer le RR réel avec VOS niveaux choisis !
-            2. For your recommendation, specify:
-               - PRIMARY SUPPORT level (historically tested, not theoretical)
-               - PRIMARY RESISTANCE level (historically tested, not theoretical)  
-               - Reference specific historical tests of these levels
-            3. Ensure levels are REALISTIC based on:
-               - 30-day price range and current position
-               - Historical volatility patterns
-               - Volume behavior at key levels
-               - 1h-3 days timeframe achievability
-            3. Set Support/Resistance levels based on technical analysis (not arbitrary percentages)
-            4. Your support/resistance levels should consider:
-               - Pattern breakout/breakdown levels
-               - Fibonacci retracement key levels (23.6%, 38.2%, 50%, 61.8%)
-               - Recent swing highs and lows
-               - Volume-based support/resistance zones
-            5. For LONG signals: Support should be logical stop-loss, Resistance should be realistic target
-            6. For SHORT signals: Resistance should be logical stop-loss, Support should be realistic target  
-            7. Levels should be achievable within 1-3 days based on current volatility
-            8. **CRITICAL**: YOU must calculate Risk-Reward ratios yourself in the JSON response
-            9. For LONG: calculated_rr_bullish = (resistance - entry) / (entry - support) 
-            10. For SHORT: calculated_rr_bearish = (entry - support) / (resistance - entry)
-            11. Target RR > 2.0 for strong signals, but recommend based on pattern confluence
-            12. Your recommendation should reflect overall pattern analysis + RR consideration
-            
-            ANALYSE TECHNIQUE - {opportunity.symbol}
-            
-            DONNÉES MARCHÉ:
-            Prix: ${opportunity.current_price:.6f} | 24h: {opportunity.price_change_24h:.2f}% | Vol: ${opportunity.volume_24h:,.0f}
-            
-            INDICATEURS TECHNIQUES CALCULÉS:
-            - RSI: {rsi:.1f} ({('Surachat' if rsi > 70 else 'Survente' if rsi < 30 else 'Neutre')})
-            - MACD Histogram: {macd_histogram:.6f} ({('Momentum Haussier' if macd_histogram > 0 else 'Momentum Baissier' if macd_histogram < 0 else 'Momentum Neutre')})
-            - MFI: {mfi:.1f} ({('Accumulation Institutionnelle' if mfi < 20 else 'Distribution Institutionnelle' if mfi > 80 else 'Flux Neutre')})
-            - VWAP Position: {vwap_position:+.1f}% ({('Prix au-dessus VWAP - Haussier' if vwap_position > 0 else 'Prix sous VWAP - Baissier' if vwap_position < 0 else 'Prix près VWAP - Neutre')})
-            - EMA Hierarchy: {trend_hierarchy} ({('Tendance Haussière' if 'bull' in trend_hierarchy else 'Tendance Baissière' if 'bear' in trend_hierarchy else 'Tendance Neutre')})
-            - Stochastic: {stochastic_k:.1f} ({('Surachat' if stochastic_k > 80 else 'Survente' if stochastic_k < 20 else 'Neutre')})
-            
-            FIGURES CHARTISTES DÉTECTÉES: {', '.join(detected_pattern_names) if detected_pattern_names else 'Aucune'}
-            
-            🚨 CRITICAL: Return ONLY valid JSON. No extra text or explanation. Use this exact format:
-            
-            ```json
-            {{
-                "signal": "LONG or SHORT or HOLD",
-                "confidence": 0.75,
-                "reasoning": "REGIME ANALYSIS: Market regime is {talib_analysis.regime} with {talib_analysis.confidence:.1%} ML confidence (Technical consistency: {talib_analysis.technical_consistency:.1%}). STEP 1 - RSI MOMENTUM: RSI 14-period is {rsi:.1f} in {talib_analysis.rsi_zone} zone, suggesting {rsi_interpretation}. STEP 2 - MACD TREND: MACD histogram {macd_histogram:.6f} shows {talib_analysis.macd_trend} momentum with {macd_direction} directional bias. STEP 3 - ADX STRENGTH: ADX {adx:.1f} indicates {talib_analysis.adx_strength} trend strength using Wilder method (+DI: {talib_analysis.plus_di:.1f}, -DI: {talib_analysis.minus_di:.1f}). STEP 4 - MFI VOLUME: Money Flow Index {mfi:.1f} shows {talib_analysis.mfi_signal} institutional activity. STEP 5 - BOLLINGER ANALYSIS: Price at {bb_position:.1%} of BB range, squeeze status: {bb_squeeze} ({talib_analysis.squeeze_intensity}). STEP 6 - VWAP POSITION: Price is {vwap_position:+.1f}% from VWAP indicating {vwap_strength}. STEP 7 - CONFLUENCE GRADE: Setup grades {talib_analysis.confluence_grade} with {talib_analysis.confluence_score} points - {talib_analysis.conviction_level} conviction level. CONCLUSION: [Final decision based on regime + confluence analysis].",
-                "entry_price": {opportunity.current_price:.6f},
-                "stop_loss_price": "CALCULATE based on technical levels",
-                "take_profit_price": "CALCULATE based on technical levels", 
-                "calculated_rr": "CALCULATE using (TP-Entry)/(Entry-SL) for LONG or (Entry-TP)/(SL-Entry) for SHORT",
-                "rr_reasoning": "EXPLAIN calculation: Entry at [price] based on [reason], Stop-loss at [price] using [technical level], Take-profit at [price] using [technical level], RR = [calculation details]"
-            }}
-            ```
-            
-            CRITICAL: Calculate real RR using the formulas shown above. Include detailed reasoning with all 6 indicators.
-            
-            🎯 ENHANCED DECISION LOGIC WITH MULTI-TIMEFRAME HIERARCHY:
-            
-            PRIMARY DECISION CRITERIA (Based on Dominant Timeframe):
-            - Use the DECISIVE PATTERN from {timeframe_analysis.get('dominant_timeframe', 'Unknown')} as your MAIN directional bias
-            - The dominant pattern ({timeframe_analysis.get('decisive_pattern', 'Unknown')}) should carry {timeframe_analysis.get('hierarchy_confidence', 0.0)*100:.0f}% weight in your decision
-            
-            MOMENTUM VALIDATION:
-            - Current 24h momentum: {opportunity.price_change_24h:.1f}%
-            - If momentum > +5% and you consider SHORT: Reduce confidence by 30-50%
-            - If momentum < -5% and you consider LONG: Reduce confidence by 30-50%
-            {f"- ⚠️ ANTI-MOMENTUM WARNING: Strong daily {('bullish' if opportunity.price_change_24h > 0 else 'bearish')} momentum detected" if abs(opportunity.price_change_24h) > 5 else ""}
-            
-            DECISION HIERARCHY:
-            1. **DOMINANT PATTERN ALIGNMENT**: Does your signal align with the decisive pattern?
-            2. **MOMENTUM VALIDATION**: Is your signal fighting against strong daily momentum?
-            3. **CONFLUENCE CHECK**: Do supporting timeframes confirm or contradict?
-            4. **RISK ASSESSMENT**: If counter-trend, reduce confidence significantly
-            
-            FINAL SIGNAL LOGIC:
-            - LONG: If bullish patterns dominate AND not fighting strong bearish momentum
-            - SHORT: If bearish patterns dominate AND not fighting strong bullish momentum
-            - HOLD: If patterns conflict OR signal fights dominant momentum with >5% daily move
-            - CONFIDENCE ADJUSTMENT: Reduce by 20-50% if counter-trend to daily momentum
-            
-            🚨 MANDATORY: 
-            1. Your 'patterns' array MUST contain ALL detected pattern names
-            2. Explain how the decisive pattern influences your final decision
-            3. Address any momentum-pattern conflicts explicitly
-            4. Justify confidence level considering timeframe hierarchy
+ANALYSIS TARGET: {opportunity.symbol}
+Market Cap: {market_cap_str} | Rank: #{opportunity.market_cap_rank or 'N/A'}
+Current Price: ${opportunity.current_price:,.4f}
+24h Change: {opportunity.price_change_24h:+.2f}% | Volume: ${opportunity.volume_24h:,.0f}
+
+{global_market_context}
+
+══════════════════════════════════════════════════════════════════════════════
+📊 TECHNICAL INDICATORS SNAPSHOT (TALib Professional Grade)
+══════════════════════════════════════════════════════════════════════════════
+
+🎯 MOMENTUM INDICATORS:
+RSI (14): {{rsi:.1f}} - Zone: {{rsi_zone}} | Trend: {{rsi_interpretation}}
+MACD: Line={{macd_line:.6f}}, Signal={{macd_signal:.6f}}, Histogram={{macd_histogram:.6f}}
+Stochastic: %K={{stoch_k:.1f}}, %D={{stoch_d:.1f}}
+
+🎯 TREND STRENGTH:
+ADX (Wilder): {{adx:.1f}} - Strength: {{adx_strength}}
++DI: {{plus_di:.1f}} | -DI: {{minus_di:.1f}}
+Trend Hierarchy: {{trend_hierarchy}} | EMA Cross: {{ema_cross_signal}}
+
+🎯 VOLUME & MONEY FLOW:
+MFI: {{mfi:.1f}} - Signal: {{mfi_signal}}
+Volume Ratio: {{volume_ratio:.1f}}x | Trend: {{volume_trend}}
+Volume Surge: {{volume_surge}}
+
+🎯 BOLLINGER BANDS & VOLATILITY:
+BB Position: {{bb_position:.1%}} | Squeeze: {{bb_squeeze}}
+Squeeze Intensity: {{squeeze_intensity}}
+ATR: {{atr:.6f}} ({{atr_pct:.2f}}%)
+
+🎯 VWAP & MOVING AVERAGES:
+VWAP: ${{vwap:.4f}} | Distance: {{vwap_distance:+.2f}}%
+SMA 20: ${{sma_20:.4f}} | SMA 50: ${{sma_50:.4f}}
+EMA 9: ${{ema_9:.4f}} | EMA 21: ${{ema_21:.4f}} | EMA 200: ${{ema_200:.4f}}
+
+══════════════════════════════════════════════════════════════════════════════
+🧠 ML REGIME DETECTION & CONFIDENCE ANALYSIS
+══════════════════════════════════════════════════════════════════════════════
+
+CURRENT REGIME: {{regime}}
+ML Confidence: {{confidence:.1%}} (Base: {{base_confidence:.1%}})
+Technical Consistency: {{technical_consistency:.1%}}
+Combined Confidence: {{combined_confidence:.1%}}
+
+REGIME PERSISTENCE: {{regime_persistence}} bars
+Regime Status: {{fresh_regime}} regime
+Stability Score: {{stability_score:.1%}}
+Transition Alert: {{regime_transition_alert}}
+
+REGIME IMPLICATIONS:
+- Position Sizing Multiplier: {{regime_multiplier:.2f}}x
+- ML Confidence Multiplier: {{ml_confidence_multiplier:.2f}}x
+- Momentum Quality Multiplier: {{momentum_multiplier:.2f}}x
+- BB Squeeze Multiplier: {{bb_multiplier:.2f}}x
+- **Combined Multiplier: {{combined_multiplier:.2f}}x**
+
+══════════════════════════════════════════════════════════════════════════════
+🎯 CONFLUENCE GRADING SYSTEM (A++ to D)
+══════════════════════════════════════════════════════════════════════════════
+
+MANDATORY REQUIREMENTS CHECK:
+✓ Regime Confidence: {{confidence:.1%}} (Min: 65%)
+✓ Trend Strength: ADX {{adx:.1f}} or BB Squeeze {{bb_squeeze}} (Min: ADX>18 OR Squeeze=True)
+✓ Volume Confirmation: {{volume_ratio:.1f}}x (Min: >1.0x)
+
+MOMENTUM CONDITIONS (Need minimum 2/6):
+1. RSI 40-65 Zone: {{rsi:.1f}} ({'✓' if 40 <= rsi <= 65 else '✗'})
+2. MACD Histogram Directional: {{macd_histogram:.6f}} ({'✓' if abs(macd_histogram) > 0.000001 else '✗'})
+3. BB Squeeze/Band Walk: {{bb_squeeze}} ({'✓' if bb_squeeze or abs(bb_position - 0.5) > 0.3 else '✗'})
+4. SMA 20 Slope Directional: {{sma_20_slope:.6f}} ({'✓' if abs(sma_20_slope) > 0.001 else '✗'})
+5. Volume Trend Positive: {{volume_trend}} ({'✓' if volume_trend > 0 else '✗'})
+6. Above SMA 20: {{above_sma_20}} ({'✓' if above_sma_20 else '✗'})
+
+HIGH CONVICTION TRIGGERS:
+🔥 ML_BREAKOUT_SQUEEZE: {{bb_squeeze and confidence > 0.75 and volume_ratio > 1.8}}
+🔥 ML_TREND_ACCELERATION: {{adx > 25 and abs(sma_20_slope) > 0.002 and confidence > 0.8}}
+🔥 ML_FRESH_REGIME: {{regime_persistence < 10 and confidence > 0.85}}
+🔥 ML_VOLUME_SURGE: {{volume_ratio > 2.0 and volume_trend > 0.1}}
+
+CONFLUENCE GRADE: {{confluence_grade}}
+CONFLUENCE SCORE: {{confluence_score}}/100
+CONVICTION LEVEL: {{conviction_level}}
+SHOULD TRADE: {{should_trade}}
+
+══════════════════════════════════════════════════════════════════════════════
+🎯 POSITION SIZING & RISK MANAGEMENT
+══════════════════════════════════════════════════════════════════════════════
+
+POSITION SIZING CALCULATION:
+Base Risk: 1.0% of capital
+Regime Multiplier: {{regime_multiplier:.2f}}x ({{regime}})
+ML Confidence Multiplier: {{ml_confidence_multiplier:.2f}}x ({{confidence:.1%}} confidence)
+Momentum Quality: {{momentum_multiplier:.2f}}x
+BB Squeeze Factor: {{bb_multiplier:.2f}}x
+**TOTAL POSITION SIZE: {{combined_multiplier:.2f}}x of base risk**
+
+RISK LIMITS BY GRADE:
+- A++: Maximum 1.5% risk
+- A+: Maximum 1.2% risk  
+- A: Maximum 1.0% risk
+- B+: Maximum 0.8% risk
+- B: Maximum 0.6% risk
+- C/D: DO NOT TRADE
+
+══════════════════════════════════════════════════════════════════════════════
+🎯 TRADING DECISION FRAMEWORK
+══════════════════════════════════════════════════════════════════════════════
+
+REGIME-BASED DECISION LOGIC:
+If {{regime}} == "TRENDING_UP_STRONG" or "BREAKOUT_BULLISH":
+    → Strong LONG bias with aggressive sizing
+    → Entry: Pullbacks to EMA 21 or VWAP support
+    → Stop: Below SMA 20 or recent swing low
+    → Targets: Previous highs + Fibonacci extensions
+
+If {{regime}} == "CONSOLIDATION" or "RANGING":  
+    → Range trading approach
+    → Entry: Range boundaries with volume confirmation
+    → Stop: Outside range + buffer
+    → Targets: Opposite range boundary
+
+If {{regime}} == "VOLATILE":
+    → Reduce position size significantly
+    → Wider stops (2x ATR minimum)
+    → Quick profit taking
+
+MULTI-TIMEFRAME VALIDATION:
+Dominant Timeframe: {timeframe_analysis.get('dominant_timeframe', 'Unknown')}
+Decisive Pattern: {timeframe_analysis.get('decisive_pattern', 'Unknown')}
+Pattern Confidence: {timeframe_analysis.get('hierarchy_confidence', 0.0)*100:.0f}%
+
+MOMENTUM ALIGNMENT CHECK:
+Current 24h momentum: {opportunity.price_change_24h:+.1f}%
+If momentum conflicts with signal → Reduce confidence by 30-50%
+
+══════════════════════════════════════════════════════════════════════════════
+🎯 MANDATORY OUTPUT FORMAT
+══════════════════════════════════════════════════════════════════════════════
+
+Based on the comprehensive ML regime analysis above, provide your trading decision in this EXACT JSON format:
+
+```json
+{{
+    "signal": "LONG or SHORT or HOLD",
+    "confidence": 0.XX,
+    "reasoning": "ML REGIME ANALYSIS: Market regime {{regime}} detected with {{confidence:.1%}} combined confidence (Base: {{base_confidence:.1%}}, Technical Consistency: {{technical_consistency:.1%}}). REGIME PERSISTENCE: {{regime_persistence}} bars - {{fresh_regime}} regime status with {{stability_score:.1%}} stability. TRANSITION ALERT: {{regime_transition_alert}}. CONFLUENCE ANALYSIS: Grade {{confluence_grade}} with {{confluence_score}}/100 points ({{conviction_level}} conviction). KEY INDICATORS: RSI {{rsi:.1f}} ({{rsi_zone}}), ADX {{adx:.1f}} ({{adx_strength}}), MACD {{macd_histogram:+.6f}}, BB Squeeze {{bb_squeeze}}, Volume {{volume_ratio:.1f}}x. POSITION SIZING: {{combined_multiplier:.2f}}x multiplier from regime ({{regime_multiplier:.2f}}x) + ML confidence ({{ml_confidence_multiplier:.2f}}x) + momentum ({{momentum_multiplier:.2f}}x) + BB factor ({{bb_multiplier:.2f}}x). DECISION RATIONALE: [Explain final decision based on regime + confluence + risk management]",
+    "entry_price": {opportunity.current_price:.6f},
+    "stop_loss_price": "[CALCULATE using regime-specific stop strategy]",
+    "take_profit_price": "[CALCULATE using regime-specific target strategy]",
+    "calculated_rr": "[CALCULATE risk-reward ratio]",
+    "rr_reasoning": "[EXPLAIN calculation methodology]",
+    "confluence_grade": "{{confluence_grade}}",
+    "confluence_score": {{confluence_score}},
+    "regime": "{{regime}}",
+    "regime_confidence": {{confidence}},
+    "position_multiplier": {{combined_multiplier}},
+    "should_trade": {{should_trade}}
+}}
+```
+
+══════════════════════════════════════════════════════════════════════════════
+🚨 CRITICAL RULES - NEVER VIOLATE
+══════════════════════════════════════════════════════════════════════════════
+
+ALWAYS:
+- Respect ML regime confidence thresholds (minimum 60%)
+- Calculate technical consistency for combined confidence
+- Track regime persistence for fresh/mature detection
+- Use corrected ADX (Wilder method) values provided
+- Adjust position size based on ALL multipliers
+- Grade every setup A++ to D before trading
+- Validate momentum conditions (minimum 2/6 required)
+
+NEVER:
+- Trade against ML regime trend without A+ setup
+- Trade with confidence < 60%
+- Trade with confluence grade < B
+- Ignore regime persistence warnings (>40 bars = caution)
+- Trade during IMMINENT_CHANGE transition alert
+- Exceed maximum position risk limits per grade
+
+═══════════════════════════════════════════════════════════════════════════════
+END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
+═══════════════════════════════════════════════════════════════════════════════
             """
             
             # ✅ CREATE ANALYSIS DATA FOR PROMPT FORMATTING (SIMPLIFIED VERSION)
