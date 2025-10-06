@@ -624,6 +624,7 @@ class TALibIndicators:
                 'ema_9': ema_9_val,
                 'ema_21': ema_21_val,
                 'ema_50': ema_50_val,
+                'ema_200': ema_200_val,
                 'trend_hierarchy': trend_hierarchy,
                 'trend_strength_score': trend_strength_score,
                 'price_vs_emas': price_vs_emas
