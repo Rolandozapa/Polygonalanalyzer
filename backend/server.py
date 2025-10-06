@@ -2215,22 +2215,22 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   📊 RSI: {rsi:.1f if rsi else 'N/A'}, MACD: {macd_histogram:.6f if macd_histogram else 'N/A'}, Stoch: {stochastic_k:.1f if stochastic_k else 'N/A'}")
             logger.info(f"   📊 VWAP-based MFI: {mfi:.2f if mfi else 'N/A'}%, BB Position: {bb_position:.2f if bb_position else 'N/A'}")
             logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr:.6f if atr else 'N/A'}, Volume Ratio: {volume_ratio:.2f if volume_ratio else 'N/A'}")
-            stochastic_k = indicators.stoch_k
-            stochastic_d = indicators.stoch_d
-            bb_upper = indicators.bb_upper
-            bb_middle = indicators.bb_middle
-            bb_lower = indicators.bb_lower
-            bb_position = indicators.bb_position
+            stochastic_k = simple_indicators_data.get('stochastic_k', 50.0)
+            stochastic_d = simple_indicators_data.get('stochastic_d', 50.0)
+            bb_upper = simple_indicators_data.get('bb_upper', opportunity.current_price * 1.02)
+            bb_middle = simple_indicators_data.get('bb_middle', opportunity.current_price)
+            bb_lower = simple_indicators_data.get('bb_lower', opportunity.current_price * 0.98)
+            bb_position = simple_indicators_data.get('bb_position', 0.5)
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
-            vwap = indicators.vwap
-            vwap_distance = indicators.vwap_distance
-            above_vwap = indicators.above_vwap
+            vwap = simple_indicators_data.get('vwap', opportunity.current_price)
+            vwap_distance = simple_indicators_data.get('vwap_distance', 0.0)
+            above_vwap = simple_indicators_data.get('above_vwap', True)
             
             # Ensure vwap_position is numeric (convert from string if needed)
             try:
-                vwap_position = float(indicators.vwap_position) if isinstance(indicators.vwap_position, str) else indicators.vwap_position
+                vwap_position = float(vwap_distance) if isinstance(vwap_distance, (str, int)) else vwap_distance
             except (ValueError, TypeError):
                 vwap_position = 0.0
             
