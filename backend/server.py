@@ -3514,9 +3514,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
                 # 🚨 AJOUTER LES VRAIS INDICATEURS TECHNIQUES CALCULÉS
                 "rsi": rsi,
-                "macd_signal": indicators.macd_line,  # 🎯 FIX: Use MACD line (corrected again)
-                "macd_line": indicators.macd_line,    # Keep MACD line for completeness
-                "macd_histogram": indicators.macd_histogram,  # Keep MACD histogram
+                "macd_signal": macd_line,  # 🎯 FIX: Use MACD line (corrected again)
+                "macd_line": macd_line,    # Keep MACD line for completeness
+                "macd_histogram": macd_histogram,  # Keep MACD histogram
                 "stochastic": stochastic_k,
                 "stochastic_d": stochastic_d,
                 "bollinger_position": bb_position,
