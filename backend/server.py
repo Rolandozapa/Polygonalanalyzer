@@ -2213,6 +2213,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_trend = "bullish" if vwap_distance > 0.5 else "bearish" if vwap_distance < -0.5 else "neutral"
             vwap_overbought = vwap_distance > 2.0
             vwap_oversold = vwap_distance < -2.0
+            vwap_extreme_overbought = vwap_distance > 3.0
+            vwap_extreme_oversold = vwap_distance < -3.0
             vwap_extreme_overbought = indicators.vwap_extreme_overbought
             vwap_extreme_oversold = indicators.vwap_extreme_oversold
             
