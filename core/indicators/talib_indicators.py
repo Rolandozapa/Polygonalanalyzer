@@ -150,9 +150,11 @@ class TALibIndicators:
             
             logger.info(f"   ✅ Normalized columns: {list(normalized_df.columns)}")
             
-            # Validate normalized data
-            if not self.validate_data(normalized_df):
-                return self._create_minimal_analysis(normalized_df, symbol)
+            # Validate normalized data - but try to calculate even with limited data
+            is_valid_data = self.validate_data(normalized_df)
+            if not is_valid_data:
+                logger.warning(f"⚠️ Limited data for {symbol} ({len(normalized_df)} bars), attempting calculation anyway...")
+                # Continue with calculations - many indicators can work with less data
             
             # Extract OHLCV arrays from normalized data
             open_prices = normalized_df['open'].values.astype(np.float64)
