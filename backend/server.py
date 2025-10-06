@@ -2470,7 +2470,7 @@ REGIME IMPLICATIONS:
 
 MANDATORY REQUIREMENTS CHECK:
 ✓ Regime Confidence: {{confidence:.1%}} (Min: 65%)
-✓ Trend Strength: ADX {{adx:.1f}} or BB Squeeze {{bb_squeeze}} (Min: ADX>18 OR Squeeze=True)
+✓ Trend Strength: ADX {{adx:.1f}} or BB Squeeze {{bb_squeeze_str}} (Min: ADX>18 OR Squeeze=True)
 ✓ Volume Confirmation: {{volume_ratio:.1f}}x (Min: >1.0x)
 
 MOMENTUM CONDITIONS (Need minimum 2/6):
