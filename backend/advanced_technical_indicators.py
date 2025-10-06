@@ -1012,6 +1012,13 @@ class AdvancedTechnicalIndicators:
                 ema_200=ema_200,
                 sma_50=sma_50,
                 
+                # Trend hierarchy analysis
+                trend_hierarchy=trend_hierarchy,
+                trend_momentum=trend_momentum,
+                price_vs_emas=price_vs_emas,
+                ema_cross_signal=ema_cross_signal,
+                trend_strength_score=trend_strength_score,
+                
                 # Trade Type Recommendation
                 trade_type=trade_type,
                 trade_duration_estimate=duration,
