@@ -4780,7 +4780,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         else:
             return "neutral"
     
-    def _create_fallback_analysis(self, opportunity: TrendingCrypto) -> TechnicalAnalysis:
+    def _create_fallback_analysis(self, opportunity: MarketOpportunity) -> None:
         """❌ FALLBACK ANALYSIS DEPRECATED - System should only use real calculated indicators"""
         logger.error(f"🚨 FALLBACK ANALYSIS ATTEMPTED for {opportunity.symbol} - This should not happen with new strict validation")
         logger.error("🚨 System configured to reject opportunities without proper technical indicator calculations")
