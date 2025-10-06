@@ -390,7 +390,10 @@ class TALibIndicators:
             return {
                 'adx': 25.0, 'plus_di': 25.0, 'minus_di': 25.0, 'adx_strength': 'MODERATE',
                 'sma_20_slope': 0.0, 'sma_50_slope': 0.0, 'above_sma_20': True, 'above_sma_50': True,
-                'distance_sma_20': 0.0, 'distance_sma_50': 0.0
+                'distance_sma_20': 0.0, 'distance_sma_50': 0.0,
+                # 🆕 NOUVEAUX INDICATEURS TREND (fallbacks)
+                'aroon_up': 50.0, 'aroon_down': 50.0, 'aroon_diff': 0.0, 'aroon_signal': 'NEUTRAL',
+                'sar': 0.0, 'sar_signal': 'NEUTRAL', 'sar_distance': 0.0
             }
     
     def _calculate_volatility_indicators(self, high: np.array, low: np.array, close: np.array) -> Dict[str, Any]:
