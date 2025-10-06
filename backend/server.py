@@ -2675,9 +2675,9 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                 'above_sma_20_check': '✓' if above_sma_20 else '✗',
                 
                 # High conviction trigger results
-                'ml_breakout_squeeze': (talib_analysis.bb_squeeze if hasattr(talib_analysis, 'bb_squeeze') else False) and confidence > 0.75 and (volume_ratio or 1.0) > 1.8,
-                'ml_trend_acceleration': (getattr(talib_analysis, 'adx', 0) > 25) and abs(sma_20_slope) > 0.002 and confidence > 0.8,
-                'ml_fresh_regime': (getattr(talib_analysis, 'regime_persistence', 50) < 10) and confidence > 0.85,
+                'ml_breakout_squeeze': (talib_analysis.bb_squeeze if hasattr(talib_analysis, 'bb_squeeze') else False) and getattr(talib_analysis, 'confidence', 0.5) > 0.75 and (volume_ratio or 1.0) > 1.8,
+                'ml_trend_acceleration': (getattr(talib_analysis, 'adx', 0) > 25) and abs(sma_20_slope) > 0.002 and getattr(talib_analysis, 'confidence', 0.5) > 0.8,
+                'ml_fresh_regime': (getattr(talib_analysis, 'regime_persistence', 50) < 10) and getattr(talib_analysis, 'confidence', 0.5) > 0.85,
                 'ml_volume_surge': (volume_ratio or 1.0) > 2.0 and (volume_trend or 0) > 0.1
             }
             
