@@ -67,6 +67,7 @@ class TechnicalAnalysisComplete:
     ema_9: float = 0.0
     ema_21: float = 0.0
     ema_50: float = 0.0
+    ema_200: float = 0.0
     sma_20: float = 0.0
     sma_50: float = 0.0
     
