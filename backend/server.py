@@ -2314,14 +2314,25 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # ✅ ALL INDICATORS EXTRACTED FROM simple_indicators_data
             # Volume analysis (already extracted above)
-            # EMAs and trend hierarchy (from simple indicators)
-            # ✅ EMAs and SMAs from TALib Professional Analysis
-            ema_9 = talib_analysis.ema_9
-            ema_21 = talib_analysis.ema_21
-            sma_20 = talib_analysis.sma_20
-            sma_50 = talib_analysis.sma_50
-            ema_200 = talib_analysis.ema_200
-            trend_hierarchy = talib_analysis.trend_hierarchy
+            # ✅ EMAs and SMAs from TALib Professional Analysis (SAFE ACCESS)
+            if talib_analysis:
+                ema_9 = getattr(talib_analysis, 'ema_9', opportunity.current_price)
+                ema_21 = getattr(talib_analysis, 'ema_21', opportunity.current_price)
+                sma_20 = getattr(talib_analysis, 'sma_20', opportunity.current_price)
+                sma_50 = getattr(talib_analysis, 'sma_50', opportunity.current_price)
+                ema_200 = getattr(talib_analysis, 'ema_200', opportunity.current_price)
+                trend_hierarchy = getattr(talib_analysis, 'trend_hierarchy', 'NEUTRAL')
+                
+                logger.info(f"🔍 TALib PRICE LEVELS for {opportunity.symbol}: SMA20=${sma_20:.4f}, EMA21=${ema_21:.4f}, Current=${opportunity.current_price:.4f}")
+            else:
+                # Fallback values
+                ema_9 = opportunity.current_price
+                ema_21 = opportunity.current_price
+                sma_20 = opportunity.current_price
+                sma_50 = opportunity.current_price
+                ema_200 = opportunity.current_price
+                trend_hierarchy = 'NEUTRAL'
+                logger.warning(f"⚠️ Using fallback price levels for {opportunity.symbol}: Current=${opportunity.current_price:.4f}")
             ema_strength = talib_analysis.trend_strength_score
             trend_momentum = "POSITIVE" if trend_hierarchy == "BULLISH" else "NEGATIVE" if trend_hierarchy == "BEARISH" else "NEUTRAL"
             price_vs_emas = talib_analysis.price_vs_emas
