@@ -907,6 +907,7 @@ class TALibIndicators:
             sma_20=current_price,
             ema_9=current_price,
             ema_21=current_price,
+            ema_200=current_price,
             
             vwap=current_price,
             
