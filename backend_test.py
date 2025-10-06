@@ -145,9 +145,9 @@ class DynamicRRIntegrationTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_0_rr_calculator_integration_validation(self):
-        """Test 0: RR Calculator Integration Validation - Critical test for new Niveaux Proches method"""
-        logger.info("\n🔍 TEST 0: RR Calculator Integration Validation")
+    async def test_1_field_name_validation(self):
+        """Test 1: Field Name Validation - Verify TechnicalAnalysis model accepts new field names"""
+        logger.info("\n🔍 TEST 1: Field Name Validation")
         
         try:
             rr_integration_results = {
