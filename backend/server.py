@@ -3514,10 +3514,29 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "take_profit_price": take_profit_price,
                 "risk_reward_ratio": ia1_risk_reward_ratio,
                 "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
-                # 🚨 AJOUTER LES VRAIS INDICATEURS TECHNIQUES CALCULÉS
+                # ✅ TALIB PROFESSIONAL INDICATORS v6.0 - All variables for enhanced IA1 reasoning
                 "rsi": rsi,
                 "macd_signal": macd_line,  # 🎯 FIX: Use MACD line (corrected again)
                 "macd_line": macd_line,    # Keep MACD line for completeness
+                
+                # 🚀 NEW IA1 v6.0 Variables for Enhanced Prompt Reasoning  
+                "regime": talib_analysis.regime,
+                "confidence": talib_analysis.confidence,
+                "technical_consistency": talib_analysis.technical_consistency,
+                "rsi_zone": talib_analysis.rsi_zone,
+                "rsi_interpretation": self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone),
+                "macd_trend": talib_analysis.macd_trend,
+                "macd_direction": "bullish" if talib_analysis.macd_histogram > 0 else "bearish" if talib_analysis.macd_histogram < 0 else "neutral",
+                "adx_strength": talib_analysis.adx_strength,
+                "plus_di": talib_analysis.plus_di,
+                "minus_di": talib_analysis.minus_di,
+                "mfi_signal": talib_analysis.mfi_signal,
+                "bb_squeeze": "ACTIVE" if talib_analysis.bb_squeeze else "INACTIVE",
+                "squeeze_intensity": talib_analysis.squeeze_intensity,
+                "vwap_strength": "price strength" if talib_analysis.vwap_distance > 0 else "price weakness" if talib_analysis.vwap_distance < 0 else "neutral positioning",
+                "confluence_grade": talib_analysis.confluence_grade,
+                "confluence_score": talib_analysis.confluence_score,
+                "conviction_level": talib_analysis.conviction_level
                 "macd_histogram": macd_histogram,  # Keep MACD histogram
                 "stochastic": stochastic_k,
                 "stochastic_d": stochastic_d,
