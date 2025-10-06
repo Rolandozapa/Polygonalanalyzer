@@ -4750,22 +4750,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         else:
             return "neutral"
     
-    def _create_fallback_analysis(self, opportunity: MarketOpportunity) -> TechnicalAnalysis:
-        """Create fallback analysis when AI fails"""
-        return TechnicalAnalysis(
-            symbol=opportunity.symbol,
-            rsi=50.0,
-            macd_signal=0.0,
-            bollinger_position=0.0,
-            fibonacci_level=0.5,
-            support_levels=[opportunity.current_price * 0.95],
-            resistance_levels=[opportunity.current_price * 1.05],
-            patterns_detected=["Ultra Professional Analysis Pending"],
-            analysis_confidence=0.7,
-            ia1_reasoning=f"Fallback ultra professional analysis for {opportunity.symbol}",
-            market_sentiment="neutral",
-            data_sources=opportunity.data_sources
-        )
+    def _create_fallback_analysis(self, opportunity: TrendingCrypto) -> TechnicalAnalysis:
+        """❌ FALLBACK ANALYSIS DEPRECATED - System should only use real calculated indicators"""
+        logger.error(f"🚨 FALLBACK ANALYSIS ATTEMPTED for {opportunity.symbol} - This should not happen with new strict validation")
+        logger.error("🚨 System configured to reject opportunities without proper technical indicator calculations")
+        # Return None to force proper error handling instead of fake data
+        return None
     
     def get_market_cap_multiplier(self, market_cap: float) -> float:
         """Détermine le multiplicateur selon le bucket market cap"""
