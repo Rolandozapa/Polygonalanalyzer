@@ -178,7 +178,7 @@ class ProfessionalIndicatorsTALib:
                     volume = df[column_mapping['volume']].values.astype(np.float64)
                 else:
                     volume = np.array([100000] * len(df), dtype=np.float64)  # Default volume
-                    logger.warning(f"   ⚠️ No volume column found, using default 100K volume")
+                    logger.warning("   ⚠️ No volume column found, using default 100K volume")
                     
             except Exception as col_error:
                 logger.error(f"   ❌ Column extraction failed: {col_error}")
