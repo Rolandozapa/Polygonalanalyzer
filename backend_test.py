@@ -685,6 +685,176 @@ class DynamicRRIntegrationTestSuite:
         except Exception as e:
             self.log_test_result("Dynamic RR Escalation Logic", False, f"Exception: {str(e)}")
 
+    async def test_3_database_persistence_validation(self):
+        """Test 3: Database Persistence - Verify analyses stored in MongoDB with new field names and sensible values"""
+        logger.info("\n🔍 TEST 3: Database Persistence Validation")
+        
+        try:
+            db_persistence_results = {
+                'database_connection_success': False,
+                'total_analyses_found': 0,
+                'analyses_with_new_fields': 0,
+                'analyses_with_old_fields': 0,
+                'trade_type_distribution': {},
+                'rr_threshold_analysis': {},
+                'field_value_validation': {},
+                'sample_analyses': []
+            }
+            
+            logger.info("   🚀 Testing database persistence of new field names and values...")
+            logger.info("   📊 Expected: Analyses stored with trade_type and minimum_rr_threshold fields")
+            
+            try:
+                # Connect to MongoDB
+                from pymongo import MongoClient
+                client = MongoClient(self.mongo_url)
+                db = client[self.db_name]
+                db_persistence_results['database_connection_success'] = True
+                
+                logger.info("      ✅ Database connection successful")
+                
+                # Get recent technical analyses
+                recent_analyses = list(db.technical_analyses.find().sort("timestamp", -1).limit(20))
+                db_persistence_results['total_analyses_found'] = len(recent_analyses)
+                
+                logger.info(f"      📊 Found {len(recent_analyses)} recent analyses in database")
+                
+                if recent_analyses:
+                    # Analyze each analysis for field presence and values
+                    trade_type_counts = {}
+                    rr_threshold_values = []
+                    
+                    for i, analysis in enumerate(recent_analyses):
+                        symbol = analysis.get('symbol', 'UNKNOWN')
+                        timestamp = analysis.get('timestamp', 'UNKNOWN')
+                        
+                        # Check for new field names
+                        trade_type = analysis.get('trade_type')
+                        minimum_rr_threshold = analysis.get('minimum_rr_threshold')
+                        
+                        # Check for old field names (should not be present)
+                        old_trade_type = analysis.get('recommended_trade_type')
+                        old_rr_threshold = analysis.get('minimum_rr_for_trade_type')
+                        
+                        # Count analyses with new fields
+                        if trade_type is not None and minimum_rr_threshold is not None:
+                            db_persistence_results['analyses_with_new_fields'] += 1
+                            
+                            # Count trade type distribution
+                            if trade_type in trade_type_counts:
+                                trade_type_counts[trade_type] += 1
+                            else:
+                                trade_type_counts[trade_type] = 1
+                            
+                            # Collect RR threshold values
+                            if isinstance(minimum_rr_threshold, (int, float)):
+                                rr_threshold_values.append(minimum_rr_threshold)
+                        
+                        # Count analyses with old fields (should be 0)
+                        if old_trade_type is not None or old_rr_threshold is not None:
+                            db_persistence_results['analyses_with_old_fields'] += 1
+                        
+                        # Store sample analyses for detailed inspection
+                        if i < 5:  # First 5 analyses
+                            db_persistence_results['sample_analyses'].append({
+                                'symbol': symbol,
+                                'timestamp': str(timestamp),
+                                'trade_type': trade_type,
+                                'minimum_rr_threshold': minimum_rr_threshold,
+                                'old_trade_type': old_trade_type,
+                                'old_rr_threshold': old_rr_threshold,
+                                'has_new_fields': trade_type is not None and minimum_rr_threshold is not None,
+                                'has_old_fields': old_trade_type is not None or old_rr_threshold is not None
+                            })
+                            
+                            logger.info(f"         📋 Sample {i+1} ({symbol}): trade_type={trade_type}, min_rr={minimum_rr_threshold}, old_fields={old_trade_type is not None or old_rr_threshold is not None}")
+                    
+                    # Analyze trade type distribution
+                    db_persistence_results['trade_type_distribution'] = trade_type_counts
+                    logger.info(f"      📊 Trade type distribution: {trade_type_counts}")
+                    
+                    # Analyze RR threshold values
+                    if rr_threshold_values:
+                        rr_analysis = {
+                            'count': len(rr_threshold_values),
+                            'min': min(rr_threshold_values),
+                            'max': max(rr_threshold_values),
+                            'avg': sum(rr_threshold_values) / len(rr_threshold_values),
+                            'unique_values': list(set(rr_threshold_values))
+                        }
+                        db_persistence_results['rr_threshold_analysis'] = rr_analysis
+                        logger.info(f"      📊 RR threshold analysis: count={rr_analysis['count']}, range={rr_analysis['min']:.1f}-{rr_analysis['max']:.1f}, avg={rr_analysis['avg']:.2f}")
+                        logger.info(f"      📊 Unique RR thresholds: {rr_analysis['unique_values']}")
+                    
+                    # Validate field values make sense
+                    field_validation = {
+                        'valid_trade_types': 0,
+                        'valid_rr_thresholds': 0,
+                        'sensible_mappings': 0
+                    }
+                    
+                    for analysis in recent_analyses:
+                        trade_type = analysis.get('trade_type')
+                        minimum_rr_threshold = analysis.get('minimum_rr_threshold')
+                        
+                        if trade_type in self.valid_trade_types:
+                            field_validation['valid_trade_types'] += 1
+                        
+                        if isinstance(minimum_rr_threshold, (int, float)) and 0.5 <= minimum_rr_threshold <= 3.0:
+                            field_validation['valid_rr_thresholds'] += 1
+                        
+                        # Check if mapping makes sense
+                        if trade_type and minimum_rr_threshold:
+                            expected_rr = self.trade_type_rr_mapping.get(trade_type, 2.0)
+                            if abs(minimum_rr_threshold - expected_rr) < 0.5:
+                                field_validation['sensible_mappings'] += 1
+                    
+                    db_persistence_results['field_value_validation'] = field_validation
+                    logger.info(f"      📊 Field validation: valid_trade_types={field_validation['valid_trade_types']}, valid_rr_thresholds={field_validation['valid_rr_thresholds']}, sensible_mappings={field_validation['sensible_mappings']}")
+                
+                else:
+                    logger.warning("      ⚠️ No analyses found in database")
+                
+                client.close()
+                
+            except Exception as e:
+                logger.error(f"      ❌ Database analysis failed: {e}")
+            
+            # Final analysis
+            new_fields_rate = db_persistence_results['analyses_with_new_fields'] / max(db_persistence_results['total_analyses_found'], 1)
+            old_fields_rate = db_persistence_results['analyses_with_old_fields'] / max(db_persistence_results['total_analyses_found'], 1)
+            
+            logger.info(f"\n   📊 DATABASE PERSISTENCE VALIDATION RESULTS:")
+            logger.info(f"      Database connection: {db_persistence_results['database_connection_success']}")
+            logger.info(f"      Total analyses found: {db_persistence_results['total_analyses_found']}")
+            logger.info(f"      Analyses with new fields: {db_persistence_results['analyses_with_new_fields']}")
+            logger.info(f"      New fields rate: {new_fields_rate:.2f}")
+            logger.info(f"      Analyses with old fields: {db_persistence_results['analyses_with_old_fields']}")
+            logger.info(f"      Old fields rate: {old_fields_rate:.2f}")
+            logger.info(f"      Trade type distribution: {db_persistence_results['trade_type_distribution']}")
+            
+            # Calculate test success based on review requirements
+            success_criteria = [
+                db_persistence_results['database_connection_success'],
+                db_persistence_results['total_analyses_found'] >= 5,  # At least 5 analyses in database
+                db_persistence_results['analyses_with_new_fields'] >= 3,  # At least 3 analyses with new fields
+                new_fields_rate >= 0.6,  # At least 60% of analyses have new fields
+                old_fields_rate <= 0.2,  # At most 20% of analyses have old fields
+                len(db_persistence_results['trade_type_distribution']) >= 2  # At least 2 different trade types
+            ]
+            success_count = sum(success_criteria)
+            test_success_rate = success_count / len(success_criteria)
+            
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("Database Persistence Validation", True, 
+                                   f"Database persistence successful: {success_count}/{len(success_criteria)} criteria met. New fields rate: {new_fields_rate:.2f}, Old fields rate: {old_fields_rate:.2f}, Trade types: {len(db_persistence_results['trade_type_distribution'])}")
+            else:
+                self.log_test_result("Database Persistence Validation", False, 
+                                   f"Database persistence issues: {success_count}/{len(success_criteria)} criteria met. May have missing new fields or persistent old fields in database")
+                
+        except Exception as e:
+            self.log_test_result("Database Persistence Validation", False, f"Exception: {str(e)}")
+
     async def test_0_pydantic_validation_fix_validation(self):
         """Test 0: Pydantic Validation Fix Validation - Critical Fix for fibonacci_key_level_proximity field"""
         logger.info("\n🔍 TEST 0: Pydantic Validation Fix Validation")
