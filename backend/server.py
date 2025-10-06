@@ -2215,12 +2215,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   📊 RSI: {rsi:.1f if rsi else 'N/A'}, MACD: {macd_histogram:.6f if macd_histogram else 'N/A'}, Stoch: {stochastic_k:.1f if stochastic_k else 'N/A'}")
             logger.info(f"   📊 VWAP-based MFI: {mfi:.2f if mfi else 'N/A'}%, BB Position: {bb_position:.2f if bb_position else 'N/A'}")
             logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr:.6f if atr else 'N/A'}, Volume Ratio: {volume_ratio:.2f if volume_ratio else 'N/A'}")
-            stochastic_k = simple_indicators_data.get('stochastic_k', 50.0)
-            stochastic_d = simple_indicators_data.get('stochastic_d', 50.0)
-            bb_upper = simple_indicators_data.get('bb_upper', opportunity.current_price * 1.02)
-            bb_middle = simple_indicators_data.get('bb_middle', opportunity.current_price)
-            bb_lower = simple_indicators_data.get('bb_lower', opportunity.current_price * 0.98)
-            bb_position = simple_indicators_data.get('bb_position', 0.5)
+            # BB bands (already extracted above)
+            bb_upper = simple_indicators_data.get('bb_upper')
+            bb_middle = simple_indicators_data.get('bb_middle')
+            bb_lower = simple_indicators_data.get('bb_lower')
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
