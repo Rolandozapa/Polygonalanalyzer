@@ -485,53 +485,101 @@ class AdvancedRegimeDetector:
     
     def _calculate_signal_consistency(self, indicators: Dict) -> float:
         """
-        Calculate consistency between different indicators
-        Returns score 0-1 (1 = all signals aligned, 0 = conflicting)
+        Calculate technical consistency with v4 weighted approach
+        Weights: Trend 35%, Momentum 35%, Volume 15%, Volatility 15%
         """
         consistency_score = 0.0
-        total_checks = 0
+        max_score = 0.0
         
-        # 1. Trend consistency (ADX + SMA alignment)
-        if indicators['adx'] > 20:
-            if indicators['sma_20_slope'] > 0 and indicators['above_sma_20']:
-                consistency_score += 1.0
-            elif indicators['sma_20_slope'] < 0 and not indicators['above_sma_20']:
-                consistency_score += 1.0
-            else:
-                consistency_score += 0.3  # Partial alignment
-        else:
-            consistency_score += 0.5  # Neutral for ranging
-        total_checks += 1
+        # 1. Trend Coherence (35%)
+        trend_score = 0.0
+        trend_max = 3.5
         
-        # 2. Momentum consistency (RSI + MACD alignment)
-        rsi_bullish = indicators['rsi'] > 50
-        macd_bullish = indicators['macd_histogram'] > 0
-        if rsi_bullish == macd_bullish:
-            consistency_score += 1.0
-        else:
-            consistency_score += 0.2  # Slight misalignment penalty
-        total_checks += 1
+        # SMA alignment
+        if indicators['sma_20_slope'] > 0 and indicators['above_sma_20']:
+            trend_score += 1.0
+        elif indicators['sma_20_slope'] < 0 and not indicators['above_sma_20']:
+            trend_score += 1.0
         
-        # 3. Volume consistency (Volume confirms price movement)
-        if indicators['volume_ratio'] > 1.2:
-            if indicators['sma_20_slope'] * indicators['macd_histogram'] > 0:
-                consistency_score += 1.0  # Volume confirms direction
-            else:
-                consistency_score += 0.4  # Volume but conflicting signals
-        else:
-            consistency_score += 0.6  # Normal volume, neutral
-        total_checks += 1
+        # Distance aux moyennes cohérente
+        if abs(indicators.get('distance_sma_20', 0)) < 10:
+            trend_score += 0.5
         
-        # 4. Volatility consistency
-        if 0.8 < indicators['volatility_ratio'] < 1.5:
-            consistency_score += 1.0  # Normal volatility
-        elif indicators['volatility_ratio'] > 1.5 and indicators.get('bb_expansion', False):
-            consistency_score += 0.8  # High but expanding (expected)
-        else:
-            consistency_score += 0.5  # Unusual volatility
-        total_checks += 1
+        # ADX confirme la tendance
+        if indicators['adx'] > 25:
+            trend_score += 1.0
+        elif indicators['adx'] > 20:
+            trend_score += 0.5
         
-        return consistency_score / total_checks
+        # Alignement SMA 20/50
+        if (indicators['sma_20_slope'] > 0 and indicators['sma_50_slope'] > 0) or \
+           (indicators['sma_20_slope'] < 0 and indicators['sma_50_slope'] < 0):
+            trend_score += 1.0
+        
+        consistency_score += trend_score
+        max_score += trend_max
+        
+        # 2. Momentum Coherence (35%)
+        momentum_score = 0.0
+        momentum_max = 3.5
+        
+        # RSI et MACD alignés
+        if indicators.get('rsi_trend', 0) > 0 and indicators['macd_histogram'] > 0:
+            momentum_score += 1.5
+        elif indicators.get('rsi_trend', 0) < 0 and indicators['macd_histogram'] < 0:
+            momentum_score += 1.5
+        
+        # RSI dans zone normale
+        rsi_zone = indicators.get('rsi_zone', 'NORMAL')
+        if rsi_zone in ['NEUTRAL', 'NORMAL']:
+            momentum_score += 1.0
+        elif rsi_zone in ['OVERBOUGHT', 'OVERSOLD']:
+            momentum_score += 0.3
+        
+        # Tendance MACD cohérente
+        if abs(indicators.get('macd_trend', 0)) > 0.01:
+            momentum_score += 1.0
+        
+        consistency_score += momentum_score
+        max_score += momentum_max
+        
+        # 3. Volume Coherence (15%)
+        volume_score = 0.0
+        volume_max = 1.5
+        
+        # Volume confirme la direction
+        if indicators['volume_ratio'] > 1.0 and indicators.get('volume_trend', 0) > 0:
+            volume_score += 1.0
+        elif indicators['volume_ratio'] < 1.0 and indicators.get('volume_trend', 0) < 0:
+            volume_score += 0.5
+        
+        # Volume pas anormalement élevé
+        if 0.8 <= indicators['volume_ratio'] <= 2.0:
+            volume_score += 0.5
+        
+        consistency_score += volume_score
+        max_score += volume_max
+        
+        # 4. Volatility Coherence (15%)
+        volatility_score = 0.0
+        volatility_max = 1.5
+        
+        # Volatilité stable
+        if 0.8 <= indicators['volatility_ratio'] <= 1.2:
+            volatility_score += 1.0
+        elif 0.6 <= indicators['volatility_ratio'] <= 1.5:
+            volatility_score += 0.5
+        
+        # Volatilité appropriée
+        if indicators['atr_pct'] < 5.0:
+            volatility_score += 0.5
+        
+        consistency_score += volatility_score
+        max_score += volatility_max
+        
+        # Score final normalisé
+        final_consistency = consistency_score / max_score if max_score > 0 else 0.5
+        return min(1.0, final_consistency)
     
     # Helper calculation methods
     def _calculate_slope(self, series: pd.Series) -> float:
