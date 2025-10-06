@@ -2608,7 +2608,44 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             4. Justify confidence level considering timeframe hierarchy
             """
             
-            # ✅ FORMAT PROMPT WITH ALL TALIB VARIABLES (IA1 v6.0)
+            # ✅ CREATE ANALYSIS DATA FOR PROMPT FORMATTING (SIMPLIFIED VERSION)
+            analysis_data = {
+                # Basic TALib indicators already calculated
+                'regime': getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
+                'confidence': getattr(talib_analysis, 'confidence', 0.5),
+                'technical_consistency': getattr(talib_analysis, 'technical_consistency', 0.5),
+                'rsi': rsi or 50.0,
+                'rsi_zone': getattr(talib_analysis, 'rsi_zone', 'NEUTRAL'),
+                'rsi_interpretation': rsi_interpretation,
+                'macd_line': macd_line or 0.0,
+                'macd_signal': macd_signal or 0.0,
+                'macd_histogram': macd_histogram or 0.0,
+                'macd_trend': getattr(talib_analysis, 'macd_trend', 'NEUTRAL'),
+                'macd_direction': macd_direction,
+                'adx': adx or 25.0,
+                'adx_strength': getattr(talib_analysis, 'adx_strength', 'MODERATE'),
+                'plus_di': getattr(talib_analysis, 'plus_di', 25.0),
+                'minus_di': getattr(talib_analysis, 'minus_di', 25.0),
+                'bb_position': bb_position or 0.5,
+                'bb_squeeze': bb_squeeze,
+                'squeeze_intensity': getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
+                'mfi': mfi or 50.0,
+                'mfi_signal': getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
+                'vwap': vwap or opportunity.current_price,
+                'vwap_distance': vwap_distance or 0.0,
+                'vwap_position': vwap_position or 0.0,
+                'vwap_strength': vwap_strength,
+                'volume_ratio': volume_ratio or 1.0,
+                'volume_trend': volume_trend or 0.0,
+                'volume_surge': volume_surge or False,
+                'confluence_grade': getattr(talib_analysis, 'confluence_grade', 'C'),
+                'confluence_score': getattr(talib_analysis, 'confluence_score', 50),
+                'conviction_level': getattr(talib_analysis, 'conviction_level', 'FAIBLE'),
+                # Current opportunity data
+                'opportunity': opportunity
+            }
+            
+            # ✅ FORMAT PROMPT WITH ALL TALIB VARIABLES (SIMPLIFIED VERSION)
             try:
                 formatted_prompt = prompt.format(**analysis_data)
                 logger.info(f"✅ Prompt formatted with {len(analysis_data)} TALib variables for {opportunity.symbol}")
