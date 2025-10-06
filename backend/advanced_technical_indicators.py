@@ -88,6 +88,11 @@ class TechnicalIndicators:
     # Multi-timeframe
     trend_alignment: str = "MIXED"
     timeframe_score: float = 0.5
+    
+    # Trade Type Recommendation (NEW)
+    recommended_trade_type: str = "SWING"  # SCALP, INTRADAY, SWING, POSITION
+    trade_duration_estimate: str = "1-3 days"
+    optimal_timeframe: str = "4H"  # Optimal chart timeframe for this setup
 
 
 @dataclass
