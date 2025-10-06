@@ -367,6 +367,85 @@ class TrendingAutoUpdater:
         logger.error("❌ Trading bot requires REAL market data only")
         return []
     
+    def _process_symbol_batch(self, ticker_batch: List[Dict], batch_type: str, relaxed_filters: bool = False) -> List[TrendingCrypto]:
+        """Process a batch of ticker symbols with appropriate filters"""
+        processed_cryptos = []
+        
+        logger.info(f"🔍 Processing {len(ticker_batch)} symbols from {batch_type} batch (relaxed_filters: {relaxed_filters})")
+        
+        for ticker_data in ticker_batch:
+            try:
+                symbol = ticker_data.get('symbol', '').replace('-', '')
+                if not symbol.endswith('USDT'):
+                    continue
+                
+                price_change_pct = float(ticker_data.get('priceChangePercent', 0))
+                volume = float(ticker_data.get('volume', 0))
+                
+                # Get current price from BingX API
+                current_price = float(ticker_data.get('lastPrice', 0)) or float(ticker_data.get('price', 0))
+                
+                if current_price <= 0 and price_change_pct != 0:
+                    logger.debug(f"⚠️ No price from BingX API for {symbol}, will use OHLCV fallback")
+                
+                # 🎯 ADAPTIVE FILTERS: Relaxed for top 25 market cap, strict for others
+                if relaxed_filters:
+                    # Top 25 market cap: More lenient filters (user wants these symbols prioritized)
+                    min_price_change = 2.0  # Reduced from 5.0% to 2.0%
+                    min_volume = 200000     # Reduced from 500k to 200k
+                    combo_filter = abs(price_change_pct) >= 2.5 or volume >= 500000  # Either condition
+                else:
+                    # Extended symbols: Strict filters to ensure quality
+                    min_price_change = 5.0   # Original 5.0%
+                    min_volume = 500000      # Original 500k
+                    combo_filter = abs(price_change_pct) >= 5.5 and volume >= 1000000  # Both conditions
+                
+                # Apply price change filter
+                if abs(price_change_pct) < min_price_change:
+                    continue
+                
+                # Apply volume filter
+                if volume < min_volume:
+                    continue
+                
+                # Apply combination filter for movement validation
+                if not combo_filter:
+                    continue
+                
+                # 🔥 PATTERN ANALYSIS: Detect lateral patterns with AI (consistent for all)
+                pattern_analysis = lateral_pattern_detector.analyze_trend_pattern(
+                    symbol=symbol,
+                    price_change_pct=price_change_pct,
+                    volume=volume
+                )
+                
+                # Filter out lateral patterns
+                if lateral_pattern_detector.should_filter_opportunity(pattern_analysis):
+                    logger.debug(f"🚫 {batch_type} FILTERED {symbol}: {pattern_analysis.reasoning}")
+                    continue
+                
+                # Create crypto object if all filters pass
+                crypto = TrendingCrypto(
+                    symbol=symbol,
+                    name=symbol.replace('USDT', ''),
+                    price=current_price if current_price > 0 else None,
+                    price_change=price_change_pct,
+                    volume=volume,
+                    rank=len(processed_cryptos) + 1,  # Assign ranking based on processing order
+                    source=f"bingx_api_{batch_type.lower()}"
+                )
+                processed_cryptos.append(crypto)
+                
+                # Log acceptance with batch info
+                logger.debug(f"✅ {batch_type} ACCEPTED {symbol}: Price Δ{price_change_pct:+.2f}%, Vol: {volume/1_000_000:.1f}M")
+            
+            except (ValueError, KeyError) as e:
+                logger.debug(f"⚠️ Error processing {ticker_data.get('symbol', 'UNKNOWN')}: {e}")
+                continue
+        
+        logger.info(f"✅ {batch_type}: {len(processed_cryptos)} symbols passed filtering")
+        return processed_cryptos
+
     def _parse_volume_string(self, volume_str: str) -> float:
         """Parse volume string like '1.41B', '950.32M' to float"""
         try:
