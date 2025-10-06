@@ -196,9 +196,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced RR Calculation & Technical Indicators Integration"
+    - "Dynamic RR Integration Field Names Fix"
   stuck_tasks:
-    - "Enhanced RR Calculation & Technical Indicators Integration"
+    []
   test_all: false
   test_priority: "high_first"
 
