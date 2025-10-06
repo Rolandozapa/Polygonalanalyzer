@@ -4422,7 +4422,35 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["multi_timeframe_pattern"] = str(analysis_data.get("multi_timeframe_pattern", "NEUTRAL"))
             cleaned_data["multi_timeframe_confidence"] = self._ensure_json_safe(analysis_data.get("multi_timeframe_confidence"), 0.5)
             
+            # 🚨 CRITICAL FIX: Add missing price level fields that were being filtered out
+            cleaned_data["current_price"] = self._ensure_json_safe(analysis_data.get("current_price"), 0.0)
+            cleaned_data["sma_20"] = self._ensure_json_safe(analysis_data.get("sma_20"), 0.0)  
+            cleaned_data["sma_50"] = self._ensure_json_safe(analysis_data.get("sma_50"), 0.0)
+            cleaned_data["ema_9"] = self._ensure_json_safe(analysis_data.get("ema_9"), 0.0)
+            cleaned_data["ema_21"] = self._ensure_json_safe(analysis_data.get("ema_21"), 0.0)
+            cleaned_data["ema_200"] = self._ensure_json_safe(analysis_data.get("ema_200"), 0.0)
+            
+            # 🚨 CRITICAL FIX: Add missing ATR volatility fields
+            cleaned_data["atr"] = self._ensure_json_safe(analysis_data.get("atr"), 0.0)
+            cleaned_data["atr_percentage"] = self._ensure_json_safe(analysis_data.get("atr_percentage"), 2.0)
+            
+            # 🚨 CRITICAL FIX: Add missing VWAP distance and volume fields
+            cleaned_data["vwap_distance"] = self._ensure_json_safe(analysis_data.get("vwap_distance"), 0.0)
+            cleaned_data["volume_ratio"] = self._ensure_json_safe(analysis_data.get("volume_ratio"), 1.0)
+            cleaned_data["volume_analysis"] = str(analysis_data.get("volume_analysis", "1.0x"))
+            
+            # 🚨 CRITICAL FIX: Add missing ML regime and confidence fields  
+            cleaned_data["regime"] = str(analysis_data.get("regime", "CONSOLIDATION"))
+            cleaned_data["base_confidence"] = self._ensure_json_safe(analysis_data.get("base_confidence"), 0.5)
+            cleaned_data["technical_consistency"] = self._ensure_json_safe(analysis_data.get("technical_consistency"), 0.5)
+            cleaned_data["combined_confidence"] = self._ensure_json_safe(analysis_data.get("combined_confidence"), 0.5)
+            cleaned_data["confluence_grade"] = str(analysis_data.get("confluence_grade", "C"))
+            cleaned_data["confluence_score"] = self._ensure_json_safe(analysis_data.get("confluence_score"), 50)
+            cleaned_data["should_trade"] = bool(analysis_data.get("should_trade", False))
+            cleaned_data["position_multiplier"] = self._ensure_json_safe(analysis_data.get("position_multiplier"), 1.0)
+            
             logger.info(f"💰 PRIX VALIDÉS {analysis_data.get('symbol', 'UNKNOWN')}: Entry=${cleaned_data['entry_price']:.6f} | SL=${cleaned_data['stop_loss_price']:.6f} | TP=${cleaned_data['take_profit_price']:.6f} | RR={cleaned_data['risk_reward_ratio']:.2f}:1")
+            logger.info(f"🔧 CRITICAL FIELDS FIXED: CurrentPrice=${cleaned_data['current_price']:.4f} | SMA20=${cleaned_data['sma_20']:.4f} | ATR={cleaned_data['atr']:.6f} | ATR%={cleaned_data['atr_percentage']:.2f}%")
             # ✅ SAFE LOGGING FOR VALIDATION - Handle None values  
             mfi_val_disp = f"{cleaned_data['mfi_value']:.1f}" if cleaned_data['mfi_value'] is not None else "N/A"
             vwap_val_disp = f"{cleaned_data['vwap_position']:+.2f}%" if cleaned_data['vwap_position'] is not None else "N/A"
