@@ -150,24 +150,20 @@ class DynamicRRIntegrationTestSuite:
         logger.info("\n🔍 TEST 1: Field Name Validation")
         
         try:
-            rr_integration_results = {
+            field_validation_results = {
                 'analyses_attempted': 0,
                 'analyses_successful': 0,
-                'rr_calculator_import_success': False,
-                'optimized_rr_calculations': 0,
-                'dynamic_rr_values': 0,
-                'fixed_rr_values': 0,
-                'atr_calculations_found': 0,
-                'support_resistance_levels': 0,
-                'ia2_escalations_triggered': 0,
-                'database_persistence_working': 0,
-                'backend_logs_analysis': {},
+                'new_field_names_present': 0,
+                'old_field_names_absent': 0,
+                'trade_type_valid': 0,
+                'minimum_rr_threshold_valid': 0,
+                'database_field_validation': 0,
                 'successful_analyses': [],
-                'rr_calculation_details': []
+                'field_validation_details': []
             }
             
-            logger.info("   🚀 Testing RR Calculator Integration with Niveaux Proches method...")
-            logger.info("   📊 Expected: Dynamic RR calculations replacing fixed values (1.0, 2.2)")
+            logger.info("   🚀 Testing new field names: trade_type and minimum_rr_threshold...")
+            logger.info("   📊 Expected: New field names present, old field names absent")
             
             # Get available symbols from scout system
             logger.info("   📞 Getting available symbols from scout system...")
