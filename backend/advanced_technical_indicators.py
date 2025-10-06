@@ -153,18 +153,21 @@ class AdvancedRegimeDetector:
                 regime = transition_detected
                 logger.info(f"🔄 Regime transition detected: {previous_regime.value} → {regime.value}")
             
-            # 5. Assess persistence and adjust confidence
-            persistence_score = self._assess_regime_persistence(regime)
-            adjusted_confidence = base_confidence * (0.7 + 0.3 * persistence_score)
+            # 5. Calculate regime persistence (v4: bar counter method)
+            persistence = self._calculate_regime_persistence_v4(regime)
             
-            # 6. Update history
-            self.regime_history.append(regime)
-            if len(self.regime_history) > self.persistence_length:
-                self.regime_history.pop(0)
+            # 6. Calculate stability score (v4: NEW)
+            stability_score = self._calculate_stability_score()
             
-            # 7. Calculate signal consistency
-            signal_consistency = self._calculate_signal_consistency(indicators)
-            final_confidence = adjusted_confidence * signal_consistency
+            # 7. Adjust confidence with persistence (v4 formula)
+            combined_confidence = 0.7 * base_confidence + 0.3 * adjusted_confidence
+            
+            # 8. Apply stability adjustment (v4)
+            final_confidence = combined_confidence * (0.9 + 0.1 * stability_score)
+            final_confidence = min(1.0, final_confidence)
+            
+            # 9. Update history
+            self._update_regime_history(regime)
             
             return {
                 'regime': regime.value,
