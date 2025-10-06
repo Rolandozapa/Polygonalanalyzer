@@ -889,13 +889,15 @@ const TradingDashboard = () => {
                               <div className="bg-white rounded-lg p-3 text-center border">
                                 <p className="text-xs text-slate-600">ATR</p>
                                 <p className={`font-bold text-lg ${
-                                  (analysis.atr_percentage || 2.0) >= 5.0 ? 'text-red-600' :
-                                  (analysis.atr_percentage || 2.0) >= 3.0 ? 'text-yellow-600' :
+                                  (analysis.atr || 0.02) >= 0.05 ? 'text-red-600' :
+                                  (analysis.atr || 0.02) >= 0.03 ? 'text-yellow-600' :
                                   'text-green-600'
                                 }`}>
-                                  {(analysis.atr_percentage || 2.0).toFixed(1)}%
+                                  {(analysis.atr || 0.02).toFixed(3)}
                                 </p>
-                                <p className="text-xs text-slate-500">Volatility</p>
+                                <p className="text-xs text-slate-500">
+                                  {((analysis.atr || 0.02) / (analysis.current_price || 1) * 100).toFixed(1)}%
+                                </p>
                               </div>
                             </div>
                           </div>
