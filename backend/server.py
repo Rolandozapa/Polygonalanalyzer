@@ -2202,14 +2202,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             bb_lower = indicators.bb_lower
             bb_position = indicators.bb_position
             
-            # 🔥 NOUVEAUX INDICATEURS MFI + VWAP POUR PRECISION ULTIME 🔥
-            mfi = indicators.mfi
-            mfi_overbought = indicators.mfi_overbought
-            mfi_oversold = indicators.mfi_oversold
-            mfi_extreme_overbought = indicators.mfi_extreme_overbought
-            mfi_extreme_oversold = indicators.mfi_extreme_oversold
-            institutional_activity = indicators.institutional_activity
-            mfi_divergence = indicators.mfi_divergence
+            # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
             vwap = indicators.vwap
             vwap_position = indicators.vwap_position
