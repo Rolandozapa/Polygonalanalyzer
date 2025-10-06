@@ -289,67 +289,25 @@ class TrendingAutoUpdater:
                             
                             logger.info(f"🎯 BingX FILTERING: Found {len(priority_symbols)} top-25 symbols, {len(extended_symbols)} extended symbols")
                             
-                            # Process priority symbols (top 25 market cap) with relaxed filters
-                            for ticker_data in priority_symbols:
-                                try:
-                                    symbol = ticker_data.get('symbol', '').replace('-', '')
-                                    
-                                    price_change_pct = float(ticker_data.get('priceChangePercent', 0))
-                                    volume = float(ticker_data.get('volume', 0))
-                                    
-                                    # 🚨 CORRECTION CRITIQUE: Récupérer le prix actuel depuis l'API BingX
-                                    current_price = float(ticker_data.get('lastPrice', 0)) or float(ticker_data.get('price', 0))
-                                    
-                                    # Si pas de prix dans l'API, calculer depuis le change %
-                                    if current_price <= 0 and price_change_pct != 0:
-                                        # Essayer de déduire le prix depuis le change % (approximatif)
-                                        # Si on a +8%, le prix actuel = prix_hier * 1.08
-                                        # Mais on n'a pas le prix d'hier, donc on va chercher avec OHLCV
-                                        logger.debug(f"⚠️ No price from BingX API for {symbol}, will use OHLCV fallback")
-                                    
-                                    # 🎯 FILTRES UTILISATEUR: min var volume daily 5%, min var price 1%
-                                    # Filtre 1: Variation de prix minimum 1%
-                                    if abs(price_change_pct) < 5.0:  # Variation minimum 5% pour analyses significatives
-                                        continue
-                                    
-                                    # Filtre 2: Volume minimum et variation de volume 5%
-                                    # Pour simplifier, on utilise le volume absolu comme proxy
-                                    if volume < 500000:  # Volume minimum
-                                        continue
-                                    
-                                    # 🎯 DÉTECTION FIGURES LATÉRALES: filtrer les mouvements trop faibles
-                                    # Éviter les figures latérales sans vraie tendance
-                                    if abs(price_change_pct) < 5.5 and volume < 1000000:  # Mouvement faible ET faible volume
-                                        continue
-                                    
-                                    # 🔥 ANALYSE AVANCÉE: Détection pattern latéral avec IA
-                                    pattern_analysis = lateral_pattern_detector.analyze_trend_pattern(
-                                        symbol=symbol,
-                                        price_change_pct=price_change_pct,
-                                        volume=volume
-                                    )
-                                    
-                                    # Filtrer si pattern latéral détecté
-                                    if lateral_pattern_detector.should_filter_opportunity(pattern_analysis):
-                                        logger.debug(f"🚫 FILTERED {symbol}: {pattern_analysis.reasoning}")
-                                        continue
-                                    
-                                    # Si toutes les conditions sont remplies, ajouter à la liste
-                                    crypto = TrendingCrypto(
-                                        symbol=symbol,
-                                        name=symbol.replace('USDT', ''),
-                                        price=current_price if current_price > 0 else None,  # 🚨 PRIX ACTUEL
-                                        price_change=price_change_pct,
-                                        volume=volume,
-                                        source="bingx_api"
-                                    )
-                                    trending_list.append(crypto)
-                                    
-                                    # Log des cryptos acceptés avec analyse
-                                    logger.debug(f"✅ ACCEPTED {symbol}: {pattern_analysis.reasoning}")
+                            # 🎯 PHASE 1: Process TOP 25 MARKET CAP symbols with relaxed filters (priority)
+                            top_25_accepted = self._process_symbol_batch(priority_symbols, "TOP_25_MARKET_CAP", relaxed_filters=True)
+                            trending_list.extend(top_25_accepted)
+                            
+                            # 🔄 PHASE 2: If we have fewer than 25 opportunities, add from extended list with strict filters
+                            if len(trending_list) < 25:
+                                needed_count = min(25 - len(trending_list), len(extended_symbols))
+                                logger.info(f"🔄 EXPANDING: Need {needed_count} more symbols from extended list (strict filters)")
                                 
-                                except (ValueError, KeyError) as e:
-                                    continue
+                                extended_accepted = self._process_symbol_batch(
+                                    extended_symbols[:needed_count * 2],  # Process 2x needed for better filtering
+                                    "EXTENDED", 
+                                    relaxed_filters=False
+                                )
+                                trending_list.extend(extended_accepted[:needed_count])
+                            
+                            # 🎯 FINAL LIMIT: Ensure we don't exceed 25 symbols total (user requirement)
+                            trending_list = trending_list[:25]
+                            logger.info(f"✅ BingX TOP 25: Selected {len(trending_list)} symbols (top market cap priority)")
                             
                             return trending_list
                     else:
