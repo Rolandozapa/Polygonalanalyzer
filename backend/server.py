@@ -3404,15 +3404,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "mfi_value": mfi,  # Real MFI from TALib
                 "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
                 
-                # ML Regime and confidence
-                "regime": getattr(talib_analysis, 'regime', 'CONSOLIDATION') if talib_analysis else 'CONSOLIDATION',
-                "confidence": getattr(talib_analysis, 'confidence', 0.5) if talib_analysis else 0.5,
-                "base_confidence": base_confidence or 0.5,
-                "technical_consistency": getattr(talib_analysis, 'technical_consistency', 0.5) if talib_analysis else 0.5,
-                "combined_confidence": combined_confidence or 0.5,
-                "confluence_grade": getattr(talib_analysis, 'confluence_grade', 'C') if talib_analysis else 'C',
-                "confluence_score": getattr(talib_analysis, 'confluence_score', 50) if talib_analysis else 50,
-                "should_trade": getattr(talib_analysis, 'should_trade', False) if talib_analysis else False,
+                # ML Regime and confidence (REAL TALIB VALUES)
+                "regime": talib_analysis.regime,
+                "confidence": talib_analysis.confidence,  
+                "base_confidence": talib_analysis.base_confidence,  # Real TALib base confidence
+                "technical_consistency": talib_analysis.technical_consistency,  # Real TALib consistency  
+                "combined_confidence": talib_analysis.combined_confidence,  # Real TALib combined
+                "confluence_grade": talib_analysis.confluence_grade,
+                "confluence_score": talib_analysis.confluence_score,
+                "should_trade": talib_analysis.should_trade,
                 
                 # Trading levels and analysis
                 "fibonacci_level": fibonacci_levels.current_level_percentage / 100.0 if fibonacci_levels else 0.618,
