@@ -3459,8 +3459,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "market_sentiment": self._determine_market_sentiment(opportunity),
                 "data_sources": opportunity.data_sources,
                 # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
-                "mfi_value": mfi,
-                "mfi_signal": ('extreme_overbought' if mfi_extreme_overbought else 'overbought' if mfi_overbought else 'extreme_oversold' if mfi_extreme_oversold else 'oversold' if mfi_oversold else 'neutral'),
+                "volume_ratio": volume_ratio,
+                "volume_signal": ('surge' if volume_surge else volume_trend.lower()),
                 "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)",
                 "vwap_price": vwap,
                 "vwap_position": vwap_position,
