@@ -4833,6 +4833,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
     def tanh_norm(self, x: float, s: float = 1.0) -> float:
         """Normalise x à [-1,1] via tanh avec seuil s (sensibilité)."""
         import math
+        # Protection contre division par zéro
+        if s == 0:
+            return 0.0
         return math.tanh(x / s)
     
     def clamp(self, x: float, lo: float = 0.0, hi: float = 100.0) -> float:
