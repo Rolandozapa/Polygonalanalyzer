@@ -347,22 +347,10 @@ class TrendingAutoUpdater:
         return []
     
     async def _create_fallback_cryptos(self) -> List[TrendingCrypto]:
-        """Create fallback trending list from top BingX futures"""
-        fallback_list = []
-        
-        for i, symbol in enumerate(self.bingx_top_futures[:25]):  # Top 25 pour optimisation performance
-            crypto = TrendingCrypto(
-                symbol=symbol,
-                name=symbol.replace('USDT', ''),
-                rank=i + 1,
-                price_change=0.0,  # Will be updated by market data
-                volume=1000000.0,  # Mock volume
-                market_cap=1000000000.0,  # Mock market cap
-                source="bingx_fallback"
-            )
-            fallback_list.append(crypto)
-        
-        return fallback_list
+        """🚨 DEPRECATED: No longer creates fake fallback data - returns empty list"""
+        logger.error("❌ CRITICAL: _create_fallback_cryptos called - NO FAKE DATA ALLOWED")
+        logger.error("❌ Trading bot requires REAL market data only")
+        return []
     
     def _parse_volume_string(self, volume_str: str) -> float:
         """Parse volume string like '1.41B', '950.32M' to float"""
