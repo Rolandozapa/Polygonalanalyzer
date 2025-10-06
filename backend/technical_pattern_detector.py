@@ -2623,5 +2623,343 @@ class TechnicalPatternDetector:
         df.set_index('timestamp', inplace=True)
         return df.sort_index()
 
+
+    # =========================================================================
+    # NEW ADVANCED CRYPTO PATTERNS - Added from pattern_detector.py
+    # =========================================================================
+    
+    def detect_wyckoff_accumulation(self, ohlc_df: pd.DataFrame, volumes: pd.Series) -> Optional[Dict]:
+        """Détecte Wyckoff Accumulation pattern"""
+        if len(ohlc_df) < 30:
+            return None
+        
+        patterns_found = []
+        
+        for i in range(25, len(ohlc_df)):
+            window = ohlc_df.iloc[i-25:i]
+            volume_window = volumes.iloc[i-25:i]
+            
+            # Analyse des 5 phases Wyckoff
+            phase_volumes = [volume_window.iloc[j*5:(j+1)*5].mean() for j in range(5)]
+            phase_closes = [window.iloc[j*5:(j+1)*5]['close'].iloc[-1] for j in range(5)]
+            
+            wyckoff_score = 0
+            # Phase A: Selling Climax (volume spike)
+            if phase_volumes[0] > volume_window.mean() * 1.5: wyckoff_score += 1
+            # Phase B: Building cause (lower volume)
+            if phase_volumes[1] < phase_volumes[0]: wyckoff_score += 1
+            # Phase C: Spring/shakeout (lower low on low volume)
+            if phase_closes[2] < phase_closes[1] and phase_volumes[2] < phase_volumes[1]: wyckoff_score += 1
+            # Phase D: Signs of Strength (rising price + volume)
+            if phase_closes[3] > phase_closes[2] and phase_volumes[3] > phase_volumes[2]: wyckoff_score += 1
+            
+            if wyckoff_score >= 3:
+                patterns_found.append({
+                    'pattern': 'WYCKOFF_ACCUMULATION',
+                    'direction': 'BULLISH',
+                    'confidence': 0.75 + (wyckoff_score * 0.05),
+                    'completion_ratio': 0.9,
+                    'target_price': phase_closes[-1] * 1.15,
+                    'trigger_level': phase_closes[-1],
+                    'phases_detected': wyckoff_score
+                })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def detect_wyckoff_distribution(self, ohlc_df: pd.DataFrame, volumes: pd.Series) -> Optional[Dict]:
+        """Détecte Wyckoff Distribution pattern"""
+        if len(ohlc_df) < 30:
+            return None
+        
+        patterns_found = []
+        
+        for i in range(25, len(ohlc_df)):
+            window = ohlc_df.iloc[i-25:i]
+            volume_window = volumes.iloc[i-25:i]
+            
+            phase_volumes = [volume_window.iloc[j*5:(j+1)*5].mean() for j in range(5)]
+            phase_closes = [window.iloc[j*5:(j+1)*5]['close'].iloc[-1] for j in range(5)]
+            
+            wyckoff_score = 0
+            # Phase A: Buying Climax (volume spike at top)
+            if phase_volumes[1] > phase_volumes[0] * 1.5: wyckoff_score += 1
+            # Phase B: Distribution (price stalls)
+            if phase_closes[2] < phase_closes[1]: wyckoff_score += 1
+            # Phase C: Last Point of Supply
+            if phase_volumes[3] < phase_volumes[1]: wyckoff_score += 1
+            # Phase D: Sign of Weakness
+            if phase_closes[4] < phase_closes[3]: wyckoff_score += 1
+            
+            if wyckoff_score >= 3:
+                patterns_found.append({
+                    'pattern': 'WYCKOFF_DISTRIBUTION',
+                    'direction': 'BEARISH',
+                    'confidence': 0.75 + (wyckoff_score * 0.05),
+                    'completion_ratio': 0.9,
+                    'target_price': phase_closes[-1] * 0.85,
+                    'trigger_level': phase_closes[-1],
+                    'phases_detected': wyckoff_score
+                })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def detect_bull_bear_trap(self, ohlc_df: pd.DataFrame, support_resistance_levels: List[float]) -> List[Dict]:
+        """Détecte Bull/Bear Trap patterns"""
+        patterns_found = []
+        
+        if len(ohlc_df) < 3 or not support_resistance_levels:
+            return patterns_found
+        
+        for level in support_resistance_levels:
+            for i in range(1, len(ohlc_df) - 1):
+                # Bear Trap: False breakout above resistance, then reversal
+                if (ohlc_df['high'].iloc[i] > level and ohlc_df['high'].iloc[i-1] <= level):
+                    if (ohlc_df['close'].iloc[i+1] < level and
+                        abs(ohlc_df['close'].iloc[i+1] - level) / level > 0.005):
+                        
+                        patterns_found.append({
+                            'pattern': 'BEAR_TRAP',
+                            'direction': 'BULLISH',
+                            'confidence': 0.75,
+                            'completion_ratio': 0.8,
+                            'target_price': level + (level - ohlc_df['low'].iloc[i+1]) * 2,
+                            'trigger_level': ohlc_df['close'].iloc[i+1]
+                        })
+                
+                # Bull Trap: False breakout below support, then reversal
+                elif (ohlc_df['low'].iloc[i] < level and ohlc_df['low'].iloc[i-1] >= level):
+                    if (ohlc_df['close'].iloc[i+1] > level and
+                        abs(ohlc_df['close'].iloc[i+1] - level) / level > 0.005):
+                        
+                        patterns_found.append({
+                            'pattern': 'BULL_TRAP',
+                            'direction': 'BEARISH',
+                            'confidence': 0.75,
+                            'completion_ratio': 0.8,
+                            'target_price': level - (ohlc_df['high'].iloc[i+1] - level) * 2,
+                            'trigger_level': ohlc_df['close'].iloc[i+1]
+                        })
+        
+        return patterns_found
+
+    def detect_volume_spike_rejection(self, ohlc_df: pd.DataFrame, volumes: pd.Series) -> Optional[Dict]:
+        """Détecte Volume Spike + Price Rejection pattern"""
+        if len(ohlc_df) < 2:
+            return None
+        
+        patterns_found = []
+        
+        for i in range(1, len(ohlc_df)):
+            volume_spike = volumes.iloc[i] > volumes.iloc[i-1] * 2.0
+            
+            if volume_spike:
+                open_price = ohlc_df['open'].iloc[i]
+                close_price = ohlc_df['close'].iloc[i]
+                high_price = ohlc_df['high'].iloc[i]
+                low_price = ohlc_df['low'].iloc[i]
+                
+                total_range = high_price - low_price
+                if total_range == 0:
+                    continue
+                
+                upper_wick = high_price - max(open_price, close_price)
+                lower_wick = min(open_price, close_price) - low_price
+                
+                # Bearish rejection (long upper wick)
+                if upper_wick / total_range > 0.4:
+                    patterns_found.append({
+                        'pattern': 'VOLUME_SPIKE_REJECTION',
+                        'direction': 'BEARISH',
+                        'confidence': 0.8,
+                        'completion_ratio': 1.0,
+                        'target_price': close_price - (upper_wick * 1.5),
+                        'trigger_level': close_price
+                    })
+                
+                # Bullish rejection (long lower wick)
+                elif lower_wick / total_range > 0.4:
+                    patterns_found.append({
+                        'pattern': 'VOLUME_SPIKE_REJECTION',
+                        'direction': 'BULLISH',
+                        'confidence': 0.8,
+                        'completion_ratio': 1.0,
+                        'target_price': close_price + (lower_wick * 1.5),
+                        'trigger_level': close_price
+                    })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def detect_hidden_divergence(self, prices: pd.Series, indicator: pd.Series, 
+                                indicator_name: str = "RSI") -> List[Dict]:
+        """Détecte Hidden Divergence (bullish and bearish)"""
+        from scipy.signal import argrelextrema
+        
+        patterns_found = []
+        
+        if len(prices) < 10:
+            return patterns_found
+        
+        price_maxima = argrelextrema(prices.values, np.greater, order=3)[0]
+        price_minima = argrelextrema(prices.values, np.less, order=3)[0]
+        indicator_maxima = argrelextrema(indicator.values, np.greater, order=3)[0]
+        indicator_minima = argrelextrema(indicator.values, np.less, order=3)[0]
+        
+        # Hidden Bullish Divergence: Price makes higher lows, indicator makes lower lows
+        for i in range(1, min(len(price_minima), len(indicator_minima))):
+            if (prices.iloc[price_minima[i]] > prices.iloc[price_minima[i-1]] and
+                indicator.iloc[indicator_minima[i]] < indicator.iloc[indicator_minima[i-1]]):
+                
+                patterns_found.append({
+                    'pattern': f'HIDDEN_BULLISH_DIVERGENCE_{indicator_name}',
+                    'direction': 'BULLISH',
+                    'confidence': 0.75,
+                    'completion_ratio': 0.5,
+                    'target_price': prices.iloc[price_minima[i]] * 1.05,
+                    'trigger_level': prices.iloc[-1],
+                    'divergence_type': 'HIDDEN'
+                })
+        
+        # Hidden Bearish Divergence: Price makes lower highs, indicator makes higher highs
+        for i in range(1, min(len(price_maxima), len(indicator_maxima))):
+            if (prices.iloc[price_maxima[i]] < prices.iloc[price_maxima[i-1]] and
+                indicator.iloc[indicator_maxima[i]] > indicator.iloc[indicator_maxima[i-1]]):
+                
+                patterns_found.append({
+                    'pattern': f'HIDDEN_BEARISH_DIVERGENCE_{indicator_name}',
+                    'direction': 'BEARISH',
+                    'confidence': 0.75,
+                    'completion_ratio': 0.5,
+                    'target_price': prices.iloc[price_maxima[i]] * 0.95,
+                    'trigger_level': prices.iloc[-1],
+                    'divergence_type': 'HIDDEN'
+                })
+        
+        return patterns_found
+
+    def detect_three_soldiers_crows(self, ohlc_df: pd.DataFrame) -> Optional[Dict]:
+        """Détecte Three White Soldiers et Three Black Crows"""
+        patterns_found = []
+        
+        if len(ohlc_df) < 3:
+            return None
+        
+        for i in range(2, len(ohlc_df)):
+            candles = ohlc_df.iloc[i-2:i+1]
+            opens = candles['open'].values
+            closes = candles['close'].values
+            
+            bodies = [abs(closes[j] - opens[j]) for j in range(3)]
+            avg_body = np.mean(bodies)
+            
+            # Three White Soldiers (three consecutive bullish candles)
+            if (all(closes > opens) and all(closes[1:] > closes[:-1]) and
+                all(opens[1:] > opens[:-1]) and all(b > avg_body * 0.7 for b in bodies)):
+                
+                patterns_found.append({
+                    'pattern': 'THREE_WHITE_SOLDIERS',
+                    'direction': 'BULLISH',
+                    'confidence': 0.75,
+                    'completion_ratio': 1.0,
+                    'target_price': closes[2] + (avg_body * 2.0),
+                    'trigger_level': closes[2]
+                })
+            
+            # Three Black Crows (three consecutive bearish candles)
+            elif (all(closes < opens) and all(closes[1:] < closes[:-1]) and
+                  all(opens[1:] < opens[:-1]) and all(b > avg_body * 0.7 for b in bodies)):
+                
+                patterns_found.append({
+                    'pattern': 'THREE_BLACK_CROWS',
+                    'direction': 'BEARISH',
+                    'confidence': 0.75,
+                    'completion_ratio': 1.0,
+                    'target_price': closes[2] - (avg_body * 2.0),
+                    'trigger_level': closes[2]
+                })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def detect_doji_patterns(self, ohlc_df: pd.DataFrame) -> Optional[Dict]:
+        """Détecte Doji patterns (indecision candles)"""
+        patterns_found = []
+        
+        for i in range(len(ohlc_df)):
+            open_price = ohlc_df['open'].iloc[i]
+            close_price = ohlc_df['close'].iloc[i]
+            high_price = ohlc_df['high'].iloc[i]
+            low_price = ohlc_df['low'].iloc[i]
+            
+            total_range = high_price - low_price
+            if total_range == 0:
+                continue
+            
+            body_size = abs(close_price - open_price)
+            body_ratio = body_size / total_range
+            
+            # Doji detected if body is less than 10% of total range
+            if body_ratio < 0.1:
+                patterns_found.append({
+                    'pattern': 'DOJI',
+                    'direction': 'NEUTRAL',
+                    'confidence': 0.6,
+                    'completion_ratio': 1.0,
+                    'target_price': close_price,
+                    'trigger_level': close_price
+                })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def detect_harami_patterns(self, ohlc_df: pd.DataFrame) -> Optional[Dict]:
+        """Détecte Bullish and Bearish Harami patterns"""
+        patterns_found = []
+        
+        if len(ohlc_df) < 2:
+            return None
+        
+        for i in range(1, len(ohlc_df)):
+            prev_open = ohlc_df['open'].iloc[i-1]
+            prev_close = ohlc_df['close'].iloc[i-1]
+            curr_open = ohlc_df['open'].iloc[i]
+            curr_close = ohlc_df['close'].iloc[i]
+            
+            prev_body = abs(prev_close - prev_open)
+            curr_body = abs(curr_close - curr_open)
+            
+            # Bullish Harami: Large bearish candle followed by small bullish candle inside
+            if (prev_close < prev_open and curr_close > curr_open and
+                curr_open > prev_close and curr_close < prev_open and
+                curr_body < prev_body * 0.8):
+                
+                patterns_found.append({
+                    'pattern': 'BULLISH_HARAMI',
+                    'direction': 'BULLISH',
+                    'confidence': 0.65,
+                    'completion_ratio': 1.0,
+                    'target_price': curr_close + prev_body,
+                    'trigger_level': curr_close
+                })
+            
+            # Bearish Harami: Large bullish candle followed by small bearish candle inside
+            elif (prev_close > prev_open and curr_close < curr_open and
+                  curr_open < prev_close and curr_close > prev_open and
+                  curr_body < prev_body * 0.8):
+                
+                patterns_found.append({
+                    'pattern': 'BEARISH_HARAMI',
+                    'direction': 'BEARISH',
+                    'confidence': 0.65,
+                    'completion_ratio': 1.0,
+                    'target_price': curr_close - prev_body,
+                    'trigger_level': curr_close
+                })
+        
+        return self._select_best_pattern(patterns_found) if patterns_found else None
+
+    def _select_best_pattern(self, patterns: List[Dict]) -> Optional[Dict]:
+        """Sélectionne le meilleur pattern basé sur la confiance"""
+        if not patterns:
+            return None
+        return max(patterns, key=lambda p: p.get('confidence', 0))
+
 # Global instance
 technical_pattern_detector = TechnicalPatternDetector()
