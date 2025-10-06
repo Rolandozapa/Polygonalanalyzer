@@ -3614,7 +3614,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 try:
                     # 🚨 STRICT VALIDATION: Use calculated indicators or None - NO FALLBACK VALUES
                     fallback_rsi = rsi if 'rsi' in locals() and rsi is not None else None
-                    fallback_macd = indicators.macd_line if hasattr(indicators, 'macd_line') and indicators.macd_line is not None else None
+                    fallback_macd = macd_line if macd_line is not None else None
                     fallback_stoch_k = stochastic_k if 'stochastic_k' in locals() and stochastic_k is not None else None
                     fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d is not None else None
                     fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position is not None else None
