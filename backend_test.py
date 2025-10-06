@@ -4293,7 +4293,7 @@ class DynamicRRIntegrationTestSuite:
 
 async def main():
     """Main test execution function"""
-    logger.info("🚀 Starting IA2 RR Calculation & Reasoning Display Testing Suite")
+    logger.info("🚀 Starting Dynamic RR Integration Testing Suite - Phase 1")
     logger.info("=" * 80)
     
     # Initialize test suite
