@@ -497,7 +497,14 @@ class TALibIndicators:
                 'macd_signal_line': macd_signal_value,
                 'macd_histogram': macd_histogram_value,
                 'macd_trend': macd_signal_type,
-                'macd_slope': macd_trend
+                'macd_slope': macd_trend,
+                # 🆕 NOUVEAUX INDICATEURS MOMENTUM
+                'willr': willr_value,
+                'willr_zone': willr_zone,
+                'cci': cci_value,
+                'cci_zone': cci_zone,
+                'roc': roc_value,
+                'roc_strength': roc_strength
             }
             
         except Exception as e:
