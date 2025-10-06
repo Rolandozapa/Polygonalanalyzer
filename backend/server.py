@@ -6118,7 +6118,7 @@ async def force_ia1_analysis(request: dict):
                 time_diff = (current_time - stored_time).total_seconds()
                 logger.warning(f"⚠️ {symbol} analyzed {time_diff:.0f}s ago - forcing anyway")
             
-            # Get the opportunity
+            # Try to get the opportunity from scout first
             from advanced_market_aggregator import advanced_market_aggregator
             opportunities = advanced_market_aggregator.get_current_opportunities()
             target_opportunity = None
@@ -6128,8 +6128,46 @@ async def force_ia1_analysis(request: dict):
                     target_opportunity = opp
                     break
             
+            # 🔧 FALLBACK: If not found in opportunities (BingX API down), create temporary opportunity with fallback data
             if not target_opportunity:
-                return {"success": False, "error": f"Symbol {symbol} not found in opportunities"}
+                logger.info(f"🔄 {symbol} not in scout opportunities, creating temporary opportunity with fallback data...")
+                
+                try:
+                    # Get current price and basic data from fallback sources
+                    fallback_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
+                    
+                    if fallback_data is not None and not fallback_data.empty:
+                        current_price = fallback_data['Close'].iloc[-1]
+                        
+                        # Calculate 24h change if we have enough data
+                        price_change_24h = 0.0
+                        if len(fallback_data) >= 2:
+                            price_change_24h = ((current_price - fallback_data['Close'].iloc[-2]) / fallback_data['Close'].iloc[-2]) * 100
+                        
+                        # Create temporary opportunity object
+                        from data_models import CryptoOpportunity
+                        import uuid
+                        
+                        target_opportunity = CryptoOpportunity(
+                            id=f"{symbol}_{int(get_paris_time().timestamp())}",
+                            symbol=symbol,
+                            current_price=current_price,
+                            price_change_24h=price_change_24h,
+                            volume_24h=fallback_data['Volume'].iloc[-1] if 'Volume' in fallback_data.columns else 1000000,
+                            market_cap=0.0,  # Will be populated by analysis
+                            market_cap_rank=None,
+                            data_sources=["fallback_enhanced_ohlcv"],
+                            data_confidence=0.8,  # Fallback confidence
+                            timestamp=get_paris_time()
+                        )
+                        
+                        logger.info(f"✅ Created temporary opportunity for {symbol}: ${current_price:.4f} ({price_change_24h:+.2f}%)")
+                    else:
+                        return {"success": False, "error": f"Could not retrieve fallback data for {symbol}"}
+                        
+                except Exception as fallback_error:
+                    logger.error(f"❌ Fallback data retrieval failed for {symbol}: {fallback_error}")
+                    return {"success": False, "error": f"Symbol {symbol} not found and fallback failed: {str(fallback_error)}"}
             
             # Force IA1 analysis (bypass pattern filter)
             analysis = await orchestrator.ia1.analyze_opportunity(target_opportunity)
