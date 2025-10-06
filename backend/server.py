@@ -2890,7 +2890,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 CHOICE): {master_pattern}"
             if detected_pattern:
                 # 🚨 CORRECTION: Aligner la direction du pattern avec la décision IA1 finale
-                final_direction = ia1_signal.lower()
+                try:
+                    final_direction = ia1_signal.lower()
+                except AttributeError as e:
+                    logger.error(f"❌ ERROR: ia1_signal is not a string: type={type(ia1_signal)}, value={ia1_signal}")
+                    final_direction = "hold"  # Default fallback
                 direction_emoji = "📈" if final_direction == "long" else "📉" if final_direction == "short" else "⚖️"
                 
                 reasoning += f"\n\n🎯 MASTER PATTERN (IA1 STRATEGIC CHOICE): {detected_pattern.pattern_type.value}"
