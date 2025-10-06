@@ -1751,5 +1751,337 @@ class AdvancedTechnicalIndicators:
             logger.error(f"Error formatting multi-timeframe data: {e}")
             return "⚠️ Error formatting multi-timeframe analysis"
 
+
+    # =========================================================================
+    # ENHANCED REGIME DETECTION - Adapted from v4
+    # =========================================================================
+    
+    def detect_market_regime_enhanced(self, df: pd.DataFrame) -> Dict:
+        """
+        Détection avancée du régime de marché avec scoring amélioré
+        Adapté depuis v4 pour compatibilité backend
+        """
+        if len(df) < 50:
+            return self._get_default_regime()
+        
+        try:
+            # Standardize column names
+            df_std = df.copy()
+            df_std.columns = df_std.columns.str.lower()
+            
+            # Calculate regime indicators
+            indicators = self._calculate_regime_indicators_enhanced(df_std)
+            
+            # Classify regime with confidence
+            regime, confidence, scores = self._classify_regime_enhanced(indicators)
+            
+            # Calculate technical consistency
+            technical_consistency = self._calculate_technical_consistency_enhanced(indicators)
+            
+            # Combined confidence
+            combined_confidence = 0.7 * confidence + 0.3 * technical_consistency
+            combined_confidence = min(1.0, combined_confidence)
+            
+            return {
+                'regime': regime,
+                'confidence': round(combined_confidence, 3),
+                'base_confidence': round(confidence, 3),
+                'technical_consistency': round(technical_consistency, 3),
+                'scores': scores,
+                'indicators': indicators,
+                'interpretation': self._interpret_regime_enhanced(regime, combined_confidence),
+                'adx': indicators.get('adx', 0),
+                'adx_strength': indicators.get('adx_strength', 'WEAK')
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in enhanced regime detection: {e}")
+            return self._get_default_regime()
+    
+    def _calculate_regime_indicators_enhanced(self, df: pd.DataFrame) -> Dict:
+        """Calculate all indicators for regime classification"""
+        
+        close_prices = df['close']
+        high_prices = df['high']
+        low_prices = df['low']
+        
+        indicators = {}
+        
+        # 1. TREND INDICATORS
+        # ADX - Trend strength (corrected method)
+        indicators['adx'] = self._calculate_adx_corrected(df, 14)
+        indicators['adx_strength'] = 'STRONG' if indicators['adx'] > 25 else 'WEAK' if indicators['adx'] < 20 else 'MODERATE'
+        
+        # SMA slopes
+        sma_20 = close_prices.rolling(20).mean()
+        sma_50 = close_prices.rolling(50).mean()
+        indicators['sma_20_slope'] = self._calculate_slope_simple(sma_20.tail(10))
+        indicators['sma_50_slope'] = self._calculate_slope_simple(sma_50.tail(20))
+        
+        # Position vs moving averages
+        indicators['above_sma_20'] = (close_prices.iloc[-1] > sma_20.iloc[-1])
+        indicators['above_sma_50'] = (close_prices.iloc[-1] > sma_50.iloc[-1])
+        
+        # Distance to moving averages
+        indicators['distance_sma_20'] = ((close_prices.iloc[-1] / sma_20.iloc[-1]) - 1) * 100
+        indicators['distance_sma_50'] = ((close_prices.iloc[-1] / sma_50.iloc[-1]) - 1) * 100
+        
+        # 2. RANGE/CONSOLIDATION INDICATORS
+        # ATR and volatility
+        atr_14 = self._calculate_atr_simple(df, 14)
+        atr_50 = self._calculate_atr_simple(df, 50)
+        indicators['atr_pct'] = (atr_14.iloc[-1] / close_prices.iloc[-1]) * 100
+        indicators['volatility_ratio'] = atr_14.iloc[-1] / atr_50.iloc[-1] if atr_50.iloc[-1] > 0 else 1.0
+        
+        # Bollinger Bands
+        bb_upper, bb_middle, bb_lower = self._calculate_bollinger_bands_simple(close_prices, 20, 2)
+        bb_width = (bb_upper.iloc[-1] - bb_lower.iloc[-1]) / bb_middle.iloc[-1]
+        indicators['bb_width_pct'] = bb_width * 100
+        indicators['bb_squeeze'] = bb_width < 0.02
+        
+        # 3. MOMENTUM INDICATORS
+        rsi = self._calculate_rsi_simple(close_prices, 14)
+        indicators['rsi'] = rsi.iloc[-1]
+        indicators['rsi_trend'] = self._calculate_slope_simple(rsi.tail(10))
+        
+        # RSI zones
+        if indicators['rsi'] > 70:
+            indicators['rsi_zone'] = 'OVERBOUGHT'
+        elif indicators['rsi'] < 30:
+            indicators['rsi_zone'] = 'OVERSOLD'
+        elif 40 <= indicators['rsi'] <= 60:
+            indicators['rsi_zone'] = 'NEUTRAL'
+        else:
+            indicators['rsi_zone'] = 'NORMAL'
+        
+        # MACD
+        macd, macd_signal = self._calculate_macd_simple(close_prices)
+        indicators['macd_histogram'] = (macd - macd_signal).iloc[-1]
+        indicators['macd_trend'] = self._calculate_slope_simple((macd - macd_signal).tail(10))
+        
+        # 4. VOLUME INDICATORS
+        volume_sma = df['volume'].rolling(20).mean()
+        indicators['volume_ratio'] = df['volume'].iloc[-1] / volume_sma.iloc[-1] if volume_sma.iloc[-1] > 0 else 1.0
+        indicators['volume_trend'] = self._calculate_slope_simple(df['volume'].tail(10))
+        
+        return indicators
+    
+    def _calculate_technical_consistency_enhanced(self, indicators: Dict) -> float:
+        """Calculate consistency between technical indicators"""
+        consistency_score = 0.0
+        
+        # 1. Trend coherence (35%)
+        trend_score = 0.0
+        if indicators['sma_20_slope'] > 0 and indicators['above_sma_20']:
+            trend_score += 1.0
+        elif indicators['sma_20_slope'] < 0 and not indicators['above_sma_20']:
+            trend_score += 1.0
+        
+        if abs(indicators['distance_sma_20']) < 5:  # Reasonable distance
+            trend_score += 1.0
+        
+        if indicators['adx'] > 20:  # Strong trend confirmation
+            trend_score += 0.5
+        
+        consistency_score += (trend_score / 2.5) * 0.35
+        
+        # 2. Momentum coherence (35%)
+        momentum_score = 0.0
+        
+        # RSI-MACD alignment
+        rsi_bullish = indicators['rsi'] > 50
+        macd_bullish = indicators['macd_histogram'] > 0
+        if rsi_bullish == macd_bullish:
+            momentum_score += 1.0
+        
+        # No extreme zones
+        if indicators['rsi_zone'] not in ['OVERBOUGHT', 'OVERSOLD']:
+            momentum_score += 0.5
+        
+        consistency_score += (momentum_score / 1.5) * 0.35
+        
+        # 3. Volume coherence (15%)
+        volume_score = 0.0
+        if indicators['volume_ratio'] > 0.8:  # Decent volume
+            volume_score += 1.0
+        
+        consistency_score += (volume_score / 1.0) * 0.15
+        
+        # 4. Volatility coherence (15%)
+        volatility_score = 0.0
+        if 0.8 < indicators['volatility_ratio'] < 1.5:  # Reasonable volatility
+            volatility_score += 1.0
+        
+        consistency_score += (volatility_score / 1.0) * 0.15
+        
+        return min(1.0, consistency_score)
+    
+    def _classify_regime_enhanced(self, indicators: Dict) -> Tuple[str, float, Dict]:
+        """Classify market regime based on indicators"""
+        scores = {
+            'TRENDING_UP_STRONG': 0,
+            'TRENDING_UP_WEAK': 0,
+            'RANGING': 0,
+            'TRENDING_DOWN_WEAK': 0,
+            'TRENDING_DOWN_STRONG': 0
+        }
+        
+        # Strong uptrend signals
+        if indicators['sma_20_slope'] > 0.002 and indicators['above_sma_20']:
+            scores['TRENDING_UP_STRONG'] += 2
+        if indicators['adx'] > 25 and indicators['sma_20_slope'] > 0:
+            scores['TRENDING_UP_STRONG'] += 2
+        if indicators['rsi'] > 55 and indicators['macd_histogram'] > 0:
+            scores['TRENDING_UP_STRONG'] += 1
+        
+        # Weak uptrend signals
+        if 0 < indicators['sma_20_slope'] <= 0.002:
+            scores['TRENDING_UP_WEAK'] += 2
+        if indicators['above_sma_20'] and indicators['adx'] < 25:
+            scores['TRENDING_UP_WEAK'] += 1
+        
+        # Ranging signals
+        if indicators['bb_squeeze']:
+            scores['RANGING'] += 3
+        if abs(indicators['sma_20_slope']) < 0.001:
+            scores['RANGING'] += 2
+        if 20 <= indicators['adx'] < 25:
+            scores['RANGING'] += 1
+        
+        # Weak downtrend signals
+        if -0.002 <= indicators['sma_20_slope'] < 0:
+            scores['TRENDING_DOWN_WEAK'] += 2
+        if not indicators['above_sma_20'] and indicators['adx'] < 25:
+            scores['TRENDING_DOWN_WEAK'] += 1
+        
+        # Strong downtrend signals
+        if indicators['sma_20_slope'] < -0.002 and not indicators['above_sma_20']:
+            scores['TRENDING_DOWN_STRONG'] += 2
+        if indicators['adx'] > 25 and indicators['sma_20_slope'] < 0:
+            scores['TRENDING_DOWN_STRONG'] += 2
+        if indicators['rsi'] < 45 and indicators['macd_histogram'] < 0:
+            scores['TRENDING_DOWN_STRONG'] += 1
+        
+        # Determine regime
+        max_score = max(scores.values())
+        if max_score == 0:
+            return 'RANGING', 0.5, scores
+        
+        regime = max(scores, key=scores.get)
+        confidence = scores[regime] / (sum(scores.values()) or 1)
+        
+        return regime, confidence, scores
+    
+    def _interpret_regime_enhanced(self, regime: str, confidence: float) -> str:
+        """Provide human-readable interpretation of regime"""
+        interpretations = {
+            'TRENDING_UP_STRONG': f"Strong uptrend detected (confidence: {confidence:.1%})",
+            'TRENDING_UP_WEAK': f"Weak uptrend or consolidation (confidence: {confidence:.1%})",
+            'RANGING': f"Ranging/consolidating market (confidence: {confidence:.1%})",
+            'TRENDING_DOWN_WEAK': f"Weak downtrend or consolidation (confidence: {confidence:.1%})",
+            'TRENDING_DOWN_STRONG': f"Strong downtrend detected (confidence: {confidence:.1%})"
+        }
+        return interpretations.get(regime, f"Unknown regime (confidence: {confidence:.1%})")
+    
+    def _get_default_regime(self) -> Dict:
+        """Return default regime when calculation fails"""
+        return {
+            'regime': 'RANGING',
+            'confidence': 0.5,
+            'base_confidence': 0.5,
+            'technical_consistency': 0.5,
+            'scores': {},
+            'indicators': {},
+            'interpretation': 'Insufficient data for regime detection',
+            'adx': 0,
+            'adx_strength': 'WEAK'
+        }
+    
+    # Helper calculation methods
+    
+    def _calculate_adx_corrected(self, df: pd.DataFrame, period: int = 14) -> float:
+        """Calculate ADX using Wilder's method"""
+        try:
+            high = df['high']
+            low = df['low']
+            close = df['close']
+            
+            # True Range
+            tr1 = high - low
+            tr2 = abs(high - close.shift())
+            tr3 = abs(low - close.shift())
+            tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            
+            # Directional Movement
+            dm_plus = high.diff()
+            dm_minus = -low.diff()
+            dm_plus[dm_plus < 0] = 0
+            dm_minus[dm_minus < 0] = 0
+            dm_plus[(dm_plus < dm_minus)] = 0
+            dm_minus[(dm_minus < dm_plus)] = 0
+            
+            # Smoothed TR and DM
+            atr = tr.ewm(span=period, adjust=False).mean()
+            di_plus = 100 * dm_plus.ewm(span=period, adjust=False).mean() / atr
+            di_minus = 100 * dm_minus.ewm(span=period, adjust=False).mean() / atr
+            
+            # DX and ADX
+            dx = 100 * abs(di_plus - di_minus) / (di_plus + di_minus)
+            adx = dx.ewm(span=period, adjust=False).mean()
+            
+            return float(adx.iloc[-1]) if not pd.isna(adx.iloc[-1]) else 0.0
+        except:
+            return 0.0
+    
+    def _calculate_atr_simple(self, df: pd.DataFrame, period: int) -> pd.Series:
+        """Calculate Average True Range"""
+        high = df['high']
+        low = df['low']
+        close = df['close']
+        
+        tr1 = high - low
+        tr2 = abs(high - close.shift())
+        tr3 = abs(low - close.shift())
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        
+        return tr.rolling(period).mean()
+    
+    def _calculate_bollinger_bands_simple(self, prices: pd.Series, period: int, std_dev: float) -> Tuple[pd.Series, pd.Series, pd.Series]:
+        """Calculate Bollinger Bands"""
+        middle = prices.rolling(period).mean()
+        std = prices.rolling(period).std()
+        upper = middle + (std * std_dev)
+        lower = middle - (std * std_dev)
+        return upper, middle, lower
+    
+    def _calculate_rsi_simple(self, prices: pd.Series, period: int) -> pd.Series:
+        """Calculate RSI"""
+        delta = prices.diff()
+        gain = (delta.where(delta > 0, 0)).rolling(period).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(period).mean()
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+        return rsi
+    
+    def _calculate_macd_simple(self, prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9) -> Tuple[pd.Series, pd.Series]:
+        """Calculate MACD"""
+        ema_fast = prices.ewm(span=fast, adjust=False).mean()
+        ema_slow = prices.ewm(span=slow, adjust=False).mean()
+        macd = ema_fast - ema_slow
+        macd_signal = macd.ewm(span=signal, adjust=False).mean()
+        return macd, macd_signal
+    
+    def _calculate_slope_simple(self, series: pd.Series) -> float:
+        """Calculate slope of a series"""
+        try:
+            if len(series) < 2:
+                return 0.0
+            x = np.arange(len(series))
+            y = series.values
+            slope = np.polyfit(x, y, 1)[0]
+            return float(slope)
+        except:
+            return 0.0
+
 # Instance globale
 advanced_technical_indicators = AdvancedTechnicalIndicators()
