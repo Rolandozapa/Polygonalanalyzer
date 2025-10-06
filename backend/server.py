@@ -2258,6 +2258,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Log the extracted values for debugging
             logger.info(f"🔍 TALib EXTRACTED for {opportunity.symbol}: RSI={rsi:.2f}, MACD_hist={macd_histogram:.6f}, ADX={adx:.1f}, ATR={atr:.4f}, VWAP=${vwap:.4f}")
             logger.info(f"🔍 TALib STATUS: Analysis object exists = {talib_analysis is not None}")
+            
+            # CRITICAL DEBUG: Check if analysis_data contains these values
+            logger.info(f"🔍 CRITICAL CHECK - analysis_data will contain: ATR={atr}, SMA_20={sma_20 if 'sma_20' in locals() else 'MISSING'}, Current_Price={real_current_price if 'real_current_price' in locals() else 'MISSING'}")
             volume_trend = talib_analysis.volume_trend
             volume_surge = talib_analysis.volume_surge
             
