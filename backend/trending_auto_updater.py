@@ -410,8 +410,9 @@ class TrendingAutoUpdater:
                 
         except Exception as e:
             logger.error(f"Error updating BingX trending list: {e}")
-            # Emergency fallback
-            return await self._create_fallback_cryptos()
+            # 🚨 NO FAKE DATA FALLBACK: Return empty list on API failure
+            logger.error("❌ CRITICAL: BingX trending update failed - NO FAKE FALLBACK DATA")
+            return []
     
     async def _fetch_page_content(self) -> Optional[str]:
         """Récupère le contenu de la page Readdy avec timeout strict"""
