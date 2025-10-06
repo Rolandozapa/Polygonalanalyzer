@@ -2333,7 +2333,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             - Use EMA HIERARCHY for dynamic S/R: EMA21 (${ema_21:.4f}) as primary S/R, SMA50 (${sma_50:.4f}) as institutional level
             - For LONG: Consider EMA21/VWAP as dynamic support, EMA200/SMA50 as resistance targets
             - For SHORT: Consider EMA21/VWAP as dynamic resistance, EMA200/SMA50 as support targets
-            - MFI extreme levels ({mfi:.1f}) indicate institutional accumulation/distribution - adjust RR accordingly
+            - VWAP extreme levels ({vwap_distance:+.1f}%) indicate price strength/weakness - adjust RR accordingly
             - EMA CROSS SIGNALS: {'🚀 GOLDEN CROSS - Bullish momentum shift' if ema_cross_signal == 'golden_cross' else '💥 DEATH CROSS - Bearish momentum shift' if ema_cross_signal == 'death_cross' else 'No cross signal'}
             {'- 🎯 VWAP EXTREME OVERSOLD: Excellent LONG entry precision near VWAP support' if vwap_extreme_oversold else ''}
             {'- 🎯 VWAP EXTREME OVERBOUGHT: Excellent SHORT entry precision near VWAP resistance' if vwap_extreme_overbought else ''}
