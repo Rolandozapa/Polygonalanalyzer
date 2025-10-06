@@ -2216,6 +2216,16 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_extreme_overbought = vwap_distance > 3.0
             vwap_extreme_oversold = vwap_distance < -3.0
             
+            # 🔧 CALCULATE MFI-equivalent from VWAP and volume (for compatibility)
+            # Use VWAP distance and volume to simulate MFI behavior
+            mfi = 50.0 + (vwap_distance * 10)  # Convert VWAP distance to MFI-like scale
+            mfi = max(0, min(100, mfi))  # Clamp to 0-100 range
+            mfi_overbought = mfi > 80
+            mfi_oversold = mfi < 20
+            mfi_extreme_overbought = mfi > 90
+            mfi_extreme_oversold = mfi < 10
+            institutional_activity = ('distribution' if mfi > 80 else 'accumulation' if mfi < 20 else 'neutral')
+            
             # Volume analysis
             volume_ratio = indicators.volume_ratio
             volume_trend = indicators.volume_trend
