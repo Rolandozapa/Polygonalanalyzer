@@ -2215,19 +2215,41 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             fibonacci_formatted = fibonacci_calculator.get_fibonacci_for_prompt(fibonacci_levels)
             logger.info(f"🔢 FIBONACCI calculated for {opportunity.symbol}: {fibonacci_levels.trend_direction} trend, current at {fibonacci_levels.current_level_percentage:.1f}% ({fibonacci_levels.nearest_level})")
             
-            # ✅ EXTRACT ALL INDICATORS from TALib Professional Analysis (IA1 v6.0 Complete System)
-            rsi = talib_analysis.rsi_14
-            macd_signal = talib_analysis.macd_signal
-            macd_line = talib_analysis.macd_line
-            macd_histogram = talib_analysis.macd_histogram
-            stochastic_k = talib_analysis.stoch_k
-            stochastic_d = talib_analysis.stoch_d
-            bb_position = talib_analysis.bb_position
-            adx = talib_analysis.adx  # ✅ Real ADX with Wilder method
-            atr = talib_analysis.atr
-            vwap = talib_analysis.vwap
-            vwap_position = talib_analysis.vwap_distance  # ✅ Real VWAP distance
-            volume_ratio = talib_analysis.volume_ratio
+            # ✅ EXTRACT ALL INDICATORS from TALib Professional Analysis (IA1 v6.0 Complete System) with SAFE ACCESS
+            # Check if talib_analysis is valid
+            if not talib_analysis:
+                logger.error(f"❌ TALib analysis is None for {opportunity.symbol}! Using fallback values.")
+                # Use safe fallbacks
+                rsi = 50.0
+                macd_signal = 0.0
+                macd_line = 0.0
+                macd_histogram = 0.0
+                stochastic_k = 50.0
+                stochastic_d = 50.0
+                bb_position = 0.5
+                adx = 25.0
+                atr = 0.02
+                vwap = opportunity.current_price
+                vwap_position = 0.0
+                volume_ratio = 1.0
+            else:
+                # Use real TALib values with safe getattr
+                rsi = getattr(talib_analysis, 'rsi_14', 50.0)
+                macd_signal = getattr(talib_analysis, 'macd_signal', 0.0)
+                macd_line = getattr(talib_analysis, 'macd_line', 0.0)
+                macd_histogram = getattr(talib_analysis, 'macd_histogram', 0.0)
+                stochastic_k = getattr(talib_analysis, 'stoch_k', 50.0)
+                stochastic_d = getattr(talib_analysis, 'stoch_d', 50.0)
+                bb_position = getattr(talib_analysis, 'bb_position', 0.5)
+                adx = getattr(talib_analysis, 'adx', 25.0)
+                atr = getattr(talib_analysis, 'atr', 0.02)
+                vwap = getattr(talib_analysis, 'vwap', opportunity.current_price)
+                vwap_position = getattr(talib_analysis, 'vwap_distance', 0.0)  # ✅ Real VWAP distance
+                volume_ratio = getattr(talib_analysis, 'volume_ratio', 1.0)
+                
+            # Log the extracted values for debugging
+            logger.info(f"🔍 TALib EXTRACTED for {opportunity.symbol}: RSI={rsi:.2f}, MACD_hist={macd_histogram:.6f}, ADX={adx:.1f}, ATR={atr:.4f}, VWAP=${vwap:.4f}")
+            logger.info(f"🔍 TALib STATUS: Analysis object exists = {talib_analysis is not None}")
             volume_trend = talib_analysis.volume_trend
             volume_surge = talib_analysis.volume_surge
             
