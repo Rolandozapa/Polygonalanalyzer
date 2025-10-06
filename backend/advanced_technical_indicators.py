@@ -129,20 +129,51 @@ class AdvancedRegimeDetector:
         self.regime_history = []  # Track last N regimes for persistence
     
     def detect_detailed_regime(self, df: pd.DataFrame) -> Dict:
-        """Main regime detection with full analysis"""
+        """Main regime detection with full analysis, persistence, and transitions"""
         if len(df) < self.lookback_period:
             return self._get_default_regime()
         
         try:
-            indicators = self._calculate_regime_indicators(df)
-            regime, confidence, scores = self._classify_regime(indicators)
+            # 1. Calculate dynamic thresholds based on asset characteristics
+            thresholds = self._get_dynamic_thresholds(df)
+            
+            # 2. Calculate regime indicators
+            indicators = self._calculate_regime_indicators(df, thresholds)
+            
+            # 3. Classify regime
+            regime, base_confidence, scores = self._classify_regime(indicators, thresholds)
+            
+            # 4. Check for regime transitions
+            previous_regime = self.regime_history[-1] if self.regime_history else regime
+            transition_detected = self._detect_regime_transition(regime, previous_regime, indicators)
+            if transition_detected:
+                regime = transition_detected
+                logger.info(f"🔄 Regime transition detected: {previous_regime.value} → {regime.value}")
+            
+            # 5. Assess persistence and adjust confidence
+            persistence_score = self._assess_regime_persistence(regime)
+            adjusted_confidence = base_confidence * (0.7 + 0.3 * persistence_score)
+            
+            # 6. Update history
+            self.regime_history.append(regime)
+            if len(self.regime_history) > self.persistence_length:
+                self.regime_history.pop(0)
+            
+            # 7. Calculate signal consistency
+            signal_consistency = self._calculate_signal_consistency(indicators)
+            final_confidence = adjusted_confidence * signal_consistency
             
             return {
                 'regime': regime.value,
-                'confidence': round(confidence, 3),
+                'confidence': round(final_confidence, 3),
+                'base_confidence': round(base_confidence, 3),
+                'persistence_score': round(persistence_score, 3),
+                'signal_consistency': round(signal_consistency, 3),
                 'scores': scores,
                 'indicators': indicators,
-                'interpretation': self._interpret_regime(regime, confidence),
+                'thresholds': thresholds,
+                'transition_detected': transition_detected is not None,
+                'interpretation': self._interpret_regime(regime, final_confidence),
                 'trading_implications': self._get_trading_implications(regime)
             }
         except Exception as e:
