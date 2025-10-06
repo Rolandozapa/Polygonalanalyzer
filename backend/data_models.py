@@ -101,10 +101,10 @@ class TechnicalAnalysis(BaseModel):
     reward_amount: float = 0.0
     rr_reasoning: str = ""
     # TRADE TYPE RECOMMENDATION (NEW)
-    recommended_trade_type: Optional[str] = "SWING"  # SCALP, INTRADAY, SWING, POSITION
+    trade_type: Optional[str] = "SWING"  # SCALP, INTRADAY, SWING, POSITION
     trade_duration_estimate: Optional[str] = "1-7 days"
     optimal_timeframe: Optional[str] = "4H/1D"
-    minimum_rr_for_trade_type: Optional[float] = 2.0
+    minimum_rr_threshold: Optional[float] = 2.0
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
