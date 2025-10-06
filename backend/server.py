@@ -2634,6 +2634,7 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                 # Bollinger Bands & Volatility
                 'bb_position': bb_position or 0.5,
                 'bb_squeeze': talib_analysis.bb_squeeze if hasattr(talib_analysis, 'bb_squeeze') else False,
+                'bb_squeeze_str': bb_squeeze_str,
                 'squeeze_intensity': getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
                 'atr': getattr(talib_analysis, 'atr', 0.02),
                 'atr_pct': getattr(talib_analysis, 'atr_pct', 2.0),
