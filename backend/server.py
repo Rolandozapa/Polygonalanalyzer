@@ -2269,17 +2269,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 mfi_extreme_oversold = False
                 institutional_activity = 'neutral'
             
-            # Volume analysis
-            volume_ratio = indicators.volume_ratio
-            volume_trend = indicators.volume_trend
-            volume_surge = indicators.volume_surge
-            
-            # 🚀 MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀
+            # ✅ ALL INDICATORS EXTRACTED FROM AdvancedTechnicalIndicators
+            # Volume analysis (already extracted above)
+            # EMAs and trend hierarchy (already extracted from indicators)
             ema_9 = indicators.ema_9
             ema_21 = indicators.ema_21
             sma_50 = indicators.sma_50
             ema_200 = indicators.ema_200
             trend_hierarchy = indicators.trend_hierarchy
+            ema_strength = indicators.trend_strength_score
             trend_momentum = indicators.trend_momentum
             price_vs_emas = indicators.price_vs_emas
             ema_cross_signal = indicators.ema_cross_signal
