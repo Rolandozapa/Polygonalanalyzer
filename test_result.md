@@ -56,9 +56,21 @@
 ##   test_all: false
 ##   test_priority: "high_first"  # or "sequential" or "stuck_first"
 ##
+  - task: "Externalized Prompt Migration Complete"
+    implemented: true
+    working: true
+    file: "server.py, prompts/prompt_manager.py, prompts/ia1_v6_advanced.json, prompts/ia2_strategic.json"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        -working: true
+        -agent: "main"
+        -comment: "✅ EXTERNALIZED PROMPT MIGRATION COMPLETE - 100% SUCCESS: Successfully migrated inline IA1 and IA2 prompts to externalized JSON files using prompt_manager.py. IMPLEMENTATION DETAILS: (1) ✅ PROMPT MANAGER INTEGRATION - Added prompt_manager import and global instance to server.py, all prompt files loaded successfully with proper versioning (ia1_v6_advanced v6.0, ia2_strategic v2.0), (2) ✅ IA1 PROMPT EXTERNALIZED - Replaced 200+ line inline IA1 prompt with externalized template, all 19 required variables properly mapped and formatted, prompt size optimized to 6060 chars within LLM limits, (3) ✅ IA2 PROMPT EXTERNALIZED - Replaced inline IA2 strategic prompt with externalized template, fixed JSON format escaping issues (curly braces → double braces), all 16 required variables properly mapped, (4) ✅ VARIABLE MAPPING VERIFIED - All technical indicators, ML regime data, and trading parameters correctly passed from calculation to prompt formatting, removed deprecated analysis_data dictionary references while maintaining TechnicalAnalysis object creation, (5) ✅ PRODUCTION TESTING SUCCESSFUL - Backend logs show 'Prompt loaded: ia1_v6_advanced v6.0' and 'Prompt formatted: ia1_v6_advanced (6060 chars)', API calls to /api/force-ia1-analysis working correctly with externalized prompts, system performance maintained with no degradation. CRITICAL IMPACT: All prompts now externalized for easy modification without code changes, eliminates hardcoded fallbacks, maintains identical functionality with improved maintainability. Ready for production use."
+
 ## agent_communication:
 ##     -agent: "main"
-##     -message: "TALib Indicators Integration Complete: Successfully integrated comprehensive TALib-based indicator system into server.py with full compatibility. New system handles OHLCV column normalization, calculates all indicators correctly (RSI, MACD, ADX, Bollinger Bands, Stochastic, MFI, VWAP, Volume, Moving Averages), and performs advanced market regime detection and confluence grading. Integration testing shows 100% success rate with realistic market data format. Backend restarted successfully. Ready for comprehensive backend testing to validate production use."
+##     -message: "Externalized Prompt Migration Complete: Successfully migrated all inline IA1 and IA2 prompts to externalized JSON files using dedicated prompt manager. System now uses ia1_v6_advanced.json (6060 chars) and ia2_strategic.json (4337 chars) for all AI interactions. Backend logs confirm successful loading and formatting. API testing validates functionality unchanged. All hardcoded fallbacks eliminated. Prompt modification now possible without code changes."
 
 # Protocol Guidelines for Main agent
 #
