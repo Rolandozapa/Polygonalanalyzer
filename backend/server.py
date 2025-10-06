@@ -3542,7 +3542,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "confidence": talib_analysis.confidence,
                 "technical_consistency": talib_analysis.technical_consistency,
                 "rsi_zone": talib_analysis.rsi_zone,
-                "rsi_interpretation": self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone),
+                "rsi_interpretation": self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone) if hasattr(self, '_get_rsi_interpretation') else f"RSI {talib_analysis.rsi_14:.1f} in {talib_analysis.rsi_zone} zone",
                 "macd_trend": talib_analysis.macd_trend,
                 "macd_direction": "bullish" if talib_analysis.macd_histogram > 0 else "bearish" if talib_analysis.macd_histogram < 0 else "neutral",
                 "adx_strength": talib_analysis.adx_strength,
