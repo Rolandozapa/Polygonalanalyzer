@@ -3374,7 +3374,79 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 DEBUG EXTRACTED VALUES from IA1 JSON: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             logger.info(f"🎯 ADAPTIVE RR THRESHOLD: {trade_type_value} → MinRR {min_rr_value} (from mapping: {min_rr_mapping})")
             
-            # ✅ Data now handled by externalized prompts, no need for analysis_data dictionary
+            # ✅ REPOPULATE analysis_data with all calculated values for TechnicalAnalysis object
+            analysis_data.update({
+                # Core technical indicators
+                "rsi": rsi or 50.0,
+                "macd_signal": macd_line or 0.0,  # Use MACD line as the main MACD value
+                "macd_line": macd_line or 0.0,
+                "macd_histogram": macd_histogram or 0.0,
+                "macd_trend": ("bullish" if macd_histogram and macd_histogram > 0 else "bearish" if macd_histogram and macd_histogram < 0 else "neutral"),
+                "stochastic": stochastic_k or 50.0,
+                "stochastic_d": stochastic_d or 50.0,
+                "bollinger_position": bb_position or 0.5,
+                
+                # Price levels from TALib calculations
+                "current_price": real_current_price,
+                "vwap_price": vwap,  # Real VWAP from TALib
+                "vwap_position": vwap_position or 0.0,
+                "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
+                "vwap_trend": vwap_trend or "neutral",
+                "sma_20": sma_20,  # Real SMA 20 from TALib
+                "sma_50": sma_50,  # Real SMA 50 from TALib  
+                "ema_9": ema_9,    # Real EMA 9 from TALib
+                "ema_21": ema_21,  # Real EMA 21 from TALib
+                "ema_200": ema_200, # Real EMA 200 from TALib
+                
+                # Volume and advanced indicators
+                "volume_ratio": volume_ratio or 1.0,
+                "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)" if volume_trend else "1.0x",
+                "mfi_value": mfi,  # Real MFI from TALib
+                "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
+                
+                # ML Regime and confidence
+                "regime": getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
+                "confidence": getattr(talib_analysis, 'confidence', 0.5),
+                "base_confidence": base_confidence,
+                "technical_consistency": getattr(talib_analysis, 'technical_consistency', 0.5),
+                "combined_confidence": combined_confidence,
+                "confluence_grade": getattr(talib_analysis, 'confluence_grade', 'C'),
+                "confluence_score": getattr(talib_analysis, 'confluence_score', 50),
+                "should_trade": getattr(talib_analysis, 'should_trade', False),
+                
+                # Trading levels and analysis
+                "fibonacci_level": fibonacci_levels.current_level_percentage / 100.0 if fibonacci_levels else 0.618,
+                "fibonacci_nearest_level": fibonacci_levels.nearest_level if fibonacci_levels else "61.8%",
+                "fibonacci_trend_direction": fibonacci_levels.trend_direction if fibonacci_levels else "neutral",
+                "support_levels": fibonacci_levels.support_levels if fibonacci_levels else [],
+                "resistance_levels": fibonacci_levels.resistance_levels if fibonacci_levels else [],
+                "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
+                "analysis_confidence": analysis_confidence,
+                "risk_reward_ratio": ia1_risk_reward_ratio,
+                "ia1_reasoning": reasoning,
+                "ia1_signal": ia1_signal,
+                "market_sentiment": self._determine_market_sentiment(opportunity),
+                "data_sources": opportunity.data_sources,
+                
+                # Trading parameters
+                "trade_type": trade_type_value,
+                "minimum_rr_threshold": min_rr_value, 
+                "trade_duration_estimate": duration_value,
+                "optimal_timeframe": '4H/1D',
+                
+                # Position sizing
+                "position_multiplier": combined_multiplier,
+                "regime_multiplier": regime_multiplier,
+                "ml_confidence_multiplier": ml_confidence_multiplier,
+                "momentum_multiplier": momentum_multiplier,
+                "bb_multiplier": bb_multiplier,
+                
+                # EMA analysis
+                "ema_hierarchy": trend_hierarchy or "neutral",
+                "ema_position": price_vs_emas or "mixed", 
+                "ema_cross_signal": ema_cross_signal or "neutral",
+                "ema_strength": trend_strength_score or 0.5
+            })
             
             # 🔧 AJOUTER LES PRIX ET INDICATEURS CALCULÉS DANS ANALYSIS_DATA
             analysis_data.update({
