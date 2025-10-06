@@ -2928,7 +2928,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             if detected_pattern:
                 # 🚨 CORRECTION: Aligner la direction du pattern avec la décision IA1 finale
                 try:
-                    final_direction = ia1_signal.lower()
+                    final_direction = str(ia1_signal).lower()
                 except AttributeError as e:
                     logger.error(f"❌ ERROR: ia1_signal is not a string: type={type(ia1_signal)}, value={ia1_signal}")
                     final_direction = "hold"  # Default fallback
@@ -3270,7 +3270,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             if ia1_calculated_levels:
                 entry_price = ia1_calculated_levels.get('entry_price', opportunity.current_price)
                 
-                if ia1_signal.lower() == "long":
+                if str(ia1_signal).lower() == "long":
                     # LONG: Stop Loss EN-DESSOUS, Take Profit AU-DESSUS
                     # Niveaux basés sur l'analyse technique PURE, pas sur la confidence
                     
@@ -3292,7 +3292,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     
                     logger.info(f"📊 LONG NIVEAUX TECHNIQUES {opportunity.symbol}: Entry={real_current_price:.6f}, SL={stop_loss_price:.6f} ({((stop_loss_price/real_current_price)-1)*100:.1f}%), TP={take_profit_price:.6f} (+{((take_profit_price/real_current_price)-1)*100:.1f}%)")
                     
-                elif ia1_signal.lower() == "short":
+                elif str(ia1_signal).lower() == "short":
                     # SHORT: Stop Loss AU-DESSUS, Take Profit EN-DESSOUS
                     # Niveaux basés sur l'analyse technique PURE, pas sur la confidence
                     
@@ -3319,14 +3319,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # 🚀 NIVEAUX FALLBACK TECHNIQUES - Basés sur l'analyse technique, PAS sur la confidence
                 # Le RR doit être déterminé par les niveaux techniques uniquement
                 
-                if ia1_signal.lower() == "long":
+                if str(ia1_signal).lower() == "long":
                     # LONG: Niveaux techniques pour RR > 2.0 (TARGET RR = 2.4:1)
                     stop_loss_price = real_current_price * 0.94  # -6% stop loss (support technique)
                     take_profit_price = real_current_price * 1.144  # +14.4% take profit (résistance technique) → RR = 2.4:1
                     
                     logger.info(f"🔧 LONG FALLBACK TECHNIQUE {opportunity.symbol}: SL -6% (support), TP +14.4% (résistance) → RR ~2.4:1")
                     
-                elif ia1_signal.lower() == "short":
+                elif str(ia1_signal).lower() == "short":
                     # SHORT: Niveaux techniques pour RR > 2.0 (TARGET RR = 2.4:1)
                     stop_loss_price = real_current_price * 1.06  # +6% stop loss (résistance technique)
                     take_profit_price = real_current_price * 0.856  # -14.4% take profit (support technique) → RR = 2.4:1
@@ -3400,13 +3400,13 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     ia1_tp = ia1_complete_json.get('take_profit_price')
                     
                     if ia1_sl and ia1_tp and isinstance(ia1_sl, (int, float)) and isinstance(ia1_tp, (int, float)):
-                        if ia1_signal.lower() == "long":
+                        if str(ia1_signal).lower() == "long":
                             if ia1_entry > ia1_sl and ia1_tp > ia1_entry:
                                 ia1_risk_reward_ratio = (ia1_tp - ia1_entry) / (ia1_entry - ia1_sl)
                                 logger.info(f"🎯 FALLBACK RR for LONG {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
                             else:
                                 ia1_risk_reward_ratio = 1.0
-                        elif ia1_signal.lower() == "short":
+                        elif str(ia1_signal).lower() == "short":
                             if ia1_sl > ia1_entry and ia1_tp < ia1_entry:
                                 ia1_risk_reward_ratio = (ia1_entry - ia1_tp) / (ia1_sl - ia1_entry)
                                 logger.info(f"🎯 FALLBACK RR for SHORT {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
@@ -3443,7 +3443,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 resistance_levels=[],
                 patterns_detected=[],
                 analysis_confidence=analysis_confidence,
-                ia1_signal=SignalType(ia1_signal.lower()),
+                ia1_signal=SignalType(str(ia1_signal).lower()),
                 ia1_reasoning=reasoning,
                 risk_reward_ratio=ia1_risk_reward_ratio,
                 entry_price=entry_price,
@@ -3472,7 +3472,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             daily_momentum = abs(opportunity.price_change_24h or 0)
             if daily_momentum > 7.0:  # Only for strong momentum (>7%)
                 daily_direction = "bullish" if opportunity.price_change_24h > 0 else "bearish"
-                signal_direction = ia1_signal.lower()
+                signal_direction = str(ia1_signal).lower()
                 
                 # High-risk case: Strong momentum + counter-signal + no technical extremes
                 if ((daily_direction == "bullish" and signal_direction == "short") or 
@@ -4972,7 +4972,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         """
         try:
             # Neutraliser si signal HOLD ou données manquantes
-            if ia1_signal.lower() == 'hold' or abs(market_cap_change_24h) < 0.1:
+            if str(ia1_signal).lower() == 'hold' or abs(market_cap_change_24h) < 0.1:
                 return 0.0
             
             # Facteur d'intensité basé sur l'ampleur de la variation Market Cap
@@ -4980,7 +4980,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             intensity_factor = min(abs(market_cap_change_24h) / 5.0, 1.0)  # Cap à 5% pour max intensity
             
             # LOGIQUE PRINCIPALE: Alignement signal vs Market Cap momentum
-            if ia1_signal.lower() == 'long':
+            if str(ia1_signal).lower() == 'long':
                 # Position LONG
                 if market_cap_change_24h > 0:
                     # Market Cap monte → BONUS pour LONG (avec la tendance)
@@ -4993,7 +4993,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     logger.info(f"🔴 LONG + Market Cap {market_cap_change_24h:.2f}% → MALUS {malus_score:+.3f}")
                     return malus_score
                     
-            elif ia1_signal.lower() == 'short':
+            elif str(ia1_signal).lower() == 'short':
                 # Position SHORT
                 if market_cap_change_24h < 0:
                     # Market Cap baisse → BONUS pour SHORT (avec la tendance)
@@ -5512,13 +5512,13 @@ class UltraProfessionalIA2DecisionAgent:
             
             # IA2 will calculate her own levels in the prompt, we just set defaults
             # These will be overridden by IA2's analysis
-            if ia1_signal.lower() == "long":
+            if str(ia1_signal).lower() == "long":
                 signal = "long"
                 stop_loss = entry_price * 0.96  # Default 4% SL
                 tp1 = entry_price * 1.10  # Default 10% TP for 2.5:1 RR
                 tp2 = entry_price * 1.15
                 tp3 = entry_price * 1.20
-            elif ia1_signal.lower() == "short":
+            elif str(ia1_signal).lower() == "short":
                 signal = "short"
                 stop_loss = entry_price * 1.04  # Default 4% SL
                 tp1 = entry_price * 0.90  # Default 10% TP for 2.5:1 RR
@@ -6116,7 +6116,7 @@ async def test_voie3_escalation_logic():
             analysis = scenario["analysis"]
             
             # Reproduire la logique de _should_send_to_ia2
-            ia1_signal = analysis.ia1_signal.lower()
+            ia1_signal = analysis.str(ia1_signal).lower()
             risk_reward_ratio = analysis.risk_reward_ratio
             confidence = analysis.analysis_confidence
             
@@ -10234,7 +10234,7 @@ class UltraProfessionalOrchestrator:
         - POSITION: RR > 2.5 (higher threshold)
         """
         try:
-            ia1_signal = analysis.ia1_signal.lower()
+            ia1_signal = analysis.str(ia1_signal).lower()
             confidence = analysis.analysis_confidence
             rr_ratio = analysis.risk_reward_ratio
             
