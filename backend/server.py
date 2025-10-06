@@ -2193,24 +2193,24 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             fibonacci_formatted = fibonacci_calculator.get_fibonacci_for_prompt(fibonacci_levels)
             logger.info(f"🔢 FIBONACCI calculated for {opportunity.symbol}: {fibonacci_levels.trend_direction} trend, current at {fibonacci_levels.current_level_percentage:.1f}% ({fibonacci_levels.nearest_level})")
             
-            # ✅ EXTRACT ALL INDICATORS from simple_indicators_data (working calculations)
-            rsi = simple_indicators_data.get('rsi')
-            macd_signal = simple_indicators_data.get('macd_signal')
-            macd_line = simple_indicators_data.get('macd_line')
-            macd_histogram = simple_indicators_data.get('macd_histogram')
-            stochastic_k = simple_indicators_data.get('stochastic_k')
-            stochastic_d = simple_indicators_data.get('stochastic_d')
-            bb_position = simple_indicators_data.get('bb_position')
-            adx = 25.0  # Default ADX (not in simple indicators yet)
-            atr = simple_indicators_data.get('atr')
-            vwap = simple_indicators_data.get('vwap')
-            vwap_position = simple_indicators_data.get('vwap_distance')  # ✅ Use VWAP distance instead of MFI
-            volume_ratio = simple_indicators_data.get('volume_ratio')
-            volume_trend = simple_indicators_data.get('volume_trend')
-            volume_surge = simple_indicators_data.get('volume_surge')
+            # ✅ EXTRACT ALL INDICATORS from TALib Professional Analysis (IA1 v6.0 Complete System)
+            rsi = talib_analysis.rsi_14
+            macd_signal = talib_analysis.macd_signal
+            macd_line = talib_analysis.macd_line
+            macd_histogram = talib_analysis.macd_histogram
+            stochastic_k = talib_analysis.stoch_k
+            stochastic_d = talib_analysis.stoch_d
+            bb_position = talib_analysis.bb_position
+            adx = talib_analysis.adx  # ✅ Real ADX with Wilder method
+            atr = talib_analysis.atr
+            vwap = talib_analysis.vwap
+            vwap_position = talib_analysis.vwap_distance  # ✅ Real VWAP distance
+            volume_ratio = talib_analysis.volume_ratio
+            volume_trend = talib_analysis.volume_trend
+            volume_surge = talib_analysis.volume_surge
             
-            # ✅ USE VWAP DISTANCE AS MFI REPLACEMENT (no separate MFI calculation needed)
-            mfi = vwap_position  # VWAP distance serves as volume-price momentum indicator
+            # ✅ USE REAL MFI from TALib (not VWAP replacement)
+            mfi = talib_analysis.mfi  # Real Money Flow Index from TALib
             
             logger.info(f"✅ ALL INDICATORS EXTRACTED from simple_indicators_data for {opportunity.symbol}")
             
