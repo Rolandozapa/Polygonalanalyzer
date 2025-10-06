@@ -3673,8 +3673,7 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
-            logger.info(f"   📊 Indicateurs: RSI={rsi:.2f if rsi else 'N/A'} | MACD={macd_signal:.6f if macd_signal else 'N/A'} | Stoch={stochastic_k:.2f if stochastic_k else 'N/A'} | BB={bb_position:.4f if bb_position else 'N/A'}")
-            # Fix: Split the conditional formatting
+            # Fix: Split the conditional formatting properly
             rsi_str = f"{rsi:.2f}" if rsi else 'N/A'
             macd_str = f"{macd_signal:.6f}" if macd_signal else 'N/A'
             stoch_str = f"{stochastic_k:.2f}" if stochastic_k else 'N/A'
