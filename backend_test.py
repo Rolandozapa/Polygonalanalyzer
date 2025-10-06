@@ -67,7 +67,7 @@ class ExternalizedPromptMigrationTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Dynamic RR Integration at: {self.api_url}")
+        logger.info(f"Testing Externalized Prompt Migration at: {self.api_url}")
         
         # Test results
         self.test_results = []
@@ -76,20 +76,33 @@ class ExternalizedPromptMigrationTestSuite:
         self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']  # Preferred symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # New field names to validate (Phase 1 implementation)
-        self.new_field_names = ['trade_type', 'minimum_rr_threshold']
-        self.old_field_names = ['recommended_trade_type', 'minimum_rr_for_trade_type']  # Should not be used
-        
-        # Expected trade types and their RR thresholds
-        self.trade_type_rr_mapping = {
-            'SCALP': 1.0,
-            'INTRADAY': 1.5,
-            'SWING': 2.0,
-            'POSITION': 2.5
+        # Prompt files to validate
+        self.prompt_files = {
+            'ia1_v6_advanced': '/app/prompts/ia1_v6_advanced.json',
+            'ia2_strategic': '/app/prompts/ia2_strategic.json'
         }
         
-        # Valid trade types
-        self.valid_trade_types = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
+        # Expected IA1 variables (19 variables as mentioned in review request)
+        self.expected_ia1_variables = [
+            "symbol", "market_cap", "market_cap_rank", "current_price", "price_change_24h", "volume_24h",
+            "global_market_context", "rsi", "rsi_zone", "rsi_interpretation", "macd_line", "macd_signal", 
+            "macd_histogram", "stoch_k", "stoch_d", "adx", "adx_strength", "plus_di", "minus_di",
+            "trend_hierarchy", "ema_cross_signal", "mfi", "mfi_signal", "volume_ratio", "volume_trend",
+            "volume_surge", "bb_position", "bb_squeeze", "squeeze_intensity", "atr", "atr_pct",
+            "vwap", "vwap_distance", "sma_20", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
+            "confidence", "base_confidence", "technical_consistency", "combined_confidence",
+            "regime_persistence", "fresh_regime", "stability_score", "regime_transition_alert",
+            "confluence_grade", "confluence_score", "combined_multiplier", "should_trade"
+        ]
+        
+        # Expected IA2 variables (16 variables as mentioned in review request)
+        self.expected_ia2_variables = [
+            "symbol", "ia1_signal", "ia1_confidence", "ia1_rr", "ia1_reasoning", "current_price",
+            "price_change_24h", "volume_ratio", "ia1_entry", "ia1_stop", "ia1_target", "rsi",
+            "rsi_zone", "macd_histogram", "adx", "adx_strength", "bb_position", "vwap_distance",
+            "volume_surge", "regime", "regime_confidence", "regime_persistence", "fresh_regime",
+            "regime_transition_alert", "min_rr_threshold", "trade_type", "trade_duration"
+        ]
         
         # Technical analysis data storage
         self.technical_analyses = []
