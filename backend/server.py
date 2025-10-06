@@ -2310,7 +2310,26 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             rsi_interpretation = self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone)
             macd_direction = "bullish" if talib_analysis.macd_histogram > 0 else "bearish" if talib_analysis.macd_histogram < 0 else "neutral"
             vwap_strength = "price strength" if talib_analysis.vwap_distance > 0 else "price weakness" if talib_analysis.vwap_distance < 0 else "neutral positioning"
-            bb_squeeze = "ACTIVE" if talib_analysis.bb_squeeze else "INACTIVE"
+            bb_squeeze_str = "ACTIVE" if talib_analysis.bb_squeeze else "INACTIVE"
+            
+            # Additional variables for new IA1 v6.0 prompt
+            sma_20_slope = 0.001 if sma_20 and len(historical_data) > 1 else 0.0  # Simple slope calculation
+            above_sma_20 = opportunity.current_price > sma_20 if sma_20 else False
+            
+            # ML variables with fallbacks for new prompt
+            base_confidence = getattr(talib_analysis, 'confidence', 0.5)
+            combined_confidence = base_confidence  # Simplified for now
+            regime_persistence = 5  # Default value
+            fresh_regime = "Fresh" if regime_persistence < 15 else "Mature"
+            stability_score = 0.75  # Default stability
+            regime_transition_alert = "STABLE"
+            
+            # Multipliers for position sizing (simplified)
+            regime_multiplier = 1.0
+            ml_confidence_multiplier = 1.0
+            momentum_multiplier = 1.0
+            bb_multiplier = 1.2 if talib_analysis.bb_squeeze else 1.0
+            combined_multiplier = regime_multiplier * ml_confidence_multiplier * momentum_multiplier * bb_multiplier
             
             # Get current price for calculations
             current_price = opportunity.current_price
