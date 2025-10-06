@@ -10050,15 +10050,25 @@ class UltraProfessionalOrchestrator:
 
     async def _should_send_to_ia2(self, analysis: TechnicalAnalysis, opportunity: MarketOpportunity) -> bool:
         """
-        🎯 SIMPLIFIED IA2 ESCALATION LOGIC - 2 CLEAR PATHS
+        🎯 ADAPTIVE IA2 ESCALATION LOGIC - 2 CLEAR PATHS WITH TRADE TYPE ADAPTATION
         
         VOIE 1: Signal LONG/SHORT + Confiance > 95% → IA2 (High Confidence Override)
-        VOIE 2: Signal LONG/SHORT + RR > 2.0 → IA2 (Good Risk-Reward)
+        VOIE 2: Signal LONG/SHORT + RR > min_rr_for_trade_type → IA2 (Good Risk-Reward)
+        
+        Minimum RR adaptatif selon trade type:
+        - SCALP: RR > 1.0 (quick profits)
+        - INTRADAY: RR > 1.5 (moderate)
+        - SWING: RR > 2.0 (standard)
+        - POSITION: RR > 2.5 (higher threshold)
         """
         try:
             ia1_signal = analysis.ia1_signal.lower()
             confidence = analysis.analysis_confidence
             rr_ratio = analysis.risk_reward_ratio
+            
+            # Get adaptive minimum RR based on trade type
+            trade_type = getattr(analysis, 'recommended_trade_type', 'SWING')
+            min_rr_required = getattr(analysis, 'minimum_rr_for_trade_type', 2.0)
             
             # Must be LONG or SHORT signal (not HOLD)
             if ia1_signal not in ['long', 'short']:
@@ -10070,18 +10080,18 @@ class UltraProfessionalOrchestrator:
                 logger.info(f"🚀 IA2 ACCEPTED (VOIE 1 - HIGH CONFIDENCE): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%} (Override)")
                 return True
             
-            # 🎯 VOIE 2: Good Risk-Reward (>2.0:1)
-            if rr_ratio > 2.0:
-                logger.info(f"🚀 IA2 ACCEPTED (VOIE 2 - GOOD RR): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%}, RR {rr_ratio:.2f}:1")
+            # 🎯 VOIE 2: Good Risk-Reward (adaptive threshold)
+            if rr_ratio > min_rr_required:
+                logger.info(f"🚀 IA2 ACCEPTED (VOIE 2 - GOOD RR): {opportunity.symbol} - {ia1_signal.upper()} {confidence:.1%}, RR {rr_ratio:.2f}:1 > {min_rr_required:.1f} ({trade_type})")
                 return True
             
             # Not eligible for IA2
-            if confidence <= 0.95 and rr_ratio <= 2.0:
-                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} Conf {confidence:.1%}<95% AND RR {rr_ratio:.2f}<2.0")
+            if confidence <= 0.95 and rr_ratio <= min_rr_required:
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} Conf {confidence:.1%}<95% AND RR {rr_ratio:.2f}<{min_rr_required:.1f} ({trade_type})")
             elif confidence <= 0.95:
                 logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} Conf {confidence:.1%}<95%")
             else:
-                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} RR {rr_ratio:.2f}<2.0")
+                logger.info(f"❌ IA2 REJECTED: {opportunity.symbol} - {ia1_signal.upper()} RR {rr_ratio:.2f}<{min_rr_required:.1f} ({trade_type})")
             
             return False
             
