@@ -2215,8 +2215,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_oversold = vwap_distance < -2.0
             vwap_extreme_overbought = vwap_distance > 3.0
             vwap_extreme_oversold = vwap_distance < -3.0
-            vwap_extreme_overbought = indicators.vwap_extreme_overbought
-            vwap_extreme_oversold = indicators.vwap_extreme_oversold
             
             # 🚀 MULTI EMA/SMA TREND HIERARCHY - THE CONFLUENCE BEAST FINAL PIECE! 🚀
             ema_9 = indicators.ema_9
