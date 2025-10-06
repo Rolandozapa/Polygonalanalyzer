@@ -3536,7 +3536,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "vwap_strength": "price strength" if talib_analysis.vwap_distance > 0 else "price weakness" if talib_analysis.vwap_distance < 0 else "neutral positioning",
                 "confluence_grade": talib_analysis.confluence_grade,
                 "confluence_score": talib_analysis.confluence_score,
-                "conviction_level": talib_analysis.conviction_level
+                "conviction_level": talib_analysis.conviction_level,
                 "macd_histogram": macd_histogram,  # Keep MACD histogram
                 "stochastic": stochastic_k,
                 "stochastic_d": stochastic_d,
