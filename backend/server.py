@@ -3612,16 +3612,23 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     }}
                 })
                 
+                # Safe extraction of regime
+                regime_value = getattr(current_context, 'current_regime', None)
+                if regime_value and hasattr(regime_value, 'value'):
+                    regime_str = regime_value.value
+                else:
+                    regime_str = "CONSOLIDATION"  # Default fallback
+                
                 # Apply AI enhancements to IA1 analysis
                 enhanced_analysis_dict = ai_performance_enhancer.enhance_ia1_analysis(
                     analysis.dict(), 
-                    current_context.current_regime.value
+                    regime_str
                 )
                 
                 # 🎯 NOUVEAU: Amélioration avec les figures chartistes
                 enhanced_analysis_dict = ai_performance_enhancer.enhance_ia1_analysis_with_chartist(
                     enhanced_analysis_dict,
-                    current_context.current_regime.value
+                    regime_str
                 )
                 
                 # Update analysis with enhancements
