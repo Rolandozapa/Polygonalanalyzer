@@ -2288,9 +2288,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # ✅ ALL INDICATORS EXTRACTED FROM simple_indicators_data
             # Volume analysis (already extracted above)
             # EMAs and trend hierarchy (from simple indicators)
-            # ✅ EMAs and trend from TALib Professional Analysis
+            # ✅ EMAs and SMAs from TALib Professional Analysis
             ema_9 = talib_analysis.ema_9
             ema_21 = talib_analysis.ema_21
+            sma_20 = talib_analysis.sma_20
             sma_50 = talib_analysis.sma_50
             ema_200 = talib_analysis.ema_200
             trend_hierarchy = talib_analysis.trend_hierarchy
