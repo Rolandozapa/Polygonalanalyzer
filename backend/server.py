@@ -3689,7 +3689,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     fallback_ema_hier = trend_hierarchy if 'trend_hierarchy' in locals() and trend_hierarchy is not None else None
                     fallback_ema_strength = trend_strength_score if 'trend_strength_score' in locals() and trend_strength_score != 0.5 else 0.5
                     
-                    logger.info(f"🔥 FALLBACK WITH CALCULATED INDICATORS for {opportunity.symbol}: RSI={fallback_rsi:.1f}, MFI={fallback_mfi:.1f}, VWAP={fallback_vwap_pos:+.2f}%")
+                    # ✅ SAFE LOGGING - Handle None fallback values
+                    rsi_fb_disp = f"{fallback_rsi:.1f}" if fallback_rsi is not None else "N/A"
+                    mfi_fb_disp = f"{fallback_mfi:.1f}" if fallback_mfi is not None else "N/A"
+                    vwap_fb_disp = f"{fallback_vwap_pos:+.2f}%" if fallback_vwap_pos is not None else "N/A"
+                    logger.info(f"🔥 FALLBACK WITH CALCULATED INDICATORS for {opportunity.symbol}: RSI={rsi_fb_disp}, MFI={mfi_fb_disp}, VWAP={vwap_fb_disp}")
                     
                     # 🚨 CRITICAL FIX: Handle confidence format properly
                     raw_confidence = float(ia1_complete_json.get('confidence', 70))
