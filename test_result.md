@@ -196,7 +196,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dynamic RR Integration Field Names Fix"
+    - "Externalized Prompt Migration Complete"
   stuck_tasks:
     []
   test_all: false
