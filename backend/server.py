@@ -2524,6 +2524,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'vwap': vwap or opportunity.current_price,
                 'vwap_distance': vwap_distance or 0.0,
                 'sma_20': sma_20 or opportunity.current_price,
+                'sma_20_slope': sma_20_slope,  # 🆕 SMA20 slope (absolute change per period)
+                'sma_20_slope_pct': sma_20_slope_pct,  # 🆕 SMA20 slope as percentage
+                'above_sma_20': above_sma_20,  # 🆕 Price above SMA20 flag
                 'sma_50': sma_50 or opportunity.current_price,
                 'ema_9': ema_9 or opportunity.current_price,
                 'ema_21': ema_21 or opportunity.current_price,
