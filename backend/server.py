@@ -3398,11 +3398,16 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "ema_21": ema_21 or real_current_price,  # Real EMA 21 from TALib
                 "ema_200": ema_200 or real_current_price, # Real EMA 200 from TALib
                 
-                # Volume and advanced indicators
-                "volume_ratio": volume_ratio or 1.0,
-                "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)" if volume_trend else "1.0x",
-                "mfi_value": mfi,  # Real MFI from TALib
-                "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
+                # Volume and advanced indicators (REAL TALIB VALUES)
+                "volume_ratio": talib_analysis.volume_ratio,  # Real TALib volume ratio
+                "volume_analysis": f"{talib_analysis.volume_trend} ({talib_analysis.volume_ratio:.1f}x)",
+                "mfi_value": talib_analysis.mfi,  # Real MFI from TALib
+                "mfi_signal": talib_analysis.mfi_signal,  # Real MFI signal
+                # ATR Volatility indicators
+                "atr": talib_analysis.atr,  # Real ATR absolute
+                "atr_percentage": talib_analysis.atr_pct,  # Real ATR percentage
+                # VWAP Distance (real calculated)
+                "vwap_distance": talib_analysis.vwap_distance,  # Real VWAP distance
                 
                 # ML Regime and confidence (REAL TALIB VALUES)
                 "regime": talib_analysis.regime,
