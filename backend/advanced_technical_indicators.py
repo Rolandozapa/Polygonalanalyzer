@@ -120,11 +120,13 @@ class MarketRegimeDetailed(Enum):
 class AdvancedRegimeDetector:
     """
     Advanced market regime detector with 10 detailed classifications
+    Enhanced with dynamic thresholds, persistence tracking, and transition detection
     """
     
-    def __init__(self, lookback_period: int = 50):
+    def __init__(self, lookback_period: int = 50, persistence_length: int = 5):
         self.lookback_period = lookback_period
-        self.regime_history = []
+        self.persistence_length = persistence_length
+        self.regime_history = []  # Track last N regimes for persistence
     
     def detect_detailed_regime(self, df: pd.DataFrame) -> Dict:
         """Main regime detection with full analysis"""
