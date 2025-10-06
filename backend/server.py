@@ -1702,7 +1702,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
             if abs(price_change_24h) > 5.0:  # Strong daily momentum
                 daily_direction = "BULLISH" if price_change_24h > 0 else "BEARISH"
                 if timeframe_analysis["decisive_pattern"]:
-                    pattern_direction = "BULLISH" if "bullish" in timeframe_analysis["decisive_pattern"].lower() else "BEARISH"
+                    pattern_direction = "BULLISH" if "bullish" in str(timeframe_analysis["decisive_pattern"]).lower() else "BEARISH"
                     if daily_direction != pattern_direction:
                         anti_momentum_warning = True
                         timeframe_analysis["anti_momentum_risk"] = "HIGH"
