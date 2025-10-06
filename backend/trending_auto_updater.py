@@ -90,6 +90,26 @@ class TrendingAutoUpdater:
         asyncio.create_task(self._startup_data_fetch())
         logger.info("⏰ Regular trending updates will continue every 4 hours")
     
+    async def _startup_data_fetch(self):
+        """Lightweight startup data fetch to ensure immediate availability"""
+        try:
+            # Wait 30 seconds for system to fully initialize
+            await asyncio.sleep(30)
+            logger.info("🚀 STARTUP: Beginning lightweight BingX data fetch...")
+            
+            # Perform a quick update to populate cache
+            trending_cryptos = await self.fetch_trending_cryptos()
+            if trending_cryptos:
+                self.current_trending = trending_cryptos
+                self.last_update = datetime.now(timezone.utc)
+                logger.info(f"✅ STARTUP SUCCESS: Cached {len(trending_cryptos)} BingX opportunities for immediate availability")
+            else:
+                logger.warning("⚠️ STARTUP: BingX data fetch returned empty - will retry in regular cycle")
+                
+        except Exception as e:
+            logger.error(f"❌ STARTUP: Error in initial BingX data fetch: {e}")
+            logger.info("⏰ Will retry in regular 4-hour cycle")
+
     async def stop_auto_update(self):
         """Arrête le système d'auto-update"""
         self.is_running = False
