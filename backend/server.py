@@ -3654,12 +3654,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🚨 SI IA1 JSON a été généré avec succès mais erreur technique, essayer de sauver l'analyse
             if 'ia1_complete_json' in locals() and ia1_complete_json and 'analysis' in ia1_complete_json:
                 try:
-                    # 🚀 CRITICAL FIX: Use calculated technical indicators even in fallback
-                    fallback_rsi = rsi if 'rsi' in locals() and rsi != 50.0 else 50.0
-                    fallback_macd = indicators.macd_line if hasattr(indicators, 'macd_line') and indicators.macd_line != 0.0 else 0.0
-                    fallback_stoch_k = stochastic_k if 'stochastic_k' in locals() and stochastic_k != 50.0 else 50.0
-                    fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d != 50.0 else 50.0
-                    fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position != 0.0 else 0.0
+                    # 🚨 STRICT VALIDATION: Use calculated indicators or None - NO FALLBACK VALUES
+                    fallback_rsi = rsi if 'rsi' in locals() and rsi is not None else None
+                    fallback_macd = indicators.macd_line if hasattr(indicators, 'macd_line') and indicators.macd_line is not None else None
+                    fallback_stoch_k = stochastic_k if 'stochastic_k' in locals() and stochastic_k is not None else None
+                    fallback_stoch_d = stochastic_d if 'stochastic_d' in locals() and stochastic_d is not None else None
+                    fallback_bb_pos = bb_position if 'bb_position' in locals() and bb_position is not None else None
                     
                     # 🚨 DEBUG: Log fallback MACD values
                     logger.warning(f"🚨 FALLBACK ANALYSIS for {opportunity.symbol}: fallback_macd={fallback_macd:.8f} (original macd_signal={macd_signal if 'macd_signal' in locals() else 'not_found'})")
