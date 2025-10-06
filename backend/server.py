@@ -5880,7 +5880,7 @@ CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. 
                 decision_data = json.loads(clean_response)
                 
                 # Extract Claude's enhanced strategic decision
-                claude_signal = decision_data.get("signal", signal).lower()  # Ensure lowercase for enum
+                claude_signal = str(decision_data.get("signal", signal)).lower()  # Ensure lowercase for enum
                 claude_confidence = decision_data.get("confidence", 0.75)
                 # 🔧 FIX: Claude returns "reasoning", not "strategic_reasoning"
                 strategic_reasoning = decision_data.get("reasoning", decision_data.get("strategic_reasoning", "IA2 strategic analysis"))
