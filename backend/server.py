@@ -3473,10 +3473,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "multi_timeframe_dominant": multi_tf_indicators.get('dominant_timeframe', 'DAILY'),
                 "multi_timeframe_pattern": multi_tf_indicators.get('decisive_pattern', 'NEUTRAL'),
                 "multi_timeframe_confidence": multi_tf_indicators.get('hierarchy_confidence', 0.5),
-                # 🎯 DYNAMIC RR INTEGRATION FIELDS (Phase 1)
-                "trade_type": getattr(indicators, 'trade_type', 'SWING'),
-                "minimum_rr_threshold": getattr(indicators, 'minimum_rr_threshold', 2.0),
-                "trade_duration_estimate": getattr(indicators, 'trade_duration_estimate', '1-7 days'),
+                # 🎯 DYNAMIC RR INTEGRATION FIELDS (Phase 1)  
+                "trade_type": trade_type_value,
+                "minimum_rr_threshold": min_rr_value,
+                "trade_duration_estimate": duration_value,
                 "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
             })
             logger.info(f"🔍 AFTER UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
