@@ -3406,8 +3406,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # ATR Volatility indicators
                 "atr": talib_analysis.atr,  # Real ATR absolute
                 "atr_percentage": talib_analysis.atr_pct,  # Real ATR percentage
-                # VWAP Distance (real calculated)
-                "vwap_distance": talib_analysis.vwap_distance,  # Real VWAP distance
+                # VWAP Distance (real calculated with safe fallback)
+                "vwap_distance": talib_analysis.vwap_distance if hasattr(talib_analysis, 'vwap_distance') and talib_analysis.vwap_distance is not None else 0.0,
                 
                 # ML Regime and confidence (REAL TALIB VALUES with safe access)
                 "regime": talib_analysis.regime,
