@@ -2183,12 +2183,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # ÉTAPE 6: Toutes les validations passées - APPEL IA1 justifié
             logger.info(f"🚀 IA1 ANALYSE JUSTIFIÉE pour {opportunity.symbol} - Données cohérentes + mouvement directionnel/patterns")
             
-            # 🚀 CALCULATE PROFESSIONAL INDICATORS WITH TALIB (IA1 v6.0 System)
-            from professional_indicators_talib import ProfessionalIndicatorsTALib
-            logger.info(f"📊 Calculating PROFESSIONAL TALib indicators for {opportunity.symbol}")
+            # 🚀 NEW TALIB INDICATORS SYSTEM - PROFESSIONAL GRADE (IA1 v6.0 System)
+            logger.info(f"📊 Calculating NEW TALib indicators system for {opportunity.symbol}")
             
-            professional_indicators = ProfessionalIndicatorsTALib()
-            talib_analysis = professional_indicators.calculate_all_indicators(historical_data, opportunity.symbol)
+            # Use the new modular TALib indicators system
+            talib_indicators = get_talib_indicators()
+            talib_analysis = talib_indicators.calculate_all_indicators(historical_data, opportunity.symbol)
             
             # 🚨 MULTI-TF DISABLED (will be re-enabled when system is stable)
             multi_tf_formatted = "Multi-timeframe analysis disabled - using simple direct calculations"
