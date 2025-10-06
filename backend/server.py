@@ -5524,8 +5524,8 @@ Your response MUST be ONLY a valid JSON object:
                 'trade_duration': trade_duration_estimate if 'trade_duration_estimate' in locals() else 'Undefined'
             }
             
-            # 🚀 USE EXTERNALIZED IA2 STRATEGIC PROMPT
-            strategic_prompt = prompt_manager.format_prompt('ia2_strategic', ia2_prompt_variables)
+            # 🚀 USE EXTERNALIZED IA2 v3.0 ULTRA STRATEGIC PROMPT
+            strategic_prompt = prompt_manager.format_prompt('ia2_v3_strategic_ultra', ia2_prompt_variables)
             
             if not strategic_prompt:
                 logger.error(f"❌ Failed to load externalized IA2 prompt, falling back to basic prompt")
