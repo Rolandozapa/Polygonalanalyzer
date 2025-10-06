@@ -2872,7 +2872,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         macd_line, macd_signal, macd_histogram = calculate_macd_optimized(historical_data[close_col])
                         logger.info(f"   🚀 MACD optimized: Line={macd_line:.8f}, Signal={macd_signal:.8f}, Histogram={macd_histogram:.8f}")
                     else:
-                        macd_line, macd_signal, macd_histogram = 0.0, 0.0, 0.0
+                        # 🚨 NO FALLBACK VALUES - Let system handle missing MACD gracefully
+                        macd_line, macd_signal, macd_histogram = None, None, None
+                        logger.error(f"🚨 MACD calculation failed for {opportunity.symbol} - Using None values instead of 0.0 fallbacks")
                     
                     # 🚨 CALCUL STOCHASTIC (14, 3, 3)
                     # 🔧 FIX: Handle column name variations
