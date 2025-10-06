@@ -2207,6 +2207,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             talib_indicators = get_talib_indicators()
             talib_analysis = talib_indicators.calculate_all_indicators(historical_data, opportunity.symbol)
             
+            # 🔍 DEBUG: Check if TALib analysis was successful
+            if talib_analysis:
+                logger.info(f"✅ TALib analysis SUCCESS for {opportunity.symbol}: {type(talib_analysis).__name__}")
+                logger.info(f"   📊 Sample values: RSI={getattr(talib_analysis, 'rsi_14', 'Missing')}, VWAP=${getattr(talib_analysis, 'vwap', 'Missing')}")
+            else:
+                logger.error(f"❌ TALib analysis FAILED for {opportunity.symbol}! calculate_all_indicators returned None")
+                logger.error(f"   📊 Historical data shape: {historical_data.shape if not historical_data.empty else 'EMPTY'}")
+            
             # 🚨 MULTI-TF DISABLED (will be re-enabled when system is stable)
             multi_tf_formatted = "Multi-timeframe analysis disabled - using simple direct calculations"
             
