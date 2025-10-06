@@ -404,6 +404,108 @@ class AdvancedRegimeDetector:
         }
         return implications.get(regime, ["Standard strategy recommended"])
     
+    def _assess_regime_persistence(self, current_regime: MarketRegimeDetailed) -> float:
+        """
+        Assess regime persistence over recent history
+        Returns score 0-1 (1 = high persistence, 0 = unstable)
+        """
+        if len(self.regime_history) < 2:
+            return 0.5  # Neutral if no history
+        
+        # Count how many recent regimes match current
+        recent = self.regime_history[-min(len(self.regime_history), self.persistence_length):]
+        same_count = sum(1 for r in recent if r == current_regime)
+        persistence = same_count / len(recent)
+        
+        return persistence
+    
+    def _detect_regime_transition(self, current_regime: MarketRegimeDetailed, 
+                                  previous_regime: MarketRegimeDetailed,
+                                  indicators: Dict) -> Optional[MarketRegimeDetailed]:
+        """
+        Detect transitions between regimes (especially breakouts from consolidation)
+        Returns new regime if transition detected, None otherwise
+        """
+        # Breakout from consolidation
+        if previous_regime in [MarketRegimeDetailed.CONSOLIDATION, 
+                              MarketRegimeDetailed.RANGING_TIGHT]:
+            
+            # Check for volume surge + volatility expansion
+            if (indicators['volume_ratio'] > 1.5 and 
+                indicators.get('bb_expansion', False) and
+                abs(indicators['macd_histogram']) > 0.5):
+                
+                # Determine breakout direction
+                if (indicators['macd_histogram'] > 0 and 
+                    indicators['sma_20_slope'] > 0 and
+                    indicators['above_sma_20']):
+                    return MarketRegimeDetailed.BREAKOUT_BULLISH
+                
+                elif (indicators['macd_histogram'] < 0 and 
+                      indicators['sma_20_slope'] < 0 and
+                      not indicators['above_sma_20']):
+                    return MarketRegimeDetailed.BREAKOUT_BEARISH
+        
+        # Reversal from strong trend to consolidation
+        if previous_regime in [MarketRegimeDetailed.TRENDING_UP_STRONG,
+                              MarketRegimeDetailed.TRENDING_DOWN_STRONG]:
+            if (indicators['adx'] < 20 and 
+                indicators.get('bb_squeeze', False) and
+                abs(indicators['sma_20_slope']) < 0.001):
+                return MarketRegimeDetailed.CONSOLIDATION
+        
+        return None
+    
+    def _calculate_signal_consistency(self, indicators: Dict) -> float:
+        """
+        Calculate consistency between different indicators
+        Returns score 0-1 (1 = all signals aligned, 0 = conflicting)
+        """
+        consistency_score = 0.0
+        total_checks = 0
+        
+        # 1. Trend consistency (ADX + SMA alignment)
+        if indicators['adx'] > 20:
+            if indicators['sma_20_slope'] > 0 and indicators['above_sma_20']:
+                consistency_score += 1.0
+            elif indicators['sma_20_slope'] < 0 and not indicators['above_sma_20']:
+                consistency_score += 1.0
+            else:
+                consistency_score += 0.3  # Partial alignment
+        else:
+            consistency_score += 0.5  # Neutral for ranging
+        total_checks += 1
+        
+        # 2. Momentum consistency (RSI + MACD alignment)
+        rsi_bullish = indicators['rsi'] > 50
+        macd_bullish = indicators['macd_histogram'] > 0
+        if rsi_bullish == macd_bullish:
+            consistency_score += 1.0
+        else:
+            consistency_score += 0.2  # Slight misalignment penalty
+        total_checks += 1
+        
+        # 3. Volume consistency (Volume confirms price movement)
+        if indicators['volume_ratio'] > 1.2:
+            if indicators['sma_20_slope'] * indicators['macd_histogram'] > 0:
+                consistency_score += 1.0  # Volume confirms direction
+            else:
+                consistency_score += 0.4  # Volume but conflicting signals
+        else:
+            consistency_score += 0.6  # Normal volume, neutral
+        total_checks += 1
+        
+        # 4. Volatility consistency
+        if 0.8 < indicators['volatility_ratio'] < 1.5:
+            consistency_score += 1.0  # Normal volatility
+        elif indicators['volatility_ratio'] > 1.5 and indicators.get('bb_expansion', False):
+            consistency_score += 0.8  # High but expanding (expected)
+        else:
+            consistency_score += 0.5  # Unusual volatility
+        total_checks += 1
+        
+        return consistency_score / total_checks
+    
     # Helper calculation methods
     def _calculate_slope(self, series: pd.Series) -> float:
         """Calculate slope of a series"""
