@@ -256,6 +256,7 @@ class TALibIndicators:
                 ema_9=ma_indicators['ema_9'],
                 ema_21=ma_indicators['ema_21'],
                 ema_50=ma_indicators['ema_50'],
+                ema_200=ma_indicators['ema_200'],
                 
                 # Trend Analysis
                 trend_hierarchy=ma_indicators['trend_hierarchy'],
