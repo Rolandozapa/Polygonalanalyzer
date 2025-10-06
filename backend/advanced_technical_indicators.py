@@ -461,6 +461,58 @@ class AdvancedRegimeDetector:
         
         return persistence
     
+    def _calculate_stability_score(self) -> float:
+        """
+        v4: Calculate stability score based on regime changes frequency
+        Returns: 0-1 (1 = stable, 0 = very unstable)
+        """
+        if len(self.regime_history) < 10:
+            return 0.5  # Neutral if insufficient history
+        
+        # Count regime changes in last 20 bars
+        recent_history = self.regime_history[-20:] if len(self.regime_history) >= 20 else self.regime_history
+        changes = sum(1 for i in range(1, len(recent_history)) 
+                     if recent_history[i] != recent_history[i-1])
+        
+        # Score inversely proportional to changes
+        # 0 changes = 1.0 (very stable)
+        # 10+ changes = 0.0 (very unstable)
+        stability = max(0.0, 1.0 - (changes / 10.0))
+        return stability
+    
+    def _update_regime_history(self, regime: MarketRegimeDetailed):
+        """Update regime history and bar count"""
+        self.regime_history.append(regime)
+        self.bar_count += 1
+        
+        # Keep last 200 regimes
+        if len(self.regime_history) > 200:
+            self.regime_history.pop(0)
+    
+    def _detect_regime_transition_v4(self) -> str:
+        """
+        v4: Enhanced transition detection
+        Returns: STABLE, EARLY_WARNING, IMMINENT_CHANGE, INSUFFICIENT_DATA
+        """
+        if len(self.regime_history) < 5:
+            return "INSUFFICIENT_DATA"
+        
+        recent = self.regime_history[-5:]
+        
+        # All 5 identical = stable
+        if len(set(recent)) == 1:
+            return "STABLE"
+        
+        # Last 3 all different = imminent change
+        if len(set(recent[-3:])) == 3:
+            return "IMMINENT_CHANGE"
+        
+        # Last 2 different from rest = early warning
+        if recent[-1] != recent[-2] or recent[-2] != recent[-3]:
+            return "EARLY_WARNING"
+        
+        return "STABLE"
+    
     def _detect_regime_transition(self, current_regime: MarketRegimeDetailed, 
                                   previous_regime: MarketRegimeDetailed,
                                   indicators: Dict) -> Optional[MarketRegimeDetailed]:
