@@ -136,9 +136,11 @@ class ProfessionalIndicatorsTALib:
         Retourne une analyse complète pour IA1 v6.0
         """
         try:
-            if len(df) < 50:
-                logger.warning(f"⚠️ Insufficient data for {symbol}: {len(df)} < 50 bars")
+            if len(df) < 26:  # Minimum for MACD (26 periods)
+                logger.warning(f"⚠️ Insufficient data for {symbol}: {len(df)} < 26 bars")
                 return self._create_minimal_analysis(df, symbol)
+            elif len(df) < 50:
+                logger.info(f"   📊 Limited data for {symbol}: {len(df)} bars (< 50 optimal). Using adaptive calculations.")
             
             logger.info(f"🔬 Calculating professional indicators for {symbol} with {len(df)} bars")
             
