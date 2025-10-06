@@ -3434,6 +3434,18 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={indicators.macd_line}, Signal={indicators.macd_signal}, Histogram={indicators.macd_histogram}")
             logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={indicators.macd_line} as macd_signal for {opportunity.symbol}")
             logger.info(f"🔍 BEFORE UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
+            
+            # 🔍 DEBUG: Check indicators object attributes before extraction
+            logger.info(f"🔍 DEBUG INDICATORS OBJECT for {opportunity.symbol}: {type(indicators)}")
+            logger.info(f"🔍 DEBUG: hasattr trade_type: {hasattr(indicators, 'trade_type')}")
+            logger.info(f"🔍 DEBUG: hasattr minimum_rr_threshold: {hasattr(indicators, 'minimum_rr_threshold')}")
+            
+            trade_type_value = getattr(indicators, 'trade_type', 'SWING')
+            min_rr_value = getattr(indicators, 'minimum_rr_threshold', 2.0)
+            duration_value = getattr(indicators, 'trade_duration_estimate', '1-7 days')
+            
+            logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
+            
             analysis_data.update({
                 "rsi": rsi,
                 "macd_signal": indicators.macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
