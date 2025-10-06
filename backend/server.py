@@ -79,6 +79,11 @@ from trending_auto_updater import trending_auto_updater
 from technical_pattern_detector import technical_pattern_detector, TechnicalPattern
 from enhanced_ohlcv_fetcher import enhanced_ohlcv_fetcher
 
+# Import prompt manager for externalized prompts
+import sys
+sys.path.append('/app')
+from prompts.prompt_manager import prompt_manager
+
 # 🚨 CACHE ANTI-DOUBLON GLOBAL (persistant entre appels API)
 GLOBAL_ANALYZED_SYMBOLS_CACHE = set()
 
