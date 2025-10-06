@@ -445,6 +445,246 @@ class DynamicRRIntegrationTestSuite:
         except Exception as e:
             self.log_test_result("Field Name Validation", False, f"Exception: {str(e)}")
 
+    async def test_2_dynamic_rr_escalation_logic(self):
+        """Test 2: Dynamic RR Escalation Logic - Test _should_send_to_ia2 method uses new field names and dynamic thresholds"""
+        logger.info("\n🔍 TEST 2: Dynamic RR Escalation Logic")
+        
+        try:
+            escalation_results = {
+                'analyses_attempted': 0,
+                'analyses_successful': 0,
+                'ia2_escalations_triggered': 0,
+                'trade_type_scalp_count': 0,
+                'trade_type_intraday_count': 0,
+                'trade_type_swing_count': 0,
+                'trade_type_position_count': 0,
+                'dynamic_threshold_usage': 0,
+                'escalation_details': [],
+                'backend_escalation_logs': []
+            }
+            
+            logger.info("   🚀 Testing dynamic RR escalation logic with trade type adaptation...")
+            logger.info("   📊 Expected: Different RR thresholds based on trade type (SCALP: 1.0, INTRADAY: 1.5, SWING: 2.0)")
+            
+            # Get available symbols from scout system
+            logger.info("   📞 Getting available symbols from scout system...")
+            
+            try:
+                response = requests.get(f"{self.api_url}/opportunities", timeout=60)
+                
+                if response.status_code == 200:
+                    opportunities = response.json()
+                    if isinstance(opportunities, dict) and 'opportunities' in opportunities:
+                        opportunities = opportunities['opportunities']
+                    
+                    # Get more symbols to increase chance of different trade types
+                    available_symbols = [opp.get('symbol') for opp in opportunities[:15] if opp.get('symbol')]
+                    
+                    # Select diverse symbols that might generate different trade types
+                    test_symbols = []
+                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT', 'DOTUSDT']
+                    
+                    for symbol in preferred_symbols:
+                        if symbol in available_symbols:
+                            test_symbols.append(symbol)
+                    
+                    # Fill remaining slots with available symbols
+                    for symbol in available_symbols:
+                        if symbol not in test_symbols and len(test_symbols) < 5:
+                            test_symbols.append(symbol)
+                    
+                    self.actual_test_symbols = test_symbols[:5]  # Test up to 5 symbols
+                    logger.info(f"      ✅ Test symbols selected: {self.actual_test_symbols}")
+                    
+                else:
+                    logger.warning(f"      ⚠️ Could not get opportunities, using default symbols")
+                    self.actual_test_symbols = self.test_symbols
+                    
+            except Exception as e:
+                logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
+                self.actual_test_symbols = self.test_symbols
+            
+            # Test each symbol for dynamic RR escalation
+            for symbol in self.actual_test_symbols:
+                logger.info(f"\n   📞 Testing dynamic RR escalation for {symbol}...")
+                escalation_results['analyses_attempted'] += 1
+                
+                try:
+                    start_time = time.time()
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=120
+                    )
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        escalation_results['analyses_successful'] += 1
+                        
+                        logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
+                        
+                        # Extract IA1 analysis data
+                        ia1_analysis = analysis_data.get('ia1_analysis', {})
+                        if not isinstance(ia1_analysis, dict):
+                            ia1_analysis = {}
+                        
+                        # Extract key fields for escalation logic
+                        trade_type = ia1_analysis.get('trade_type', 'SWING')
+                        minimum_rr_threshold = ia1_analysis.get('minimum_rr_threshold', 2.0)
+                        risk_reward_ratio = ia1_analysis.get('risk_reward_ratio', 1.0)
+                        ia1_signal = ia1_analysis.get('ia1_signal', 'hold')
+                        confidence = ia1_analysis.get('analysis_confidence', 0.5)
+                        
+                        logger.info(f"         📊 Escalation Data: trade_type={trade_type}, min_rr_threshold={minimum_rr_threshold}, actual_rr={risk_reward_ratio}, signal={ia1_signal}, confidence={confidence:.2f}")
+                        
+                        # Count trade types
+                        if trade_type == 'SCALP':
+                            escalation_results['trade_type_scalp_count'] += 1
+                        elif trade_type == 'INTRADAY':
+                            escalation_results['trade_type_intraday_count'] += 1
+                        elif trade_type == 'SWING':
+                            escalation_results['trade_type_swing_count'] += 1
+                        elif trade_type == 'POSITION':
+                            escalation_results['trade_type_position_count'] += 1
+                        
+                        # Check if dynamic threshold is being used correctly
+                        expected_threshold = self.trade_type_rr_mapping.get(trade_type, 2.0)
+                        if abs(minimum_rr_threshold - expected_threshold) < 0.5:
+                            escalation_results['dynamic_threshold_usage'] += 1
+                            logger.info(f"         ✅ Dynamic threshold correct: {minimum_rr_threshold} ≈ {expected_threshold} for {trade_type}")
+                        else:
+                            logger.warning(f"         ⚠️ Dynamic threshold incorrect: {minimum_rr_threshold} vs expected {expected_threshold} for {trade_type}")
+                        
+                        # Determine if IA2 escalation should occur based on logic
+                        should_escalate_confidence = confidence > 0.95
+                        should_escalate_rr = risk_reward_ratio > minimum_rr_threshold
+                        should_escalate_signal = ia1_signal.lower() in ['long', 'short']
+                        should_escalate = should_escalate_signal and (should_escalate_confidence or should_escalate_rr)
+                        
+                        # Check if IA2 decision was actually created (check response for IA2 data)
+                        ia2_decision = analysis_data.get('ia2_decision')
+                        ia2_escalated = ia2_decision is not None and isinstance(ia2_decision, dict)
+                        
+                        if ia2_escalated:
+                            escalation_results['ia2_escalations_triggered'] += 1
+                            logger.info(f"         🚀 IA2 escalation triggered for {symbol}")
+                        
+                        # Store escalation details
+                        escalation_results['escalation_details'].append({
+                            'symbol': symbol,
+                            'trade_type': trade_type,
+                            'minimum_rr_threshold': minimum_rr_threshold,
+                            'expected_threshold': expected_threshold,
+                            'risk_reward_ratio': risk_reward_ratio,
+                            'ia1_signal': ia1_signal,
+                            'confidence': confidence,
+                            'should_escalate': should_escalate,
+                            'ia2_escalated': ia2_escalated,
+                            'escalation_match': should_escalate == ia2_escalated,
+                            'response_time': response_time
+                        })
+                        
+                        logger.info(f"         📊 Escalation Logic: should_escalate={should_escalate}, ia2_escalated={ia2_escalated}, match={should_escalate == ia2_escalated}")
+                        
+                    else:
+                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
+                        if response.text:
+                            logger.error(f"         Error response: {response.text[:300]}")
+                
+                except Exception as e:
+                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
+                
+                # Wait between analyses
+                if symbol != self.actual_test_symbols[-1]:
+                    logger.info(f"      ⏳ Waiting 10 seconds before next analysis...")
+                    await asyncio.sleep(10)
+            
+            # Capture backend logs to check for escalation logic
+            logger.info("   📋 Capturing backend logs to check for escalation logic...")
+            
+            try:
+                backend_logs = await self._capture_backend_logs()
+                if backend_logs:
+                    # Look for escalation-related logs
+                    escalation_logs = []
+                    should_send_logs = []
+                    dynamic_threshold_logs = []
+                    
+                    for log_line in backend_logs:
+                        log_lower = log_line.lower()
+                        
+                        if 'ia2 accepted' in log_lower or 'ia2 rejected' in log_lower:
+                            escalation_logs.append(log_line.strip())
+                        
+                        if '_should_send_to_ia2' in log_lower:
+                            should_send_logs.append(log_line.strip())
+                        
+                        if any(term in log_lower for term in ['minimum_rr_threshold', 'trade_type', 'scalp', 'intraday', 'swing']):
+                            dynamic_threshold_logs.append(log_line.strip())
+                    
+                    escalation_results['backend_escalation_logs'] = escalation_logs
+                    
+                    logger.info(f"      📊 Backend escalation logs analysis:")
+                    logger.info(f"         - Escalation decision logs: {len(escalation_logs)}")
+                    logger.info(f"         - _should_send_to_ia2 logs: {len(should_send_logs)}")
+                    logger.info(f"         - Dynamic threshold logs: {len(dynamic_threshold_logs)}")
+                    
+                    # Show sample logs
+                    if escalation_logs:
+                        logger.info(f"      📋 Sample escalation log: {escalation_logs[0]}")
+                    if dynamic_threshold_logs:
+                        logger.info(f"      📋 Sample dynamic threshold log: {dynamic_threshold_logs[0]}")
+                        
+            except Exception as e:
+                logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
+            
+            # Final analysis
+            success_rate = escalation_results['analyses_successful'] / max(escalation_results['analyses_attempted'], 1)
+            dynamic_threshold_rate = escalation_results['dynamic_threshold_usage'] / max(escalation_results['analyses_successful'], 1)
+            escalation_rate = escalation_results['ia2_escalations_triggered'] / max(escalation_results['analyses_successful'], 1)
+            
+            logger.info(f"\n   📊 DYNAMIC RR ESCALATION LOGIC RESULTS:")
+            logger.info(f"      Analyses attempted: {escalation_results['analyses_attempted']}")
+            logger.info(f"      Analyses successful: {escalation_results['analyses_successful']}")
+            logger.info(f"      Success rate: {success_rate:.2f}")
+            logger.info(f"      IA2 escalations triggered: {escalation_results['ia2_escalations_triggered']}")
+            logger.info(f"      Escalation rate: {escalation_rate:.2f}")
+            logger.info(f"      Dynamic threshold usage: {escalation_results['dynamic_threshold_usage']}")
+            logger.info(f"      Dynamic threshold rate: {dynamic_threshold_rate:.2f}")
+            logger.info(f"      Trade type distribution:")
+            logger.info(f"         - SCALP: {escalation_results['trade_type_scalp_count']}")
+            logger.info(f"         - INTRADAY: {escalation_results['trade_type_intraday_count']}")
+            logger.info(f"         - SWING: {escalation_results['trade_type_swing_count']}")
+            logger.info(f"         - POSITION: {escalation_results['trade_type_position_count']}")
+            
+            # Show escalation details
+            if escalation_results['escalation_details']:
+                logger.info(f"      📊 Escalation Logic Details:")
+                for detail in escalation_results['escalation_details']:
+                    logger.info(f"         - {detail['symbol']}: {detail['trade_type']} (threshold={detail['minimum_rr_threshold']:.1f}, rr={detail['risk_reward_ratio']:.2f}, escalated={detail['ia2_escalated']}, match={detail['escalation_match']})")
+            
+            # Calculate test success based on review requirements
+            success_criteria = [
+                escalation_results['analyses_successful'] >= 3,  # At least 3 successful analyses
+                escalation_results['dynamic_threshold_usage'] >= 2,  # At least 2 correct dynamic thresholds
+                dynamic_threshold_rate >= 0.6,  # At least 60% correct dynamic threshold usage
+                len(set([detail['trade_type'] for detail in escalation_results['escalation_details']])) >= 2,  # At least 2 different trade types
+                success_rate >= 0.6  # At least 60% success rate
+            ]
+            success_count = sum(success_criteria)
+            test_success_rate = success_count / len(success_criteria)
+            
+            if test_success_rate >= 0.8:  # 80% success threshold
+                self.log_test_result("Dynamic RR Escalation Logic", True, 
+                                   f"Dynamic RR escalation successful: {success_count}/{len(success_criteria)} criteria met. Dynamic threshold rate: {dynamic_threshold_rate:.2f}, Escalation rate: {escalation_rate:.2f}, Success rate: {success_rate:.2f}")
+            else:
+                self.log_test_result("Dynamic RR Escalation Logic", False, 
+                                   f"Dynamic RR escalation issues: {success_count}/{len(success_criteria)} criteria met. May not be using dynamic thresholds correctly or missing trade type diversity")
+                
+        except Exception as e:
+            self.log_test_result("Dynamic RR Escalation Logic", False, f"Exception: {str(e)}")
+
     async def test_0_pydantic_validation_fix_validation(self):
         """Test 0: Pydantic Validation Fix Validation - Critical Fix for fibonacci_key_level_proximity field"""
         logger.info("\n🔍 TEST 0: Pydantic Validation Fix Validation")
