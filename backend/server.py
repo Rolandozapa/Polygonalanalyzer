@@ -4312,12 +4312,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         try:
             cleaned_data = {}
             
-            # Validation des champs numériques
+            # 🚨 STRICT VALIDATION: NO FALLBACK VALUES - Use only calculated indicators
+            # ❌ REMOVED ALL FALLBACK VALUES - System must use real calculated data or fail gracefully
             logger.info(f"🔍 MACD VALIDATION for {analysis_data.get('symbol', 'UNKNOWN')}: Raw MACD Signal={analysis_data.get('macd_signal')}, Line={analysis_data.get('macd_line')}, Histogram={analysis_data.get('macd_histogram')}")
-            cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), 50.0)
-            cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), 0.0)
-            cleaned_data["macd_line"] = self._ensure_json_safe(analysis_data.get("macd_line"), 0.0)  # Add MACD line
-            cleaned_data["macd_histogram"] = self._ensure_json_safe(analysis_data.get("macd_histogram"), 0.0)  # Add MACD histogram
+            
+            # ✅ USE REAL CALCULATED VALUES ONLY (no fallback to 50.0, 0.0, etc.)
+            cleaned_data["rsi"] = self._ensure_json_safe(analysis_data.get("rsi"), None)
+            cleaned_data["macd_signal"] = self._ensure_json_safe(analysis_data.get("macd_signal"), None) 
+            cleaned_data["macd_line"] = self._ensure_json_safe(analysis_data.get("macd_line"), None)
+            cleaned_data["macd_histogram"] = self._ensure_json_safe(analysis_data.get("macd_histogram"), None)
             cleaned_data["macd_trend"] = str(analysis_data.get("macd_trend", "neutral"))  # Add MACD trend
             cleaned_data["stochastic"] = self._ensure_json_safe(analysis_data.get("stochastic"), 50.0)  # Add Stochastic %K
             cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), 50.0)  # Add Stochastic %D
