@@ -4322,8 +4322,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["macd_line"] = self._ensure_json_safe(analysis_data.get("macd_line"), None)
             cleaned_data["macd_histogram"] = self._ensure_json_safe(analysis_data.get("macd_histogram"), None)
             cleaned_data["macd_trend"] = str(analysis_data.get("macd_trend", "neutral"))  # Add MACD trend
-            cleaned_data["stochastic"] = self._ensure_json_safe(analysis_data.get("stochastic"), 50.0)  # Add Stochastic %K
-            cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), 50.0)  # Add Stochastic %D
+            cleaned_data["stochastic"] = self._ensure_json_safe(analysis_data.get("stochastic"), None)  # ✅ NO FALLBACK
+            cleaned_data["stochastic_d"] = self._ensure_json_safe(analysis_data.get("stochastic_d"), None)  # ✅ NO FALLBACK
             cleaned_data["bollinger_position"] = self._ensure_json_safe(analysis_data.get("bollinger_position"), 0.0)
             cleaned_data["fibonacci_level"] = self._ensure_json_safe(analysis_data.get("fibonacci_level"), 0.618)
             cleaned_data["fibonacci_nearest_level"] = str(analysis_data.get("fibonacci_nearest_level", "61.8"))
