@@ -175,7 +175,7 @@ class TALibIndicators:
             bb_indicators = self._calculate_bollinger_bands(close_prices)
             
             # 🔥 4. INDICATEURS DE MOMENTUM
-            momentum_indicators = self._calculate_momentum_indicators(close_prices)
+            momentum_indicators = self._calculate_momentum_indicators(high_prices, low_prices, close_prices)
             
             # 🔥 5. INDICATEURS DE VOLUME
             volume_indicators = self._calculate_volume_indicators(volume)
