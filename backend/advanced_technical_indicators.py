@@ -415,8 +415,16 @@ class AdvancedRegimeDetector:
         # Add persistence-based implications
         if persistence < 15:
             base_implications.append("🆕 Fresh regime - Early entry opportunity")
-        elif persistence > 40 and confidence > 0.7:
+            base_implications.append("⚡ Recommended: SCALP/INTRADAY for momentum capture")
+        elif 15 <= persistence < 40:
+            base_implications.append("📊 Developing regime - Strong setup")
+            base_implications.append("📈 Recommended: INTRADAY/SWING trading")
+        elif persistence >= 40 and confidence > 0.7:
             base_implications.append("⚠️ Mature regime - Consider tightening stops")
+            base_implications.append("📊 Recommended: SWING/POSITION with trailing stops")
+        elif persistence >= 40 and confidence <= 0.7:
+            base_implications.append("⚠️ Mature weakening regime - Reduce exposure")
+            base_implications.append("🔄 Recommended: EXIT positions or SCALP only")
         
         # Add confidence-based implications
         if confidence > 0.85:
