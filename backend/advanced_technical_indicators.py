@@ -80,6 +80,16 @@ class TechnicalIndicators:
     volume_trend: str = "NEUTRAL"
     volume_surge: bool = False
     
+    # MFI (Money Flow Index)
+    mfi: float = 50.0
+    mfi_overbought: bool = False
+    mfi_oversold: bool = False
+    mfi_extreme_overbought: bool = False
+    mfi_extreme_oversold: bool = False
+    institutional_activity: str = "NEUTRAL"
+    mfi_divergence: bool = False
+    vwap_position: str = "NEUTRAL"
+    
     # Market Regime
     market_regime: str = "RANGING"
     regime_confidence: float = 0.5
