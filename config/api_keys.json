@@ -1,0 +1,26 @@
+{
+  "description": "Centralized API keys configuration",
+  "version": "1.0",
+  "keys": {
+    "bingx": {
+      "api_key": "3a267ba5bdd268ee93276010999fbde443b7fa507dbd882f9611c6028569c931",
+      "secret_key": "ynNfVmYYSPmlP1roNGa5L8VeUokXMF94XH9VNf7pBXocIgMWxBlnarX3Uy13ftf9zQfI5jzrvMXQiA0qGQ",
+      "base_url": "https://open-api.bingx.com"
+    },
+    "coinmarketcap": {
+      "api_key": "70046baa-e887-42ee-a909-03c6b6afab67"
+    },
+    "coinapi": {
+      "api_key": "30484334-1a7c-49a0-ae01-63922e3e542a"
+    },
+    "twelvedata": {
+      "api_key": "d95a7424cbdd428297a058d8b74b"
+    },
+    "binance": {
+      "api_key": "dS4YsQ9BzFYypHvsSuJMLN7qe8jXxHO1H18ebkG7Oj4C5bBaq1ti1qKNL0t5wJ2g"
+    },
+    "emergent_llm": {
+      "description": "Universal LLM key for OpenAI, Anthropic, Google models"
+    }
+  }
+}
