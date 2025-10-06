@@ -748,111 +748,325 @@ const TradingDashboard = () => {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border">
               <div className="p-6 border-b">
-                <h2 className="text-xl font-bold text-slate-900">IA1 Technical Analysis</h2>
-                <p className="text-slate-600">Advanced technical analysis with RSI, MACD, Stochastic, and Bollinger Bands</p>
+                <h2 className="text-xl font-bold text-slate-900">🤖 IA1 Ultra Professional Analysis v7.0</h2>
+                <p className="text-slate-600">ML Regime Detection + Confluence Grading + Advanced Technical Indicators (TALib Professional)</p>
               </div>
               
               <div className="p-6">
                 {analyses.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-slate-500">No technical analyses available</p>
+                    <div className="text-6xl mb-4">🤖</div>
+                    <p className="text-slate-500">No IA1 Ultra analyses available</p>
+                    <p className="text-sm text-slate-400">Run trading cycle to generate ML-powered technical analysis</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {analyses.map((analysis, index) => (
-                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-lg text-slate-900">{analysis.symbol}</h3>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              analysis.analysis_confidence >= 0.8 ? 'bg-green-100 text-green-700' :
-                              analysis.analysis_confidence >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {(analysis.analysis_confidence * 100).toFixed(1)}% confidence
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              analysis.ia1_signal === 'long' ? 'bg-emerald-100 text-emerald-700' :
-                              analysis.ia1_signal === 'short' ? 'bg-red-100 text-red-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                              {analysis.ia1_signal?.toUpperCase() || 'HOLD'}
-                            </span>
+                      <div key={index} className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-white shadow-lg">
+                        
+                        {/* Header with Symbol and Core Signals */}
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                              <span className="text-white font-bold text-lg">🎯</span>
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-2xl text-slate-900">{analysis.symbol}</h3>
+                              <p className="text-sm text-slate-600">Ultra Professional ML Analysis</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end space-y-2">
+                            {/* Combined Confidence */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-slate-600">ML Confidence:</span>
+                              <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                (analysis.combined_confidence || analysis.analysis_confidence || 0) >= 0.8 ? 'bg-green-100 text-green-700' :
+                                (analysis.combined_confidence || analysis.analysis_confidence || 0) >= 0.65 ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {((analysis.combined_confidence || analysis.analysis_confidence || 0) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                            
+                            {/* Signal + Confluence Grade */}
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                analysis.ia1_signal === 'LONG' ? 'bg-emerald-100 text-emerald-700' :
+                                analysis.ia1_signal === 'SHORT' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {analysis.ia1_signal?.toUpperCase() || 'HOLD'}
+                              </span>
+                              
+                              {/* Confluence Grade */}
+                              <span className={`px-3 py-2 rounded-lg text-sm font-bold border-2 ${
+                                (analysis.confluence_grade || 'C').startsWith('A') ? 'bg-green-50 text-green-700 border-green-200' :
+                                (analysis.confluence_grade || 'C').startsWith('B') ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                'bg-slate-50 text-slate-700 border-slate-200'
+                              }`}>
+                                Grade: {analysis.confluence_grade || 'C'}
+                              </span>
+                            </div>
+                            
+                            {/* Regime Info */}
+                            <div className="text-xs text-slate-600 text-right">
+                              <div>Regime: <span className="font-medium">{analysis.regime || 'CONSOLIDATION'}</span></div>
+                              <div>Trade Type: <span className="font-medium">{analysis.trade_type || 'SWING'}</span></div>
+                            </div>
                           </div>
                         </div>
-                        
-                        {/* Technical Indicators */}
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">RSI</p>
-                            <p className={`font-semibold ${
-                              analysis.rsi >= 70 ? 'text-red-600' :
-                              analysis.rsi <= 30 ? 'text-green-600' :
-                              'text-slate-900'
-                            }`}>
-                              {analysis.rsi?.toFixed(1) || 'N/A'}
-                            </p>
+
+                        {/* ML Regime & Confidence Framework */}
+                        <div className="bg-white/80 rounded-xl p-4 mb-4 border border-blue-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">🧠 ML Regime Detection Framework</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="text-center">
+                              <p className="text-xs text-slate-600">Current Regime</p>
+                              <p className="font-bold text-blue-700">{analysis.regime || 'CONSOLIDATION'}</p>
+                              <p className="text-xs text-slate-500">
+                                {analysis.regime_persistence || 25} bars ({(analysis.regime_persistence || 25) < 15 ? 'Fresh' : 'Mature'})
+                              </p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-slate-600">Base Confidence</p>
+                              <p className="font-bold text-slate-900">{((analysis.base_confidence || 0.5) * 100).toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-slate-600">Tech Consistency</p>
+                              <p className="font-bold text-slate-900">{((analysis.technical_consistency || 0.5) * 100).toFixed(1)}%</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xs text-slate-600">Position Multiplier</p>
+                              <p className="font-bold text-purple-600">{(analysis.position_multiplier || 1.0).toFixed(2)}x</p>
+                            </div>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">MACD</p>
-                            <p className={`font-semibold ${
-                              analysis.macd_signal > 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {analysis.macd_signal?.toFixed(4) || 'N/A'}
-                            </p>
+                        </div>
+
+                        {/* TALib Professional Indicators Grid */}
+                        <div className="bg-white/80 rounded-xl p-4 mb-4 border border-green-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">📊 TALib Professional Indicators</h4>
+                          
+                          {/* Row 1: Momentum Core */}
+                          <div className="mb-4">
+                            <h5 className="text-sm font-medium text-slate-700 mb-2">🎯 Momentum Core</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">RSI (14)</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.rsi || 50) >= 70 ? 'text-red-600' :
+                                  (analysis.rsi || 50) <= 30 ? 'text-green-600' :
+                                  'text-slate-900'
+                                }`}>
+                                  {(analysis.rsi || 50).toFixed(1)}
+                                </p>
+                                <p className="text-xs text-slate-500">{analysis.rsi_zone || 'NEUTRAL'}</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">MACD</p>
+                                <p className={`font-bold text-sm ${
+                                  (analysis.macd_histogram || 0) > 0 ? 'text-green-600' : 
+                                  (analysis.macd_histogram || 0) < 0 ? 'text-red-600' : 'text-slate-900'
+                                }`}>
+                                  {(analysis.macd_histogram || 0).toFixed(4)}
+                                </p>
+                                <p className="text-xs text-slate-500">Histogram</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">Stochastic</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.stochastic || 50) >= 80 ? 'text-red-600' :
+                                  (analysis.stochastic || 50) <= 20 ? 'text-green-600' :
+                                  'text-slate-900'
+                                }`}>
+                                  {(analysis.stochastic || 50).toFixed(1)}
+                                </p>
+                                <p className="text-xs text-slate-500">%K</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">MFI</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.mfi_value || 50) >= 80 ? 'text-red-600' :
+                                  (analysis.mfi_value || 50) <= 20 ? 'text-green-600' :
+                                  'text-slate-900'
+                                }`}>
+                                  {(analysis.mfi_value || 50).toFixed(1)}
+                                </p>
+                                <p className="text-xs text-slate-500">{analysis.mfi_signal || 'NEUTRAL'}</p>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">Stochastic</p>
-                            <p className={`font-semibold ${
-                              analysis.stochastic >= 80 ? 'text-red-600' :
-                              analysis.stochastic <= 20 ? 'text-green-600' :
-                              'text-slate-900'
-                            }`}>
-                              {analysis.stochastic?.toFixed(1) || 'N/A'}
-                            </p>
+
+                          {/* Row 2: Trend & Strength */}
+                          <div className="mb-4">
+                            <h5 className="text-sm font-medium text-slate-700 mb-2">📈 Trend & Strength</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">ADX (Wilder)</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.adx || 25) >= 25 ? 'text-green-600' :
+                                  (analysis.adx || 25) >= 18 ? 'text-yellow-600' :
+                                  'text-slate-600'
+                                }`}>
+                                  {(analysis.adx || 25).toFixed(1)}
+                                </p>
+                                <p className="text-xs text-slate-500">{analysis.adx_strength || 'MODERATE'}</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">Bollinger</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.bollinger_position || 0.5) >= 0.8 ? 'text-red-600' :
+                                  (analysis.bollinger_position || 0.5) <= 0.2 ? 'text-green-600' :
+                                  'text-slate-900'
+                                }`}>
+                                  {((analysis.bollinger_position || 0.5) * 100).toFixed(0)}%
+                                </p>
+                                <p className="text-xs text-slate-500">Position</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">Volume</p>
+                                <p className={`font-bold text-lg ${
+                                  (analysis.volume_ratio || 1.0) >= 2.0 ? 'text-green-600' :
+                                  (analysis.volume_ratio || 1.0) >= 1.5 ? 'text-yellow-600' :
+                                  'text-slate-600'
+                                }`}>
+                                  {(analysis.volume_ratio || 1.0).toFixed(1)}x
+                                </p>
+                                <p className="text-xs text-slate-500">{analysis.volume_surge ? 'SURGE' : 'Normal'}</p>
+                              </div>
+                              
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">VWAP Dist</p>
+                                <p className={`font-bold text-lg ${
+                                  Math.abs(analysis.vwap_distance || 0) >= 5 ? 'text-red-600' :
+                                  Math.abs(analysis.vwap_distance || 0) >= 2 ? 'text-yellow-600' :
+                                  'text-green-600'
+                                }`}>
+                                  {(analysis.vwap_distance || 0) >= 0 ? '+' : ''}{(analysis.vwap_distance || 0).toFixed(1)}%
+                                </p>
+                                <p className="text-xs text-slate-500">vs Fair Value</p>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">Bollinger</p>
-                            <p className={`font-semibold ${
-                              analysis.bollinger_position >= 0.8 ? 'text-red-600' :
-                              analysis.bollinger_position <= 0.2 ? 'text-green-600' :
-                              'text-slate-900'
-                            }`}>
-                              {analysis.bollinger_position?.toFixed(2) || 'N/A'}
-                            </p>
+
+                          {/* Row 3: Price Levels */}
+                          <div>
+                            <h5 className="text-sm font-medium text-slate-700 mb-2">💰 Key Price Levels</h5>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">Current</p>
+                                <p className="font-bold text-blue-600">${(analysis.current_price || 0).toFixed(4)}</p>
+                              </div>
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">VWAP</p>
+                                <p className="font-bold text-purple-600">${(analysis.vwap_price || 0).toFixed(4)}</p>
+                              </div>
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">EMA 21</p>
+                                <p className="font-bold text-indigo-600">${(analysis.ema_21 || 0).toFixed(4)}</p>
+                              </div>
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">SMA 20</p>
+                                <p className="font-bold text-cyan-600">${(analysis.sma_20 || 0).toFixed(4)}</p>
+                              </div>
+                              <div className="bg-white rounded-lg p-3 text-center border">
+                                <p className="text-xs text-slate-600">ATR</p>
+                                <p className="font-bold text-orange-600">{((analysis.atr_pct || 2.0)).toFixed(1)}%</p>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">Fibonacci</p>
-                            <p className={`font-semibold ${
-                              (analysis.fibonacci_trend_direction || 'neutral') === 'bullish' ? 'text-green-600' :
-                              (analysis.fibonacci_trend_direction || 'neutral') === 'bearish' ? 'text-red-600' :
-                              'text-slate-900'
-                            }`}>
-                              {analysis.fibonacci_nearest_level || '61.8'}%
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {((analysis.fibonacci_level || 0.618) * 100).toFixed(0)}%
+                        </div>
+
+                        {/* Confluence Score & Risk Management */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                          {/* Confluence Analysis */}
+                          <div className="bg-white/80 rounded-xl p-4 border border-purple-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">🎯 Confluence Analysis</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Grade:</span>
+                                <span className={`font-bold ${
+                                  (analysis.confluence_grade || 'C').startsWith('A') ? 'text-green-600' :
+                                  (analysis.confluence_grade || 'C').startsWith('B') ? 'text-blue-600' :
+                                  'text-slate-600'
+                                }`}>
+                                  {analysis.confluence_grade || 'C'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Score:</span>
+                                <span className="font-bold text-slate-900">{analysis.confluence_score || 50}/100</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Should Trade:</span>
+                                <span className={`font-bold ${
+                                  analysis.should_trade ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {analysis.should_trade ? '✅ YES' : '❌ NO'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Risk Management */}
+                          <div className="bg-white/80 rounded-xl p-4 border border-orange-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">🛡️ Risk Management</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Max Risk:</span>
+                                <span className="font-bold text-red-600">
+                                  {(analysis.confluence_grade || 'C').startsWith('A') ? '1.2%' : 
+                                   (analysis.confluence_grade || 'C').startsWith('B') ? '0.8%' : '0.5%'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Position Size:</span>
+                                <span className="font-bold text-blue-600">{(analysis.position_multiplier || 1.0).toFixed(2)}x</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">RR Ratio:</span>
+                                <span className={`font-bold ${
+                                  (analysis.calculated_rr || analysis.risk_reward_ratio || 1.0) >= 2.0 ? 'text-green-600' :
+                                  (analysis.calculated_rr || analysis.risk_reward_ratio || 1.0) >= 1.5 ? 'text-yellow-600' :
+                                  'text-red-600'
+                                }`}>
+                                  {(analysis.calculated_rr || analysis.risk_reward_ratio || 1.0).toFixed(1)}:1
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* ML Ultra Reasoning */}
+                        <div className="bg-white/90 rounded-xl p-4 border border-indigo-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">🧠 IA1 Ultra ML Reasoning</h4>
+                          <div className="bg-slate-50 rounded-lg p-3">
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                              {analysis.reasoning || analysis.ia1_reasoning || 'No ML reasoning available from v7.0 prompt'}
                             </p>
                           </div>
                         </div>
-                        
-                        {/* Analysis Reasoning */}
-                        <div className="bg-white rounded p-3 border">
-                          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                            {analysis.ia1_reasoning || 'No reasoning available'}
-                          </p>
-                        </div>
-                        
-                        {/* Patterns */}
+
+                        {/* Detected Patterns */}
                         {analysis.patterns_detected && analysis.patterns_detected.length > 0 && (
-                          <div className="mt-3">
-                            <p className="text-sm text-slate-600 mb-2">Detected Patterns:</p>
+                          <div className="bg-white/80 rounded-xl p-4 mt-4 border border-blue-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">📈 Detected Chart Patterns</h4>
                             <div className="flex flex-wrap gap-2">
-                              {analysis.patterns_detected.slice(0, 5).map((pattern, i) => (
-                                <span key={i} className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                              {analysis.patterns_detected.slice(0, 8).map((pattern, i) => (
+                                <span key={i} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium border border-blue-200">
                                   {pattern}
                                 </span>
                               ))}
+                              {analysis.patterns_detected.length > 8 && (
+                                <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium">
+                                  +{analysis.patterns_detected.length - 8} more
+                                </span>
+                              )}
                             </div>
                           </div>
                         )}
