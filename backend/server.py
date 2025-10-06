@@ -939,7 +939,7 @@ class TrailingStopManager:
         if trailing_stop.direction == "LONG":
             # Check from highest to lowest TP
             for tp_name in ["TP5", "TP4", "TP3", "TP2", "TP1"]:
-                if current_price >= tp_levels[tp_name.lower()]:
+                if current_price >= tp_levels[str(tp_name).lower()]:
                     return tp_name
         else:  # SHORT
             # Check from lowest to highest TP
