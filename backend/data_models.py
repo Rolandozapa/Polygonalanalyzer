@@ -105,6 +105,25 @@ class TechnicalAnalysis(BaseModel):
     trade_duration_estimate: Optional[str] = "1-7 days"
     optimal_timeframe: Optional[str] = "4H/1D"
     minimum_rr_threshold: Optional[float] = 2.0
+    # ML REGIME & CONFLUENCE FIELDS (v7.0 ULTRA)
+    current_price: Optional[float] = 0.0  # Current price at analysis time
+    regime: Optional[str] = "CONSOLIDATION"  # ML detected regime
+    base_confidence: Optional[float] = 0.5  # Base ML confidence
+    technical_consistency: Optional[float] = 0.5  # Technical consistency score
+    combined_confidence: Optional[float] = 0.5  # Combined ML confidence
+    confluence_grade: Optional[str] = "C"  # A++ to D confluence grading
+    confluence_score: Optional[int] = 50  # Confluence score 0-100
+    should_trade: Optional[bool] = False  # Should trade flag
+    position_multiplier: Optional[float] = 1.0  # Position size multiplier
+    # PRICE LEVELS FROM TALIB
+    sma_20: Optional[float] = 0.0  # SMA 20 value
+    sma_50: Optional[float] = 0.0  # SMA 50 value  
+    ema_9: Optional[float] = 0.0   # EMA 9 value
+    ema_21: Optional[float] = 0.0  # EMA 21 value
+    ema_200: Optional[float] = 0.0 # EMA 200 value
+    # VOLUME INDICATORS
+    volume_ratio: Optional[float] = 1.0  # Volume ratio
+    volume_analysis: Optional[str] = "1.0x"  # Volume analysis text
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
