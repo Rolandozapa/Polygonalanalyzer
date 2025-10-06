@@ -3505,9 +3505,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "macd_trend": ('strong_bullish' if indicators.macd_line > 0.1 else 'bullish' if indicators.macd_line > 0 else 'strong_bearish' if indicators.macd_line < -0.1 else 'bearish' if indicators.macd_line < 0 else 'neutral'),  # Use macd_line
                 "stochastic_signal": ('extreme_overbought' if stochastic_k > 90 else 'overbought' if stochastic_k > 80 else 'extreme_oversold' if stochastic_k < 10 else 'oversold' if stochastic_k < 20 else 'neutral'),
                 # 🎯 NEW DYNAMIC RR INTEGRATION FIELDS
-                "trade_type": getattr(indicators, 'trade_type', 'SWING'),
-                "minimum_rr_threshold": getattr(indicators, 'minimum_rr_threshold', 2.0),
-                "trade_duration_estimate": getattr(indicators, 'trade_duration_estimate', '1-7 days'),
+                "trade_type": trade_type_value,
+                "minimum_rr_threshold": min_rr_value,
+                "trade_duration_estimate": duration_value,
                 "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
             })
             
