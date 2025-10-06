@@ -4300,17 +4300,19 @@ async def main():
     test_suite = DynamicRRIntegrationTestSuite()
     
     try:
-        # Run IA2-specific tests in sequence
-        await test_suite.test_ia2_decisions_database_analysis()
-        await test_suite.test_ia2_api_decisions_structure()
-        await test_suite.test_ia2_rr_calculation_formulas()
-        await test_suite.test_ia2_json_parsing_logs_analysis()
+        # Run all Dynamic RR Integration tests
+        success = await test_suite.run_all_tests()
         
-        # Run supporting tests for context
-        await test_suite.test_1_scout_system_3_cryptos_test()
+        if success:
+            logger.info("🎉 DYNAMIC RR INTEGRATION PHASE 1 TESTING COMPLETED SUCCESSFULLY")
+        else:
+            logger.info("❌ DYNAMIC RR INTEGRATION PHASE 1 TESTING FAILED")
+        
+        return success
         
     except Exception as e:
         logger.error(f"❌ Test suite execution failed: {e}")
+        return False
     
     # Print final summary
     logger.info("\n" + "=" * 80)
