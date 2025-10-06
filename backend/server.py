@@ -3461,7 +3461,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # 🚀 ADVANCED TECHNICAL INDICATORS FOR IA2
                 "mfi_value": mfi,
                 "mfi_signal": ('extreme_overbought' if mfi_extreme_overbought else 'overbought' if mfi_overbought else 'extreme_oversold' if mfi_extreme_oversold else 'oversold' if mfi_oversold else 'neutral'),
-                "mfi_institution": institutional_activity,
+                "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)",
                 "vwap_price": vwap,
                 "vwap_position": vwap_position,
                 "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
