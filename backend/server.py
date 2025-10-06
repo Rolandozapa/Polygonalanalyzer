@@ -3064,7 +3064,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'var_cap': abs(opportunity.price_change_24h or 0),  # Price volatility 24h
                 'var_vol': getattr(opportunity, 'volume_change_24h', 0) or 0,  # Volume change 24h  
                 'fg': 50,  # Fear & Greed placeholder (à connecter si disponible)
-                'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap else 0.05,  # Volume/Cap ratio
+                'volcap': (opportunity.volume_24h or 1) / max(opportunity.market_cap or 1, 1) if opportunity.market_cap and opportunity.market_cap > 0 else 0.05,  # Volume/Cap ratio
                 'rsi_extreme': max(0, rsi - 70) if rsi > 70 else max(0, 30 - rsi) if rsi < 30 else 0,  # RSI extremes
                 'volatility': opportunity.volatility or 0.05,  # Volatilité générale
                 'mcap_24h': market_cap_change_24h  # 🚨 NOUVELLE VARIABLE CRITIQUE: Market Cap 24h pour bonus/malus
