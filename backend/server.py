@@ -3471,7 +3471,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         
                         logger.warning(f"🚨 CRITICAL MOMENTUM CORRECTION {opportunity.symbol}:")
                         logger.warning(f"   💥 Strong momentum: {opportunity.price_change_24h:.1f}% vs {signal_direction.upper()} signal")
-                        logger.warning(f"   💥 No technical extremes detected (RSI:{rsi:.1f}, Stoch:{stochastic_k:.1f}, BB:{bb_position:.2f})")
+                        # ✅ SAFE LOGGING - Handle None values  
+                        rsi_disp = f"{rsi:.1f}" if rsi is not None else "N/A"
+                        stoch_disp = f"{stochastic_k:.1f}" if stochastic_k is not None else "N/A"
+                        bb_disp = f"{bb_position:.2f}" if bb_position is not None else "N/A"
+                        logger.warning(f"   💥 No technical extremes detected (RSI:{rsi_disp}, Stoch:{stoch_disp}, BB:{bb_disp})")
                         logger.warning(f"   💥 Penalty: {confidence_penalty:.1%} → Confidence: {original_confidence:.1%} → {analysis_confidence:.1%}")
                         
                         if analysis_confidence < 0.4:
