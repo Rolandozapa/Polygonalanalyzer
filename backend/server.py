@@ -2205,6 +2205,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
             vwap = indicators.vwap
+            vwap_distance = indicators.vwap_distance
+            above_vwap = indicators.above_vwap
             vwap_position = indicators.vwap_position
             vwap_trend = indicators.vwap_trend
             vwap_overbought = indicators.vwap_overbought
