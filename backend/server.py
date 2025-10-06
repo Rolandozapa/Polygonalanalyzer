@@ -2529,6 +2529,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'trend_hierarchy': getattr(talib_analysis, 'trend_hierarchy', 'NEUTRAL'),
                 'ema_cross_signal': ema_cross_signal or 'NEUTRAL',
                 
+                # 🆕 NOUVEAUX INDICATEURS TREND (High Priority)
+                'aroon_up': getattr(talib_analysis, 'aroon_up', 50.0),
+                'aroon_down': getattr(talib_analysis, 'aroon_down', 50.0), 
+                'aroon_diff': getattr(talib_analysis, 'aroon_diff', 0.0),
+                'aroon_signal': getattr(talib_analysis, 'aroon_signal', 'NEUTRAL'),
+                'sar': getattr(talib_analysis, 'sar', 0.0),
+                'sar_signal': getattr(talib_analysis, 'sar_signal', 'NEUTRAL'),
+                'sar_distance': getattr(talib_analysis, 'sar_distance', 0.0),
+                
                 # Volume and flow
                 'mfi': mfi or 50.0,
                 'mfi_signal': getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
