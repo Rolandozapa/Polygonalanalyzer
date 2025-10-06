@@ -3225,7 +3225,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   📊 Market Adjustment: {scoring_result['adjustment']:.1f} points")
             logger.info(f"   📊 MC Multiplier: {mc_mult:.2f} (Market Cap: {opportunity.market_cap or 1_000_000:,.0f})")
             logger.info(f"   🎯 Final Confidence: {analysis_confidence:.1%}")
-            logger.info(f"   🎯 Key Factors: RSI={rsi:.1f}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
+            # ✅ SAFE LOGGING - Handle None values
+            rsi_display = f"{rsi:.1f}" if rsi is not None else "N/A"
+            logger.info(f"   🎯 Key Factors: RSI={rsi_display}, Vol={opportunity.volatility or 0.05:.1%}, Price∆={opportunity.price_change_24h or 0:.1f}%")
             
             # Log the sophisticated confidence breakdown
             if ia1_organic_confidence:
