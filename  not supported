@@ -1,0 +1,34 @@
+[Found 536003 matches for pattern "NoneType.*int|" in /var/log/supervisor]
+[Showing first 30 results]
+/var/log/supervisor/frontend.err.log:1:(node:315) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+/var/log/supervisor/frontend.err.log:2:(Use `node --trace-deprecation ...` to show where the warning was created)
+/var/log/supervisor/frontend.err.log:3:(node:315) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+--
+/var/log/supervisor/supervisord.log:1:2025-10-06 10:38:32,699 INFO spawned: 'frontend' with pid 296
+/var/log/supervisor/supervisord.log:2:2025-10-06 10:38:34,013 INFO success: frontend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:3:2025-10-06 10:39:34,735 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:4:2025-10-06 10:39:36,758 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:5:2025-10-06 10:39:37,184 INFO stopped: backend (exit status 0)
+/var/log/supervisor/supervisord.log:6:2025-10-06 10:39:37,187 INFO spawned: 'backend' with pid 421
+/var/log/supervisor/supervisord.log:7:2025-10-06 10:39:38,373 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:8:2025-10-06 10:42:52,258 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:9:2025-10-06 10:42:54,258 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:10:2025-10-06 10:42:54,505 INFO stopped: backend (exit status 0)
+/var/log/supervisor/supervisord.log:11:2025-10-06 10:42:54,509 INFO spawned: 'backend' with pid 1250
+/var/log/supervisor/supervisord.log:12:2025-10-06 10:42:55,717 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:13:2025-10-06 10:48:24,067 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:14:2025-10-06 10:48:26,069 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:15:2025-10-06 10:48:26,594 INFO stopped: backend (exit status 0)
+/var/log/supervisor/supervisord.log:16:2025-10-06 10:48:26,597 INFO spawned: 'backend' with pid 1620
+/var/log/supervisor/supervisord.log:17:2025-10-06 10:48:27,792 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:18:2025-10-06 10:55:01,269 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:19:2025-10-06 10:55:01,395 INFO stopped: backend (exit status 0)
+/var/log/supervisor/supervisord.log:20:2025-10-06 10:55:01,399 INFO spawned: 'backend' with pid 2016
+/var/log/supervisor/supervisord.log:21:2025-10-06 10:55:02,594 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:22:2025-10-06 11:12:55,263 INFO waiting for backend to stop
+/var/log/supervisor/supervisord.log:23:2025-10-06 11:12:55,375 INFO stopped: backend (exit status 0)
+/var/log/supervisor/supervisord.log:24:2025-10-06 11:12:55,379 INFO spawned: 'backend' with pid 3873
+/var/log/supervisor/supervisord.log:25:2025-10-06 11:12:56,554 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+/var/log/supervisor/supervisord.log:26:2025-10-06 11:15:02,815 INFO waiting for backend to stop
+[WARNING: Only showing first 30 of 536003 matches. Consider a more specific pattern.]
+[End of matches for pattern "NoneType.*int|" in /var/log/supervisor]
