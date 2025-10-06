@@ -3516,6 +3516,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
             logger.info(f"   📊 Indicateurs: RSI={rsi:.2f} | MACD={indicators.macd_signal:.6f} | Stoch={stochastic_k:.2f} | BB={bb_position:.4f}")
             logger.info(f"   🚀 MACD Details: Line={indicators.macd_line:.6f} | Signal={indicators.macd_signal:.6f} | Histogram={indicators.macd_histogram:.6f}")
+            logger.info(f"   🎯 DYNAMIC RR: TradeType={getattr(indicators, 'trade_type', 'SWING')} | MinRR={getattr(indicators, 'minimum_rr_threshold', 2.0)} | Duration={getattr(indicators, 'trade_duration_estimate', '1-7 days')}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
             logger.info(f"🔍 DEBUG: About to call _validate_analysis_data for {opportunity.symbol}")
