@@ -250,7 +250,7 @@ class AdvancedRegimeDetector:
         
         return indicators
     
-    def _classify_regime(self, ind: Dict) -> Tuple[MarketRegimeDetailed, float, Dict]:
+    def _classify_regime(self, ind: Dict, thresholds: Dict) -> Tuple[MarketRegimeDetailed, float, Dict]:
         """Classify market regime based on indicators"""
         scores = {regime: 0 for regime in MarketRegimeDetailed}
         
