@@ -178,6 +178,11 @@ from chartist_learning_system import chartist_learning_system
 from ai_training_optimizer import ai_training_optimizer
 from advanced_technical_indicators import AdvancedTechnicalIndicators
 from enhanced_market_scoring import enhanced_market_scoring, EnhancedMarketScoring
+
+# ✨ NEW TALIB INDICATORS SYSTEM - Professional Integration
+import sys
+sys.path.append('/app/core')
+from core.indicators.talib_indicators import TALibIndicators, get_talib_indicators
 from macd_calculator import calculate_macd_optimized, macd_calculator
 from fibonacci_calculator import fibonacci_calculator, calculate_fibonacci_retracements
 import psutil  # CPU monitoring optimization - moved from loop
