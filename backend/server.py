@@ -2248,28 +2248,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_extreme_overbought = vwap_distance_num > 3.0
             vwap_extreme_oversold = vwap_distance_num < -3.0
             
-            # 🔧 SIMPLIFIED MFI FROM VWAP - Compatible with existing data structure
-            # Use VWAP distance and volume to calculate MFI-like indicator (no high/low columns needed)
-            try:
-                if vwap is not None and vwap > 0:
-                    # Calculate MFI-equivalent using VWAP position and volume trends
-                    vwap_distance = ((opportunity.current_price - vwap) / vwap) * 100 if vwap > 0 else 0
-                    mfi = 50.0 + (vwap_distance * 2)  # Scale VWAP distance to MFI range
-                    mfi = max(20, min(80, mfi))  # Clamp to reasonable MFI range (20-80)
-                    
-                    mfi_overbought = mfi > 70
-                    mfi_oversold = mfi < 30
-                    logger.debug(f"✅ MFI calculated for {opportunity.symbol}: {mfi:.1f} (VWAP-based)")
-                else:
-                    # ❌ NO FALLBACK - No MFI calculation possible
-                    mfi = None
-                    mfi_overbought = False
-                    mfi_oversold = False
-                    logger.warning(f"⚠️ MFI calculation failed for {opportunity.symbol} - no VWAP data")
-                    
-            except Exception as e:
-                logger.error(f"❌ MFI calculation error for {opportunity.symbol}: {e}")
-                mfi = None
+            # 🚀 MFI REPLACED BY VWAP DISTANCE FROM AdvancedTechnicalIndicators - No calculation needed
+            # MFI functionality now provided by vwap_position (already extracted above)
+            logger.debug(f"✅ VWAP-based MFI available for {opportunity.symbol}: {mfi:.2f}% (from AdvancedTechnicalIndicators)")
+            
+            # Calculate MFI thresholds from VWAP distance
+            if mfi is not None:
+                mfi_overbought = mfi > 5.0   # VWAP distance > 5% is like MFI > 70
+                mfi_oversold = mfi < -5.0    # VWAP distance < -5% is like MFI < 30
+            else:
                 mfi_overbought = False
                 mfi_oversold = False
             # 🚨 MFI EXTREME ANALYSIS - NULL SAFE
