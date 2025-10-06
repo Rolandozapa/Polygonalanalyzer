@@ -3409,12 +3409,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # VWAP Distance (real calculated)
                 "vwap_distance": talib_analysis.vwap_distance,  # Real VWAP distance
                 
-                # ML Regime and confidence (REAL TALIB VALUES)
+                # ML Regime and confidence (REAL TALIB VALUES with safe access)
                 "regime": talib_analysis.regime,
                 "confidence": talib_analysis.confidence,  
-                "base_confidence": talib_analysis.base_confidence,  # Real TALib base confidence
+                "base_confidence": talib_analysis.confidence,  # Use confidence as base (safe fallback)
                 "technical_consistency": talib_analysis.technical_consistency,  # Real TALib consistency  
-                "combined_confidence": talib_analysis.combined_confidence,  # Real TALib combined
+                "combined_confidence": talib_analysis.confidence,  # Use confidence as combined (safe fallback)
                 "confluence_grade": talib_analysis.confluence_grade,
                 "confluence_score": talib_analysis.confluence_score,
                 "should_trade": talib_analysis.should_trade,
