@@ -3358,8 +3358,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 DEBUG: Using TALib regime: {talib_analysis.regime}, confidence: {talib_analysis.confidence:.1%}")
             
             # 🎯 EXTRACT TRADE TYPE FROM IA1 JSON RESPONSE
-            trade_type_value = ia1_complete_json.get('trade_type', 'SWING').upper()
-            duration_value = ia1_complete_json.get('trade_duration_estimate', '1-7 days')
+            trade_type_raw = ia1_complete_json.get('trade_type', 'SWING')
+            trade_type_value = (trade_type_raw or 'SWING').upper()
+            duration_value = ia1_complete_json.get('trade_duration_estimate', '1-7 days') or '1-7 days'
             
             # 🎯 ADAPTIVE MINIMUM RR BASED ON TRADE TYPE
             min_rr_mapping = {
