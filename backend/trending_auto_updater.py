@@ -57,18 +57,25 @@ class TrendingAutoUpdater:
             r'([A-Z]{2,10})USDT.*?USD.*?\+?(-?\d+\.?\d*)%.*?(\d+\.?\d*[KMBT]?)',  # Market cap pattern
         ]
         
-        # Top crypto symbols pour fallback (BingX top 25 futures par market cap avec variation min 5%)
-        self.bingx_top_futures = [
-            "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "DOGEUSDT",
-            "BNBUSDT", "HYPEUSDT", "SUIUSDT", "TRXUSDT", "LINKUSDT", "AVAXUSDT",
-            "XLMUSDT", "PIUSDT", "CROUSDT", "MUSDT", "WLFIUSDT", "UNIUSDT",
-            "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "ETCUSDT", "FILUSDT",
-            "ICPUSDT", "NEARUSDT", "APTUSDT", "FTMUSDT", "INJUSDT", "GMXUSDT",
-            "ENSUSDT", "OPUSDT", "ARBUSDT", "ATOMUSDT", "ALGOUSDT", "SANDUSDT",
-            "MANAUSDT", "AXSUSDT", "THETAUSDT", "FLOWUSDT", "CHZUSDT",  # REMOVED XTZUSDT - not available on BingX Futures
-            "EGLDUSDT", "HBARUSDT", "VETUSDT", "GRTUSDT", "COMPUSDT", "YFIUSDT",
-            "SUSHIUSDT", "BATUSDT"  # Total: 50 symbols
-        ]
+        # 🎯 BingX TOP 25 MARKET CAP FUTURES (User Request: Limit scout to top 25 only)
+        self.bingx_top_25_futures = [
+            # Top 10 by market cap
+            "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", 
+            "DOGEUSDT", "BNBUSDT", "TRXUSDT", "LINKUSDT", "AVAXUSDT",
+            # Top 11-20 by market cap  
+            "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "UNIUSDT",
+            "FILUSDT", "ICPUSDT", "NEARUSDT", "APTUSDT", "ATOMUSDT",
+            # Top 21-25 by market cap
+            "OPUSDT", "ARBUSDT", "INJUSDT", "FTMUSDT", "GMXUSDT"
+        ]  # Total: 25 symbols (focused on market cap leaders only)
+        
+        # 🔄 COMPATIBILITY: Keep broader list for fallback scenarios
+        self.bingx_extended_futures = [
+            "XLMUSDT", "PIUSDT", "CROUSDT", "MUSDT", "WLFIUSDT", "SUIUSDT",
+            "ENSUSDT", "ALGOUSDT", "SANDUSDT", "MANAUSDT", "AXSUSDT", 
+            "THETAUSDT", "FLOWUSDT", "CHZUSDT", "EGLDUSDT", "HBARUSDT", 
+            "VETUSDT", "GRTUSDT", "COMPUSDT", "YFIUSDT", "SUSHIUSDT", "BATUSDT"
+        ]  # Extended list for backup scenarios
         
         logger.info("TrendingAutoUpdater initialized - 4h update cycle avec filtres avancés")
     
