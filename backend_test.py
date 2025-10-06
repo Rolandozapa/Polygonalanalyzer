@@ -4314,30 +4314,7 @@ async def main():
         logger.error(f"❌ Test suite execution failed: {e}")
         return False
     
-    # Print final summary
-    logger.info("\n" + "=" * 80)
-    logger.info("🎯 IA2 RR CALCULATION & REASONING DISPLAY TESTING SUITE - FINAL SUMMARY")
-    logger.info("=" * 80)
-    
-    total_tests = len(test_suite.test_results)
-    passed_tests = sum(1 for result in test_suite.test_results if result['success'])
-    failed_tests = total_tests - passed_tests
-    
-    logger.info(f"📊 TOTAL TESTS: {total_tests}")
-    logger.info(f"✅ PASSED: {passed_tests}")
-    logger.info(f"❌ FAILED: {failed_tests}")
-    logger.info(f"📈 SUCCESS RATE: {(passed_tests/total_tests*100):.1f}%" if total_tests > 0 else "📈 SUCCESS RATE: 0%")
-    
-    logger.info("\n📋 DETAILED RESULTS:")
-    for result in test_suite.test_results:
-        status = "✅ PASS" if result['success'] else "❌ FAIL"
-        logger.info(f"   {status}: {result['test']}")
-        if result['details']:
-            logger.info(f"      Details: {result['details']}")
-    
-    logger.info("\n" + "=" * 80)
-    logger.info("🏁 IA2 RR Calculation & Reasoning Display Testing Suite Complete")
-    logger.info("=" * 80)
+    # Summary is handled by run_all_tests method
 
 
 if __name__ == "__main__":
