@@ -2267,19 +2267,19 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 mfi_extreme_oversold = False
                 institutional_activity = 'neutral'
             
-            # ✅ ALL INDICATORS EXTRACTED FROM AdvancedTechnicalIndicators
+            # ✅ ALL INDICATORS EXTRACTED FROM simple_indicators_data
             # Volume analysis (already extracted above)
-            # EMAs and trend hierarchy (already extracted from indicators)
-            ema_9 = indicators.ema_9
-            ema_21 = indicators.ema_21
-            sma_50 = indicators.sma_50
-            ema_200 = indicators.ema_200
-            trend_hierarchy = indicators.trend_hierarchy
-            ema_strength = indicators.trend_strength_score
-            trend_momentum = indicators.trend_momentum
-            price_vs_emas = indicators.price_vs_emas
-            ema_cross_signal = indicators.ema_cross_signal
-            trend_strength_score = indicators.trend_strength_score
+            # EMAs and trend hierarchy (from simple indicators)
+            ema_9 = simple_indicators_data.get('ema_9', opportunity.current_price)
+            ema_21 = simple_indicators_data.get('ema_21', opportunity.current_price)
+            sma_50 = simple_indicators_data.get('ema_50', opportunity.current_price)  # Using ema_50 from simple indicators
+            ema_200 = opportunity.current_price  # Default (not in simple indicators yet)
+            trend_hierarchy = "BULLISH" if simple_indicators_data.get('trend_bullish', False) else "BEARISH" if simple_indicators_data.get('trend_bearish', False) else "NEUTRAL"
+            ema_strength = 0.5  # Default trend strength
+            trend_momentum = "POSITIVE" if simple_indicators_data.get('trend_bullish', False) else "NEGATIVE" if simple_indicators_data.get('trend_bearish', False) else "NEUTRAL"
+            price_vs_emas = "ABOVE" if simple_indicators_data.get('price_above_emas', False) else "BELOW"
+            ema_cross_signal = "BULLISH" if simple_indicators_data.get('trend_bullish', False) else "BEARISH"
+            trend_strength_score = 0.5  # Default trend strength score
             
             # Debug logging pour vérifier les vraies valeurs calculées AVEC VWAP+MULTI EMA/SMA
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}")
