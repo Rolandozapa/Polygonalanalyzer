@@ -4214,19 +4214,16 @@ class DynamicRRIntegrationTestSuite:
             return []
     
     async def run_all_tests(self):
-        """Run all tests focusing on RR Calculator integration validation"""
-        logger.info("🚀 STARTING RR CALCULATOR INTEGRATION TESTING SUITE")
+        """Run all tests focusing on Dynamic RR Integration Phase 1 validation"""
+        logger.info("🚀 STARTING DYNAMIC RR INTEGRATION TESTING SUITE - PHASE 1")
         logger.info("=" * 80)
         
         start_time = time.time()
         
-        # Run RR Calculator integration test first (priority)
-        await self.test_0_rr_calculator_integration_validation()
-        
-        # Run additional validation tests
-        await self.test_1_scout_system_3_cryptos_test()
-        await self.test_2_technical_indicators_integration_verification()
-        await self.test_3_json_schema_validation_fix()
+        # Run Dynamic RR Integration tests (Phase 1 focus)
+        await self.test_1_field_name_validation()
+        await self.test_2_dynamic_rr_escalation_logic()
+        await self.test_3_database_persistence_validation()
         
         # Calculate overall results
         total_time = time.time() - start_time
@@ -4234,17 +4231,25 @@ class DynamicRRIntegrationTestSuite:
         total_tests = len(self.test_results)
         
         logger.info("\n" + "=" * 80)
-        logger.info("🎯 RR CALCULATOR INTEGRATION VALIDATION SUMMARY")
+        logger.info("🎯 DYNAMIC RR INTEGRATION PHASE 1 VALIDATION SUMMARY")
         logger.info("=" * 80)
         
-        # Check RR Calculator integration specifically
-        rr_calculator_result = next((r for r in self.test_results if 'rr calculator' in r['test'].lower()), None)
+        # Check specific test results
+        field_name_result = next((r for r in self.test_results if 'field name' in r['test'].lower()), None)
+        escalation_result = next((r for r in self.test_results if 'escalation' in r['test'].lower()), None)
+        persistence_result = next((r for r in self.test_results if 'persistence' in r['test'].lower()), None)
         
-        if rr_calculator_result:
-            if rr_calculator_result['success']:
-                logger.info("✅ RR CALCULATOR INTEGRATION: SUCCESSFUL - Dynamic RR calculations working with Niveaux Proches method")
-            else:
-                logger.info(f"❌ RR CALCULATOR INTEGRATION: FAILED - {rr_calculator_result['details']}")
+        if field_name_result:
+            status = "✅ SUCCESSFUL" if field_name_result['success'] else "❌ FAILED"
+            logger.info(f"{status} FIELD NAME VALIDATION: {field_name_result['details']}")
+        
+        if escalation_result:
+            status = "✅ SUCCESSFUL" if escalation_result['success'] else "❌ FAILED"
+            logger.info(f"{status} DYNAMIC RR ESCALATION: {escalation_result['details']}")
+        
+        if persistence_result:
+            status = "✅ SUCCESSFUL" if persistence_result['success'] else "❌ FAILED"
+            logger.info(f"{status} DATABASE PERSISTENCE: {persistence_result['details']}")
         
         for result in self.test_results:
             status = "✅ PASS" if result['success'] else "❌ FAIL"
@@ -4257,19 +4262,32 @@ class DynamicRRIntegrationTestSuite:
         logger.info(f"   Success rate: {passed_tests/total_tests:.2f}")
         logger.info(f"   Total time: {total_time:.2f} seconds")
         
-        # Determine overall success based on RR Calculator integration
-        rr_calculator_success = rr_calculator_result['success'] if rr_calculator_result else False
-        overall_success = rr_calculator_success and (passed_tests >= (total_tests * 0.5))  # 50% pass rate + RR Calculator integration
+        # Determine overall success based on Phase 1 requirements
+        field_name_success = field_name_result['success'] if field_name_result else False
+        escalation_success = escalation_result['success'] if escalation_result else False
+        persistence_success = persistence_result['success'] if persistence_result else False
         
-        if rr_calculator_success:
-            logger.info("🎉 RR CALCULATOR INTEGRATION SUCCESSFUL: Dynamic RR calculations replacing fixed values")
+        phase1_success = field_name_success and escalation_success and persistence_success
+        overall_success = phase1_success and (passed_tests >= (total_tests * 0.67))  # 67% pass rate + all core tests
+        
+        if phase1_success:
+            logger.info("🎉 DYNAMIC RR INTEGRATION PHASE 1 SUCCESSFUL:")
+            logger.info("   ✅ Field names updated: trade_type and minimum_rr_threshold")
+            logger.info("   ✅ Dynamic RR escalation logic working")
+            logger.info("   ✅ Database persistence with new field names")
             if overall_success:
-                logger.info("✅ READY FOR PRODUCTION: Niveaux Proches method operational with technical levels")
+                logger.info("✅ READY FOR PHASE 2: Advanced technical indicators integration")
             else:
-                logger.info("⚠️ PARTIAL SUCCESS: RR Calculator working but other issues may need attention")
+                logger.info("⚠️ PARTIAL SUCCESS: Core functionality working but some issues need attention")
         else:
-            logger.info("❌ RR CALCULATOR INTEGRATION FAILED: Still using fixed RR values or missing optimized calculations")
-            logger.info("🚨 REQUIRES IMMEDIATE ATTENTION: Dynamic RR calculation system not operational")
+            logger.info("❌ DYNAMIC RR INTEGRATION PHASE 1 FAILED:")
+            if not field_name_success:
+                logger.info("   ❌ Field name validation failed")
+            if not escalation_success:
+                logger.info("   ❌ Dynamic RR escalation logic failed")
+            if not persistence_success:
+                logger.info("   ❌ Database persistence failed")
+            logger.info("🚨 REQUIRES IMMEDIATE ATTENTION: Phase 1 implementation not working correctly")
         
         return overall_success
 
