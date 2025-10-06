@@ -3388,7 +3388,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 
                 # Price levels from TALib calculations
                 "current_price": real_current_price,
-                "vwap_price": vwap,  # Real VWAP from TALib
+                "vwap_price": vwap or real_current_price,  # Real VWAP from TALib
                 "vwap_position": vwap_position or 0.0,
                 "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
                 "vwap_trend": vwap_trend or "neutral",
