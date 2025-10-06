@@ -1,39 +1,37 @@
 #!/usr/bin/env python3
 """
-IA2 RR CALCULATION & REASONING DISPLAY TESTING SUITE
-Focus: Analyser pourquoi IA2 reasoning n'est pas affiché et statut du calcul RR.
+DYNAMIC RR INTEGRATION TESTING SUITE - PHASE 1 VALIDATION
+Focus: Test the dynamic RR integration functionality implemented in Phase 1.
 
-OBJECTIFS SPÉCIFIQUES:
+TESTING OBJECTIVES:
 
-1. **IA2 RR Calculation Analysis**:
-   - Examiner les décisions IA2 récentes via /api/decisions
-   - Vérifier si IA2 utilise les formules RR correctes: LONG: (TP1-Entry)/(Entry-SL), SHORT: (Entry-TP1)/(SL-Entry)
-   - Analyser les champs: calculated_rr, risk_reward_ratio, ia2_calculated_rr dans les décisions stockées
-   - Comparer avec les niveaux techniques: ia2_entry_price, ia2_stop_loss, ia2_take_profit_1
+1. **Field Name Validation**: 
+   - Verify TechnicalAnalysis data model accepts new field names: `trade_type` and `minimum_rr_threshold`
+   - Test that old field names are no longer used
 
-2. **IA2 Reasoning Field Investigation**:
-   - Examiner le champ "ia2_reasoning" dans les décisions IA2 stockées en base
-   - Vérifier si "strategic_reasoning" contient le contenu détaillé d'IA2
-   - Analyser pourquoi le reasoning pourrait être vide ou non affiché dans l'interface
-   - Comparer avec "reasoning" field vs "strategic_reasoning" field
+2. **Dynamic RR Escalation Logic**: 
+   - Test `_should_send_to_ia2` method uses new field names correctly
+   - Verify dynamic minimum RR thresholds based on trade type:
+     * Scalping trades: RR threshold ~1.0
+     * Intraday trades: RR threshold ~1.5  
+     * Swing trades: RR threshold ~2.0
 
-3. **IA2 JSON Response Parsing Check**:
-   - Vérifier si IA2 génère des réponses JSON valides
-   - Examiner les logs pour "IA2: Raw strategic response" et "CLEANED IA2 JSON"
-   - Identifier les erreurs JSON parsing dans IA2 (comme IA1 avait)
-   - Analyser si IA2 tombe en fallback mode
+3. **Advanced Technical Indicators Integration**:
+   - Verify `advanced_technical_indicators.py` calculates and returns `trade_type` and `minimum_rr_threshold`
+   - Test values are based on market conditions
 
-4. **Database Storage Validation**:
-   - Vérifier que les décisions IA2 sont correctement stockées dans trading_decisions collection
-   - Examiner la structure complète des documents IA2 en base
-   - Confirmer que tous les champs IA2 sont persistés (reasoning, calculated_rr, etc.)
+4. **Data Flow Validation**:
+   - Test new fields flow correctly through: Advanced technical indicators → Server validation → TechnicalAnalysis object → IA2 escalation logic
 
-5. **API Response Structure Check**:
-   - Tester /api/decisions pour voir la structure des décisions IA2 retournées
-   - Vérifier si l'API expose correctement les champs IA2: reasoning, calculated_rr
-   - Identifier disconnect entre backend calculation et API response
+5. **Database Persistence**:
+   - Verify analyses stored in MongoDB with new field names
+   - Validate values make sense based on market conditions
 
-FOCUS: Déterminer pourquoi IA2 reasoning n'apparaît pas dans l'interface et si IA2 utilise les calculs RR optimisés ou des valeurs fixes.
+6. **Symbol Testing**:
+   - Test symbols that generate different trade types (scalping vs swing)
+   - Verify dynamic behavior is working correctly
+
+FOCUS: Validate Phase 1 implementation of dynamic RR integration with consistent field naming and adaptive minimum RR thresholds.
 """
 
 import asyncio
