@@ -207,35 +207,11 @@ class TrendingAutoUpdater:
                     logger.info(f"✅ CACHE HIT: Using cached trending data ({time_since_update:.0f}s old)")
                     return self.current_trending
             
-            # Si pas de cache valide, retourner une liste basique pour que le système continue à fonctionner
-            logger.warning("📦 NO CACHE: Returning basic fallback list")
-            # Retourner les TOP 25 symboles de base pour que le système continue à fonctionner
-            basic_symbols = [
-                'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOGEUSDT', 
-                'AVAXUSDT', 'DOTUSDT', 'MATICUSDT', 'LINKUSDT', 'LTCUSDT', 'BCHUSDT', 'UNIUSDT',
-                'ATOMUSDT', 'FILUSDT', 'APTUSDT', 'NEARUSDT', 'VETUSDT', 'ICPUSDT', 'HBARUSDT',
-                'ALGOUSDT', 'ETCUSDT', 'MANAUSDT', 'SANDUSDT', 'THETAUSDT', 'FTMUSDT',  # REMOVED XTZUSDT - not on BingX
-                'EGLDUSDT', 'AAVEUSDT', 'GRTUSDT', 'AXSUSDT', 'KLAYUSDT', 'RUNEUSDT', 'QNTUSDT',
-                'CRVUSDT', 'SUSHIUSDT', 'ZECUSDT', 'COMPUSDT', 'YFIUSDT', 'SNXUSDT', 'MKRUSDT',
-                'ENJUSDT', 'BATUSDT', 'FLOWUSDT', 'KSMUSDT', 'ZRXUSDT', 'RENUSDT', 'LRCUSDT', '1INCHUSDT'
-            ]
-            
-            # Convertir en objets TrendingCrypto corrects
-            fallback_trending = []
-            for symbol in basic_symbols:
-                trending_crypto = TrendingCrypto(
-                    symbol=symbol,
-                    name=symbol.replace('USDT', ''),
-                    price=1.0,  # Prix neutre
-                    price_change=2.5,  # Valeur neutre positive 
-                    volume=1000000,     # Volume raisonnable
-                    source='fallback_basic'
-                )
-                fallback_trending.append(trending_crypto)
-            
-            self.current_trending = fallback_trending
-            logger.info(f"✅ FALLBACK: Using {len(fallback_trending)} basic TrendingCrypto objects")
-            return fallback_trending
+            # 🚨 NO FAKE DATA FALLBACK: System must use real market data only
+            logger.error("❌ CRITICAL: BingX API failed completely - NO FAKE FALLBACK DATA")
+            logger.error("❌ Trading bot requires REAL market data - system will return empty list")
+            self.current_trending = []
+            return []
                 
         except Exception as e:
             logger.error(f"❌ SYNC ERROR: {e}")
