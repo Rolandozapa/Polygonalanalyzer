@@ -2051,6 +2051,82 @@ class AdvancedTechnicalIndicators:
         middle = prices.rolling(period).mean()
         std = prices.rolling(period).std()
         upper = middle + (std * std_dev)
+
+    # =========================================================================
+    # ENHANCED SUPPORT & RESISTANCE INTEGRATION
+    # =========================================================================
+    
+    def calculate_enhanced_sr_levels(self, df: pd.DataFrame) -> Dict:
+        """
+        Calculate enhanced support/resistance using multi-timeframe detection,
+        clustering, and volume validation
+        """
+        try:
+            from enhanced_support_resistance import enhanced_sr_calculator
+            return enhanced_sr_calculator.calculate_enhanced_support_resistance(df)
+        except Exception as e:
+            logger.error(f"Error calculating enhanced S/R: {e}")
+            # Fallback to simple calculation
+            current_price = df['close'].iloc[-1] if 'close' in df.columns else df['Close'].iloc[-1]
+            return {
+                'supports': [],
+                'resistances': [],
+                'current_price': current_price,
+                'primary_support': current_price * 0.95,
+                'primary_resistance': current_price * 1.05,
+                'support_strength': 0.5,
+                'resistance_strength': 0.5
+            }
+    
+    def calculate_context_aware_rr(self, df: pd.DataFrame, direction: str, 
+                                   entry_price: Optional[float] = None) -> Dict:
+        """
+        Calculate context-aware Risk-Reward using ADX, RSI, volatility, and enhanced S/R
+        """
+        try:
+            from enhanced_support_resistance import enhanced_sr_calculator
+            
+            # Get enhanced S/R levels
+            sr_levels = self.calculate_enhanced_sr_levels(df)
+            
+            # Calculate enhanced RR with context
+            rr_analysis = enhanced_sr_calculator.calculate_enhanced_rr(
+                df, direction, entry_price, sr_levels
+            )
+            
+            return {
+                'entry_price': rr_analysis.entry_price,
+                'stop_loss': rr_analysis.stop_loss,
+                'take_profit': rr_analysis.take_profit,
+                'risk': rr_analysis.risk,
+                'reward': rr_analysis.reward,
+                'rr_ratio': rr_analysis.rr_ratio,
+                'confidence_score': rr_analysis.confidence_score,
+                'min_rr_required': rr_analysis.min_rr_required,
+                'trade_valid': rr_analysis.trade_valid,
+                'recommendation': rr_analysis.recommendation,
+                'reasoning': rr_analysis.reasoning,
+                'market_context': rr_analysis.market_context,
+                'indicators': rr_analysis.indicators,
+                'atr_multiple_used': rr_analysis.atr_multiple_used,
+                'sr_levels': sr_levels
+            }
+        except Exception as e:
+            logger.error(f"Error calculating context-aware RR: {e}")
+            # Fallback to simple RR
+            current_price = df['close'].iloc[-1] if 'close' in df.columns else df['Close'].iloc[-1]
+            return {
+                'entry_price': current_price,
+                'stop_loss': current_price * 0.95,
+                'take_profit': current_price * 1.05,
+                'risk': current_price * 0.05,
+                'reward': current_price * 0.05,
+                'rr_ratio': 1.0,
+                'confidence_score': 50.0,
+                'trade_valid': False,
+                'reasoning': 'Fallback calculation'
+            }
+
         lower = middle - (std * std_dev)
         return upper, middle, lower
     
