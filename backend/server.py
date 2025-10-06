@@ -3386,17 +3386,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "stochastic_d": stochastic_d or 50.0,
                 "bollinger_position": bb_position or 0.5,
                 
-                # Price levels from TALib calculations
-                "current_price": real_current_price,
-                "vwap_price": vwap or real_current_price,  # Real VWAP from TALib
-                "vwap_position": vwap_position or 0.0,
+                # Price levels from TALib calculations (with safe fallbacks)
+                "current_price": real_current_price or opportunity.current_price or 0.0,
+                "vwap_price": vwap if vwap and vwap > 0 else real_current_price,  # Real VWAP from TALib
+                "vwap_position": vwap_position if vwap_position is not None else 0.0,
                 "vwap_signal": ('extreme_overbought' if vwap_extreme_overbought else 'overbought' if vwap_overbought else 'extreme_oversold' if vwap_extreme_oversold else 'oversold' if vwap_oversold else 'neutral'),
                 "vwap_trend": vwap_trend or "neutral",
-                "sma_20": sma_20 or real_current_price,  # Real SMA 20 from TALib
-                "sma_50": sma_50 or real_current_price,  # Real SMA 50 from TALib  
-                "ema_9": ema_9 or real_current_price,    # Real EMA 9 from TALib
-                "ema_21": ema_21 or real_current_price,  # Real EMA 21 from TALib
-                "ema_200": ema_200 or real_current_price, # Real EMA 200 from TALib
+                "sma_20": sma_20 if sma_20 and sma_20 > 0 else real_current_price,  # Real SMA 20 from TALib
+                "sma_50": sma_50 if sma_50 and sma_50 > 0 else real_current_price,  # Real SMA 50 from TALib  
+                "ema_9": ema_9 if ema_9 and ema_9 > 0 else real_current_price,    # Real EMA 9 from TALib
+                "ema_21": ema_21 if ema_21 and ema_21 > 0 else real_current_price,  # Real EMA 21 from TALib
+                "ema_200": ema_200 if ema_200 and ema_200 > 0 else real_current_price, # Real EMA 200 from TALib
                 
                 # Volume and advanced indicators (REAL TALIB VALUES)
                 "volume_ratio": talib_analysis.volume_ratio,  # Real TALib volume ratio
