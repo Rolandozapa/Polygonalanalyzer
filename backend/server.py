@@ -4476,6 +4476,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["atr"] = self._ensure_json_safe(analysis_data.get("atr"), 0.0)
             cleaned_data["atr_percentage"] = self._ensure_json_safe(analysis_data.get("atr_percentage"), 2.0)
             
+            # 🚨 CRITICAL FIX: Add missing ADX trend strength fields
+            cleaned_data["adx"] = self._ensure_json_safe(analysis_data.get("adx"), 25.0)
+            cleaned_data["adx_strength"] = str(analysis_data.get("adx_strength", "MODERATE"))
+            cleaned_data["plus_di"] = self._ensure_json_safe(analysis_data.get("plus_di"), 25.0)
+            cleaned_data["minus_di"] = self._ensure_json_safe(analysis_data.get("minus_di"), 25.0)
+            
             # 🚨 CRITICAL FIX: Add missing VWAP distance and volume fields
             cleaned_data["vwap_distance"] = self._ensure_json_safe(analysis_data.get("vwap_distance"), 0.0)
             cleaned_data["volume_ratio"] = self._ensure_json_safe(analysis_data.get("volume_ratio"), 1.0)
