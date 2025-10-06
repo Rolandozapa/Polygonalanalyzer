@@ -2395,8 +2395,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             2. Volume (Flow): {volume_ratio:.1f}x - {'SURGE' if volume_surge else 'INCREASING' if volume_trend == 'INCREASING' else 'DECREASING' if volume_trend == 'DECREASING' else 'NEUTRAL'}
             3. RSI (Momentum): {rsi:.1f} - {'OVERSOLD' if rsi < 30 else 'OVERBOUGHT' if rsi > 70 else 'NEUTRAL'}
             4. Multi-Timeframe: Available above
-            5. Volume: {volume_trend.upper()} ({volume_ratio:.1f}x)
-            6. EMA HIERARCHY: {trend_hierarchy.upper()} ({trend_strength_score:.0f}% strength)
+            5. Volume: {str(volume_trend).upper() if volume_trend is not None else 'NEUTRAL'} ({volume_ratio:.1f}x)
+            6. EMA HIERARCHY: {str(trend_hierarchy).upper() if trend_hierarchy is not None else 'NEUTRAL'} ({trend_strength_score:.0f}% strength)
             
             CONFLUENCE REQUIREMENT: Need 4+/6 indicators aligned for STRONG signal
             
