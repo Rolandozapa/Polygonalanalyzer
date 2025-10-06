@@ -2306,6 +2306,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🚀 {opportunity.symbol} - Volume: {volume_ratio:.2f}x, Trend: {volume_trend}, Surge: {volume_surge}")
             logger.info(f"📊 {opportunity.symbol} - EMAs: 9=${ema_9:.4f}, 21=${ema_21:.4f}, SMA50=${sma_50:.4f}, EMA200=${ema_200:.4f}")
             
+            # Define variables used in IA1 prompt f-strings
+            rsi_interpretation = self._get_rsi_interpretation(talib_analysis.rsi_14, talib_analysis.rsi_zone)
+            macd_direction = "bullish" if talib_analysis.macd_histogram > 0 else "bearish" if talib_analysis.macd_histogram < 0 else "neutral"
+            vwap_strength = "price strength" if talib_analysis.vwap_distance > 0 else "price weakness" if talib_analysis.vwap_distance < 0 else "neutral positioning"
+            bb_squeeze = "ACTIVE" if talib_analysis.bb_squeeze else "INACTIVE"
+            
             # Get current price for calculations
             current_price = opportunity.current_price
             
