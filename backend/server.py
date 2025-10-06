@@ -2585,8 +2585,21 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             4. Justify confidence level considering timeframe hierarchy
             """
             
-            # Process the prompt with chunking support
-            chunks = self._chunk_prompt_for_llm(prompt)
+            # ✅ FORMAT PROMPT WITH ALL TALIB VARIABLES (IA1 v6.0)
+            try:
+                formatted_prompt = prompt.format(**analysis_data)
+                logger.info(f"✅ Prompt formatted with {len(analysis_data)} TALib variables for {opportunity.symbol}")
+            except KeyError as e:
+                logger.error(f"❌ Missing variable in prompt formatting: {e}")
+                logger.info(f"   📊 Available variables: {list(analysis_data.keys())}")
+                # Use original prompt if formatting fails
+                formatted_prompt = prompt
+            except Exception as e:
+                logger.error(f"❌ Prompt formatting error: {e}")
+                formatted_prompt = prompt
+            
+            # Process the formatted prompt with chunking support
+            chunks = self._chunk_prompt_for_llm(formatted_prompt)
             response = await self._process_chunked_analysis(chunks, opportunity.symbol)
             logger.info(f"🤖 IA1 raw response for {opportunity.symbol}: {len(response)} chars - {response[:200]}...")
             
