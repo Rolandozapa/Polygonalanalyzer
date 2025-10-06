@@ -2846,12 +2846,13 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🚨 CALCUL MANQUANT DES INDICATEURS TECHNIQUES IA1
             logger.info(f"📊 CALCULATING MISSING TECHNICAL INDICATORS for {opportunity.symbol}")
             
-            # Initialiser avec valeurs par défaut sûres SEULEMENT pour les indicateurs non encore calculés
-            # NOTE: rsi, macd_signal, macd_histogram, stochastic_k/d sont déjà calculés plus haut
+            # 🚨 STRICT VALIDATION: NO FALLBACK INITIALIZATION - All indicators must be properly calculated
+            # ❌ REMOVED: Safe fallback values (rsi=50.0, bb_position=0.0) 
+            # ✅ NEW POLICY: If indicators are not calculated, analysis should fail gracefully, not use fake data
             if 'rsi' not in locals() or rsi is None:
-                rsi = 50.0
+                logger.error(f"🚨 RSI not calculated for {opportunity.symbol} - Analysis will use None values")
             if 'bb_position' not in locals() or bb_position is None:
-                bb_position = 0.0
+                logger.error(f"🚨 Bollinger Bands not calculated for {opportunity.symbol} - Analysis will use None values")
             
             # Calculer les vrais indicateurs si nous avons des données OHLCV
             if not historical_data.empty and len(historical_data) >= 20:
