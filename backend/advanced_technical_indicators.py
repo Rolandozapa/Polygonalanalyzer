@@ -978,7 +978,8 @@ class AdvancedTechnicalIndicators:
                 # Trade Type Recommendation
                 recommended_trade_type=trade_type,
                 trade_duration_estimate=duration,
-                optimal_timeframe=timeframe
+                optimal_timeframe=timeframe,
+                minimum_rr_for_trade_type=min_rr
             )
             
         except Exception as e:
