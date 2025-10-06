@@ -121,9 +121,14 @@ class TechnicalAnalysis(BaseModel):
     ema_9: Optional[float] = 0.0   # EMA 9 value
     ema_21: Optional[float] = 0.0  # EMA 21 value
     ema_200: Optional[float] = 0.0 # EMA 200 value
-    # VOLUME INDICATORS
+    # VOLUME INDICATORS  
     volume_ratio: Optional[float] = 1.0  # Volume ratio
     volume_analysis: Optional[str] = "1.0x"  # Volume analysis text
+    # ATR VOLATILITY INDICATORS
+    atr: Optional[float] = 0.0  # ATR absolute value
+    atr_percentage: Optional[float] = 2.0  # ATR as percentage of price
+    # VWAP DISTANCE (real calculated)
+    vwap_distance: Optional[float] = 0.0  # VWAP distance percentage
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
