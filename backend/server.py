@@ -2261,8 +2261,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # CRITICAL DEBUG: Check if analysis_data contains these values
             logger.info(f"🔍 CRITICAL CHECK - analysis_data will contain: ATR={atr}, SMA_20={sma_20 if 'sma_20' in locals() else 'MISSING'}, Current_Price={real_current_price if 'real_current_price' in locals() else 'MISSING'}")
-            volume_trend = talib_analysis.volume_trend
-            volume_surge = talib_analysis.volume_surge
+            
+            # ✅ SAFE ACCESS to volume indicators (could be missing in TALib)
+            volume_trend = getattr(talib_analysis, 'volume_trend', 0.0) if talib_analysis else 0.0
+            volume_surge = getattr(talib_analysis, 'volume_surge', False) if talib_analysis else False
             
             # ✅ USE REAL MFI from TALib (not VWAP replacement)
             mfi = talib_analysis.mfi  # Real Money Flow Index from TALib
