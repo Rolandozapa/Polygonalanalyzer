@@ -4382,9 +4382,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["mfi_signal"] = str(analysis_data.get("mfi_signal", "neutral"))
             cleaned_data["mfi_institution"] = str(analysis_data.get("mfi_institution", "neutral"))
             
-            # Add VWAP indicators
-            cleaned_data["vwap_price"] = self._ensure_json_safe(analysis_data.get("vwap_price"), 0.0)
-            cleaned_data["vwap_position"] = self._ensure_json_safe(analysis_data.get("vwap_position"), 0.0)
+            # ✅ VWAP indicators - NO FALLBACK to 0.0
+            cleaned_data["vwap_price"] = self._ensure_json_safe(analysis_data.get("vwap_price"), None)  # ❌ NO 0.0 FALLBACK
+            cleaned_data["vwap_position"] = self._ensure_json_safe(analysis_data.get("vwap_position"), None)  # ❌ NO 0.0 FALLBACK  
             cleaned_data["vwap_signal"] = str(analysis_data.get("vwap_signal", "neutral"))
             cleaned_data["vwap_trend"] = str(analysis_data.get("vwap_trend", "neutral"))
             
