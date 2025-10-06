@@ -39,7 +39,6 @@ class TALibIndicators:
     """
     
     def __init__(self, config: Dict[str, Any] = None):
-        super().__init__(config)
         
         # Load configuration from file or use defaults
         self.config = config or self._load_default_config()
