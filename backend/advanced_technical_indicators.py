@@ -180,7 +180,23 @@ class AdvancedRegimeDetector:
             logger.error(f"Error in regime detection: {e}")
             return self._get_default_regime()
     
-    def _calculate_regime_indicators(self, df: pd.DataFrame) -> Dict:
+    def _get_dynamic_thresholds(self, df: pd.DataFrame) -> Dict:
+        """Calculate dynamic thresholds based on asset volatility"""
+        close = df['close']
+        volatility = close.pct_change().std()
+        
+        return {
+            'bb_squeeze': 0.015 + volatility * 10,  # Dynamic BB squeeze threshold
+            'bb_expansion': 0.045 + volatility * 15,  # Dynamic expansion threshold
+            'adx_strong': max(20, min(30, 20 + volatility * 50)),  # Adaptive ADX
+            'adx_weak': max(15, min(25, 15 + volatility * 30)),
+            'volume_surge': 1.8 + volatility * 5,  # Adaptive volume surge
+            'slope_strong': 0.001 + volatility * 2,  # Adaptive slope thresholds
+            'range_tight': max(3, min(7, 5 - volatility * 100)),  # Adaptive range
+            'range_wide': max(8, min(15, 10 + volatility * 100))
+        }
+    
+    def _calculate_regime_indicators(self, df: pd.DataFrame, thresholds: Dict) -> Dict:
         """Calculate all indicators for regime classification"""
         close = df['close']
         high = df['high']
