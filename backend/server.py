@@ -1645,6 +1645,17 @@ class UltraProfessionalIA1TechnicalAnalyst:
         self.market_aggregator = advanced_market_aggregator
         self.advanced_indicators = AdvancedTechnicalIndicators()
     
+    def _get_rsi_interpretation(self, rsi_value: float, rsi_zone: str) -> str:
+        """Get RSI interpretation based on value and zone"""
+        if rsi_zone == "OVERBOUGHT":
+            return f"RSI {rsi_value:.1f} shows overbought conditions - potential reversal zone"
+        elif rsi_zone == "OVERSOLD":
+            return f"RSI {rsi_value:.1f} shows oversold conditions - potential bounce zone"
+        elif rsi_zone == "NEUTRAL":
+            return f"RSI {rsi_value:.1f} in neutral zone - balanced momentum"
+        else:
+            return f"RSI {rsi_value:.1f} in normal range - moderate momentum"
+    
     def analyze_multi_timeframe_hierarchy(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> dict:
         """
         🎯 ANALYSE RÉGRESSIVE MULTI-TIMEFRAME : Long terme → Court terme
