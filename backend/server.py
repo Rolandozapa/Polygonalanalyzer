@@ -2209,16 +2209,21 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             above_vwap = indicators.above_vwap
             vwap_position = indicators.vwap_position
             
-            # Calculate VWAP-derived values
-            vwap_trend = "bullish" if vwap_distance > 0.5 else "bearish" if vwap_distance < -0.5 else "neutral"
-            vwap_overbought = vwap_distance > 2.0
-            vwap_oversold = vwap_distance < -2.0
-            vwap_extreme_overbought = vwap_distance > 3.0
-            vwap_extreme_oversold = vwap_distance < -3.0
+            # Calculate VWAP-derived values - Ensure numeric types
+            try:
+                vwap_distance_num = float(vwap_distance) if isinstance(vwap_distance, (str, int)) else vwap_distance
+            except (ValueError, TypeError):
+                vwap_distance_num = 0.0
+                
+            vwap_trend = "bullish" if vwap_distance_num > 0.5 else "bearish" if vwap_distance_num < -0.5 else "neutral"
+            vwap_overbought = vwap_distance_num > 2.0
+            vwap_oversold = vwap_distance_num < -2.0
+            vwap_extreme_overbought = vwap_distance_num > 3.0
+            vwap_extreme_oversold = vwap_distance_num < -3.0
             
             # 🔧 CALCULATE MFI-equivalent from VWAP and volume (for compatibility)
             # Use VWAP distance and volume to simulate MFI behavior
-            mfi = 50.0 + (vwap_distance * 10)  # Convert VWAP distance to MFI-like scale
+            mfi = 50.0 + (vwap_distance_num * 10)  # Convert VWAP distance to MFI-like scale
             mfi = max(0, min(100, mfi))  # Clamp to 0-100 range
             mfi_overbought = mfi > 80
             mfi_oversold = mfi < 20
