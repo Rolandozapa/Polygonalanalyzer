@@ -887,15 +887,15 @@ const TradingDashboard = () => {
                               </div>
                               
                               <div className="bg-white rounded-lg p-3 text-center border">
-                                <p className="text-xs text-slate-600">MFI</p>
+                                <p className="text-xs text-slate-600">ATR</p>
                                 <p className={`font-bold text-lg ${
-                                  (analysis.mfi_value || 50) >= 80 ? 'text-red-600' :
-                                  (analysis.mfi_value || 50) <= 20 ? 'text-green-600' :
-                                  'text-slate-900'
+                                  (analysis.atr_percentage || 2.0) >= 5.0 ? 'text-red-600' :
+                                  (analysis.atr_percentage || 2.0) >= 3.0 ? 'text-yellow-600' :
+                                  'text-green-600'
                                 }`}>
-                                  {(analysis.mfi_value || 50).toFixed(1)}
+                                  {(analysis.atr_percentage || 2.0).toFixed(1)}%
                                 </p>
-                                <p className="text-xs text-slate-500">{analysis.mfi_signal || 'NEUTRAL'}</p>
+                                <p className="text-xs text-slate-500">Volatility</p>
                               </div>
                             </div>
                           </div>
