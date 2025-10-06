@@ -3579,9 +3579,18 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             logger.info(f"🔍 DEBUG TALIB INDICATORS for {opportunity.symbol}: All indicators calculated by TALib system")
             logger.info(f"🔍 DEBUG: Using TALib regime: {talib_analysis.regime}, confidence: {talib_analysis.confidence:.1%}")
             
-            trade_type_value = 'SWING'  # Default trade type
-            min_rr_value = 2.0  # Default minimum RR
-            duration_value = '1-7 days'  # Default duration
+            # 🎯 EXTRACT TRADE TYPE FROM IA1 JSON RESPONSE
+            trade_type_value = ia1_complete_json.get('trade_type', 'SWING').upper()
+            duration_value = ia1_complete_json.get('trade_duration_estimate', '1-7 days')
+            
+            # 🎯 ADAPTIVE MINIMUM RR BASED ON TRADE TYPE
+            min_rr_mapping = {
+                'SCALP': 1.0,
+                'INTRADAY': 1.5, 
+                'SWING': 2.0,
+                'POSITION': 2.5
+            }
+            min_rr_value = min_rr_mapping.get(trade_type_value, 2.0)
             
             logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             
