@@ -2212,9 +2212,19 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             mfi = vwap_position  # VWAP distance serves as volume-price momentum indicator
             
             logger.info(f"✅ ALL INDICATORS EXTRACTED from simple_indicators_data for {opportunity.symbol}")
-            logger.info(f"   📊 RSI: {rsi:.1f if rsi else 'N/A'}, MACD: {macd_histogram:.6f if macd_histogram else 'N/A'}, Stoch: {stochastic_k:.1f if stochastic_k else 'N/A'}")
-            logger.info(f"   📊 VWAP-based MFI: {mfi:.2f if mfi else 'N/A'}%, BB Position: {bb_position:.2f if bb_position else 'N/A'}")
-            logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr:.6f if atr else 'N/A'}, Volume Ratio: {volume_ratio:.2f if volume_ratio else 'N/A'}")
+            
+            # ✅ SAFE LOGGING - Convert None to string first
+            rsi_str = f"{rsi:.1f}" if rsi is not None else "N/A"
+            macd_str = f"{macd_histogram:.6f}" if macd_histogram is not None else "N/A"  
+            stoch_str = f"{stochastic_k:.1f}" if stochastic_k is not None else "N/A"
+            mfi_str = f"{mfi:.2f}" if mfi is not None else "N/A"
+            bb_str = f"{bb_position:.2f}" if bb_position is not None else "N/A"
+            atr_str = f"{atr:.6f}" if atr is not None else "N/A"
+            vol_str = f"{volume_ratio:.2f}" if volume_ratio is not None else "N/A"
+            
+            logger.info(f"   📊 RSI: {rsi_str}, MACD: {macd_str}, Stoch: {stoch_str}")
+            logger.info(f"   📊 VWAP-based MFI: {mfi_str}%, BB Position: {bb_str}")
+            logger.info(f"   📊 ADX: {adx:.1f}, ATR: {atr_str}, Volume Ratio: {vol_str}")
             # BB bands (already extracted above)
             bb_upper = simple_indicators_data.get('bb_upper')
             bb_middle = simple_indicators_data.get('bb_middle')
