@@ -890,27 +890,73 @@ class TALibIndicators:
         current_price = float(df['close'].iloc[-1]) if len(df) > 0 else 100.0
         
         return TechnicalAnalysisComplete(
+            # Regime
             regime="CONSOLIDATION",
             confidence=0.5,
             technical_consistency=0.5,
             
+            # RSI
             rsi_14=50.0,
             rsi_9=50.0,
             rsi_21=50.0,
             rsi_zone="NEUTRAL",
             
+            # MACD
+            macd_line=0.0,
+            macd_signal=0.0,
+            macd_histogram=0.0,
+            macd_trend="NEUTRAL",
+            
+            # ADX
+            adx=25.0,
+            plus_di=25.0,
+            minus_di=25.0,
+            adx_strength="MODERATE",
+            
+            # Bollinger Bands
             bb_upper=current_price * 1.02,
             bb_middle=current_price,
             bb_lower=current_price * 0.98,
             bb_position=0.5,
+            bb_squeeze=False,
+            squeeze_intensity="NONE",
             
+            # Stochastic
+            stoch_k=50.0,
+            stoch_d=50.0,
+            
+            # MFI
+            mfi=50.0,
+            mfi_signal="NEUTRAL",
+            
+            # ATR & Volatility
+            atr=0.02,
+            atr_pct=2.0,
+            
+            # Volume
+            volume_ratio=1.0,
+            volume_trend=0.0,
+            volume_surge=False,
+            
+            # Moving Averages
             sma_20=current_price,
+            sma_50=current_price,
             ema_9=current_price,
             ema_21=current_price,
+            ema_50=current_price,
             ema_200=current_price,
             
-            vwap=current_price,
+            # Trend Analysis
+            trend_hierarchy="NEUTRAL",
+            trend_strength_score=0.5,
+            price_vs_emas="NEUTRAL",
             
+            # VWAP
+            vwap=current_price,
+            vwap_distance=0.0,
+            above_vwap=True,
+            
+            # Confluence
             confluence_grade='C',
             confluence_score=50,
             should_trade=False,
