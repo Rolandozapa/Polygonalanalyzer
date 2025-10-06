@@ -472,8 +472,8 @@ class TALibIndicators:
                 'squeeze_intensity': 'NONE'
             }
     
-    def _calculate_momentum_indicators(self, close: np.array) -> Dict[str, Any]:
-        """Calculate momentum indicators (RSI, MACD)"""
+    def _calculate_momentum_indicators(self, high: np.array, low: np.array, close: np.array) -> Dict[str, Any]:
+        """Calculate momentum indicators (RSI, MACD, Williams %R, CCI, ROC)"""
         try:
             # RSI
             rsi = talib.RSI(close, timeperiod=self.rsi_period)
