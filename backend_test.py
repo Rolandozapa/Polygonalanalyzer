@@ -68,53 +68,37 @@ class DynamicRRIntegrationTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing IA2 RR Calculation and Reasoning Display at: {self.api_url}")
+        logger.info(f"Testing Dynamic RR Integration at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Test symbols for IA1 analysis (will be dynamically determined from available opportunities)
+        # Test symbols for analysis (will be dynamically determined from available opportunities)
         self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']  # Preferred symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # Core technical indicators to verify (as specified in review request)
-        self.core_technical_indicators = ['RSI', 'MACD', 'MFI', 'VWAP']
+        # New field names to validate (Phase 1 implementation)
+        self.new_field_names = ['trade_type', 'minimum_rr_threshold']
+        self.old_field_names = ['recommended_trade_type', 'minimum_rr_for_trade_type']  # Should not be used
         
-        # Simplified JSON schema fields to verify
-        self.simplified_json_fields = [
-            'signal', 'confidence', 'reasoning', 'entry_price', 
-            'technical_indicators', 'patterns'
-        ]
+        # Expected trade types and their RR thresholds
+        self.trade_type_rr_mapping = {
+            'SCALP': 1.0,
+            'INTRADAY': 1.5,
+            'SWING': 2.0,
+            'POSITION': 2.5
+        }
         
-        # Technical indicators object fields
-        self.technical_indicators_fields = [
-            'rsi_value', 'macd_histogram', 'mfi_value', 'vwap_position', 
-            'trend', 'stochastic'
-        ]
+        # Valid trade types
+        self.valid_trade_types = ['SCALP', 'INTRADAY', 'SWING', 'POSITION']
         
-        # Extended technical indicators to look for
-        self.extended_technical_indicators = [
-            'RSI', 'MACD', 'MFI', 'VWAP', 'Bollinger', 'Stochastic', 
-            'EMA', 'SMA', 'overbought', 'oversold', 'momentum', 'confluence'
-        ]
-        
-        # Chartist patterns to compare against
-        self.chartist_patterns = [
-            'pattern', 'support', 'resistance', 'trend', 'channel', 'triangle',
-            'head and shoulders', 'double top', 'double bottom', 'wedge'
-        ]
-        
-        # Expected specific value patterns (RSI 32.1, MACD -0.015, etc.)
-        self.specific_value_patterns = [
-            r'RSI\s+[\d\.]+',
-            r'MACD\s+[\d\.\-]+',
-            r'MFI\s+[\d\.]+',
-            r'VWAP\s+[\d\.\-]+%?'
-        ]
-        
-        # IA1 analysis data storage
-        self.ia1_analyses = []
+        # Technical analysis data storage
+        self.technical_analyses = []
         self.backend_logs = []
+        
+        # Database connection info
+        self.mongo_url = "mongodb://localhost:27017"
+        self.db_name = "myapp"
         
     def log_test_result(self, test_name: str, success: bool, details: str = ""):
         """Log test result"""
