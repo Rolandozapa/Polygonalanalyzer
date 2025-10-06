@@ -3439,28 +3439,27 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"📊 STREAMLINED VALIDATION: {opportunity.symbol} {ia1_signal.upper()} {analysis_confidence:.1%} (No correction needed)")
             
             # Remove complex multi-timeframe calculations and use simplified approach
-            # 🚀 FIX: Use actual calculated indicators instead of fallback values
-            logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={indicators.macd_line}, Signal={indicators.macd_signal}, Histogram={indicators.macd_histogram}")
-            logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={indicators.macd_line} as macd_signal for {opportunity.symbol}")
+            # 🚀 FIX: Use actual calculated indicators from simple_indicators_data
+            logger.info(f"🔍 MACD RAW VALUES for {opportunity.symbol}: Line={macd_line}, Signal={macd_signal}, Histogram={macd_histogram}")
+            logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={macd_line} as macd_signal for {opportunity.symbol}")
             logger.info(f"🔍 BEFORE UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
             
-            # 🔍 DEBUG: Check indicators object attributes before extraction
-            logger.info(f"🔍 DEBUG INDICATORS OBJECT for {opportunity.symbol}: {type(indicators)}")
-            logger.info(f"🔍 DEBUG: hasattr trade_type: {hasattr(indicators, 'trade_type')}")
-            logger.info(f"🔍 DEBUG: hasattr minimum_rr_threshold: {hasattr(indicators, 'minimum_rr_threshold')}")
+            # 🔍 DEBUG: Check simple indicators data
+            logger.info(f"🔍 DEBUG SIMPLE INDICATORS for {opportunity.symbol}: {len(simple_indicators_data)} indicators calculated")
+            logger.info(f"🔍 DEBUG: Available indicators: {list(simple_indicators_data.keys())}")
             
-            trade_type_value = getattr(indicators, 'trade_type', 'SWING')
-            min_rr_value = getattr(indicators, 'minimum_rr_threshold', 2.0)
-            duration_value = getattr(indicators, 'trade_duration_estimate', '1-7 days')
+            trade_type_value = 'SWING'  # Default trade type
+            min_rr_value = 2.0  # Default minimum RR
+            duration_value = '1-7 days'  # Default duration
             
             logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             
             analysis_data.update({
                 "rsi": rsi,
-                "macd_signal": indicators.macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
-                "macd_line": indicators.macd_line,      # Add MACD line for trend analysis
-                "macd_histogram": indicators.macd_histogram,  # Add MACD histogram
-                "macd_trend": ("bullish" if indicators.macd_histogram > 0 else "bearish" if indicators.macd_histogram < 0 else "neutral"),
+                "macd_signal": macd_line,  # 🎯 FIX: Use MACD line as the main MACD value for display
+                "macd_line": macd_line,      # Add MACD line for trend analysis
+                "macd_histogram": macd_histogram,  # Add MACD histogram
+                "macd_trend": ("bullish" if macd_histogram and macd_histogram > 0 else "bearish" if macd_histogram and macd_histogram < 0 else "neutral"),
                 "stochastic": stochastic_k,  # Add Stochastic %K
                 "stochastic_d": stochastic_d,  # Add Stochastic %D
                 "bollinger_position": bb_position,
