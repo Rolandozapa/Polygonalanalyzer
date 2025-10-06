@@ -32,7 +32,7 @@ class RegimeDetectionResult:
         if self.indicators is None:
             self.indicators = {}
 
-class TALibIndicators(BaseIndicator):
+class TALibIndicators:
     """
     Professional Technical Indicators using TA-Lib
     Implements all indicators from the detailed specification
