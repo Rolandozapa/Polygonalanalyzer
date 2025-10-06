@@ -897,6 +897,11 @@ class AdvancedTechnicalIndicators:
             # 10. Multi-timeframe trend alignment
             trend_alignment, tf_score = self._calculate_trend_alignment(df)
             
+            # 11. Trade Type Recommendation (NEW)
+            trade_type, duration, timeframe = self._determine_trade_type(
+                regime_data, adx, volatility_ratio, atr_pct, indicators
+            )
+            
             return TechnicalIndicators(
                 # RSI
                 rsi_14=rsi_14,
