@@ -3700,7 +3700,11 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             stoch_str = f"{stochastic_k:.2f}" if stochastic_k is not None else 'N/A'
             bb_str = f"{bb_position:.4f}" if bb_position is not None else 'N/A'
             logger.info(f"   📊 Indicateurs: RSI={rsi_str} | MACD={macd_str} | Stoch={stoch_str} | BB={bb_str}")
-            logger.info(f"   🚀 MACD Details: Line={macd_line:.6f if macd_line else 'N/A'} | Signal={macd_signal:.6f if macd_signal else 'N/A'} | Histogram={macd_histogram:.6f if macd_histogram else 'N/A'}")
+            # Fix: Proper conditional formatting for MACD
+            macd_line_str = f"{macd_line:.6f}" if macd_line is not None else 'N/A'
+            macd_signal_str = f"{macd_signal:.6f}" if macd_signal is not None else 'N/A'  
+            macd_histogram_str = f"{macd_histogram:.6f}" if macd_histogram is not None else 'N/A'
+            logger.info(f"   🚀 MACD Details: Line={macd_line_str} | Signal={macd_signal_str} | Histogram={macd_histogram_str}")
             logger.info(f"   🎯 DYNAMIC RR: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
             
             # Valide et nettoie les données pour éviter les erreurs JSON
