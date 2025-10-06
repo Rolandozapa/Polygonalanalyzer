@@ -2738,10 +2738,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     
                     # Extract key fields for processing - Handle both 'signal' and 'recommendation'
                     if 'signal' in parsed_response:
-                        ia1_signal = parsed_response['signal'].lower()
+                        ia1_signal = str(parsed_response['signal']).lower()
                         logger.info(f"✅ IA1 signal: {ia1_signal.upper()} for {opportunity.symbol}")
                     elif 'recommendation' in parsed_response:
-                        ia1_signal = parsed_response['recommendation'].lower()
+                        ia1_signal = str(parsed_response['recommendation']).lower()
                         logger.info(f"✅ IA1 recommendation: {ia1_signal.upper()} for {opportunity.symbol}")
                     
                     if 'master_pattern' in parsed_response and parsed_response['master_pattern']:
