@@ -936,7 +936,7 @@ class AdvancedTechnicalIndicators:
                 current_price, ema_9, ema_21, ema_50, ema_200, sma_50
             )
             
-            # 12. Trade Type Recommendation (NEW)
+            # 13. Trade Type Recommendation (NEW)
             trade_type, duration, timeframe, min_rr = self._determine_trade_type(
                 regime_data, adx, volatility_ratio, atr_pct, indicators
             )
