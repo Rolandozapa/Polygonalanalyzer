@@ -123,8 +123,8 @@ class TrendingAutoUpdater:
     
     async def _update_loop(self):
         """🚀 OPTIMIZED: Boucle principale d'update - VERSION CPU OPTIMISÉE"""
-        # 🚨 CPU OPTIMIZATION: Délai initial plus long pour éviter la surcharge startup
-        await asyncio.sleep(300)  # 5 minutes au lieu de 1 minute
+        # 🚨 CPU OPTIMIZATION: Moderate delay to avoid startup overload while maintaining responsiveness
+        await asyncio.sleep(120)  # 2 minutes - reduced from 5 minutes for better responsiveness
         
         while self.is_running:
             try:
