@@ -365,6 +365,62 @@ class AdvancedRegimeDetector:
         }
         return interpretations.get(regime, f"Unknown regime (confidence: {confidence:.1%})")
     
+    def _get_ml_confidence_multiplier(self, confidence: float) -> float:
+        """
+        v4: ML confidence multiplier for position sizing
+        High confidence = larger positions
+        """
+        if confidence >= 0.85:
+            return 1.3
+        elif confidence >= 0.75:
+            return 1.15
+        elif confidence >= 0.65:
+            return 1.0
+        elif confidence >= 0.55:
+            return 0.85
+        else:
+            return 0.7
+    
+    def _get_regime_multiplier(self, regime: MarketRegimeDetailed) -> float:
+        """
+        v4: Regime-based multiplier for position sizing
+        Strong trends = larger positions, ranging/volatile = smaller
+        """
+        multipliers = {
+            MarketRegimeDetailed.TRENDING_UP_STRONG: 1.2,
+            MarketRegimeDetailed.TRENDING_UP_MODERATE: 1.0,
+            MarketRegimeDetailed.TRENDING_DOWN_STRONG: 1.2,
+            MarketRegimeDetailed.TRENDING_DOWN_MODERATE: 1.0,
+            MarketRegimeDetailed.BREAKOUT_BULLISH: 1.5,
+            MarketRegimeDetailed.BREAKOUT_BEARISH: 1.5,
+            MarketRegimeDetailed.CONSOLIDATION: 0.5,
+            MarketRegimeDetailed.RANGING_TIGHT: 0.6,
+            MarketRegimeDetailed.RANGING_WIDE: 0.8,
+            MarketRegimeDetailed.VOLATILE: 0.3
+        }
+        return multipliers.get(regime, 1.0)
+    
+    def _get_trading_implications_v4(self, regime: MarketRegimeDetailed, 
+                                    persistence: int, confidence: float) -> List[str]:
+        """
+        v4: Enhanced trading implications with persistence and confidence
+        """
+        base_implications = self._get_trading_implications(regime)
+        
+        # Add persistence-based implications
+        if persistence < 15:
+            base_implications.append("🆕 Fresh regime - Early entry opportunity")
+        elif persistence > 40 and confidence > 0.7:
+            base_implications.append("⚠️ Mature regime - Consider tightening stops")
+        
+        # Add confidence-based implications
+        if confidence > 0.85:
+            base_implications.append("💪 High confidence - Larger position sizing recommended")
+        elif confidence < 0.55:
+            base_implications.append("⚠️ Low confidence - Reduced position sizing advised")
+        
+        return base_implications
+    
     def _get_trading_implications(self, regime: MarketRegimeDetailed) -> List[str]:
         """Trading implications for each regime"""
         implications = {
