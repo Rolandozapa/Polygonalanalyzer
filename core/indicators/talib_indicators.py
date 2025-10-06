@@ -209,7 +209,9 @@ class TALibIndicators:
                 # Régime
                 regime=regime_result.regime,
                 confidence=regime_result.combined_confidence,
+                base_confidence=regime_result.base_confidence,
                 technical_consistency=regime_result.technical_consistency,
+                combined_confidence=regime_result.combined_confidence,
                 
                 # RSI
                 rsi_14=momentum_indicators['rsi'],
