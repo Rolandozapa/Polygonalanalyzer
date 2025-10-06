@@ -3498,7 +3498,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # 🚀 CRITICAL FIX: Add calculated signals for RSI, MACD, Stochastic
                 "rsi_signal": ('extreme_overbought' if rsi > 90 else 'overbought' if rsi > 70 else 'extreme_oversold' if rsi < 10 else 'oversold' if rsi < 30 else 'neutral'),
                 "macd_trend": ('strong_bullish' if indicators.macd_line > 0.1 else 'bullish' if indicators.macd_line > 0 else 'strong_bearish' if indicators.macd_line < -0.1 else 'bearish' if indicators.macd_line < 0 else 'neutral'),  # Use macd_line
-                "stochastic_signal": ('extreme_overbought' if stochastic_k > 90 else 'overbought' if stochastic_k > 80 else 'extreme_oversold' if stochastic_k < 10 else 'oversold' if stochastic_k < 20 else 'neutral')
+                "stochastic_signal": ('extreme_overbought' if stochastic_k > 90 else 'overbought' if stochastic_k > 80 else 'extreme_oversold' if stochastic_k < 10 else 'oversold' if stochastic_k < 20 else 'neutral'),
+                # 🎯 NEW DYNAMIC RR INTEGRATION FIELDS
+                "trade_type": getattr(indicators, 'trade_type', 'SWING'),
+                "minimum_rr_threshold": getattr(indicators, 'minimum_rr_threshold', 2.0),
+                "trade_duration_estimate": getattr(indicators, 'trade_duration_estimate', '1-7 days'),
+                "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
             })
             
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
