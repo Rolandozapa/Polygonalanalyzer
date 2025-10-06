@@ -9,7 +9,7 @@ import time
 def test_dynamic_rr_logging():
     """Test if the DYNAMIC RR log line appears"""
     
-    api_url = "https://cryptobot-pro-11.preview.emergentagent.com/api"
+    api_url = "https://dynamic-rr-trading.preview.emergentagent.com/api"
     
     # Test symbols
     test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
