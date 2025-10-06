@@ -3592,7 +3592,8 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             }
             min_rr_value = min_rr_mapping.get(trade_type_value, 2.0)
             
-            logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
+            logger.info(f"🔍 DEBUG EXTRACTED VALUES from IA1 JSON: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
+            logger.info(f"🎯 ADAPTIVE RR THRESHOLD: {trade_type_value} → MinRR {min_rr_value} (from mapping: {min_rr_mapping})")
             
             analysis_data.update({
                 "rsi": rsi,
