@@ -4320,6 +4320,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["risk_reward_ratio"] = self._ensure_json_safe(analysis_data.get("risk_reward_ratio"), 1.0)
             cleaned_data["rr_reasoning"] = str(analysis_data.get("rr_reasoning", ""))
             
+            # 🎯 TRADE TYPE RECOMMENDATION (NEW)
+            cleaned_data["recommended_trade_type"] = str(analysis_data.get("recommended_trade_type", "SWING"))
+            cleaned_data["trade_duration_estimate"] = str(analysis_data.get("trade_duration_estimate", "1-7 days"))
+            cleaned_data["optimal_timeframe"] = str(analysis_data.get("optimal_timeframe", "4H/1D"))
+            cleaned_data["minimum_rr_for_trade_type"] = self._ensure_json_safe(analysis_data.get("minimum_rr_for_trade_type"), 2.0)
+            
             # 🚀 ADVANCED TECHNICAL INDICATORS - CRITICAL FIX FOR IA1 ANALYSIS
             # Add MFI indicators
             cleaned_data["mfi_value"] = self._ensure_json_safe(analysis_data.get("mfi_value"), 50.0)
