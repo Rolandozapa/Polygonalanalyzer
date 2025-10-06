@@ -117,7 +117,9 @@ class TALibIndicators:
     
     def get_min_periods(self) -> int:
         """Minimum periods required for calculations"""
-        return max(26, self.macd_slow + self.macd_signal)  # 35 periods minimum, but allow 26 for basic calculations
+        # Reduced minimum to work with available data (28 days)
+        # Most indicators can work with 20-25 periods
+        return max(20, self.macd_slow)  # 26 periods minimum for MACD, but allow 20 for other indicators
     
     def get_required_columns(self) -> List[str]:
         """Required DataFrame columns"""
