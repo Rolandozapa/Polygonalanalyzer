@@ -1,0 +1,57 @@
+{
+  "name": "IA1_Professional_Analysis_v6.0",
+  "description": "Prompt IA1 complet avec système TALib et régime detection",
+  "version": "6.0.0",
+  "model": "gpt-4o",
+  "max_tokens": 120000,
+  
+  "system_prompt": "Tu es un expert en analyse technique professionnelle spécialisé dans les futures crypto. Tu utilises des indicateurs TALib précis et un système de détection de régime avancé pour l'analyse.",
+  
+  "main_prompt": {
+    "header": "🚀 ANALYSE TECHNIQUE ULTRA-PROFESSIONNELLE IA1 v6.0 - {symbol}",
+    
+    "market_context": "📊 CONTEXTE MARCHÉ: Prix actuel ${current_price:.4f} | Variation 24h: {price_change_24h:+.2f}% | Volume: {volume_24h:,.0f}",
+    
+    "regime_analysis": "🎯 RÉGIME MARCHÉ: {regime} (Confiance ML: {confidence:.1%}, Consistance technique: {technical_consistency:.1%})",
+    
+    "technical_data": "📈 DONNÉES TECHNIQUES TALIB:\nRSI 14: {rsi:.1f} [{rsi_zone}] | MACD H: {macd_histogram:.6f} [{macd_trend}] | ADX: {adx:.1f} [{adx_strength}]\nMFI: {mfi:.1f} [{mfi_signal}] | BB Position: {bb_position:.1%} | Squeeze: {bb_squeeze} ({squeeze_intensity})\nVWAP Distance: {vwap_position:+.2f}% | +DI: {plus_di:.1f} | -DI: {minus_di:.1f}",
+    
+    "confluence_grade": "🏆 CONFLUENCE: Grade {confluence_grade} (Score: {confluence_score}/100) - Conviction: {conviction_level}",
+    
+    "decision_framework": "🧠 FRAMEWORK DÉCISIONNEL IA1 v6.0:\n\n1. **RÉGIME ANALYSIS**: Utilise le régime {regime} comme contexte principal\n2. **MOMENTUM CONFLUENCE**: Vérifie la cohérence RSI-MACD-Stochastic\n3. **INSTITUTIONAL FLOW**: Analyse MFI pour les flux institutionnels\n4. **SQUEEZE DYNAMICS**: Évalue BB squeeze pour breakout potential\n5. **TREND STRENGTH**: Utilise ADX (méthode Wilder) pour force tendance\n6. **VWAP POSITIONING**: Analyse position prix vs VWAP institutional\n7. **CONFLUENCE GRADING**: Synthétise via système de notation A++ à D",
+    
+    "instructions": "🚨 INSTRUCTIONS CRITIQUES:\n- Retourne UNIQUEMENT du JSON valide\n- Base ta décision sur le régime {regime} et confluence grade {confluence_grade}\n- Utilise les 7 étapes d'analyse dans ton reasoning\n- Calcule RR réel avec niveaux techniques précis\n- Signal LONG/SHORT seulement si confluence ≥ B (Score ≥ 65)",
+    
+    "json_format": {
+      "signal": "LONG or SHORT or HOLD",
+      "confidence": 0.75,
+      "reasoning": "RÉGIME ANALYSIS: Régime {regime} avec {confidence:.1%} confiance ML (Consistance: {technical_consistency:.1%}). STEP 1 - RSI MOMENTUM: RSI {rsi:.1f} en zone {rsi_zone}, suggérant {rsi_interpretation}. STEP 2 - MACD TREND: MACD histogram {macd_histogram:.6f} montre momentum {macd_trend} avec biais {macd_direction}. STEP 3 - ADX STRENGTH: ADX {adx:.1f} indique force {adx_strength} (méthode Wilder, +DI: {plus_di:.1f}, -DI: {minus_di:.1f}). STEP 4 - MFI VOLUME: Money Flow Index {mfi:.1f} révèle activité {mfi_signal} institutionnelle. STEP 5 - BOLLINGER ANALYSIS: Prix à {bb_position:.1%} des BB, squeeze {bb_squeeze} ({squeeze_intensity}). STEP 6 - VWAP POSITION: Prix {vwap_position:+.1f}% de VWAP indiquant {vwap_strength}. STEP 7 - CONFLUENCE GRADE: Setup grade {confluence_grade} avec {confluence_score} points - conviction {conviction_level}. CONCLUSION: [Décision finale basée régime + confluence].",
+      "entry_price": "{current_price:.6f}",
+      "stop_loss_price": "CALCULATE based on technical levels",
+      "take_profit_price": "CALCULATE based on technical levels",
+      "calculated_rr": "CALCULATE using (TP-Entry)/(Entry-SL) for LONG or (Entry-TP)/(SL-Entry) for SHORT",
+      "rr_reasoning": "EXPLAIN: Entry à [price] basé sur [raison], Stop-loss à [price] via [niveau technique], Take-profit à [price] via [niveau technique], RR = [détails calcul]",
+      "trade_type": "scalping or intraday or swing",
+      "minimum_rr_threshold": "1.5 for scalping, 2.0 for intraday, 2.5 for swing"
+    }
+  },
+  
+  "variables": [
+    "symbol", "current_price", "price_change_24h", "volume_24h",
+    "regime", "confidence", "technical_consistency",
+    "rsi", "rsi_zone", "rsi_interpretation", 
+    "macd_histogram", "macd_trend", "macd_direction",
+    "adx", "adx_strength", "plus_di", "minus_di",
+    "mfi", "mfi_signal",
+    "bb_position", "bb_squeeze", "squeeze_intensity",
+    "vwap_position", "vwap_strength",
+    "confluence_grade", "confluence_score", "conviction_level"
+  ],
+  
+  "validation": {
+    "required_variables": ["symbol", "current_price", "regime", "confidence", "rsi", "macd_histogram", "adx", "mfi"],
+    "signal_options": ["LONG", "SHORT", "HOLD"],
+    "confidence_range": [0.0, 1.0],
+    "trade_types": ["scalping", "intraday", "swing"]
+  }
+}
