@@ -1,0 +1,118 @@
+{
+  "description": "Trading bot configuration parameters",
+  "version": "6.0",
+  "
+  
+  "scout": {
+    "top_symbols_count": 25,
+    "update_interval_hours": 4,
+    "min_volume_threshold": 500000,
+    "min_price_change_pct": 2.0,
+    "excluded_patterns": ["lateral", "sideways"],
+    "bingx_top_25_symbols": [
+      "BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT",
+      "DOGEUSDT", "BNBUSDT", "TRXUSDT", "LINKUSDT", "AVAXUSDT",
+      "DOTUSDT", "MATICUSDT", "LTCUSDT", "BCHUSDT", "UNIUSDT",
+      "FILUSDT", "ICPUSDT", "NEARUSDT", "APTUSDT", "ATOMUSDT",
+      "OPUSDT", "ARBUSDT", "INJUSDT", "FTMUSDT", "GMXUSDT"
+    ]
+  },
+  
+  "ia1": {
+    "confidence_threshold": 0.7,
+    "min_data_bars": 26,
+    "optimal_data_bars": 50,
+    "escalation_criteria": {
+      "voie_1": {
+        "description": "High confidence signal",
+        "min_confidence": 0.7,
+        "required_signal": ["LONG", "SHORT"]
+      },
+      "voie_2": {
+        "description": "Good risk-reward ratio", 
+        "min_rr_scalping": 1.5,
+        "min_rr_intraday": 2.0,
+        "min_rr_swing": 2.5
+      },
+      "voie_3": {
+        "description": "Exceptional technical setup",
+        "min_confidence": 0.95
+      }
+    }
+  },
+  
+  "ia2": {
+    "confidence_threshold": 0.8,
+    "min_rr_override": 2.0,
+    "max_position_size_pct": 2.0,
+    "risk_per_trade_pct": 1.0
+  },
+  
+  "indicators": {
+    "rsi": {
+      "periods": [9, 14, 21],
+      "overbought": 70,
+      "oversold": 30
+    },
+    "macd": {
+      "fast_period": 12,
+      "slow_period": 26, 
+      "signal_period": 9
+    },
+    "bollinger_bands": {
+      "period": 20,
+      "std_dev": 2,
+      "squeeze_threshold": 0.02
+    },
+    "adx": {
+      "period": 14,
+      "strong_trend": 25,
+      "very_strong_trend": 50
+    },
+    "stochastic": {
+      "k_period": 14,
+      "d_period": 3,
+      "overbought": 80,
+      "oversold": 20
+    },
+    "mfi": {
+      "period": 14,
+      "overbought": 80,
+      "oversold": 20
+    },
+    "atr": {
+      "period": 14
+    }
+  },
+  
+  "regime_detection": {
+    "regimes": [
+      "TRENDING_UP_STRONG",
+      "TRENDING_UP_MODERATE", 
+      "BREAKOUT_BULLISH",
+      "CONSOLIDATION",
+      "RANGING_TIGHT",
+      "RANGING_WIDE",
+      "VOLATILE",
+      "TRENDING_DOWN_MODERATE",
+      "TRENDING_DOWN_STRONG",
+      "BREAKOUT_BEARISH"
+    ],
+    "min_confidence": 0.5,
+    "persistence_threshold": 15
+  },
+  
+  "confluence": {
+    "grades": ["D", "C", "B", "B+", "A", "A+", "A++"],
+    "mandatory_requirements": {
+      "min_confidence": 0.65,
+      "min_adx_or_squeeze": 18,
+      "min_volume_ratio": 1.0
+    },
+    "scoring": {
+      "confidence_weight": 40,
+      "momentum_conditions_min": 2,
+      "technical_consistency_weight": 10
+    }
+  }
+}
