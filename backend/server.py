@@ -3359,7 +3359,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         logger.warning(f"⚠️ No valid levels for {opportunity.symbol}, using fallback RR 1.0")
             
             # Cap RR pour éviter valeurs aberrantes
+            logger.info(f"🔍 DEBUG RR BEFORE CLAMP for {opportunity.symbol}: {ia1_risk_reward_ratio}")
             ia1_risk_reward_ratio = min(max(ia1_risk_reward_ratio, 0.1), 20.0)
+            logger.info(f"🔍 DEBUG RR AFTER CLAMP for {opportunity.symbol}: {ia1_risk_reward_ratio}")
 
             # 🚨 MISE À JOUR REASONING avec les vrais prix calculés
             if "Target: [Calculating...]" in reasoning:
