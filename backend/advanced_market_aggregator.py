@@ -1414,7 +1414,22 @@ class AdvancedMarketAggregator:
                         self.symbol_timestamps[crypto.symbol] = unique_timestamp
                         logger.info(f"🆕 NEW TIMESTAMP for {crypto.symbol}: {unique_timestamp}")
                     
-                    # Créer l'opportunité avec données BingX principalement (IA1 récupérera OHLCV)
+                    # 🚨 VALIDATE: Only create opportunities with REAL market data
+                    volume = crypto.volume if hasattr(crypto, 'volume') and crypto.volume else 0.0
+                    price_change = crypto.price_change if hasattr(crypto, 'price_change') and crypto.price_change else 0.0
+                    
+                    # Skip opportunities with fake data patterns
+                    is_fake_data = (
+                        current_price == 1.0 or 
+                        (volume == 1000000 and price_change == 2.5) or
+                        current_price <= 0
+                    )
+                    
+                    if is_fake_data:
+                        logger.warning(f"❌ SKIPPING {crypto.symbol}: Detected fake data (price={current_price}, volume={volume}, change={price_change}%)")
+                        continue
+                    
+                    # Créer l'opportunité avec données BingX RÉELLES uniquement
                     opportunity = MarketOpportunity(
                         symbol=crypto.symbol,
                         current_price=current_price,  # Prix depuis BingX API ou prix fallback
