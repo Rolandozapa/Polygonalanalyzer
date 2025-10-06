@@ -4748,6 +4748,21 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         else:
             return "neutral"
     
+    def _get_rsi_interpretation(self, rsi_value: float, rsi_zone: str) -> str:
+        """Interpret RSI value for IA1 v6.0 reasoning"""
+        if rsi_zone == "OVERSOLD":
+            return "potential bullish reversal opportunity with oversold momentum"
+        elif rsi_zone == "OVERBOUGHT": 
+            return "potential bearish reversal risk with overbought momentum"
+        elif rsi_zone == "NEUTRAL":
+            return "balanced momentum conditions with neutral bias"
+        elif rsi_value > 60:
+            return "bullish momentum strength above 60 level"
+        elif rsi_value < 40:
+            return "bearish momentum pressure below 40 level"
+        else:
+            return "normal momentum range without extreme conditions"
+
     def _create_fallback_analysis(self, opportunity: MarketOpportunity) -> None:
         """❌ FALLBACK ANALYSIS DEPRECATED - System should only use real calculated indicators"""
         logger.error(f"🚨 FALLBACK ANALYSIS ATTEMPTED for {opportunity.symbol} - This should not happen with new strict validation")
