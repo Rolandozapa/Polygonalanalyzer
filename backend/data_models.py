@@ -129,6 +129,11 @@ class TechnicalAnalysis(BaseModel):
     atr_percentage: Optional[float] = 2.0  # ATR as percentage of price
     # VWAP DISTANCE (real calculated)
     vwap_distance: Optional[float] = 0.0  # VWAP distance percentage
+    # ADX TREND STRENGTH INDICATORS
+    adx: Optional[float] = 25.0  # ADX trend strength value
+    adx_strength: Optional[str] = "MODERATE"  # ADX strength interpretation  
+    plus_di: Optional[float] = 25.0  # +DI directional indicator
+    minus_di: Optional[float] = 25.0  # -DI directional indicator
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
