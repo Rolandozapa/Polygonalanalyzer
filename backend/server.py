@@ -2207,7 +2207,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap = indicators.vwap
             vwap_distance = indicators.vwap_distance
             above_vwap = indicators.above_vwap
-            vwap_position = indicators.vwap_position
+            
+            # Ensure vwap_position is numeric (convert from string if needed)
+            try:
+                vwap_position = float(indicators.vwap_position) if isinstance(indicators.vwap_position, str) else indicators.vwap_position
+            except (ValueError, TypeError):
+                vwap_position = 0.0
             
             # Calculate VWAP-derived values - Ensure numeric types
             try:
