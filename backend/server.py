@@ -2208,9 +2208,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_distance = indicators.vwap_distance
             above_vwap = indicators.above_vwap
             vwap_position = indicators.vwap_position
-            vwap_trend = indicators.vwap_trend
-            vwap_overbought = indicators.vwap_overbought
-            vwap_oversold = indicators.vwap_oversold
+            
+            # Calculate VWAP-derived values
+            vwap_trend = "bullish" if vwap_distance > 0.5 else "bearish" if vwap_distance < -0.5 else "neutral"
+            vwap_overbought = vwap_distance > 2.0
+            vwap_oversold = vwap_distance < -2.0
             vwap_extreme_overbought = indicators.vwap_extreme_overbought
             vwap_extreme_oversold = indicators.vwap_extreme_oversold
             
