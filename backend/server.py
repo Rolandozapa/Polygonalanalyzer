@@ -2193,20 +2193,20 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔢 FIBONACCI calculated for {opportunity.symbol}: {fibonacci_levels.trend_direction} trend, current at {fibonacci_levels.current_level_percentage:.1f}% ({fibonacci_levels.nearest_level})")
             
             # ✅ EXTRACT ALL INDICATORS from simple_indicators_data (working calculations)
-            rsi = simple_indicators_data.get('rsi', 50.0)
-            macd_signal = simple_indicators_data.get('macd_signal', 0.0)
-            macd_line = simple_indicators_data.get('macd_line', 0.0)
-            macd_histogram = simple_indicators_data.get('macd_histogram', 0.0)
-            stochastic_k = simple_indicators_data.get('stochastic_k', 50.0)
-            stochastic_d = simple_indicators_data.get('stochastic_d', 50.0)
-            bb_position = simple_indicators_data.get('bb_position', 0.5)
+            rsi = simple_indicators_data.get('rsi')
+            macd_signal = simple_indicators_data.get('macd_signal')
+            macd_line = simple_indicators_data.get('macd_line')
+            macd_histogram = simple_indicators_data.get('macd_histogram')
+            stochastic_k = simple_indicators_data.get('stochastic_k')
+            stochastic_d = simple_indicators_data.get('stochastic_d')
+            bb_position = simple_indicators_data.get('bb_position')
             adx = 25.0  # Default ADX (not in simple indicators yet)
-            atr = simple_indicators_data.get('atr', 0.01)
-            vwap = simple_indicators_data.get('vwap', opportunity.current_price)
-            vwap_position = simple_indicators_data.get('vwap_distance', 0.0)  # ✅ Use VWAP distance instead of MFI
-            volume_ratio = simple_indicators_data.get('volume_ratio', 1.0)
-            volume_trend = simple_indicators_data.get('volume_trend', 'NEUTRAL')
-            volume_surge = simple_indicators_data.get('volume_surge', False)
+            atr = simple_indicators_data.get('atr')
+            vwap = simple_indicators_data.get('vwap')
+            vwap_position = simple_indicators_data.get('vwap_distance')  # ✅ Use VWAP distance instead of MFI
+            volume_ratio = simple_indicators_data.get('volume_ratio')
+            volume_trend = simple_indicators_data.get('volume_trend')
+            volume_surge = simple_indicators_data.get('volume_surge')
             
             # ✅ USE VWAP DISTANCE AS MFI REPLACEMENT (no separate MFI calculation needed)
             mfi = vwap_position  # VWAP distance serves as volume-price momentum indicator
