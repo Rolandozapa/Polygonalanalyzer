@@ -62,6 +62,41 @@ class TALibIndicators:
         
         logger.info(f"✅ TALibIndicators initialized with config: {len(self.config)} parameters")
     
+    def validate_data(self, df: pd.DataFrame) -> bool:
+        """
+        Validate input data format and requirements
+        
+        Args:
+            df: Input DataFrame
+            
+        Returns:
+            True if data is valid, False otherwise
+        """
+        try:
+            # Check minimum length
+            min_length = self.get_min_periods()
+            if len(df) < min_length:
+                logger.warning(f"TALibIndicators: Insufficient data {len(df)} < {min_length}")
+                return False
+            
+            # Check required columns
+            required_cols = self.get_required_columns()
+            missing_cols = [col for col in required_cols if col not in df.columns]
+            if missing_cols:
+                logger.error(f"TALibIndicators: Missing columns {missing_cols}")
+                return False
+            
+            # Check for NaN values in critical columns
+            for col in required_cols:
+                if df[col].isna().any():
+                    logger.warning(f"TALibIndicators: NaN values found in {col}")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"TALibIndicators: Data validation error: {e}")
+            return False
+    
     def _load_default_config(self) -> Dict[str, Any]:
         """Load default configuration"""
         return {
