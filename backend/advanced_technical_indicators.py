@@ -1087,7 +1087,7 @@ class AdvancedTechnicalIndicators:
         return float(vwap)
     
     def _determine_trade_type(self, regime_data: Dict, adx: float, volatility_ratio: float,
-                              atr_pct: float, indicators: Dict) -> Tuple[str, str, str]:
+                              atr_pct: float, indicators: Dict) -> Tuple[str, str, str, float]:
         """
         Determine optimal trade type based on market conditions
         Returns: (trade_type, duration_estimate, optimal_timeframe)
