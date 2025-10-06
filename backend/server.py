@@ -6145,10 +6145,10 @@ async def force_ia1_analysis(request: dict):
                             price_change_24h = ((current_price - fallback_data['Close'].iloc[-2]) / fallback_data['Close'].iloc[-2]) * 100
                         
                         # Create temporary opportunity object
-                        from data_models import CryptoOpportunity
+                        from data_models import MarketOpportunity
                         import uuid
                         
-                        target_opportunity = CryptoOpportunity(
+                        target_opportunity = MarketOpportunity(
                             id=f"{symbol}_{int(get_paris_time().timestamp())}",
                             symbol=symbol,
                             current_price=current_price,
