@@ -173,14 +173,20 @@ class AdvancedRegimeDetector:
                 'regime': regime.value,
                 'confidence': round(final_confidence, 3),
                 'base_confidence': round(base_confidence, 3),
-                'persistence_score': round(persistence_score, 3),
-                'signal_consistency': round(signal_consistency, 3),
+                'technical_consistency': round(adjusted_confidence, 3),
+                'combined_confidence': round(combined_confidence, 3),
+                'regime_persistence': persistence,  # v4: bar count
+                'stability_score': round(stability_score, 3),  # v4: NEW
+                'regime_transition_alert': self._detect_regime_transition_v4(),  # v4: enhanced
                 'scores': scores,
                 'indicators': indicators,
                 'thresholds': thresholds,
                 'transition_detected': transition_detected is not None,
                 'interpretation': self._interpret_regime(regime, final_confidence),
-                'trading_implications': self._get_trading_implications(regime)
+                'trading_implications': self._get_trading_implications_v4(regime, persistence, final_confidence),  # v4: enhanced
+                'ml_confidence_multiplier': self._get_ml_confidence_multiplier(final_confidence),  # v4: NEW
+                'regime_multiplier': self._get_regime_multiplier(regime),  # v4: NEW
+                'fresh_regime': persistence < 15  # v4: NEW flag
             }
         except Exception as e:
             logger.error(f"Error in regime detection: {e}")
