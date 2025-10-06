@@ -3695,10 +3695,10 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
             # Fix: Split the conditional formatting properly
-            rsi_str = f"{rsi:.2f}" if rsi else 'N/A'
-            macd_str = f"{macd_signal:.6f}" if macd_signal else 'N/A'
-            stoch_str = f"{stochastic_k:.2f}" if stochastic_k else 'N/A'
-            bb_str = f"{bb_position:.4f}" if bb_position else 'N/A'
+            rsi_str = f"{rsi:.2f}" if rsi is not None else 'N/A'
+            macd_str = f"{macd_signal:.6f}" if macd_signal is not None else 'N/A'
+            stoch_str = f"{stochastic_k:.2f}" if stochastic_k is not None else 'N/A'
+            bb_str = f"{bb_position:.4f}" if bb_position is not None else 'N/A'
             logger.info(f"   📊 Indicateurs: RSI={rsi_str} | MACD={macd_str} | Stoch={stoch_str} | BB={bb_str}")
             logger.info(f"   🚀 MACD Details: Line={macd_line:.6f if macd_line else 'N/A'} | Signal={macd_signal:.6f if macd_signal else 'N/A'} | Histogram={macd_histogram:.6f if macd_histogram else 'N/A'}")
             logger.info(f"   🎯 DYNAMIC RR: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
