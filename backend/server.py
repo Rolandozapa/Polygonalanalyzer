@@ -2593,12 +2593,20 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
 ═══════════════════════════════════════════════════════════════════════════════
             """
             
-            # ✅ CREATE ANALYSIS DATA FOR PROMPT FORMATTING (SIMPLIFIED VERSION)
+            # ✅ CREATE ANALYSIS DATA FOR IA1 v6.0 PROMPT FORMATTING
             analysis_data = {
-                # Basic TALib indicators already calculated
+                # ML Regime Detection
                 'regime': getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
                 'confidence': getattr(talib_analysis, 'confidence', 0.5),
+                'base_confidence': base_confidence,
                 'technical_consistency': getattr(talib_analysis, 'technical_consistency', 0.5),
+                'combined_confidence': combined_confidence,
+                'regime_persistence': regime_persistence,
+                'fresh_regime': fresh_regime,
+                'stability_score': stability_score,
+                'regime_transition_alert': regime_transition_alert,
+                
+                # Technical Indicators
                 'rsi': rsi or 50.0,
                 'rsi_zone': getattr(talib_analysis, 'rsi_zone', 'NEUTRAL'),
                 'rsi_interpretation': rsi_interpretation,
@@ -2606,26 +2614,53 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                 'macd_signal': macd_signal or 0.0,
                 'macd_histogram': macd_histogram or 0.0,
                 'macd_trend': getattr(talib_analysis, 'macd_trend', 'NEUTRAL'),
-                'macd_direction': macd_direction,
+                'stoch_k': getattr(talib_analysis, 'stoch_k', 50.0),
+                'stoch_d': getattr(talib_analysis, 'stoch_d', 50.0),
                 'adx': adx or 25.0,
                 'adx_strength': getattr(talib_analysis, 'adx_strength', 'MODERATE'),
                 'plus_di': getattr(talib_analysis, 'plus_di', 25.0),
                 'minus_di': getattr(talib_analysis, 'minus_di', 25.0),
-                'bb_position': bb_position or 0.5,
-                'bb_squeeze': bb_squeeze,
-                'squeeze_intensity': getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
+                'trend_hierarchy': getattr(talib_analysis, 'trend_hierarchy', 'NEUTRAL'),
+                'ema_cross_signal': ema_cross_signal or 'NEUTRAL',
+                
+                # Volume & Money Flow
                 'mfi': mfi or 50.0,
                 'mfi_signal': getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
-                'vwap': vwap or opportunity.current_price,
-                'vwap_distance': vwap_distance or 0.0,
-                'vwap_position': vwap_position or 0.0,
-                'vwap_strength': vwap_strength,
                 'volume_ratio': volume_ratio or 1.0,
                 'volume_trend': volume_trend or 0.0,
                 'volume_surge': volume_surge or False,
+                
+                # Bollinger Bands & Volatility
+                'bb_position': bb_position or 0.5,
+                'bb_squeeze': talib_analysis.bb_squeeze if hasattr(talib_analysis, 'bb_squeeze') else False,
+                'squeeze_intensity': getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
+                'atr': getattr(talib_analysis, 'atr', 0.02),
+                'atr_pct': getattr(talib_analysis, 'atr_pct', 2.0),
+                
+                # VWAP & Moving Averages
+                'vwap': vwap or opportunity.current_price,
+                'vwap_distance': vwap_distance or 0.0,
+                'sma_20': sma_20 or opportunity.current_price,
+                'sma_50': sma_50 or opportunity.current_price,
+                'ema_9': ema_9 or opportunity.current_price,
+                'ema_21': ema_21 or opportunity.current_price,
+                'ema_200': ema_200 or opportunity.current_price,
+                'sma_20_slope': sma_20_slope,
+                'above_sma_20': above_sma_20,
+                
+                # Position Sizing & Multipliers
+                'regime_multiplier': regime_multiplier,
+                'ml_confidence_multiplier': ml_confidence_multiplier,
+                'momentum_multiplier': momentum_multiplier,
+                'bb_multiplier': bb_multiplier,
+                'combined_multiplier': combined_multiplier,
+                
+                # Confluence Grading
                 'confluence_grade': getattr(talib_analysis, 'confluence_grade', 'C'),
                 'confluence_score': getattr(talib_analysis, 'confluence_score', 50),
                 'conviction_level': getattr(talib_analysis, 'conviction_level', 'FAIBLE'),
+                'should_trade': getattr(talib_analysis, 'should_trade', False),
+                
                 # Current opportunity data
                 'opportunity': opportunity
             }
