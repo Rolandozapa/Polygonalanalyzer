@@ -2889,73 +2889,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             stop_loss_price = real_current_price  
             take_profit_price = real_current_price
             
-            # 🚨 CALCUL MANQUANT DES INDICATEURS TECHNIQUES IA1
-            logger.info(f"📊 CALCULATING MISSING TECHNICAL INDICATORS for {opportunity.symbol}")
+            # 🚀 INDICATORS ALREADY CALCULATED BY AdvancedTechnicalIndicators - No manual calculation needed
+            logger.info(f"🎯 USING PROFESSIONAL INDICATORS from AdvancedTechnicalIndicators for {opportunity.symbol}")
+            logger.info(f"   📊 All indicators calculated by advanced_technical_indicators.calculate_all_indicators()")
             
-            # 🚨 STRICT VALIDATION: NO FALLBACK INITIALIZATION - All indicators must be properly calculated
-            # ❌ REMOVED: Safe fallback values (rsi=50.0, bb_position=0.0) 
-            # ✅ NEW POLICY: If indicators are not calculated, analysis should fail gracefully, not use fake data
-            if 'rsi' not in locals() or rsi is None:
-                logger.error(f"🚨 RSI not calculated for {opportunity.symbol} - Analysis will use None values")
-            if 'bb_position' not in locals() or bb_position is None:
-                logger.error(f"🚨 Bollinger Bands not calculated for {opportunity.symbol} - Analysis will use None values")
-            
-            # Calculer les vrais indicateurs si nous avons des données OHLCV
-            if not historical_data.empty and len(historical_data) >= 20:
-                try:
-                    # RSI (14 périodes)
-                    # 🔧 FIX: Handle both 'Close' and 'close' column names
-                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
-                    if close_col:
-                        rsi = self._calculate_rsi(historical_data[close_col])
-                        logger.info(f"   ✅ RSI calculé: {rsi:.2f}")
-                    
-                    # 🚨 CALCUL MACD (12, 26, 9)
-                    # 🔧 FIX: Handle both 'Close' and 'close' column names
-                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
-                    if close_col:
-                        # 🚀 NEW OPTIMIZED MACD: Utiliser le module MACD optimisé
-                        macd_line, macd_signal, macd_histogram = calculate_macd_optimized(historical_data[close_col])
-                        logger.info(f"   🚀 MACD optimized: Line={macd_line:.8f}, Signal={macd_signal:.8f}, Histogram={macd_histogram:.8f}")
-                    else:
-                        # 🚨 NO FALLBACK VALUES - Let system handle missing MACD gracefully
-                        macd_line, macd_signal, macd_histogram = None, None, None
-                        logger.error(f"🚨 MACD calculation failed for {opportunity.symbol} - Using None values instead of 0.0 fallbacks")
-                    
-                    # 🚨 CALCUL STOCHASTIC (14, 3, 3)
-                    # 🔧 FIX: Handle column name variations
-                    high_col = 'High' if 'High' in historical_data.columns else 'high' if 'high' in historical_data.columns else None
-                    low_col = 'Low' if 'Low' in historical_data.columns else 'low' if 'low' in historical_data.columns else None
-                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
-                    
-                    if high_col and low_col and close_col:
-                        stoch_result = self._calculate_stochastic(historical_data[high_col], historical_data[low_col], historical_data[close_col])
-                        if stoch_result and isinstance(stoch_result, dict):
-                            # Stochastic returns {"k": %K, "d": %D}
-                            stochastic_k = stoch_result.get("k", 50.0)
-                            stochastic_d = stoch_result.get("d", 50.0)
-                            logger.info(f"   ✅ Stochastic calculé: K={stochastic_k:.2f}, D={stochastic_d:.2f}")
-                        else:
-                            stochastic_k, stochastic_d = 50.0, 50.0
-                    
-                    # 🚨 CALCUL BOLLINGER BANDS POSITION
-                    # 🔧 FIX: Handle both 'Close' and 'close' column names
-                    close_col = 'Close' if 'Close' in historical_data.columns else 'close' if 'close' in historical_data.columns else None
-                    if close_col:
-                        bb_result = self._calculate_bollinger_position(historical_data[close_col])
-                        if bb_result and isinstance(bb_result, (dict, float)):
-                            if isinstance(bb_result, dict):
-                                bb_position = bb_result.get('position', 0.0)
-                            else:
-                                bb_position = float(bb_result)
-                            logger.info(f"   ✅ Bollinger position calculée: {bb_position:.4f}")
-                        else:
-                            bb_position = 0.0
-                            
-                except Exception as e:
-                    logger.error(f"❌ Error calculating technical indicators for {opportunity.symbol}: {e}")
-                    
-            logger.info(f"📊 FINAL INDICATORS {opportunity.symbol}: RSI={rsi:.2f}, MACD={indicators.macd_line:.6f}, Stoch={stochastic_k:.2f}, BB={bb_position:.4f}")
+            # ✅ INDICATORS ARE READY - No additional processing required
+            # RSI, MACD, Stochastic, Bollinger Bands, ADX, ATR, VWAP already extracted above
             
             if 'risk_reward_analysis' in ia1_complete_json and isinstance(ia1_complete_json['risk_reward_analysis'], dict):
                 rr_analysis = ia1_complete_json['risk_reward_analysis']
