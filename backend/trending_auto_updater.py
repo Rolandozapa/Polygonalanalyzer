@@ -218,13 +218,21 @@ class TrendingAutoUpdater:
             return []
     
     async def _fetch_bingx_api_data(self) -> List[TrendingCrypto]:
-        """Fetch trending data from BingX API"""
+        """Fetch trending data from BingX API with authentication"""
         try:
+            # Get API key from environment
+            bingx_api_key = os.getenv('BINGX_API_KEY')
+            
+            headers = {}
+            if bingx_api_key:
+                headers['X-BX-APIKEY'] = bingx_api_key
+            
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
-                # BingX API endpoint pour 24h ticker statistics
+                # BingX API endpoint pour 24h ticker statistics  
                 api_url = f"{self.bingx_api_base}/openApi/swap/v2/quote/ticker"
+                logger.info(f"🔥 BingX API Call: {api_url} (with API key: {'✅' if bingx_api_key else '❌'})")
                 
-                async with session.get(api_url) as response:
+                async with session.get(api_url, headers=headers) as response:
                     if response.status == 200:
                         data = await response.json()
                         
