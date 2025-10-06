@@ -3448,8 +3448,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 if ((daily_direction == "bullish" and signal_direction == "short") or 
                     (daily_direction == "bearish" and signal_direction == "long")):
                     
-                    # Quick technical extremes check (simplified)
-                    has_reversal_signals = (rsi > 75 or rsi < 25 or stochastic_k > 80 or stochastic_k < 20 or abs(bb_position) > 0.8)
+                    # Quick technical extremes check (simplified) - NULL SAFE
+                    has_reversal_signals = False
+                    if rsi is not None:
+                        has_reversal_signals = has_reversal_signals or (rsi > 75 or rsi < 25)
+                    if stochastic_k is not None:
+                        has_reversal_signals = has_reversal_signals or (stochastic_k > 80 or stochastic_k < 20)
+                    if bb_position is not None:
+                        has_reversal_signals = has_reversal_signals or abs(bb_position) > 0.8
                     
                     if not has_reversal_signals:
                         # CRITICAL ERROR: Strong counter-momentum without technical justification
