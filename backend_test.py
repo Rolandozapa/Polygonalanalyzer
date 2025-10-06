@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
 """
-DYNAMIC RR INTEGRATION TESTING SUITE - PHASE 1 VALIDATION
-Focus: Test the dynamic RR integration functionality implemented in Phase 1.
+EXTERNALIZED PROMPT MIGRATION TESTING SUITE
+Focus: Test the externalized prompt migration for the AI trading bot system.
 
-TESTING OBJECTIVES:
+CRITICAL VALIDATION POINTS:
 
-1. **Field Name Validation**: 
-   - Verify TechnicalAnalysis data model accepts new field names: `trade_type` and `minimum_rr_threshold`
-   - Test that old field names are no longer used
+1. **Prompt Loading Verification**:
+   - Test that externalized prompts are loaded correctly from `/app/prompts/` directory
+   - Verify ia1_v6_advanced.json and ia2_strategic.json are properly formatted and accessible
+   - Check backend logs for prompt loading success messages
 
-2. **Dynamic RR Escalation Logic**: 
-   - Test `_should_send_to_ia2` method uses new field names correctly
-   - Verify dynamic minimum RR thresholds based on trade type:
-     * Scalping trades: RR threshold ~1.0
-     * Intraday trades: RR threshold ~1.5  
-     * Swing trades: RR threshold ~2.0
+2. **IA1 Prompt Testing**:
+   - Test `/api/force-ia1-analysis` with various symbols to ensure IA1 externalized prompt works
+   - Verify prompt formatting with all required variables (19 variables for IA1)
+   - Check response quality and JSON parsing success
+   - Monitor backend logs for "Prompt formatted: ia1_v6_advanced" messages
 
-3. **Advanced Technical Indicators Integration**:
-   - Verify `advanced_technical_indicators.py` calculates and returns `trade_type` and `minimum_rr_threshold`
-   - Test values are based on market conditions
+3. **IA2 Prompt Testing**:
+   - Test IA2 escalation scenarios to validate ia2_strategic prompt works
+   - Verify JSON format handling (ensure double braces fix resolved formatting issues)
+   - Check IA2 strategic analysis responses
 
-4. **Data Flow Validation**:
-   - Test new fields flow correctly through: Advanced technical indicators → Server validation → TechnicalAnalysis object → IA2 escalation logic
+4. **System Integration**:
+   - Test full IA1 cycle with `/api/run-ia1-cycle` to ensure no prompt-related errors
+   - Verify system performance is maintained (no degradation from externalized prompts)
+   - Check that all technical indicators and ML regime data flows correctly to prompts
 
-5. **Database Persistence**:
-   - Verify analyses stored in MongoDB with new field names
-   - Validate values make sense based on market conditions
+5. **Error Handling**:
+   - Verify system gracefully handles any prompt loading failures
+   - Test fallback mechanisms if externalized prompts are unavailable
 
-6. **Symbol Testing**:
-   - Test symbols that generate different trade types (scalping vs swing)
-   - Verify dynamic behavior is working correctly
-
-FOCUS: Validate Phase 1 implementation of dynamic RR integration with consistent field naming and adaptive minimum RR thresholds.
+FOCUS: Validate the prompt migration is 100% functional and maintains all existing functionality.
 """
 
 import asyncio
