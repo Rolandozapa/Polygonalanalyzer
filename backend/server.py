@@ -2267,6 +2267,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 raw_adx_strength = getattr(talib_analysis, 'adx_strength', 'MISSING')
                 logger.info(f"🔍 ADX DEBUG for {opportunity.symbol}: Raw ADX={raw_adx}, +DI={raw_plus_di}, -DI={raw_minus_di}, Strength={raw_adx_strength}")
                 logger.info(f"🔍 ADX EXTRACTED VALUE: {adx} (should be real, not 25.0 fallback)")
+                
+                # Check prompt variable value
+                prompt_adx = adx if adx is not None else 25.0
+                logger.info(f"🔍 ADX PROMPT VARIABLE: {prompt_adx} (final value sent to IA1)")
             else:
                 logger.warning(f"⚠️ TALib analysis is None - using all fallback values including ADX=25.0")
             
