@@ -38,6 +38,14 @@ class TechnicalAnalysisComplete:
     macd_histogram: float = 0.0
     macd_trend: str = "NEUTRAL"
     
+    # 🆕 NOUVEAUX INDICATEURS MOMENTUM (High Priority)
+    willr: float = -50.0  # Williams %R (-100 to 0)
+    willr_zone: str = "NEUTRAL"  # OVERSOLD, OVERBOUGHT, NEUTRAL
+    cci: float = 0.0  # Commodity Channel Index 
+    cci_zone: str = "NEUTRAL"  # OVERSOLD, OVERBOUGHT, NEUTRAL
+    roc: float = 0.0  # Rate of Change (%)
+    roc_strength: str = "WEAK"  # WEAK, MODERATE, STRONG
+    
     adx: float = 25.0
     plus_di: float = 25.0
     minus_di: float = 25.0
