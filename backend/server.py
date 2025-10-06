@@ -2559,6 +2559,8 @@ Based on the comprehensive ML regime analysis above, provide your trading decisi
     "take_profit_price": "[CALCULATE using regime-specific target strategy]",
     "calculated_rr": "[CALCULATE risk-reward ratio]",
     "rr_reasoning": "[EXPLAIN calculation methodology]",
+    "trade_type": "[SCALP/INTRADAY/SWING/POSITION based on regime and timeframe]",
+    "trade_duration_estimate": "[Duration estimate for the trade]",
     "confluence_grade": "{{confluence_grade}}",
     "confluence_score": {{confluence_score}},
     "regime": "{{regime}}",
