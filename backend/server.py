@@ -2253,9 +2253,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 mfi = None
                 mfi_overbought = False
                 mfi_oversold = False
-            mfi_extreme_overbought = mfi > 90
-            mfi_extreme_oversold = mfi < 10
-            institutional_activity = ('distribution' if mfi > 80 else 'accumulation' if mfi < 20 else 'neutral')
+            # 🚨 MFI EXTREME ANALYSIS - NULL SAFE
+            if mfi is not None:
+                mfi_extreme_overbought = mfi > 90
+                mfi_extreme_oversold = mfi < 10
+                institutional_activity = ('distribution' if mfi > 80 else 'accumulation' if mfi < 20 else 'neutral')
+            else:
+                mfi_extreme_overbought = False
+                mfi_extreme_oversold = False
+                institutional_activity = 'neutral'
             
             # Volume analysis
             volume_ratio = indicators.volume_ratio
