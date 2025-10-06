@@ -1211,21 +1211,25 @@ class AdvancedTechnicalIndicators:
         if max_score < 3:
             trade_type = 'SWING'
         
-        # Determine duration and optimal timeframe
+        # Determine duration, optimal timeframe, and minimum RR
         if trade_type == 'SCALP':
             duration = "5min - 2 hours"
             timeframe = "1M/5M"
+            min_rr = 1.0  # Quick profits, lower RR acceptable
         elif trade_type == 'INTRADAY':
             duration = "2 hours - 24 hours"
             timeframe = "15M/1H"
+            min_rr = 1.5  # Moderate RR for intraday
         elif trade_type == 'SWING':
             duration = "1-7 days"
             timeframe = "4H/1D"
+            min_rr = 2.0  # Standard swing trading RR
         else:  # POSITION
             duration = "1-4 weeks"
             timeframe = "1D/1W"
+            min_rr = 2.5  # Higher RR for position trades
         
-        return trade_type, duration, timeframe
+        return trade_type, duration, timeframe, min_rr
     
     def _calculate_trend_alignment(self, df: pd.DataFrame) -> Tuple[str, float]:
         """Calculate multi-timeframe trend alignment"""
