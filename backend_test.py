@@ -203,10 +203,10 @@ class DynamicRRIntegrationTestSuite:
                 logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
                 self.actual_test_symbols = self.test_symbols
             
-            # Test each symbol for RR Calculator integration
+            # Test each symbol for field name validation
             for symbol in self.actual_test_symbols:
-                logger.info(f"\n   📞 Testing RR Calculator integration for {symbol}...")
-                rr_integration_results['analyses_attempted'] += 1
+                logger.info(f"\n   📞 Testing field name validation for {symbol}...")
+                field_validation_results['analyses_attempted'] += 1
                 
                 try:
                     start_time = time.time()
@@ -219,7 +219,7 @@ class DynamicRRIntegrationTestSuite:
                     
                     if response.status_code == 200:
                         analysis_data = response.json()
-                        rr_integration_results['analyses_successful'] += 1
+                        field_validation_results['analyses_successful'] += 1
                         
                         logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
                         
@@ -228,55 +228,76 @@ class DynamicRRIntegrationTestSuite:
                         if not isinstance(ia1_analysis, dict):
                             ia1_analysis = {}
                         
-                        # Check for RR calculation values
-                        calculated_rr = ia1_analysis.get('calculated_rr') or ia1_analysis.get('risk_reward_ratio')
-                        entry_price = ia1_analysis.get('entry_price')
-                        stop_loss = ia1_analysis.get('stop_loss_price')
-                        take_profit = ia1_analysis.get('take_profit_price')
+                        # Check for NEW field names (should be present)
+                        trade_type = ia1_analysis.get('trade_type')
+                        minimum_rr_threshold = ia1_analysis.get('minimum_rr_threshold')
                         
-                        logger.info(f"         📊 RR Values: calculated_rr={calculated_rr}, entry={entry_price}, sl={stop_loss}, tp={take_profit}")
+                        # Check for OLD field names (should be absent)
+                        old_trade_type = ia1_analysis.get('recommended_trade_type')
+                        old_rr_threshold = ia1_analysis.get('minimum_rr_for_trade_type')
                         
-                        # Check if RR is dynamic (not fixed values like 1.0, 2.2)
-                        if calculated_rr and isinstance(calculated_rr, (int, float)):
-                            if calculated_rr not in [1.0, 2.2, 1, 2]:  # Not fixed values
-                                rr_integration_results['dynamic_rr_values'] += 1
-                                logger.info(f"         ✅ Dynamic RR value detected: {calculated_rr}")
+                        logger.info(f"         📊 New Fields: trade_type={trade_type}, minimum_rr_threshold={minimum_rr_threshold}")
+                        logger.info(f"         📊 Old Fields: recommended_trade_type={old_trade_type}, minimum_rr_for_trade_type={old_rr_threshold}")
+                        
+                        # Validate new field names are present
+                        if trade_type is not None:
+                            field_validation_results['new_field_names_present'] += 1
+                            logger.info(f"         ✅ New field 'trade_type' present: {trade_type}")
+                            
+                            # Validate trade_type value
+                            if trade_type in self.valid_trade_types:
+                                field_validation_results['trade_type_valid'] += 1
+                                logger.info(f"         ✅ trade_type value valid: {trade_type}")
                             else:
-                                rr_integration_results['fixed_rr_values'] += 1
-                                logger.warning(f"         ❌ Fixed RR value detected: {calculated_rr}")
+                                logger.warning(f"         ⚠️ trade_type value invalid: {trade_type}")
+                        else:
+                            logger.error(f"         ❌ New field 'trade_type' missing")
+                        
+                        if minimum_rr_threshold is not None:
+                            field_validation_results['new_field_names_present'] += 1
+                            logger.info(f"         ✅ New field 'minimum_rr_threshold' present: {minimum_rr_threshold}")
+                            
+                            # Validate minimum_rr_threshold value
+                            if isinstance(minimum_rr_threshold, (int, float)) and minimum_rr_threshold > 0:
+                                field_validation_results['minimum_rr_threshold_valid'] += 1
+                                logger.info(f"         ✅ minimum_rr_threshold value valid: {minimum_rr_threshold}")
+                                
+                                # Check if it matches expected mapping
+                                expected_rr = self.trade_type_rr_mapping.get(trade_type, 2.0)
+                                if abs(minimum_rr_threshold - expected_rr) < 0.5:
+                                    logger.info(f"         ✅ minimum_rr_threshold matches expected for {trade_type}: {minimum_rr_threshold} ≈ {expected_rr}")
+                                else:
+                                    logger.warning(f"         ⚠️ minimum_rr_threshold doesn't match expected for {trade_type}: {minimum_rr_threshold} vs {expected_rr}")
+                            else:
+                                logger.warning(f"         ⚠️ minimum_rr_threshold value invalid: {minimum_rr_threshold}")
+                        else:
+                            logger.error(f"         ❌ New field 'minimum_rr_threshold' missing")
+                        
+                        # Validate old field names are absent
+                        if old_trade_type is None and old_rr_threshold is None:
+                            field_validation_results['old_field_names_absent'] += 1
+                            logger.info(f"         ✅ Old field names correctly absent")
+                        else:
+                            logger.warning(f"         ⚠️ Old field names still present: recommended_trade_type={old_trade_type}, minimum_rr_for_trade_type={old_rr_threshold}")
                         
                         # Store analysis details
-                        rr_integration_results['successful_analyses'].append({
+                        field_validation_results['successful_analyses'].append({
                             'symbol': symbol,
-                            'calculated_rr': calculated_rr,
-                            'entry_price': entry_price,
-                            'stop_loss': stop_loss,
-                            'take_profit': take_profit,
+                            'trade_type': trade_type,
+                            'minimum_rr_threshold': minimum_rr_threshold,
+                            'old_trade_type': old_trade_type,
+                            'old_rr_threshold': old_rr_threshold,
                             'response_time': response_time
                         })
                         
-                        # Store RR calculation details for mathematical verification
-                        if all([entry_price, stop_loss, take_profit]) and all(isinstance(x, (int, float)) for x in [entry_price, stop_loss, take_profit]):
-                            signal = ia1_analysis.get('signal', '').lower()
-                            
-                            # Calculate expected RR based on formulas
-                            if signal == 'long' and entry_price > stop_loss and take_profit > entry_price:
-                                expected_rr = (take_profit - entry_price) / (entry_price - stop_loss)
-                            elif signal == 'short' and stop_loss > entry_price and take_profit < entry_price:
-                                expected_rr = (entry_price - take_profit) / (stop_loss - entry_price)
-                            else:
-                                expected_rr = None
-                            
-                            rr_integration_results['rr_calculation_details'].append({
-                                'symbol': symbol,
-                                'signal': signal,
-                                'entry': entry_price,
-                                'sl': stop_loss,
-                                'tp': take_profit,
-                                'calculated_rr': calculated_rr,
-                                'expected_rr': expected_rr,
-                                'formula_match': abs(calculated_rr - expected_rr) < 0.1 if expected_rr and calculated_rr else False
-                            })
+                        # Store field validation details
+                        field_validation_results['field_validation_details'].append({
+                            'symbol': symbol,
+                            'new_fields_present': trade_type is not None and minimum_rr_threshold is not None,
+                            'old_fields_absent': old_trade_type is None and old_rr_threshold is None,
+                            'trade_type_valid': trade_type in self.valid_trade_types if trade_type else False,
+                            'rr_threshold_valid': isinstance(minimum_rr_threshold, (int, float)) and minimum_rr_threshold > 0 if minimum_rr_threshold else False
+                        })
                         
                     else:
                         logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
