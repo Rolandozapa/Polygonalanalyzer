@@ -5543,112 +5543,43 @@ Your response MUST be ONLY a valid JSON object:
             except Exception as e:
                 logger.warning(f"⚠️ Could not get global market context for IA2: {e}")
             
-            # Enhanced strategic prompt for detailed IA2 decisions
-            strategic_prompt = f"""You are IA2, the strategic trading decision maker. Based on IA1's comprehensive technical analysis, make a strategic decision.
-
-📊 MARKET CONTEXT:
-- Symbol: {symbol}
-- Current Price: ${current_price:.4f}
-- IA1 Signal: {ia1_signal.upper()}
-- IA1 Confidence: {ia1_confidence:.1%}
-- Risk-Reward Ratio: {rr_ratio:.2f}:1
-- 🌍 Global Market: {market_context_str}
-
-🧠 IA1 COMPLETE ANALYSIS SUMMARY:
-{analysis.ia1_reasoning}
-
-🔍 DETECTED PATTERNS & IA1 STRATEGIC CHOICE:
-- All Detected Patterns: {', '.join(analysis.patterns_detected) if analysis.patterns_detected else 'No specific patterns detected'}
-- IA1 Pattern Assessment: Based on the detected patterns, IA1 has made its strategic recommendation of {ia1_signal.upper()} with {ia1_confidence:.1%} confidence
-
-📈 TECHNICAL INDICATORS (DETAILED):
-- RSI: {analysis.rsi:.1f}
-- MACD Line: {analysis.macd_line:.6f} (MACD Signal: {analysis.macd_signal:.6f})
-- MACD Histogram: {analysis.macd_histogram:.6f} | Trend: {analysis.macd_trend}
-- Stochastic %K: {analysis.stochastic:.1f} | %D: {analysis.stochastic_d:.1f}
-- Bollinger Position: {analysis.bollinger_position:.2f}
-- Support Levels: {analysis.support_levels}
-- Resistance Levels: {analysis.resistance_levels}
-
-🔥 ADVANCED INSTITUTIONAL INDICATORS:
-- MFI (Money Flow): {analysis.mfi_value:.1f} ({analysis.mfi_signal})
-- Institution Activity: {analysis.mfi_institution}
-- VWAP Price: ${analysis.vwap_price:.2f}
-- VWAP Position: {analysis.vwap_position:.1f}% ({analysis.vwap_signal})
-- VWAP Trend: {analysis.vwap_trend}
-
-🚀 EMA/SMA TREND HIERARCHY:
-- EMA Hierarchy: {analysis.ema_hierarchy}
-- Price vs EMAs: {analysis.ema_position}
-- EMA Cross Signal: {analysis.ema_cross_signal}
-- EMA Strength: {analysis.ema_strength:.1f}%
-
-⚡ MULTI-TIMEFRAME ANALYSIS:
-- Dominant Timeframe: {analysis.multi_timeframe_dominant}
-- Decisive Pattern: {analysis.multi_timeframe_pattern}
-- Hierarchy Confidence: {analysis.multi_timeframe_confidence:.1%}
-
-🎯 FIBONACCI & SENTIMENT:
-- Fibonacci Level: {analysis.fibonacci_level:.3f} ({analysis.fibonacci_nearest_level})
-- Fibonacci Trend: {analysis.fibonacci_trend_direction}
-- Market Sentiment: {analysis.market_sentiment}
-
-🎯 STRATEGIC DECISION FRAMEWORK:
-As IA2, your role is to validate or override IA1's recommendation based on:
-1. **IA1 Complete Reasoning Analysis**: Does IA1's detailed reasoning align with all technical evidence?
-2. **Pattern Confluence**: Do the detected patterns support IA1's chosen direction?
-3. **Institutional Flow**: What do MFI + VWAP suggest about smart money positioning?
-4. **Multi-Timeframe Alignment**: Does the dominant timeframe support IA1's view?
-5. **Risk Management**: Are there hidden risks IA1 might have missed?
-6. **Market Regime Assessment**: What's the broader market context?
-
-🚨 CRITICAL IA2 LEVEL GENERATION & RR VALIDATION:
-You MUST generate your OWN technical levels independent of IA1:
-- **Analyze support/resistance yourself** using the provided technical data
-- **Calculate YOUR OWN entry/stop-loss/take-profit levels**
-- **Compute YOUR OWN Risk-Reward ratio** using your levels
-
-🎯 EXECUTION RULES (SIMPLIFIED):
-- **IF YOUR calculated_rr > 2.0**: trade_execution_ready = true
-- **IF YOUR calculated_rr ≤ 2.0**: trade_execution_ready = false
-
-Only execute trades with YOUR calculated RR > 2.0:1 for proper risk management.
-
-RESPONSE FORMAT (JSON):
-{{
-    "signal": "long" or "short" or "hold",
-    "confidence": 0.XX (0.50 to 0.99),
-    "reasoning": "Strategic analysis explaining your decision vs IA1's analysis, your own technical level identification, and why your RR supports/rejects execution",
-    "risk_level": "low" or "medium" or "high",
-    "position_size": X.X (0.5 to 8.0 percent of portfolio),
-    "market_regime_assessment": "bullish/bearish/neutral with detailed confluence analysis",
-    "execution_priority": "immediate/wait_for_confluence/avoid",
-    
-    "ia2_entry_price": XXX.XXXX (YOUR identified optimal entry price - independent from IA1),
-    "ia2_stop_loss": XXX.XXXX (YOUR calculated stop loss level based on YOUR support/resistance analysis),
-    "ia2_take_profit_1": XXX.XXXX (YOUR primary take profit target),
-    "ia2_take_profit_2": XXX.XXXX (YOUR secondary take profit target),
-    "ia2_take_profit_3": XXX.XXXX (YOUR extended take profit target),
-    
-    "calculated_rr": X.XX (YOUR calculated risk-reward ratio using YOUR levels),
-    "rr_reasoning": "Detailed explanation of YOUR RR calculation with YOUR specific support/resistance levels and WHY these levels are optimal",
-    "trade_execution_ready": true/false (true ONLY if YOUR calculated_rr > 2.0)
-}}
-
-🔥 SIMPLE EXECUTION LOGIC:
-**RULE**: IF YOUR calculated_rr > 2.0 → trade_execution_ready = true
-**OTHERWISE**: trade_execution_ready = false
-
-Your RR calculation determines trade execution, not IA1's RR.
-
-CRITICAL INSTRUCTIONS FOR IA2 LEVELS:
-- **LONG Signal**: Entry near current support, SL below stronger support, TP at resistance levels
-- **SHORT Signal**: Entry near current resistance, SL above stronger resistance, TP at support levels  
-- **HOLD Signal**: No specific levels needed, use conservative estimates
-- **Position Size**: Consider volatility, market regime, and confluence strength
-- **RR Calculation**: LONG RR = (TP1-Entry)/(Entry-SL), SHORT RR = (Entry-TP1)/(SL-Entry)
-
-CRITICAL: Generate YOUR OWN technical levels and execute ONLY if YOUR RR > 2.0. Return valid JSON only."""
+            # 🚀 PREPARE VARIABLES FOR EXTERNALIZED IA2 STRATEGIC PROMPT
+            ia2_prompt_variables = {
+                'symbol': symbol,
+                'ia1_signal': ia1_signal,
+                'ia1_confidence': ia1_confidence,
+                'ia1_rr': rr_ratio,
+                'ia1_reasoning': analysis.ia1_reasoning,
+                'current_price': current_price,
+                'price_change_24h': analysis.price_change_24h if hasattr(analysis, 'price_change_24h') else 0.0,
+                'volume_ratio': volume_ratio if volume_ratio else 1.0,
+                'ia1_entry': entry_price,
+                'ia1_stop': stop_loss,
+                'ia1_target': tp1,
+                'rsi': rsi,
+                'rsi_zone': getattr(analysis, 'rsi_zone', 'NEUTRAL'),
+                'macd_histogram': analysis.macd_histogram,
+                'adx': analysis.adx,
+                'adx_strength': getattr(analysis, 'adx_strength', 'MODERATE'),
+                'bb_position': analysis.bollinger_position,
+                'vwap_distance': vwap_distance if vwap_distance else 0.0,
+                'volume_surge': volume_surge if volume_surge else False,
+                'regime': getattr(analysis, 'regime', 'CONSOLIDATION'),
+                'regime_confidence': getattr(analysis, 'confidence', 0.5),
+                'regime_persistence': getattr(analysis, 'regime_persistence', 25),
+                'fresh_regime': 'fresh' if getattr(analysis, 'regime_persistence', 25) < 15 else 'mature',
+                'regime_transition_alert': getattr(analysis, 'regime_transition_alert', 'STABLE'),
+                'min_rr_threshold': min_rr_threshold,
+                'trade_type': trade_type,
+                'trade_duration': trade_duration_estimate if 'trade_duration_estimate' in locals() else 'Undefined'
+            }
+            
+            # 🚀 USE EXTERNALIZED IA2 STRATEGIC PROMPT
+            strategic_prompt = prompt_manager.format_prompt('ia2_strategic', ia2_prompt_variables)
+            
+            if not strategic_prompt:
+                logger.error(f"❌ Failed to load externalized IA2 prompt, falling back to basic prompt")
+                strategic_prompt = f"Analyze IA1's {ia1_signal} signal for {symbol} with {ia1_confidence:.1%} confidence and provide strategic decision in JSON format."
 
             # Send to Claude using correct method
             response = await self.chat.send_message(UserMessage(text=strategic_prompt))
