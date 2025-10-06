@@ -3562,6 +3562,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "rsi_interpretation": self._get_rsi_interpretation(getattr(talib_analysis, 'rsi_14', 50.0), getattr(talib_analysis, 'rsi_zone', 'NEUTRAL')),
                 "macd_trend": getattr(talib_analysis, 'macd_trend', 'NEUTRAL'),
                 "macd_direction": "bullish" if getattr(talib_analysis, 'macd_histogram', 0.0) > 0 else "bearish" if getattr(talib_analysis, 'macd_histogram', 0.0) < 0 else "neutral",
+                "adx": adx if adx is not None else 25.0,  # 🆕 ADD MISSING ADX VALUE
                 "adx_strength": getattr(talib_analysis, 'adx_strength', 'MODERATE'),
                 "plus_di": getattr(talib_analysis, 'plus_di', 25.0),
                 "minus_di": getattr(talib_analysis, 'minus_di', 25.0),
