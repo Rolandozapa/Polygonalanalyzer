@@ -290,25 +290,36 @@ class AdvancedRegimeDetector:
             if abs(ind['sma_20_slope']) < 0.001:
                 scores[MarketRegimeDetailed.CONSOLIDATION] += 2
         
-        # RANGING TIGHT
-        if (ind['range_pct'] < 5 and ind['adx'] < 20 and not ind['bb_squeeze']):
+        # RANGING TIGHT (use dynamic thresholds)
+        if (ind['range_pct'] < thresholds['range_tight'] and 
+            ind['adx'] < thresholds['adx_weak'] and 
+            not ind['bb_squeeze']):
             scores[MarketRegimeDetailed.RANGING_TIGHT] += 3
-            if abs(ind['sma_20_slope']) < 0.001:
+            if abs(ind['sma_20_slope']) < thresholds['slope_strong'] * 0.5:
                 scores[MarketRegimeDetailed.RANGING_TIGHT] += 2
         
-        # RANGING WIDE
-        if (5 <= ind['range_pct'] < 10 and ind['adx'] < 25):
+        # RANGING WIDE (use dynamic thresholds)
+        if (thresholds['range_tight'] <= ind['range_pct'] < thresholds['range_wide'] and 
+            ind['adx'] < thresholds['adx_strong']):
             scores[MarketRegimeDetailed.RANGING_WIDE] += 3
         
-        # BREAKOUT BULLISH
-        if (ind['volume_ratio'] > 1.5 and ind['sma_20_slope'] > 0.003 and 
-            ind['above_sma_20'] and ind['volatility_ratio'] > 1.2):
+        # BREAKOUT BULLISH (use dynamic thresholds)
+        if (ind['volume_ratio'] > thresholds['volume_surge'] and 
+            ind['sma_20_slope'] > thresholds['slope_strong'] * 1.5 and 
+            ind['above_sma_20'] and 
+            ind['volatility_ratio'] > 1.2):
             scores[MarketRegimeDetailed.BREAKOUT_BULLISH] += 4
+            if ind.get('bb_expansion', False):
+                scores[MarketRegimeDetailed.BREAKOUT_BULLISH] += 1
         
-        # BREAKOUT BEARISH
-        if (ind['volume_ratio'] > 1.5 and ind['sma_20_slope'] < -0.003 and 
-            not ind['above_sma_20'] and ind['volatility_ratio'] > 1.2):
+        # BREAKOUT BEARISH (use dynamic thresholds)
+        if (ind['volume_ratio'] > thresholds['volume_surge'] and 
+            ind['sma_20_slope'] < -thresholds['slope_strong'] * 1.5 and 
+            not ind['above_sma_20'] and 
+            ind['volatility_ratio'] > 1.2):
             scores[MarketRegimeDetailed.BREAKOUT_BEARISH] += 4
+            if ind.get('bb_expansion', False):
+                scores[MarketRegimeDetailed.BREAKOUT_BEARISH] += 1
         
         # VOLATILE
         if (ind['volatility_ratio'] > 1.5 and ind['range_pct'] > 10):
