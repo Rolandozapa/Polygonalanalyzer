@@ -413,13 +413,44 @@ class AdvancedRegimeDetector:
         return float(slope)
     
     def _calculate_adx(self, df: pd.DataFrame, period: int) -> float:
-        """Simplified ADX calculation"""
-        high_low = df['high'] - df['low']
-        high_close = abs(df['high'] - df['close'].shift())
-        low_close = abs(df['low'] - df['close'].shift())
-        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
-        adx_value = min(60, true_range.rolling(period).mean().iloc[-1] / df['close'].iloc[-1] * 1000)
-        return float(adx_value)
+        """
+        Correct ADX calculation using Wilder's method
+        Returns proper ADX value (0-100)
+        """
+        high = df['high']
+        low = df['low']
+        close = df['close']
+        
+        # True Range
+        tr1 = high - low
+        tr2 = abs(high - close.shift())
+        tr3 = abs(low - close.shift())
+        tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        atr = tr.ewm(span=period, adjust=False).mean()
+        
+        # Directional Movement
+        dm_plus = high.diff()
+        dm_minus = -low.diff()
+        dm_plus[dm_plus < 0] = 0
+        dm_minus[dm_minus < 0] = 0
+        dm_plus[(dm_plus < dm_minus)] = 0
+        dm_minus[(dm_minus < dm_plus)] = 0
+        
+        # Smoothed directional movement
+        dm_plus_smooth = dm_plus.ewm(span=period, adjust=False).mean()
+        dm_minus_smooth = dm_minus.ewm(span=period, adjust=False).mean()
+        
+        # Directional Indicators
+        di_plus = 100 * dm_plus_smooth / atr
+        di_minus = 100 * dm_minus_smooth / atr
+        
+        # DX (Directional Index)
+        dx = 100 * abs(di_plus - di_minus) / (di_plus + di_minus + 0.0001)
+        
+        # ADX (smoothed DX)
+        adx = dx.ewm(span=period, adjust=False).mean()
+        
+        return float(adx.iloc[-1]) if not pd.isna(adx.iloc[-1]) else 0.0
     
     def _calculate_atr(self, df: pd.DataFrame, period: int) -> pd.Series:
         """Calculate ATR"""
