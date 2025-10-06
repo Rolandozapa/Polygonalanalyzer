@@ -3497,7 +3497,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "trade_type": trade_type_value,
                 "minimum_rr_threshold": min_rr_value,
                 "trade_duration_estimate": duration_value,
-                "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
+                "optimal_timeframe": '4H/1D'
             })
             logger.info(f"🔍 AFTER UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
             
@@ -3528,7 +3528,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "trade_type": trade_type_value,
                 "minimum_rr_threshold": min_rr_value,
                 "trade_duration_estimate": duration_value,
-                "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
+                "optimal_timeframe": '4H/1D'
             })
             
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
