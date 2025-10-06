@@ -2225,11 +2225,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             ema_cross_signal = indicators.ema_cross_signal
             trend_strength_score = indicators.trend_strength_score
             
-            # Debug logging pour vérifier les vraies valeurs calculées AVEC MFI+VWAP+MULTI EMA/SMA
+            # Debug logging pour vérifier les vraies valeurs calculées AVEC VWAP+MULTI EMA/SMA
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}")
-            logger.info(f"🔥 {opportunity.symbol} - MFI: {mfi:.1f} ({'EXTREME_OVERSOLD' if mfi_extreme_oversold else 'OVERSOLD' if mfi_oversold else 'EXTREME_OVERBOUGHT' if mfi_extreme_overbought else 'OVERBOUGHT' if mfi_overbought else 'NEUTRAL'}), Institution: {institutional_activity}")
-            logger.info(f"⚡ {opportunity.symbol} - VWAP: ${vwap:.4f}, Position: {vwap_position:.2f}% ({'EXTREME_OVERSOLD' if vwap_extreme_oversold else 'OVERSOLD' if vwap_oversold else 'EXTREME_OVERBOUGHT' if vwap_extreme_overbought else 'OVERBOUGHT' if vwap_overbought else 'NEUTRAL'}), Trend: {vwap_trend}")
-            logger.info(f"🚀 {opportunity.symbol} - EMA HIERARCHY: {trend_hierarchy.upper()}, Price vs EMAs: {price_vs_emas}, Cross: {ema_cross_signal}, Strength: {trend_strength_score:.0f}%")
+            logger.info(f"⚡ {opportunity.symbol} - VWAP: ${vwap:.4f}, Distance: {vwap_distance:.2f}%, Above: {above_vwap}, Position: {vwap_position}")
+            logger.info(f"🚀 {opportunity.symbol} - Volume: {volume_ratio:.2f}x, Trend: {volume_trend}, Surge: {volume_surge}")
             logger.info(f"📊 {opportunity.symbol} - EMAs: 9=${ema_9:.4f}, 21=${ema_21:.4f}, SMA50=${sma_50:.4f}, EMA200=${ema_200:.4f}")
             
             # Get current price for calculations
