@@ -254,30 +254,34 @@ class AdvancedRegimeDetector:
         """Classify market regime based on indicators"""
         scores = {regime: 0 for regime in MarketRegimeDetailed}
         
-        # TRENDING UP STRONG
-        if (ind['adx'] > 25 and ind['sma_20_slope'] > 0.002 and 
+        # TRENDING UP STRONG (use dynamic thresholds)
+        if (ind['adx'] > thresholds['adx_strong'] and 
+            ind['sma_20_slope'] > thresholds['slope_strong'] and 
             ind['above_sma_20'] and ind['above_sma_50']):
             scores[MarketRegimeDetailed.TRENDING_UP_STRONG] += 3
             if ind['rsi'] > 50 and ind['macd_histogram'] > 0:
                 scores[MarketRegimeDetailed.TRENDING_UP_STRONG] += 2
         
         # TRENDING UP MODERATE
-        elif (ind['above_sma_20'] and 0 < ind['sma_20_slope'] <= 0.002):
+        elif (ind['above_sma_20'] and 
+              0 < ind['sma_20_slope'] <= thresholds['slope_strong']):
             scores[MarketRegimeDetailed.TRENDING_UP_MODERATE] += 3
-            if ind['adx'] > 20:
+            if ind['adx'] > thresholds['adx_weak']:
                 scores[MarketRegimeDetailed.TRENDING_UP_MODERATE] += 1
         
-        # TRENDING DOWN STRONG
-        if (ind['adx'] > 25 and ind['sma_20_slope'] < -0.002 and 
+        # TRENDING DOWN STRONG (use dynamic thresholds)
+        if (ind['adx'] > thresholds['adx_strong'] and 
+            ind['sma_20_slope'] < -thresholds['slope_strong'] and 
             not ind['above_sma_20'] and not ind['above_sma_50']):
             scores[MarketRegimeDetailed.TRENDING_DOWN_STRONG] += 3
             if ind['rsi'] < 50 and ind['macd_histogram'] < 0:
                 scores[MarketRegimeDetailed.TRENDING_DOWN_STRONG] += 2
         
         # TRENDING DOWN MODERATE
-        elif (not ind['above_sma_20'] and -0.002 <= ind['sma_20_slope'] < 0):
+        elif (not ind['above_sma_20'] and 
+              -thresholds['slope_strong'] <= ind['sma_20_slope'] < 0):
             scores[MarketRegimeDetailed.TRENDING_DOWN_MODERATE] += 3
-            if ind['adx'] > 20:
+            if ind['adx'] > thresholds['adx_weak']:
                 scores[MarketRegimeDetailed.TRENDING_DOWN_MODERATE] += 1
         
         # CONSOLIDATION (BB Squeeze)
