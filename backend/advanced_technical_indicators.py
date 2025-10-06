@@ -992,6 +992,13 @@ class AdvancedTechnicalIndicators:
                 trend_alignment=trend_alignment,
                 timeframe_score=tf_score,
                 
+                # EMAs for trend analysis
+                ema_9=ema_9,
+                ema_21=ema_21,
+                ema_50=ema_50,
+                ema_200=ema_200,
+                sma_50=sma_50,
+                
                 # Trade Type Recommendation
                 trade_type=trade_type,
                 trade_duration_estimate=duration,
