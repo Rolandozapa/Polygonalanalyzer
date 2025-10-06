@@ -2352,7 +2352,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             📊 **BALANCED QUALITY STANDARDS WITH PRECISION TOOLS**:
             - Minimum Confidence: 70% (balanced - multi-timeframe removes bad signals)
             - Minimum Risk-Reward: 2.0:1 (balanced - VWAP precision allows realistic targets)
-            - Preferred: MFI institutional confirmation OR VWAP extreme positioning
+            - Preferred: Volume surge confirmation OR VWAP extreme positioning
             - Required: Multi-timeframe confluence OR strong traditional indicators
             - Philosophy: QUALITY through better analysis, not artificial barriers
             
