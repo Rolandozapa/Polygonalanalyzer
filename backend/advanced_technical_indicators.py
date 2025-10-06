@@ -223,7 +223,9 @@ class AdvancedRegimeDetector:
         indicators['volatility_ratio'] = atr.iloc[-1] / atr_50.iloc[-1] if atr_50.iloc[-1] > 0 else 1.0
         
         bb_width = self._calculate_bb_width(df, 20)
-        indicators['bb_squeeze'] = bb_width.iloc[-1] < 0.02
+        indicators['bb_width'] = bb_width.iloc[-1]
+        indicators['bb_squeeze'] = bb_width.iloc[-1] < thresholds['bb_squeeze']
+        indicators['bb_expansion'] = bb_width.iloc[-1] > thresholds['bb_expansion']
         
         high_20 = high.rolling(20).max()
         low_20 = low.rolling(20).min()
