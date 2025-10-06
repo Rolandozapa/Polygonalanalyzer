@@ -84,9 +84,11 @@ class TrendingAutoUpdater:
         logger.info("✅ OPTIMIZED: Trending update loop reactivated with CPU optimizations")
         logger.info("🔄 Auto-trending updater started - checking every 4 hours")
         
-        # 🚨 CORRECTION: Pas de premier update immédiat au startup pour éviter les blocages
-        # L'update se fera lors du premier cycle de la boucle
-        logger.info("⏰ First trending update will occur in the background loop")
+        # 🚨 IMMEDIATE STARTUP UPDATE: Perform lightweight BingX data fetch on startup
+        # This ensures opportunities endpoint has data immediately without waiting 5 minutes
+        logger.info("🚀 STARTUP: Triggering immediate BingX data fetch to populate cache")
+        asyncio.create_task(self._startup_data_fetch())
+        logger.info("⏰ Regular trending updates will continue every 4 hours")
     
     async def stop_auto_update(self):
         """Arrête le système d'auto-update"""
