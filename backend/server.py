@@ -2259,6 +2259,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 TALib EXTRACTED for {opportunity.symbol}: RSI={rsi:.2f}, MACD_hist={macd_histogram:.6f}, ADX={adx:.1f}, ATR={atr:.4f}, VWAP=${vwap:.4f}")
             logger.info(f"🔍 TALib STATUS: Analysis object exists = {talib_analysis is not None}")
             
+            # 🚨 DEBUG ADX SPECIFIC - Check if ADX is correctly extracted
+            if talib_analysis:
+                raw_adx = getattr(talib_analysis, 'adx', 'MISSING')
+                raw_plus_di = getattr(talib_analysis, 'plus_di', 'MISSING') 
+                raw_minus_di = getattr(talib_analysis, 'minus_di', 'MISSING')
+                raw_adx_strength = getattr(talib_analysis, 'adx_strength', 'MISSING')
+                logger.info(f"🔍 ADX DEBUG for {opportunity.symbol}: Raw ADX={raw_adx}, +DI={raw_plus_di}, -DI={raw_minus_di}, Strength={raw_adx_strength}")
+                logger.info(f"🔍 ADX EXTRACTED VALUE: {adx} (should be real, not 25.0 fallback)")
+            else:
+                logger.warning(f"⚠️ TALib analysis is None - using all fallback values including ADX=25.0")
+            
             # CRITICAL DEBUG: Check if analysis_data contains these values
             logger.info(f"🔍 CRITICAL CHECK - analysis_data will contain: ATR={atr}, SMA_20={sma_20 if 'sma_20' in locals() else 'MISSING'}, Current_Price={real_current_price if 'real_current_price' in locals() else 'MISSING'}")
             
