@@ -3807,7 +3807,7 @@ END OF ANALYSIS FRAMEWORK - PROVIDE JSON RESPONSE NOW
                         resistance_levels=[opportunity.current_price * 1.05],
                         patterns_detected=ia1_complete_json.get('patterns', ['technical_error']),
                         analysis_confidence=fallback_confidence,
-                        ia1_signal=ia1_complete_json.get('recommendation', 'hold').lower(),
+                        ia1_signal=str(ia1_complete_json.get('recommendation', 'hold')).lower(),
                         ia1_reasoning=ia1_complete_json.get('reasoning', f"IA1 analysis with technical error for {opportunity.symbol}"),
                         market_sentiment="neutral",
                         data_sources=opportunity.data_sources,
