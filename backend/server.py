@@ -2271,17 +2271,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # ✅ ALL INDICATORS EXTRACTED FROM simple_indicators_data
             # Volume analysis (already extracted above)
             # EMAs and trend hierarchy (from simple indicators)
-            # EMAs and trend (from simple indicators)
-            ema_9 = simple_indicators_data.get('ema_9')
-            ema_21 = simple_indicators_data.get('ema_21')
-            sma_50 = simple_indicators_data.get('ema_50')  # Using ema_50 from simple indicators
-            ema_200 = opportunity.current_price  # Default (not in simple indicators yet)
-            trend_hierarchy = "BULLISH" if simple_indicators_data.get('trend_bullish') else "BEARISH" if simple_indicators_data.get('trend_bearish') else "NEUTRAL"
-            ema_strength = 0.5  # Default trend strength
-            trend_momentum = "POSITIVE" if simple_indicators_data.get('trend_bullish') else "NEGATIVE" if simple_indicators_data.get('trend_bearish') else "NEUTRAL"
-            price_vs_emas = "ABOVE" if simple_indicators_data.get('price_above_emas') else "BELOW"
-            ema_cross_signal = "BULLISH" if simple_indicators_data.get('trend_bullish') else "BEARISH"
-            trend_strength_score = 0.5  # Default trend strength score
+            # ✅ EMAs and trend from TALib Professional Analysis
+            ema_9 = talib_analysis.ema_9
+            ema_21 = talib_analysis.ema_21
+            sma_50 = talib_analysis.sma_50
+            ema_200 = talib_analysis.ema_200
+            trend_hierarchy = talib_analysis.trend_hierarchy
+            ema_strength = talib_analysis.trend_strength_score
+            trend_momentum = "POSITIVE" if trend_hierarchy == "BULLISH" else "NEGATIVE" if trend_hierarchy == "BEARISH" else "NEUTRAL"
+            price_vs_emas = talib_analysis.price_vs_emas
+            ema_cross_signal = "BULLISH" if trend_hierarchy == "BULLISH" else "BEARISH" if trend_hierarchy == "BEARISH" else "NEUTRAL"
+            trend_strength_score = talib_analysis.trend_strength_score
             
             # Debug logging pour vérifier les vraies valeurs calculées AVEC VWAP+MULTI EMA/SMA
             logger.info(f"🔢 {opportunity.symbol} - RSI: {rsi:.2f}, MACD: {macd_signal:.6f}, Stochastic: {stochastic_k:.2f}, BB Position: {bb_position:.2f}")
