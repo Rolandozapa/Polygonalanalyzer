@@ -4377,8 +4377,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["minimum_rr_threshold"] = self._ensure_json_safe(analysis_data.get("minimum_rr_threshold"), 2.0)
             
             # 🚀 ADVANCED TECHNICAL INDICATORS - CRITICAL FIX FOR IA1 ANALYSIS
-            # Add MFI indicators
-            cleaned_data["mfi_value"] = self._ensure_json_safe(analysis_data.get("mfi_value"), 50.0)
+            # ✅ NO FALLBACK VALUES - Use real calculated MFI indicators
+            cleaned_data["mfi_value"] = self._ensure_json_safe(analysis_data.get("mfi_value"), None)  # ❌ NO 50.0 FALLBACK
             cleaned_data["mfi_signal"] = str(analysis_data.get("mfi_signal", "neutral"))
             cleaned_data["mfi_institution"] = str(analysis_data.get("mfi_institution", "neutral"))
             
