@@ -2972,7 +2972,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 primary_resistance = float(rr_analysis.get('primary_resistance', opportunity.current_price * 1.144))  # +14.4% pour RR = 2.4:1
                 
                 # 🎯 ASSIGNATION DES PRIX SELON LE SIGNAL IA1
-                if ia1_signal.lower() == 'long':
+                if str(ia1_signal).lower() == 'long':
                     # LONG: Entry = current, SL = support, TP = resistance
                     stop_loss_price = primary_support
                     take_profit_price = primary_resistance
@@ -3023,7 +3023,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         logger.info(f"📊 EXTRACTED FROM REASONING {opportunity.symbol}: Entry=${extracted_entry:.6f}, Target=${extracted_target:.6f}")
                         
                         # Calculer support/resistance basé sur les niveaux extraits
-                        if ia1_signal.lower() == 'long':
+                        if str(ia1_signal).lower() == 'long':
                             # LONG: Target = resistance, calculer support pour RR > 2.0
                             primary_resistance = extracted_target
                             # Pour RR = 2.5:1, Risk = (Target - Entry) / 2.5
@@ -3054,7 +3054,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     primary_resistance = resistance_levels[0] if resistance_levels else opportunity.current_price * 1.12  # +12% resistance (plus large pour meilleur RR)
                 
                 # Assignation des prix selon le signal
-                if ia1_signal.lower() == 'long':
+                if str(ia1_signal).lower() == 'long':
                     stop_loss_price = primary_support
                     take_profit_price = primary_resistance
                 elif ia1_signal.lower() == 'short':
