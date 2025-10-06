@@ -4984,7 +4984,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Clamp to 0-100 range
             final_score = max(0.0, min(100.0, base_score))
             
-            logger.info(f"📊 IA1 Institutional validation: {final_score:.1f}% (MFI: {mfi:.1f}, VWAP: {vwap_position:+.1f}%, Signal: {primary_signal})")
+            # ✅ SAFE LOGGING - Handle None values
+            mfi_inst_disp = f"{mfi:.1f}" if mfi is not None else "N/A"
+            vwap_inst_disp = f"{vwap_position:+.1f}%" if vwap_position is not None else "N/A"
+            logger.info(f"📊 IA1 Institutional validation: {final_score:.1f}% (MFI: {mfi_inst_disp}, VWAP: {vwap_inst_disp}, Signal: {primary_signal})")
             return final_score
             
         except Exception as e:
