@@ -431,6 +431,21 @@ class AdvancedRegimeDetector:
         }
         return implications.get(regime, ["Standard strategy recommended"])
     
+    def _calculate_regime_persistence_v4(self, current_regime: MarketRegimeDetailed) -> int:
+        """
+        v4: Calculate regime persistence using bar counter (more precise)
+        Returns: number of bars since regime started
+        """
+        if current_regime != self.current_regime:
+            # Changement de régime
+            self.current_regime = current_regime
+            self.regime_start_bar = self.bar_count
+            return 0
+        
+        # Même régime, calculer la persistence
+        persistence = self.bar_count - self.regime_start_bar
+        return persistence
+    
     def _assess_regime_persistence(self, current_regime: MarketRegimeDetailed) -> float:
         """
         Assess regime persistence over recent history
