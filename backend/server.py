@@ -6116,7 +6116,7 @@ async def test_voie3_escalation_logic():
             analysis = scenario["analysis"]
             
             # Reproduire la logique de _should_send_to_ia2
-            ia1_signal = analysis.str(ia1_signal).lower()
+            ia1_signal = str(analysis.ia1_signal).lower()
             risk_reward_ratio = analysis.risk_reward_ratio
             confidence = analysis.analysis_confidence
             
@@ -10234,7 +10234,7 @@ class UltraProfessionalOrchestrator:
         - POSITION: RR > 2.5 (higher threshold)
         """
         try:
-            ia1_signal = analysis.str(ia1_signal).lower()
+            ia1_signal = str(analysis.ia1_signal).lower()
             confidence = analysis.analysis_confidence
             rr_ratio = analysis.risk_reward_ratio
             
