@@ -2222,9 +2222,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
-            vwap = simple_indicators_data.get('vwap', opportunity.current_price)
-            vwap_distance = simple_indicators_data.get('vwap_distance', 0.0)
-            above_vwap = simple_indicators_data.get('above_vwap', True)
+            # VWAP (already extracted above)
+            vwap_distance = simple_indicators_data.get('vwap_distance')
+            above_vwap = simple_indicators_data.get('above_vwap')
             
             # Ensure vwap_position is numeric (convert from string if needed)
             try:
