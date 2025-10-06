@@ -1276,6 +1276,73 @@ class AdvancedTechnicalIndicators:
         
         return trade_type, duration, timeframe, min_rr
     
+    def _calculate_trend_hierarchy(self, current_price: float, ema_9: float, ema_21: float, 
+                                 ema_50: float, ema_200: float, sma_50: float) -> tuple:
+        """Calculate trend hierarchy and related metrics"""
+        
+        # Price position relative to EMAs
+        above_ema9 = current_price > ema_9
+        above_ema21 = current_price > ema_21
+        above_ema50 = current_price > ema_50
+        above_ema200 = current_price > ema_200
+        above_sma50 = current_price > sma_50
+        
+        # EMA alignment
+        ema9_above_21 = ema_9 > ema_21
+        ema21_above_50 = ema_21 > ema_50
+        ema50_above_200 = ema_50 > ema_200
+        
+        # Calculate trend strength score
+        bullish_signals = sum([above_ema9, above_ema21, above_ema50, above_ema200, above_sma50, 
+                              ema9_above_21, ema21_above_50, ema50_above_200])
+        trend_strength_score = bullish_signals / 8.0  # 8 total signals
+        
+        # Determine trend hierarchy
+        if bullish_signals >= 7:
+            trend_hierarchy = "strong_bull"
+        elif bullish_signals >= 5:
+            trend_hierarchy = "weak_bull"
+        elif bullish_signals <= 1:
+            trend_hierarchy = "strong_bear"
+        elif bullish_signals <= 3:
+            trend_hierarchy = "weak_bear"
+        else:
+            trend_hierarchy = "neutral"
+        
+        # Determine price vs EMAs
+        if above_ema9 and above_ema21 and above_ema50:
+            price_vs_emas = "above_all"
+        elif above_ema9 and above_ema21:
+            price_vs_emas = "above_fast"
+        elif not above_ema9 and not above_ema21 and not above_ema50:
+            price_vs_emas = "below_all"
+        elif not above_ema9 and not above_ema21:
+            price_vs_emas = "below_fast"
+        else:
+            price_vs_emas = "mixed"
+        
+        # Determine EMA cross signal
+        if ema9_above_21 and ema21_above_50:
+            ema_cross_signal = "golden_cross"
+        elif not ema9_above_21 and not ema21_above_50:
+            ema_cross_signal = "death_cross"
+        else:
+            ema_cross_signal = "none"
+        
+        # Determine trend momentum
+        if trend_strength_score > 0.7:
+            trend_momentum = "strong_bullish"
+        elif trend_strength_score > 0.6:
+            trend_momentum = "bullish"
+        elif trend_strength_score < 0.3:
+            trend_momentum = "strong_bearish"
+        elif trend_strength_score < 0.4:
+            trend_momentum = "bearish"
+        else:
+            trend_momentum = "neutral"
+        
+        return trend_hierarchy, trend_momentum, price_vs_emas, ema_cross_signal, trend_strength_score
+    
     def _calculate_trend_alignment(self, df: pd.DataFrame) -> Tuple[str, float]:
         """Calculate multi-timeframe trend alignment"""
         close = df['close']
