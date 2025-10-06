@@ -11,7 +11,7 @@ from pymongo import MongoClient
 
 def test_escalation_fix():
     """Test that escalation system is working after the fix"""
-    api_url = "https://dualai-trader-1.preview.emergentagent.com/api"
+    api_url = "https://tradingbot-ultra.preview.emergentagent.com/api"
     
     print("🔍 Testing IA1 to IA2 Escalation System Fix...")
     
