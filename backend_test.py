@@ -356,27 +356,44 @@ class DynamicRRIntegrationTestSuite:
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
             
-            # Check database for RR persistence
-            logger.info("   🗄️ Checking database for RR value persistence...")
+            # Check database for field name persistence
+            logger.info("   🗄️ Checking database for new field name persistence...")
             
             try:
                 # Connect to MongoDB to check recent analyses
                 from pymongo import MongoClient
-                mongo_url = "mongodb://localhost:27017"
-                client = MongoClient(mongo_url)
-                db = client["myapp"]
+                client = MongoClient(self.mongo_url)
+                db = client[self.db_name]
                 
                 # Get recent analyses
                 recent_analyses = list(db.technical_analyses.find().sort("timestamp", -1).limit(10))
                 
-                dynamic_rr_in_db = 0
-                for analysis in recent_analyses:
-                    calculated_rr = analysis.get('calculated_rr') or analysis.get('risk_reward_ratio')
-                    if calculated_rr and isinstance(calculated_rr, (int, float)) and calculated_rr not in [1.0, 2.2]:
-                        dynamic_rr_in_db += 1
+                new_fields_in_db = 0
+                old_fields_in_db = 0
                 
-                rr_integration_results['database_persistence_working'] = dynamic_rr_in_db
-                logger.info(f"      ✅ Database persistence: {dynamic_rr_in_db}/10 recent analyses have dynamic RR values")
+                for analysis in recent_analyses:
+                    # Check for new field names
+                    if 'trade_type' in analysis and 'minimum_rr_threshold' in analysis:
+                        new_fields_in_db += 1
+                    
+                    # Check for old field names (should not be present)
+                    if 'recommended_trade_type' in analysis or 'minimum_rr_for_trade_type' in analysis:
+                        old_fields_in_db += 1
+                
+                field_validation_results['database_field_validation'] = new_fields_in_db
+                logger.info(f"      ✅ Database field validation: {new_fields_in_db}/10 recent analyses have new field names")
+                if old_fields_in_db > 0:
+                    logger.warning(f"      ⚠️ Database old fields: {old_fields_in_db}/10 recent analyses still have old field names")
+                else:
+                    logger.info(f"      ✅ Database clean: 0/10 recent analyses have old field names")
+                
+                # Show sample analysis with new fields
+                if recent_analyses:
+                    sample_analysis = recent_analyses[0]
+                    trade_type = sample_analysis.get('trade_type')
+                    min_rr = sample_analysis.get('minimum_rr_threshold')
+                    symbol = sample_analysis.get('symbol', 'UNKNOWN')
+                    logger.info(f"      📋 Sample DB analysis ({symbol}): trade_type={trade_type}, minimum_rr_threshold={min_rr}")
                 
                 client.close()
                 
