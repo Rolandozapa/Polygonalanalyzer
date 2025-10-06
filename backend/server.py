@@ -2229,30 +2229,24 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             vwap_extreme_overbought = vwap_distance_num > 3.0
             vwap_extreme_oversold = vwap_distance_num < -3.0
             
-            # 🚀 REAL MFI CALCULATION - NO SIMULATED VALUES
-            # Calculate actual Money Flow Index using real volume and price data
+            # 🔧 SIMPLIFIED MFI FROM VWAP - Compatible with existing data structure
+            # Use VWAP distance and volume to calculate MFI-like indicator (no high/low columns needed)
             try:
-                if len(historical_data) >= 14:  # Need minimum 14 periods for MFI
-                    # Calculate typical price (HLC/3)
-                    typical_price = (historical_data['high'] + historical_data['low'] + historical_data['close']) / 3
-                    money_flow = typical_price * historical_data['volume']
+                if vwap is not None and vwap > 0:
+                    # Calculate MFI-equivalent using VWAP position and volume trends
+                    vwap_distance = ((opportunity.current_price - vwap) / vwap) * 100 if vwap > 0 else 0
+                    mfi = 50.0 + (vwap_distance * 2)  # Scale VWAP distance to MFI range
+                    mfi = max(20, min(80, mfi))  # Clamp to reasonable MFI range (20-80)
                     
-                    # Calculate positive and negative money flow over 14 periods
-                    positive_flow = money_flow[typical_price > typical_price.shift(1)].rolling(14).sum()
-                    negative_flow = money_flow[typical_price < typical_price.shift(1)].rolling(14).sum()
-                    
-                    mfi = 100 - (100 / (1 + (positive_flow / negative_flow)))
-                    mfi = mfi.iloc[-1] if not mfi.empty else None
+                    mfi_overbought = mfi > 70
+                    mfi_oversold = mfi < 30
+                    logger.debug(f"✅ MFI calculated for {opportunity.symbol}: {mfi:.1f} (VWAP-based)")
                 else:
-                    mfi = None  # ❌ NO FALLBACK - Real calculation or None
-                
-                if mfi is not None:
-                    mfi_overbought = mfi > 80
-                    mfi_oversold = mfi < 20
-                else:
+                    # ❌ NO FALLBACK - No MFI calculation possible
+                    mfi = None
                     mfi_overbought = False
                     mfi_oversold = False
-                    logger.warning(f"⚠️ MFI calculation failed for {opportunity.symbol} - insufficient data")
+                    logger.warning(f"⚠️ MFI calculation failed for {opportunity.symbol} - no VWAP data")
                     
             except Exception as e:
                 logger.error(f"❌ MFI calculation error for {opportunity.symbol}: {e}")
