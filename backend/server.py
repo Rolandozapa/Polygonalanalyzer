@@ -2218,10 +2218,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   📊 ADX (Wilder): {adx:.1f} [{talib_analysis.adx_strength}], ATR: {atr:.6f}, Vol: {volume_ratio:.2f}")
             logger.info(f"   🎯 Regime: {talib_analysis.regime} (Confidence: {talib_analysis.confidence:.1%})")
             logger.info(f"   🏆 Confluence: {talib_analysis.confluence_grade} (Score: {talib_analysis.confluence_score}) - {talib_analysis.conviction_level}")
-            # BB bands (already extracted above)
-            bb_upper = simple_indicators_data.get('bb_upper')
-            bb_middle = simple_indicators_data.get('bb_middle')
-            bb_lower = simple_indicators_data.get('bb_lower')
+            # ✅ BB bands from TALib
+            bb_upper = talib_analysis.bb_upper
+            bb_middle = talib_analysis.bb_middle
+            bb_lower = talib_analysis.bb_lower
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
