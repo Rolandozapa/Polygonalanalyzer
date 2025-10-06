@@ -3288,6 +3288,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🎯 EXTRACT IA1 CALCULATED RR (from new JSON format)
             ia1_calculated_rr = ia1_complete_json.get('calculated_rr')
+            logger.info(f"🔍 DEBUG IA1 RR EXTRACTION for {opportunity.symbol}: ia1_calculated_rr={ia1_calculated_rr} (type: {type(ia1_calculated_rr)})")
             
             # 🎯 NOUVEAU SYSTÈME RR OPTIMISÉ - Méthode "Niveaux Proches"
             from risk_reward_calculator import create_rr_calculator
