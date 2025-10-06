@@ -4489,7 +4489,27 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "stop_loss_price": 0.0,
                 "take_profit_price": 0.0,
                 "risk_reward_ratio": 1.0,
-                "rr_reasoning": "Fallback analysis - default pricing"
+                "rr_reasoning": "Fallback analysis - default pricing",
+                # 🔧 CRITICAL FIELDS FALLBACK (added to prevent missing fields)
+                "current_price": 0.0,
+                "sma_20": 0.0,
+                "sma_50": 0.0,
+                "ema_9": 0.0,
+                "ema_21": 0.0,
+                "ema_200": 0.0,
+                "atr": 0.0,
+                "atr_percentage": 2.0,
+                "vwap_distance": 0.0,
+                "volume_ratio": 1.0,
+                "volume_analysis": "1.0x",
+                "regime": "CONSOLIDATION",
+                "base_confidence": 0.5,
+                "technical_consistency": 0.5,
+                "combined_confidence": 0.5,
+                "confluence_grade": "C",
+                "confluence_score": 50,
+                "should_trade": False,
+                "position_multiplier": 1.0
             }
 
     def _calculate_analysis_confidence(self, rsi: float, macd_histogram: float, bb_position: float, volatility: float, data_confidence: float) -> float:
