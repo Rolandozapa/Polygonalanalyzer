@@ -3523,17 +3523,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "optimal_timeframe": getattr(indicators, 'optimal_timeframe', '4H/1D')
             })
             
-            # 🔍 DEBUG: Check indicators object attributes before extraction
-            logger.info(f"🔍 DEBUG INDICATORS OBJECT for {opportunity.symbol}: {type(indicators)}")
-            logger.info(f"🔍 DEBUG: hasattr trade_type: {hasattr(indicators, 'trade_type')}")
-            logger.info(f"🔍 DEBUG: hasattr minimum_rr_threshold: {hasattr(indicators, 'minimum_rr_threshold')}")
-            
-            trade_type_value = getattr(indicators, 'trade_type', 'SWING')
-            min_rr_value = getattr(indicators, 'minimum_rr_threshold', 2.0)
-            duration_value = getattr(indicators, 'trade_duration_estimate', '1-7 days')
-            
-            logger.info(f"🔍 DEBUG EXTRACTED VALUES: TradeType={trade_type_value} | MinRR={min_rr_value} | Duration={duration_value}")
-            
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
