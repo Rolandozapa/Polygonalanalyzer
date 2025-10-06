@@ -764,7 +764,8 @@ class AdvancedTechnicalIndicators:
 
 
 # =============================================================================
-# GLOBAL INSTANCE
+# GLOBAL INSTANCES (for backward compatibility)
 # =============================================================================
 
 advanced_indicators = AdvancedTechnicalIndicators()
+advanced_technical_indicators = advanced_indicators  # Alias for compatibility
