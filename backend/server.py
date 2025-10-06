@@ -2797,7 +2797,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 
                 # 🎯 SMART PATTERN-BASED FALLBACK LOGIC
                 if primary_pattern:
-                    pattern_name = primary_pattern.pattern_type.value.lower()
+                    pattern_name = str(primary_pattern.pattern_type.value).lower()
                     
                     # 🔽 BEARISH PATTERNS → SHORT
                     if any(bear in pattern_name for bear in ['bearish', 'double_top', 'head_shoulder', 'descending', 'falling_wedge']):
