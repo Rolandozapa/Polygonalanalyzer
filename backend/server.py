@@ -4517,6 +4517,23 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["plus_di"] = self._ensure_json_safe(analysis_data.get("plus_di"), 25.0)
             cleaned_data["minus_di"] = self._ensure_json_safe(analysis_data.get("minus_di"), 25.0)
             
+            # 🆕 NOUVEAUX INDICATEURS MOMENTUM
+            cleaned_data["willr"] = self._ensure_json_safe(analysis_data.get("willr"), -50.0)
+            cleaned_data["willr_zone"] = str(analysis_data.get("willr_zone", "NEUTRAL"))
+            cleaned_data["cci"] = self._ensure_json_safe(analysis_data.get("cci"), 0.0)
+            cleaned_data["cci_zone"] = str(analysis_data.get("cci_zone", "NEUTRAL"))
+            cleaned_data["roc"] = self._ensure_json_safe(analysis_data.get("roc"), 0.0)
+            cleaned_data["roc_strength"] = str(analysis_data.get("roc_strength", "WEAK"))
+            
+            # 🆕 NOUVEAUX INDICATEURS TREND
+            cleaned_data["aroon_up"] = self._ensure_json_safe(analysis_data.get("aroon_up"), 50.0)
+            cleaned_data["aroon_down"] = self._ensure_json_safe(analysis_data.get("aroon_down"), 50.0)
+            cleaned_data["aroon_diff"] = self._ensure_json_safe(analysis_data.get("aroon_diff"), 0.0)
+            cleaned_data["aroon_signal"] = str(analysis_data.get("aroon_signal", "NEUTRAL"))
+            cleaned_data["sar"] = self._ensure_json_safe(analysis_data.get("sar"), 0.0)
+            cleaned_data["sar_signal"] = str(analysis_data.get("sar_signal", "NEUTRAL"))
+            cleaned_data["sar_distance"] = self._ensure_json_safe(analysis_data.get("sar_distance"), 0.0)
+            
             # 🚨 CRITICAL FIX: Add missing VWAP distance and volume fields
             cleaned_data["vwap_distance"] = self._ensure_json_safe(analysis_data.get("vwap_distance"), 0.0)
             cleaned_data["volume_ratio"] = self._ensure_json_safe(analysis_data.get("volume_ratio"), 1.0)
