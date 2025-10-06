@@ -916,7 +916,14 @@ class AdvancedTechnicalIndicators:
             # 10. Multi-timeframe trend alignment
             trend_alignment, tf_score = self._calculate_trend_alignment(df)
             
-            # 11. Trade Type Recommendation (NEW)
+            # 11. EMAs for trend analysis
+            ema_9 = close.ewm(span=9).mean().iloc[-1] if len(close) >= 9 else close.iloc[-1]
+            ema_21 = close.ewm(span=21).mean().iloc[-1] if len(close) >= 21 else close.iloc[-1]
+            ema_50 = close.ewm(span=50).mean().iloc[-1] if len(close) >= 50 else close.iloc[-1]
+            ema_200 = close.ewm(span=200).mean().iloc[-1] if len(close) >= 200 else close.iloc[-1]
+            sma_50 = close.rolling(50).mean().iloc[-1] if len(close) >= 50 else close.iloc[-1]
+            
+            # 12. Trade Type Recommendation (NEW)
             trade_type, duration, timeframe, min_rr = self._determine_trade_type(
                 regime_data, adx, volatility_ratio, atr_pct, indicators
             )
