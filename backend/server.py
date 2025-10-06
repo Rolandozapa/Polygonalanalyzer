@@ -1737,17 +1737,19 @@ class UltraProfessionalIA1TechnicalAnalyst:
         bullish_signals = 0
         bearish_signals = 0
         
-        # RSI context (4H perspective)
-        if rsi < 40:
-            bullish_signals += 1
-        elif rsi > 60:
-            bearish_signals += 1
+        # RSI context (4H perspective) - NULL SAFE
+        if rsi is not None:
+            if rsi < 40:
+                bullish_signals += 1
+            elif rsi > 60:
+                bearish_signals += 1
             
-        # MACD 4H inference
-        if macd > 0.001:
-            bullish_signals += 1
-        elif macd < -0.001:
-            bearish_signals += 1
+        # MACD 4H inference - NULL SAFE
+        if macd is not None:
+            if macd > 0.001:
+                bullish_signals += 1
+            elif macd < -0.001:
+                bearish_signals += 1
             
         # Bollinger 4H inference  
         if bollinger < -0.5:
