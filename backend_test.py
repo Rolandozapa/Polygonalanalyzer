@@ -401,47 +401,49 @@ class DynamicRRIntegrationTestSuite:
                 logger.warning(f"      ⚠️ Could not check database: {e}")
             
             # Final analysis
-            success_rate = rr_integration_results['analyses_successful'] / max(rr_integration_results['analyses_attempted'], 1)
-            dynamic_rr_rate = rr_integration_results['dynamic_rr_values'] / max(rr_integration_results['analyses_successful'], 1)
+            success_rate = field_validation_results['analyses_successful'] / max(field_validation_results['analyses_attempted'], 1)
+            new_fields_rate = field_validation_results['new_field_names_present'] / max(field_validation_results['analyses_successful'] * 2, 1)  # 2 new fields per analysis
+            old_fields_absent_rate = field_validation_results['old_field_names_absent'] / max(field_validation_results['analyses_successful'], 1)
             
-            logger.info(f"\n   📊 RR CALCULATOR INTEGRATION VALIDATION RESULTS:")
-            logger.info(f"      Analyses attempted: {rr_integration_results['analyses_attempted']}")
-            logger.info(f"      Analyses successful: {rr_integration_results['analyses_successful']}")
+            logger.info(f"\n   📊 FIELD NAME VALIDATION RESULTS:")
+            logger.info(f"      Analyses attempted: {field_validation_results['analyses_attempted']}")
+            logger.info(f"      Analyses successful: {field_validation_results['analyses_successful']}")
             logger.info(f"      Success rate: {success_rate:.2f}")
-            logger.info(f"      Dynamic RR values: {rr_integration_results['dynamic_rr_values']}")
-            logger.info(f"      Fixed RR values: {rr_integration_results['fixed_rr_values']}")
-            logger.info(f"      Dynamic RR rate: {dynamic_rr_rate:.2f}")
-            logger.info(f"      Optimized RR calculations in logs: {rr_integration_results['optimized_rr_calculations']}")
-            logger.info(f"      ATR calculations found: {rr_integration_results['atr_calculations_found']}")
-            logger.info(f"      Support/Resistance levels: {rr_integration_results['support_resistance_levels']}")
-            logger.info(f"      Database persistence working: {rr_integration_results['database_persistence_working']}")
+            logger.info(f"      New field names present: {field_validation_results['new_field_names_present']}")
+            logger.info(f"      New fields rate: {new_fields_rate:.2f}")
+            logger.info(f"      Old field names absent: {field_validation_results['old_field_names_absent']}")
+            logger.info(f"      Old fields absent rate: {old_fields_absent_rate:.2f}")
+            logger.info(f"      Trade type valid: {field_validation_results['trade_type_valid']}")
+            logger.info(f"      Minimum RR threshold valid: {field_validation_results['minimum_rr_threshold_valid']}")
+            logger.info(f"      Database field validation: {field_validation_results['database_field_validation']}")
             
-            # Show RR calculation details
-            if rr_integration_results['rr_calculation_details']:
-                logger.info(f"      📊 RR Calculation Formula Verification:")
-                for detail in rr_integration_results['rr_calculation_details']:
-                    logger.info(f"         - {detail['symbol']}: {detail['signal'].upper()} calculated={detail['calculated_rr']:.2f}, expected={detail['expected_rr']:.2f if detail['expected_rr'] else 'N/A'}, match={detail['formula_match']}")
+            # Show field validation details
+            if field_validation_results['field_validation_details']:
+                logger.info(f"      📊 Field Validation Details:")
+                for detail in field_validation_results['field_validation_details']:
+                    logger.info(f"         - {detail['symbol']}: new_fields={detail['new_fields_present']}, old_fields_absent={detail['old_fields_absent']}, trade_type_valid={detail['trade_type_valid']}, rr_valid={detail['rr_threshold_valid']}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                rr_integration_results['analyses_successful'] >= 2,  # At least 2 successful analyses
-                rr_integration_results['dynamic_rr_values'] >= 1,  # At least 1 dynamic RR value
-                dynamic_rr_rate >= 0.5,  # At least 50% dynamic RR values
-                rr_integration_results['optimized_rr_calculations'] >= 1,  # At least 1 optimized calculation in logs
+                field_validation_results['analyses_successful'] >= 2,  # At least 2 successful analyses
+                field_validation_results['new_field_names_present'] >= 4,  # At least 4 new field instances (2 per analysis)
+                field_validation_results['old_field_names_absent'] >= 2,  # At least 2 analyses without old fields
+                field_validation_results['trade_type_valid'] >= 2,  # At least 2 valid trade types
+                field_validation_results['minimum_rr_threshold_valid'] >= 2,  # At least 2 valid RR thresholds
                 success_rate >= 0.67  # At least 67% success rate
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
-            if test_success_rate >= 0.8:  # 80% success threshold
-                self.log_test_result("RR Calculator Integration Validation", True, 
-                                   f"RR Calculator integration successful: {success_count}/{len(success_criteria)} criteria met. Dynamic RR rate: {dynamic_rr_rate:.2f}, Optimized calculations: {rr_integration_results['optimized_rr_calculations']}, Success rate: {success_rate:.2f}")
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("Field Name Validation", True, 
+                                   f"Field name validation successful: {success_count}/{len(success_criteria)} criteria met. New fields rate: {new_fields_rate:.2f}, Old fields absent rate: {old_fields_absent_rate:.2f}, Success rate: {success_rate:.2f}")
             else:
-                self.log_test_result("RR Calculator Integration Validation", False, 
-                                   f"RR Calculator integration issues: {success_count}/{len(success_criteria)} criteria met. May still be using fixed RR values or missing optimized calculations")
+                self.log_test_result("Field Name Validation", False, 
+                                   f"Field name validation issues: {success_count}/{len(success_criteria)} criteria met. May still be using old field names or missing new field names")
                 
         except Exception as e:
-            self.log_test_result("RR Calculator Integration Validation", False, f"Exception: {str(e)}")
+            self.log_test_result("Field Name Validation", False, f"Exception: {str(e)}")
 
     async def test_0_pydantic_validation_fix_validation(self):
         """Test 0: Pydantic Validation Fix Validation - Critical Fix for fibonacci_key_level_proximity field"""
