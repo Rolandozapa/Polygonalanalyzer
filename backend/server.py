@@ -2366,7 +2366,31 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             bb_squeeze_str = "ACTIVE" if talib_analysis.bb_squeeze else "INACTIVE"
             
             # Additional variables for new IA1 v6.0 prompt
-            sma_20_slope = 0.001 if sma_20 and len(historical_data) > 1 else 0.0  # Simple slope calculation
+            # 🎯 IMPROVED SMA20 SLOPE CALCULATION (proper trend analysis)
+            sma_20_slope = 0.0
+            sma_20_slope_pct = 0.0
+            if sma_20 and not historical_data.empty and len(historical_data) >= 5:
+                try:
+                    # Calculate SMA20 for the last 5 periods to get slope
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close'
+                    recent_closes = historical_data[close_col].tail(5)
+                    
+                    if len(recent_closes) >= 5:
+                        # Simple moving averages for slope calculation
+                        sma_current = recent_closes.tail(3).mean()  # Last 3 periods average
+                        sma_previous = recent_closes.head(3).mean()  # First 3 periods average
+                        
+                        # Calculate slope (change per period)
+                        if sma_previous > 0:
+                            sma_20_slope = (sma_current - sma_previous) / 3  # Average change per period
+                            sma_20_slope_pct = (sma_20_slope / sma_previous) * 100  # Percentage slope
+                            
+                    logger.info(f"📈 SMA20 SLOPE for {opportunity.symbol}: {sma_20_slope:.6f} ({sma_20_slope_pct:+.3f}%/period)")
+                except Exception as e:
+                    logger.debug(f"SMA20 slope calculation error for {opportunity.symbol}: {e}")
+                    sma_20_slope = 0.0
+                    sma_20_slope_pct = 0.0
+            
             above_sma_20 = opportunity.current_price > sma_20 if sma_20 else False
             
             # ML variables with fallbacks for new prompt
