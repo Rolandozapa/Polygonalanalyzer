@@ -265,7 +265,7 @@ test_plan:
     file: "data_models.py, server.py, advanced_technical_indicators.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         -working: "NA"
         -agent: "main"
