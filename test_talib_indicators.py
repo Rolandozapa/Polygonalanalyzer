@@ -7,12 +7,15 @@ Phase 1: Complete & Test TALib Indicators System
 import sys
 import os
 sys.path.append('/app/backend')
+sys.path.append('/app/core')
 sys.path.append('/app/core/indicators')
 
 import pandas as pd
 import numpy as np
 import logging
-from talib_indicators import TALibIndicators, get_talib_indicators
+
+# Import from the core indicators module
+from core.indicators.talib_indicators import TALibIndicators, get_talib_indicators
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
