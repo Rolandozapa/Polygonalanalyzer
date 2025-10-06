@@ -472,6 +472,23 @@ class TALibIndicators:
             else:
                 macd_signal_type = "NEUTRAL"
             
+            # 🆕 NOUVEAUX INDICATEURS MOMENTUM POUR IA1
+            
+            # Williams %R (plus réactif que Stochastic)
+            willr = talib.WILLR(high[-14:], low[-14:], close[-14:], timeperiod=14)
+            willr_value = float(willr[-1]) if not np.isnan(willr[-1]) else -50.0
+            willr_zone = "OVERSOLD" if willr_value < -80 else "OVERBOUGHT" if willr_value > -20 else "NEUTRAL"
+            
+            # CCI (Commodity Channel Index) - Détecte les extrêmes
+            cci = talib.CCI(high[-20:], low[-20:], close[-20:], timeperiod=20)
+            cci_value = float(cci[-1]) if not np.isnan(cci[-1]) else 0.0
+            cci_zone = "OVERSOLD" if cci_value < -100 else "OVERBOUGHT" if cci_value > 100 else "NEUTRAL"
+            
+            # ROC (Rate of Change) - Momentum en pourcentage
+            roc = talib.ROC(close, timeperiod=10)
+            roc_value = float(roc[-1]) if not np.isnan(roc[-1]) else 0.0
+            roc_strength = "STRONG" if abs(roc_value) > 5 else "MODERATE" if abs(roc_value) > 2 else "WEAK"
+            
             return {
                 'rsi': rsi_value,
                 'rsi_zone': rsi_zone,
