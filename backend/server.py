@@ -2509,8 +2509,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'stoch_k': getattr(talib_analysis, 'stoch_k', 50.0),
                 'stoch_d': getattr(talib_analysis, 'stoch_d', 50.0),
                 
-                # Trend indicators
-                'adx': adx or 25.0,
+                # Trend indicators  
+                'adx': adx if adx is not None else 25.0,  # 🔧 FIX: Don't use "or" as it fails for 0.0 values
                 'adx_strength': getattr(talib_analysis, 'adx_strength', 'MODERATE'),
                 'plus_di': getattr(talib_analysis, 'plus_di', 25.0),
                 'minus_di': getattr(talib_analysis, 'minus_di', 25.0),
