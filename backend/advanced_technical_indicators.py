@@ -121,12 +121,15 @@ class AdvancedRegimeDetector:
     """
     Advanced market regime detector with 10 detailed classifications
     Enhanced with dynamic thresholds, persistence tracking, and transition detection
+    MERGED with v4: bar counter, stability score, ML multipliers
     """
     
-    def __init__(self, lookback_period: int = 50, persistence_length: int = 5):
+    def __init__(self, lookback_period: int = 50, history_size: int = 200):
         self.lookback_period = lookback_period
-        self.persistence_length = persistence_length
         self.regime_history = []  # Track last N regimes for persistence
+        self.current_regime = None  # v4: Current regime tracking
+        self.regime_start_bar = 0  # v4: Bar counter for persistence
+        self.bar_count = 0  # v4: Total bar count
     
     def detect_detailed_regime(self, df: pd.DataFrame) -> Dict:
         """Main regime detection with full analysis, persistence, and transitions"""
