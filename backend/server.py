@@ -2476,8 +2476,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'should_trade': getattr(talib_analysis, 'should_trade', False)
             }
             
-            # 🚀 USE EXTERNALIZED IA1 v6.0 PROMPT
-            formatted_prompt = prompt_manager.format_prompt('ia1_v6_advanced', prompt_variables)
+            # 🚀 USE EXTERNALIZED IA1 v7.0 ULTRA PROMPT
+            formatted_prompt = prompt_manager.format_prompt('ia1_v7_ultra_pro', prompt_variables)
             
             if not formatted_prompt:
                 logger.error(f"❌ Failed to load externalized IA1 prompt, falling back to basic prompt")
