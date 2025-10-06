@@ -3482,9 +3482,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"✅ MACD ASSIGNMENT: Using macd_line={macd_line} as macd_signal for {opportunity.symbol}")
             logger.info(f"🔍 BEFORE UPDATE: analysis_data[macd_signal] = {analysis_data.get('macd_signal', 'MISSING')}")
             
-            # 🔍 DEBUG: Check simple indicators data
-            logger.info(f"🔍 DEBUG SIMPLE INDICATORS for {opportunity.symbol}: {len(simple_indicators_data)} indicators calculated")
-            logger.info(f"🔍 DEBUG: Available indicators: {list(simple_indicators_data.keys())}")
+            # 🔍 DEBUG: TALib indicators system active
+            logger.info(f"🔍 DEBUG TALIB INDICATORS for {opportunity.symbol}: All indicators calculated by TALib system")
+            logger.info(f"🔍 DEBUG: Using TALib regime: {talib_analysis.regime}, confidence: {talib_analysis.confidence:.1%}")
             
             trade_type_value = 'SWING'  # Default trade type
             min_rr_value = 2.0  # Default minimum RR
