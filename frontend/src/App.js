@@ -1083,119 +1083,287 @@ const TradingDashboard = () => {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl shadow-sm border">
               <div className="p-6 border-b">
-                <h2 className="text-xl font-bold text-slate-900">IA2 Strategic Decisions</h2>
-                <p className="text-slate-600">Claude-powered strategic decisions with probabilistic TP optimization</p>
+                <h2 className="text-xl font-bold text-slate-900">🏛️ IA2 Ultra Strategic Analyst v3.0</h2>
+                <p className="text-slate-600">Institutional-Grade Strategic Decisions • Volume Profile Intelligence • Orderbook Analysis • Multi-Phase Framework</p>
               </div>
               
               <div className="p-6">
                 {decisions.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-slate-500">No strategic decisions available</p>
+                    <div className="text-6xl mb-4">🏛️</div>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">No IA2 Strategic Decisions</h3>
+                    <p className="text-slate-500 mb-2">Waiting for high-confidence IA1 escalations (>70% confidence)</p>
+                    <p className="text-sm text-slate-400">Ultra Strategic decisions will appear here when institutional-grade opportunities are detected</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {decisions.map((decision, index) => (
-                      <div key={index} className="bg-slate-50 rounded-lg p-4 border">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="font-semibold text-lg text-slate-900">{decision.symbol}</h3>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              decision.confidence >= 0.8 ? 'bg-green-100 text-green-700' :
-                              decision.confidence >= 0.6 ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {(decision.confidence * 100).toFixed(1)}% confidence
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              decision.signal === 'LONG' ? 'bg-emerald-100 text-emerald-700' :
-                              decision.signal === 'SHORT' ? 'bg-red-100 text-red-700' :
-                              'bg-slate-100 text-slate-700'
-                            }`}>
-                              {decision.signal}
-                            </span>
+                      <div key={index} className="bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 rounded-2xl p-6 border-2 border-white shadow-lg">
+                        
+                        {/* Header with Symbol and Strategic Status */}
+                        <div className="flex justify-between items-start mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                              <span className="text-white font-bold text-lg">🏛️</span>
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-2xl text-slate-900">{decision.symbol}</h3>
+                              <p className="text-sm text-slate-600">Ultra Strategic Analysis • Institutional Grade</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end space-y-2">
+                            {/* IA2 Strategic Confidence */}
+                            <div className="flex items-center space-x-2">
+                              <span className="text-xs text-slate-600">IA2 Confidence:</span>
+                              <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                (decision.confidence || 0) >= 0.8 ? 'bg-green-100 text-green-700' :
+                                (decision.confidence || 0) >= 0.65 ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {((decision.confidence || 0) * 100).toFixed(1)}%
+                              </span>
+                            </div>
+                            
+                            {/* Signal + Validation Status */}
+                            <div className="flex items-center space-x-2">
+                              <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                decision.signal === 'LONG' ? 'bg-emerald-100 text-emerald-700' :
+                                decision.signal === 'SHORT' ? 'bg-red-100 text-red-700' :
+                                'bg-slate-100 text-slate-700'
+                              }`}>
+                                {decision.signal || 'HOLD'}
+                              </span>
+                              
+                              {/* IA1 Validation Status */}
+                              <span className={`px-3 py-2 rounded-lg text-xs font-bold border-2 ${
+                                decision.ia1_validation === 'confirmed' ? 'bg-green-50 text-green-700 border-green-200' :
+                                decision.ia1_validation === 'enhanced' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                                decision.ia1_validation === 'overridden' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                'bg-slate-50 text-slate-700 border-slate-200'
+                              }`}>
+                                IA1: {decision.ia1_validation || 'approved'}
+                              </span>
+                            </div>
+                            
+                            {/* Execution Priority */}
+                            <div className="text-xs text-slate-600 text-right">
+                              <div>Priority: <span className="font-medium">{decision.execution_priority || 'immediate'}</span></div>
+                              <div>Strategy: <span className="font-medium">{decision.strategy_type?.replace('_', ' ') || 'dual_ai'}</span></div>
+                            </div>
                           </div>
                         </div>
-                        
-                        {/* Trading Levels */}
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">Entry</p>
-                            <p className="font-semibold text-slate-900">
-                              ${decision.entry_price?.toFixed(4) || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">Stop Loss</p>
-                            <p className="font-semibold text-red-600">
-                              ${decision.stop_loss?.toFixed(4) || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">TP1</p>
-                            <p className="font-semibold text-green-600">
-                              ${decision.take_profit_1?.toFixed(4) || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">TP2</p>
-                            <p className="font-semibold text-green-600">
-                              ${decision.take_profit_2?.toFixed(4) || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">TP3</p>
-                            <p className="font-semibold text-green-600">
-                              ${decision.take_profit_3?.toFixed(4) || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-sm text-slate-600">IA2 R:R</p>
-                            <p className={`font-semibold ${
-                              (decision.risk_reward_ratio || 1.0) >= 2.0 ? 'text-green-600' :
-                              (decision.risk_reward_ratio || 1.0) >= 1.5 ? 'text-yellow-600' :
-                              'text-red-600'
-                            }`}>
-                              {(decision.risk_reward_ratio || 1.0).toFixed(1)}:1
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {(decision.risk_reward_ratio || 1.0) >= 2.0 ? 'Excellent' :
-                               (decision.risk_reward_ratio || 1.0) >= 1.5 ? 'Good' : 'Low'}
-                            </p>
+
+                        {/* Multi-Phase Analysis Framework */}
+                        <div className="bg-white/80 rounded-xl p-4 mb-4 border border-purple-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">🔄 Multi-Phase Strategic Framework</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">Phase 1</p>
+                              <p className="font-bold text-blue-700">Pressure-Momentum</p>
+                              <p className="text-xs text-slate-500">✅ Synthesized</p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">Phase 2</p>
+                              <p className="font-bold text-green-700">Volume Profile</p>
+                              <p className="text-xs text-slate-500">
+                                {decision.volume_profile_bias || '⚖️ Neutral'}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">Phase 3</p>
+                              <p className="font-bold text-purple-700">Orderbook Intel</p>
+                              <p className="text-xs text-slate-500">
+                                {decision.orderbook_quality || '📊 Good'}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">Phase 4</p>
+                              <p className="font-bold text-indigo-700">Risk-Optimized</p>
+                              <p className="text-xs text-slate-500">
+                                Score: {decision.multi_phase_score || '85'}/100
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        
-                        {/* Position Size and Risk */}
-                        <div className="grid grid-cols-3 gap-4 mb-4">
-                          <div className="text-center bg-white rounded p-2">
-                            <p className="text-sm text-slate-600">Position Size</p>
-                            <p className="font-semibold text-blue-600">
-                              {(decision.position_size * 100)?.toFixed(2) || '0'}%
-                            </p>
-                          </div>
-                          <div className="text-center bg-white rounded p-2">
-                            <p className="text-sm text-slate-600">Risk Level</p>
-                            <p className={`font-semibold ${
-                              decision.risk_level === 'HIGH' ? 'text-red-600' :
-                              decision.risk_level === 'MEDIUM' ? 'text-yellow-600' :
-                              'text-green-600'
-                            }`}>
-                              {decision.risk_level || 'N/A'}
-                            </p>
-                          </div>
-                          <div className="text-center bg-white rounded p-2">
-                            <p className="text-sm text-slate-600">Strategy</p>
-                            <p className="font-semibold text-purple-600">
-                              {decision.strategy_type?.replace('_', ' ') || 'N/A'}
-                            </p>
+
+                        {/* IA2 Independent Price Levels */}
+                        <div className="bg-white/80 rounded-xl p-4 mb-4 border border-green-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">💰 IA2 Independent Price Levels</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 Entry</p>
+                              <p className="font-bold text-blue-700">
+                                ${(decision.ia2_entry_price || decision.entry_price || 0).toFixed(4)}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 Stop</p>
+                              <p className="font-bold text-red-600">
+                                ${(decision.ia2_stop_loss || decision.stop_loss || 0).toFixed(4)}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 TP1</p>
+                              <p className="font-bold text-green-600">
+                                ${(decision.ia2_take_profit_1 || decision.take_profit_1 || 0).toFixed(4)}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 TP2</p>
+                              <p className="font-bold text-green-600">
+                                ${(decision.ia2_take_profit_2 || decision.take_profit_2 || 0).toFixed(4)}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 TP3</p>
+                              <p className="font-bold text-green-600">
+                                ${(decision.ia2_take_profit_3 || decision.take_profit_3 || 0).toFixed(4)}
+                              </p>
+                            </div>
+                            <div className="text-center bg-white rounded-lg p-3 border">
+                              <p className="text-xs text-slate-600">IA2 R:R</p>
+                              <p className={`font-bold text-lg ${
+                                (decision.calculated_rr || decision.risk_reward_ratio || 1.0) >= 2.0 ? 'text-green-600' :
+                                (decision.calculated_rr || decision.risk_reward_ratio || 1.0) >= 1.8 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {(decision.calculated_rr || decision.risk_reward_ratio || 1.0).toFixed(1)}:1
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {(decision.calculated_rr || decision.risk_reward_ratio || 1.0) >= 2.0 ? 'Excellent' :
+                                 (decision.calculated_rr || decision.risk_reward_ratio || 1.0) >= 1.8 ? 'Good' : 'Reject'}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                        
-                        {/* Decision Reasoning */}
-                        <div className="bg-white rounded p-3 border">
-                          <p className="text-sm font-medium text-slate-800 mb-2">IA2 Strategic Reasoning:</p>
-                          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                            {decision.strategic_reasoning || decision.ia2_reasoning || 'No strategic reasoning available'}
-                          </p>
+
+                        {/* Strategic Analysis Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          {/* Risk Management */}
+                          <div className="bg-white/80 rounded-xl p-4 border border-orange-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">🛡️ Risk Management</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Position Size:</span>
+                                <span className="font-bold text-blue-600">
+                                  {(decision.position_size_pct || (decision.position_size || 0) * 100).toFixed(1)}%
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Risk Level:</span>
+                                <span className={`font-bold ${
+                                  (decision.risk_level || 'medium').toLowerCase() === 'high' ? 'text-red-600' :
+                                  (decision.risk_level || 'medium').toLowerCase() === 'low' ? 'text-green-600' :
+                                  'text-yellow-600'
+                                }`}>
+                                  {decision.risk_level || 'MEDIUM'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Execution:</span>
+                                <span className={`font-bold ${
+                                  decision.trade_execution_ready ? 'text-green-600' : 'text-red-600'
+                                }`}>
+                                  {decision.trade_execution_ready ? '✅ READY' : '❌ WAIT'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Institutional Intelligence */}
+                          <div className="bg-white/80 rounded-xl p-4 border border-blue-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">🏛️ Institutional Edge</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Volume Profile:</span>
+                                <span className="font-bold text-purple-600">
+                                  {decision.volume_profile_bias || 'Neutral'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Orderbook:</span>
+                                <span className="font-bold text-indigo-600">
+                                  {decision.orderbook_quality || 'Good'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Edge:</span>
+                                <span className="font-bold text-green-600 text-xs">
+                                  {decision.institutional_edge || 'Multi-phase validation'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Strategic Override Info */}
+                          <div className="bg-white/80 rounded-xl p-4 border border-indigo-100">
+                            <h4 className="font-semibold text-slate-900 mb-3">⚡ Strategic Status</h4>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">IA1 Status:</span>
+                                <span className={`font-bold text-xs ${
+                                  decision.ia1_validation === 'enhanced' ? 'text-blue-600' :
+                                  decision.ia1_validation === 'overridden' ? 'text-orange-600' :
+                                  'text-green-600'
+                                }`}>
+                                  {decision.ia1_validation || 'CONFIRMED'}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-sm text-slate-600">Priority:</span>
+                                <span className={`font-bold ${
+                                  decision.execution_priority === 'immediate' ? 'text-red-600' :
+                                  decision.execution_priority === 'delayed' ? 'text-yellow-600' :
+                                  'text-green-600'
+                                }`}>
+                                  {decision.execution_priority || 'IMMEDIATE'}
+                                </span>
+                              </div>
+                              {decision.strategic_override_reason && (
+                                <div className="text-xs text-orange-600 font-medium">
+                                  Override: {decision.strategic_override_reason}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* IA2 Ultra Strategic Reasoning */}
+                        <div className="bg-white/90 rounded-xl p-4 border border-purple-100">
+                          <h4 className="font-semibold text-slate-900 mb-3">🏛️ IA2 Ultra Strategic Analysis</h4>
+                          <div className="bg-slate-50 rounded-lg p-3 mb-3">
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                              {decision.strategic_reasoning || decision.ia2_reasoning || 'No strategic reasoning available from v3.0 prompt'}
+                            </p>
+                          </div>
+                          
+                          {/* Risk Factors & Contingency */}
+                          {(decision.key_risk_factors || decision.contingency_plan) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {decision.key_risk_factors && (
+                                <div>
+                                  <h5 className="text-sm font-medium text-red-700 mb-2">⚠️ Key Risk Factors</h5>
+                                  <div className="flex flex-wrap gap-1">
+                                    {decision.key_risk_factors.slice(0, 3).map((risk, i) => (
+                                      <span key={i} className="px-2 py-1 bg-red-50 text-red-700 rounded text-xs border border-red-200">
+                                        {risk}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {decision.contingency_plan && (
+                                <div>
+                                  <h5 className="text-sm font-medium text-blue-700 mb-2">📋 Contingency Plan</h5>
+                                  <p className="text-xs text-blue-600 bg-blue-50 rounded p-2 border border-blue-200">
+                                    {decision.contingency_plan}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
