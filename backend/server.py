@@ -10073,8 +10073,8 @@ class UltraProfessionalOrchestrator:
             rr_ratio = analysis.risk_reward_ratio
             
             # Get adaptive minimum RR based on trade type
-            trade_type = getattr(analysis, 'recommended_trade_type', 'SWING')
-            min_rr_required = getattr(analysis, 'minimum_rr_for_trade_type', 2.0)
+            trade_type = getattr(analysis, 'trade_type', 'SWING')
+            min_rr_required = getattr(analysis, 'minimum_rr_threshold', 2.0)
             
             # Must be LONG or SHORT signal (not HOLD)
             if ia1_signal not in ['long', 'short']:
