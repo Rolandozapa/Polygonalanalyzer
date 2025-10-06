@@ -4470,17 +4470,20 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Initialise la confiance de base
             confidence = 0.5
             
-            # RSI dans des zones significatives
-            rsi_safe = self._ensure_json_safe(rsi, 50.0)
-            if rsi_safe < 30 or rsi_safe > 70:
-                confidence += 0.15
-            elif 35 < rsi_safe < 65:
-                confidence += 0.1
+            # ✅ RSI analysis - NO FALLBACK, only if calculated
+            if rsi is not None:
+                if rsi < 30 or rsi > 70:
+                    confidence += 0.15
+                elif 35 < rsi < 65:
+                    confidence += 0.1
+            else:
+                logger.warning(f"⚠️ RSI not available for confidence calculation: {opportunity.symbol}")
             
-            # MACD histogram strength
-            macd_safe = self._ensure_json_safe(macd_histogram, 0.0)
-            if abs(macd_safe) > 0.01:
+            # ✅ MACD histogram strength - NO FALLBACK, only if calculated  
+            if macd_histogram is not None and abs(macd_histogram) > 0.01:
                 confidence += 0.1
+            else:
+                logger.warning(f"⚠️ MACD histogram not available for confidence: {opportunity.symbol}")
             
             # Bollinger bands position
             bb_safe = self._ensure_json_safe(bb_position, 0.0)
