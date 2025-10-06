@@ -3597,13 +3597,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     regime_str
                 )
                 
-                # Update analysis with enhancements
+                # Update analysis with enhancements (PRESERVE ALL TALIB DATA)
                 if 'ai_enhancements' in enhanced_analysis_dict:
-                    # Create new enhanced analysis
+                    # Merge enhanced data with original analysis_data (preserve TALib values)
+                    merged_data = analysis_data.copy()  # Start with our complete TALib data
+                    merged_data.update({k: v for k, v in enhanced_analysis_dict.items() if k != 'ai_enhancements'})  # Add AI enhancements
+                    
+                    # Create new enhanced analysis with ALL data preserved
                     analysis = TechnicalAnalysis(
                         symbol=opportunity.symbol,
                         timestamp=get_paris_time(),
-                        **{k: v for k, v in enhanced_analysis_dict.items() if k != 'ai_enhancements'}
+                        **merged_data  # Use merged data that preserves TALib values
                     )
                     
                     # Log AI enhancements applied
