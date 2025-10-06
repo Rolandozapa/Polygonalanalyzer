@@ -3502,9 +3502,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "ema_position": price_vs_emas,
                 "ema_cross_signal": ema_cross_signal,
                 "ema_strength": trend_strength_score,
-                "multi_timeframe_dominant": multi_tf_indicators.get('dominant_timeframe', 'DAILY'),
-                "multi_timeframe_pattern": multi_tf_indicators.get('decisive_pattern', 'NEUTRAL'),
-                "multi_timeframe_confidence": multi_tf_indicators.get('hierarchy_confidence', 0.5),
+                "multi_timeframe_dominant": 'DAILY',  # Simplified - multi_tf_indicators disabled
+                "multi_timeframe_pattern": 'NEUTRAL',  # Simplified - multi_tf_indicators disabled
+                "multi_timeframe_confidence": 0.5,  # Simplified - multi_tf_indicators disabled
                 # 🎯 DYNAMIC RR INTEGRATION FIELDS (Phase 1)  
                 "trade_type": trade_type_value,
                 "minimum_rr_threshold": min_rr_value,
