@@ -293,10 +293,10 @@ test_plan:
   - task: "TALib Indicators System Integration - Phase 1"
     implemented: true
     working: true
-    file: "core/indicators/talib_indicators.py"
+    file: "core/indicators/talib_indicators.py, server.py"
     stuck_count: 0
-    priority: "high"
-    needs_retesting: false
+    priority: "high" 
+    needs_retesting: true
     status_history:
         -working: true
         -agent: "main"
