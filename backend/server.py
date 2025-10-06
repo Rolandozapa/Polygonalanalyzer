@@ -2744,6 +2744,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         ia1_signal = str(parsed_response['recommendation']).lower()
                         logger.info(f"✅ IA1 recommendation: {ia1_signal.upper()} for {opportunity.symbol}")
                     
+                    # Validation: ensure ia1_signal is a valid string
+                    if not isinstance(ia1_signal, str) or ia1_signal not in ['long', 'short', 'hold']:
+                        logger.warning(f"⚠️ Invalid IA1 signal '{ia1_signal}' for {opportunity.symbol}, defaulting to 'hold'")
+                        ia1_signal = 'hold'
+                    
                     if 'master_pattern' in parsed_response and parsed_response['master_pattern']:
                         master_pattern = parsed_response['master_pattern']
                         logger.info(f"🎯 IA1 master pattern: {master_pattern} for {opportunity.symbol}")
