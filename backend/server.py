@@ -2276,9 +2276,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   🎯 Regime: {talib_analysis.regime} (Confidence: {talib_analysis.confidence:.1%})")
             logger.info(f"   🏆 Confluence: {talib_analysis.confluence_grade} (Score: {talib_analysis.confluence_score}) - {talib_analysis.conviction_level}")
             # ✅ BB bands from TALib - SAFE ACCESS
-            bb_upper = getattr(talib_analysis, 'bb_upper', real_current_price * 1.02) if talib_analysis else real_current_price * 1.02
-            bb_middle = getattr(talib_analysis, 'bb_middle', real_current_price) if talib_analysis else real_current_price  
-            bb_lower = getattr(talib_analysis, 'bb_lower', real_current_price * 0.98) if talib_analysis else real_current_price * 0.98
+            current_price_for_fallback = opportunity.current_price
+            bb_upper = getattr(talib_analysis, 'bb_upper', current_price_for_fallback * 1.02) if talib_analysis else current_price_for_fallback * 1.02
+            bb_middle = getattr(talib_analysis, 'bb_middle', current_price_for_fallback) if talib_analysis else current_price_for_fallback  
+            bb_lower = getattr(talib_analysis, 'bb_lower', current_price_for_fallback * 0.98) if talib_analysis else current_price_for_fallback * 0.98
             
             # 🔥 VWAP POUR PRECISION ULTIME (MFI removed - redundant with VWAP) 🔥
             
