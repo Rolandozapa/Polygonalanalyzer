@@ -45,14 +45,7 @@ class TechnicalAnalysisComplete:
     minus_di: float = 25.0
     adx_strength: str = "MODERATE"
     
-    # 🆕 NOUVEAUX INDICATEURS TREND (High Priority)  
-    aroon_up: float = 50.0  # Aroon Up (0-100)
-    aroon_down: float = 50.0  # Aroon Down (0-100)
-    aroon_diff: float = 0.0  # Difference (trend strength)
-    aroon_signal: str = "NEUTRAL"  # BULLISH, BEARISH, NEUTRAL
-    sar: float = 0.0  # Parabolic SAR price level
-    sar_signal: str = "NEUTRAL"  # BULLISH, BEARISH
-    sar_distance: float = 0.0  # Distance from price (%)
+    # ❌ INDICATEURS TREND REDONDANTS SUPPRIMÉS
     
     bb_upper: float = 0.0
     bb_middle: float = 0.0  
