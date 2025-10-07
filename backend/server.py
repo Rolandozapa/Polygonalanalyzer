@@ -7082,6 +7082,48 @@ async def get_scout_status():
         return {"error": str(e)}
 
 
+@app.post("/api/create-test-ia2-decision")
+async def create_test_ia2_decision():
+    """Create a test IA2 decision with reasoning to test frontend display"""
+    try:
+        from data_models import TradingDecision, SignalType
+        
+        # Create test decision with reasoning
+        test_decision = TradingDecision(
+            symbol="TESTUSDT",
+            signal=SignalType.LONG,
+            confidence=0.95,
+            entry_price=50000.0,
+            stop_loss=48000.0,
+            take_profit_1=52000.0,
+            take_profit_2=54000.0,
+            take_profit_3=56000.0,
+            position_size=2.0,
+            risk_reward_ratio=3.0,
+            ia1_analysis_id="test-id",
+            ia2_reasoning="Test IA2 reasoning: Market shows strong bullish momentum with multiple confluence factors. RSI divergence suggests accumulation phase. Volume profile indicates institutional participation.",
+            strategic_reasoning="Strategic Analysis: Current market structure presents an optimal LONG opportunity. Key resistance broken with conviction. Risk management suggests 2% position sizing with staged profit-taking at Fibonacci extensions.",
+            market_regime_assessment="bullish",
+            execution_priority="immediate",
+            risk_level="medium",
+            calculated_rr=3.2
+        )
+        
+        # Save to database
+        decision_dict = test_decision.dict()
+        decision_dict['timestamp'] = get_paris_time()
+        await db.trading_decisions.insert_one(decision_dict)
+        
+        return {
+            "success": True,
+            "message": "Test IA2 decision created with reasoning",
+            "decision": test_decision.dict()
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Test IA2 creation error: {e}")
+        return {"success": False, "error": str(e)}
+
 @app.get("/api/test-ia2-rr-logic")
 async def test_ia2_rr_logic():
     """Test IA2 RR calculation and execution logic"""
