@@ -10145,6 +10145,10 @@ async def startup_event():
             tradable_symbols = bingx_fetcher.get_tradable_symbols()
             logger.info(f"✅ BingX fallback initialization: {len(tradable_symbols)} tradable symbols loaded")
         
+        # 🔄 START AUTOMATIC SCOUT REFRESH LOOP (Every 4 hours)
+        asyncio.create_task(automatic_scout_refresh_loop())
+        logger.info("✅ Automatic scout refresh loop started (4-hour intervals)")
+        
         logger.info("✅ All startup systems initialized successfully")
         
     except Exception as e:
