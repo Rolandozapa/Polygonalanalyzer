@@ -3934,7 +3934,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 direction = str(detected_pattern.trading_direction).lower()
             else:
                 # Simple trend analysis basé sur les données récentes
-                recent_prices = historical_data['Close'].tail(5)
+                close_col = get_ohlcv_column(historical_data, 'close')
+                recent_prices = historical_data[close_col].tail(5)
                 if recent_prices.iloc[-1] < recent_prices.iloc[0]:
                     direction = "short"
             
