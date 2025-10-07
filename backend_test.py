@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
 """
-CONFLUENCE ANALYSIS FIX TESTING SUITE
-Focus: Test the confluence analysis fix to validate that confluence values are displaying correctly.
+MULTI-PHASE STRATEGIC FRAMEWORK TESTING SUITE
+Focus: Test du Multi-Phase Strategic Framework enrichi dans le prompt IA2.
 
 CRITICAL VALIDATION POINTS:
 
-1. **API Force IA1 Analysis** - Test with 3 symbols (BTCUSDT, ETHUSDT, LINKUSDT):
-   - Verify confluence_grade is not null (should be A, B, C, or D)  
-   - Verify confluence_score is not null (should be 0-100)
-   - Verify should_trade is not null (should be true/false)
-   - Confirm values match IA1 reasoning
+1. **Test du prompt IA2 enrichi** - Vérifier que le nouveau champ `market_regime_assessment` est bien dans la configuration :
+   - Vérifier le contenu du prompt IA2 v3 Strategic Ultra  
+   - Confirmer que `market_regime_assessment` est dans la section JSON output
+   - Valider que les champs execution_priority, risk_level sont configurés correctement
 
-2. **API Analyses Endpoint** - Check consistency:
-   - Confluence values in /api/analyses are consistent
-   - No default values (50/100) used as fallbacks
-   - Scores reflect real market conditions
+2. **Test de génération IA2** - Essayer de créer une décision IA2 réelle :
+   - Forcer des analyses IA1 avec différents symboles (BTCUSDT, ETHUSDT, LINKUSDT)
+   - Identifier s'il existe des analyses avec confidence >70% ET RR >2.0 ET signal LONG/SHORT
+   - Si aucune n'existe, documenter les conditions actuelles
 
-3. **Validation of Calculations** - Check logic:
-   - Confluence scores 0 correspond to Grade D and should_trade=false
-   - Values reflect real conditions (not fallbacks)
-   - Consistency between IA1 reasoning and API values
+3. **Test endpoint de création IA2** :
+   - Tester /api/create-test-ia2-decision 
+   - Vérifier que la décision créée contient bien les champs attendus
+   - Valider que market_regime_assessment, execution_priority, risk_level ont des valeurs
 
-4. **Test Diversity** - Check with multiple symbols:
-   - Different confluence grades according to conditions
-   - Variety in scores (not always 0 or 50)
-   - Should_trade varies according to setup quality
+4. **Validation de la réponse API IA2** :
+   - Vérifier /api/ia2-decisions retourne des décisions avec tous les champs Multi-Phase
+   - Confirmer que les valeurs ne sont plus null pour les nouveaux champs
+   - Tester la diversité des valeurs (bullish/bearish/neutral, immediate/delayed/wait, etc.)
 
-FOCUS: Confirm confluence analysis fix is complete and working correctly - real calculated values appear in API instead of null/fallbacks.
+OBJECTIF: Confirmer que le prompt IA2 enrichi génère correctement tous les signaux du Multi-Phase Strategic Framework et que ces données sont accessibles via l'API.
 """
 
 import asyncio
