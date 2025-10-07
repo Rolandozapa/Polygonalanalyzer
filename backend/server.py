@@ -3898,7 +3898,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "quality": "error"
             }
 
-    async def _get_enhanced_historical_data(self, symbol: str, days: int = 28) -> Optional[pd.DataFrame]:
+    async def _get_enhanced_historical_data(self, symbol: str, days: int = 60) -> Optional[pd.DataFrame]:  # 🔧 FIX MACD: 60 jours pour calculs corrects
         """Get enhanced historical data using improved OHLCV fetcher - 4 semaines pour analyse technique IA1"""
         try:
             logger.info(f"🔍 Fetching IA1 OHLCV data for {symbol} ({days} jours pour analyse technique)")
