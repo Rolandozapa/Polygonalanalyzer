@@ -317,164 +317,63 @@ class VolumeRatioFixDiagnosticTestSuite:
                     logger.info(f"      ⏳ Waiting 8 seconds before next analysis...")
                     await asyncio.sleep(8)
                     
-                    # Analyze prompt content
-                    prompt_template = ia2_v3_content.get('prompt_template', '')
-                    
-                    # Check for market_regime_assessment in JSON output
-                    if 'market_regime_assessment' in prompt_template:
-                        prompt_results['market_regime_assessment_found'] = True
-                        logger.info(f"      ✅ market_regime_assessment found in prompt template")
-                    else:
-                        logger.error(f"      ❌ market_regime_assessment NOT found in prompt template")
-                    
-                    # Check for execution_priority in JSON output
-                    if 'execution_priority' in prompt_template:
-                        prompt_results['execution_priority_found'] = True
-                        logger.info(f"      ✅ execution_priority found in prompt template")
-                    else:
-                        logger.error(f"      ❌ execution_priority NOT found in prompt template")
-                    
-                    # Check for risk_level in JSON output
-                    if 'risk_level' in prompt_template:
-                        prompt_results['risk_level_found'] = True
-                        logger.info(f"      ✅ risk_level found in prompt template")
-                    else:
-                        logger.error(f"      ❌ risk_level NOT found in prompt template")
-                    
-                    # Check JSON output section validity
-                    if '"market_regime_assessment": "bullish/bearish/neutral"' in prompt_template:
-                        prompt_results['json_output_section_valid'] = True
-                        logger.info(f"      ✅ JSON output section contains proper market_regime_assessment format")
-                    else:
-                        logger.warning(f"      ⚠️ JSON output section may not contain proper market_regime_assessment format")
-                    
-                    # Check required variables
-                    required_vars = ia2_v3_content.get('required_variables', [])
-                    if len(required_vars) >= 20:  # Should have many variables for comprehensive analysis
-                        prompt_results['required_variables_present'] = True
-                        logger.info(f"      ✅ Required variables present: {len(required_vars)} variables")
-                    else:
-                        logger.warning(f"      ⚠️ Limited required variables: {len(required_vars)} variables")
-                    
-                    # Store prompt content analysis
-                    prompt_results['prompt_content_analysis'] = {
-                        'name': ia2_v3_content.get('name', 'Unknown'),
-                        'version': ia2_v3_content.get('version', 'Unknown'),
-                        'description': ia2_v3_content.get('description', 'No description'),
-                        'model': ia2_v3_content.get('model', 'Unknown'),
-                        'required_variables_count': len(required_vars),
-                        'template_length': len(prompt_template),
-                        'enhancements_v3': ia2_v3_content.get('enhancements_v3', {})
-                    }
-                    
-                    logger.info(f"      📊 Prompt Analysis:")
-                    logger.info(f"         - Name: {prompt_results['prompt_content_analysis']['name']}")
-                    logger.info(f"         - Version: {prompt_results['prompt_content_analysis']['version']}")
-                    logger.info(f"         - Model: {prompt_results['prompt_content_analysis']['model']}")
-                    logger.info(f"         - Template Length: {prompt_results['prompt_content_analysis']['template_length']} chars")
-                    logger.info(f"         - Required Variables: {prompt_results['prompt_content_analysis']['required_variables_count']}")
-                    
-                    # Check enhancements v3
-                    enhancements = prompt_results['prompt_content_analysis']['enhancements_v3']
-                    if enhancements:
-                        logger.info(f"      ✅ V3 Enhancements found:")
-                        for key, value in enhancements.items():
-                            logger.info(f"         - {key}: {value}")
-                    
-            except FileNotFoundError:
-                logger.error(f"      ❌ IA2 v3 Strategic Ultra prompt file not found")
-                prompt_results['error_details'].append("IA2 v3 prompt file not found")
-            except json.JSONDecodeError as e:
-                logger.error(f"      ❌ IA2 v3 prompt file invalid JSON: {e}")
-                prompt_results['error_details'].append(f"IA2 v3 prompt JSON error: {e}")
-            except Exception as e:
-                logger.error(f"      ❌ Error reading IA2 v3 prompt: {e}")
-                prompt_results['error_details'].append(f"IA2 v3 prompt read error: {e}")
-            
-            # Also check the regular IA2 strategic prompt for comparison
-            try:
-                with open('/app/prompts/ia2_strategic.json', 'r') as f:
-                    ia2_strategic_content = json.load(f)
-                    prompt_results['ia2_strategic_prompt_exists'] = True
-                    logger.info(f"      ✅ IA2 Strategic prompt file found for comparison")
-                    
-                    strategic_template = ia2_strategic_content.get('prompt_template', '')
-                    
-                    # Check if strategic prompt has the new fields (it shouldn't)
-                    has_market_regime = 'market_regime_assessment' in strategic_template
-                    has_execution_priority = 'execution_priority' in strategic_template
-                    has_risk_level = 'risk_level' in strategic_template
-                    
-                    logger.info(f"      📊 IA2 Strategic (v2.0) comparison:")
-                    logger.info(f"         - market_regime_assessment: {'✅ Present' if has_market_regime else '❌ Not present'}")
-                    logger.info(f"         - execution_priority: {'✅ Present' if has_execution_priority else '❌ Not present'}")
-                    logger.info(f"         - risk_level: {'✅ Present' if has_risk_level else '❌ Not present'}")
-                    
-            except Exception as e:
-                logger.warning(f"      ⚠️ Could not read IA2 strategic prompt for comparison: {e}")
-            
-            # Determine if Multi-Phase Framework is complete
-            multi_phase_criteria = [
-                prompt_results['market_regime_assessment_found'],
-                prompt_results['execution_priority_found'],
-                prompt_results['risk_level_found'],
-                prompt_results['json_output_section_valid'],
-                prompt_results['required_variables_present']
-            ]
-            
-            prompt_results['multi_phase_framework_complete'] = sum(multi_phase_criteria) >= 4  # At least 4/5 criteria
-            
             # Final analysis and results
-            logger.info(f"\n   📊 IA2 PROMPT ENRICHED VALIDATION RESULTS:")
-            logger.info(f"      IA2 v3 prompt exists: {prompt_results['ia2_v3_prompt_exists']}")
-            logger.info(f"      IA2 strategic prompt exists: {prompt_results['ia2_strategic_prompt_exists']}")
-            logger.info(f"      market_regime_assessment found: {prompt_results['market_regime_assessment_found']}")
-            logger.info(f"      execution_priority found: {prompt_results['execution_priority_found']}")
-            logger.info(f"      risk_level found: {prompt_results['risk_level_found']}")
-            logger.info(f"      JSON output section valid: {prompt_results['json_output_section_valid']}")
-            logger.info(f"      Required variables present: {prompt_results['required_variables_present']}")
-            logger.info(f"      Multi-Phase Framework complete: {prompt_results['multi_phase_framework_complete']}")
+            ia1_success_rate = volume_ratio_results['ia1_analyses_successful'] / max(volume_ratio_results['ia1_analyses_attempted'], 1)
+            confluence_improvement_rate = volume_ratio_results['confluence_grades_not_d'] / max(volume_ratio_results['ia1_analyses_successful'], 1)
+            score_improvement_rate = volume_ratio_results['confluence_scores_above_zero'] / max(volume_ratio_results['ia1_analyses_successful'], 1)
+            volume_ratio_fix_rate = volume_ratio_results['volume_ratio_in_range'] / max(volume_ratio_results['ia1_analyses_successful'], 1)
             
-            # Show prompt content analysis
-            if prompt_results['prompt_content_analysis']:
-                analysis = prompt_results['prompt_content_analysis']
-                logger.info(f"      📊 Prompt Content Analysis:")
-                logger.info(f"         - Name: {analysis['name']}")
-                logger.info(f"         - Version: {analysis['version']}")
-                logger.info(f"         - Model: {analysis['model']}")
-                logger.info(f"         - Template Length: {analysis['template_length']} chars")
-                logger.info(f"         - Required Variables: {analysis['required_variables_count']}")
-                
-                if analysis['enhancements_v3']:
-                    logger.info(f"         - V3 Enhancements: {len(analysis['enhancements_v3'])} features")
+            logger.info(f"\n   📊 VOLUME RATIO FIX VALIDATION RESULTS:")
+            logger.info(f"      IA1 analyses attempted: {volume_ratio_results['ia1_analyses_attempted']}")
+            logger.info(f"      IA1 analyses successful: {volume_ratio_results['ia1_analyses_successful']}")
+            logger.info(f"      IA1 success rate: {ia1_success_rate:.2f}")
+            logger.info(f"      Confluence grades not D: {volume_ratio_results['confluence_grades_not_d']} ({confluence_improvement_rate:.2f})")
+            logger.info(f"      Confluence scores > 0: {volume_ratio_results['confluence_scores_above_zero']} ({score_improvement_rate:.2f})")
+            logger.info(f"      Volume ratio in range (0.1-1.0): {volume_ratio_results['volume_ratio_in_range']} ({volume_ratio_fix_rate:.2f})")
+            logger.info(f"      Confidence > 0.65: {volume_ratio_results['confidence_above_threshold']}")
+            logger.info(f"      ADX > 18: {volume_ratio_results['adx_above_threshold']}")
+            logger.info(f"      BB squeeze active: {volume_ratio_results['bb_squeeze_active']}")
+            
+            # Show successful analyses details
+            if volume_ratio_results['successful_analyses']:
+                logger.info(f"      📊 IA1 Analyses Details:")
+                for analysis in volume_ratio_results['successful_analyses']:
+                    logger.info(f"         - {analysis['symbol']}: grade={analysis['confluence_grade']}, score={analysis['confluence_score']:.1f}, volume_ratio={analysis['volume_ratio']:.3f}")
+            
+            # Show confluence data analysis
+            if volume_ratio_results['confluence_data']:
+                logger.info(f"      📊 Confluence Data Analysis:")
+                for data in volume_ratio_results['confluence_data']:
+                    requirements = data['mandatory_requirements_met']
+                    logger.info(f"         - {data['symbol']}: grade={data['grade']}, score={data['score']:.1f}, requirements_met={sum(requirements.values())}/3")
+                    logger.info(f"           confidence={requirements['confidence']}, adx_or_squeeze={requirements['adx_or_squeeze']}, volume_ratio={requirements['volume_ratio']}")
             
             # Show error details if any
-            if prompt_results['error_details']:
+            if volume_ratio_results['error_details']:
                 logger.info(f"      📊 Error Details:")
-                for error in prompt_results['error_details']:
-                    logger.info(f"         - {error}")
+                for error in volume_ratio_results['error_details']:
+                    logger.info(f"         - {error['symbol']}: {error['error_type']}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                prompt_results['ia2_v3_prompt_exists'],  # IA2 v3 prompt file exists
-                prompt_results['market_regime_assessment_found'],  # market_regime_assessment field found
-                prompt_results['execution_priority_found'],  # execution_priority field found
-                prompt_results['risk_level_found'],  # risk_level field found
-                prompt_results['required_variables_present'],  # Required variables present
-                prompt_results['multi_phase_framework_complete']  # Multi-Phase Framework complete
+                volume_ratio_results['ia1_analyses_successful'] >= 2,  # At least 2 successful IA1 analyses
+                ia1_success_rate >= 0.67,  # At least 67% IA1 success rate
+                volume_ratio_results['confluence_grades_not_d'] >= 1 or volume_ratio_results['confluence_scores_above_zero'] >= 1,  # Some improvement
+                volume_ratio_results['volume_ratio_in_range'] >= 1,  # At least 1 volume ratio in fixed range
+                len(volume_ratio_results['error_details']) <= 1  # Minimal errors
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
-            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("IA2 Prompt Enriched Validation", True, 
-                                   f"IA2 prompt enriched validation successful: {success_count}/{len(success_criteria)} criteria met. Multi-Phase Framework fields properly configured in IA2 v3 Strategic Ultra prompt.")
+            if test_success_rate >= 0.80:  # 80% success threshold (4/5 criteria)
+                self.log_test_result("Volume Ratio Fix Validation", True, 
+                                   f"Volume ratio fix validation successful: {success_count}/{len(success_criteria)} criteria met. IA1 success rate: {ia1_success_rate:.2f}, confluence improvements: grades={confluence_improvement_rate:.2f}, scores={score_improvement_rate:.2f}")
             else:
-                self.log_test_result("IA2 Prompt Enriched Validation", False, 
-                                   f"IA2 prompt enriched validation issues: {success_count}/{len(success_criteria)} criteria met. Multi-Phase Framework may be incomplete or missing fields.")
+                self.log_test_result("Volume Ratio Fix Validation", False, 
+                                   f"Volume ratio fix validation issues: {success_count}/{len(success_criteria)} criteria met. Volume ratio fix may not be working properly")
                 
         except Exception as e:
-            self.log_test_result("API Force IA1 Analysis Confluence", False, f"Exception: {str(e)}")
+            self.log_test_result("Volume Ratio Fix Validation", False, f"Exception: {str(e)}")
 
     async def test_2_ia2_generation_real_decision(self):
         """Test 2: Test de génération IA2 - Essayer de créer une décision IA2 réelle"""
