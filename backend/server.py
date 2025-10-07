@@ -6210,7 +6210,12 @@ Your response MUST be ONLY a valid JSON object:
                 ia2_take_profit_3=ia2_tp3,
                 ia2_calculated_rr=ia2_calculated_rr,
                 trade_execution_ready=trade_ready,
-                auto_execution_triggered=auto_execution
+                auto_execution_triggered=auto_execution,
+                # 🔧 NEW DYNAMIC FIELDS FOR FRONTEND 
+                ia1_validation=ia1_validation,
+                volume_profile_bias=volume_profile_bias,
+                orderbook_quality=orderbook_quality,
+                institutional_edge=institutional_edge
             )
             
             # 🚀 AUTO-EXECUTION TO BINGX IF CONDITIONS MET
