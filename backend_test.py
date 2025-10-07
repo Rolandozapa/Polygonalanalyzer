@@ -178,7 +178,7 @@ class ConfluenceAnalysisTestSuite:
                     available_symbols = [opp.get('symbol') for opp in opportunities[:15] if opp.get('symbol')]
                     
                     # Prefer specific symbols from review request
-                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT']
+                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']
                     test_symbols = []
                     
                     for symbol in preferred_symbols:
@@ -187,10 +187,10 @@ class ConfluenceAnalysisTestSuite:
                     
                     # Fill remaining slots with available symbols if needed
                     for symbol in available_symbols:
-                        if symbol not in test_symbols and len(test_symbols) < 4:
+                        if symbol not in test_symbols and len(test_symbols) < 3:
                             test_symbols.append(symbol)
                     
-                    self.actual_test_symbols = test_symbols[:4]  # Limit to 4 symbols as per review request
+                    self.actual_test_symbols = test_symbols[:3]  # Limit to 3 symbols as per review request
                     logger.info(f"      ✅ Test symbols selected: {self.actual_test_symbols}")
                     
                 else:
