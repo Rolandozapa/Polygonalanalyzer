@@ -62,7 +62,7 @@ class MultiPhaseStrategicFrameworkTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Confluence Analysis Fix at: {self.api_url}")
+        logger.info(f"Testing Multi-Phase Strategic Framework at: {self.api_url}")
         
         # Test results
         self.test_results = []
@@ -71,23 +71,28 @@ class MultiPhaseStrategicFrameworkTestSuite:
         self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']  # Specific symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # Expected confluence fields that should be present and not null
-        self.expected_confluence_fields = ['confluence_grade', 'confluence_score', 'should_trade']
+        # Expected Multi-Phase Strategic Framework fields that should be present and not null
+        self.expected_ia2_fields = [
+            'market_regime_assessment', 'execution_priority', 'risk_level', 
+            'volume_profile_bias', 'orderbook_quality', 'multi_phase_score'
+        ]
         
-        # Valid confluence grades
-        self.valid_confluence_grades = ['A', 'B', 'C', 'D']
+        # Valid values for Multi-Phase fields
+        self.valid_market_regime_values = ['bullish', 'bearish', 'neutral']
+        self.valid_execution_priority_values = ['immediate', 'delayed', 'wait']
+        self.valid_risk_level_values = ['low', 'medium', 'high']
         
         # Error patterns to check for in logs
         self.error_patterns = [
-            "confluence_grade.*null",
-            "confluence_score.*null", 
-            "should_trade.*null",
-            "confluence.*fallback",
-            "confluence.*default"
+            "market_regime_assessment.*null",
+            "execution_priority.*null", 
+            "risk_level.*null",
+            "ia2.*fallback",
+            "ia2.*default"
         ]
         
-        # Technical analysis data storage
-        self.technical_analyses = []
+        # IA2 decision data storage
+        self.ia2_decisions = []
         self.backend_logs = []
         
         # Database connection info
