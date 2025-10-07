@@ -200,7 +200,8 @@ class RiskRewardCalculator:
                 # Stop-loss basé sur ATR ou résistance
                 sl_candidate1 = entry_price + (atr * 1.5)
                 sl_candidate2 = resistances[0] if resistances else entry_price * 1.02
-                stop_loss = min(sl_candidate1, sl_candidate2)  # Plus conservateur
+                # 🔧 FIX RR: Pour SHORT, prendre le SL le plus haut (plus de risk mais RR réaliste)
+                stop_loss = max(sl_candidate1, sl_candidate2)  # Stop-loss plus distant pour RR réaliste
                 
                 # Take-profit multiples
                 tp_levels = []
