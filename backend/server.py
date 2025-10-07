@@ -3933,9 +3933,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Utiliser BingX API pour données intraday
             bingx_url = f"{self.bingx_base_url or 'https://open-api.bingx.com'}/openApi/spot/v1/market/kline"
             
+            # Convertir format symbole pour BingX API (ETHUSDT -> ETH-USDT)
+            bingx_symbol = symbol.replace('USDT', '-USDT').replace('BTC', '-BTC') if 'USDT' in symbol else symbol
+            
             params = {
-                'symbol': symbol,
-                'interval': timeframe,
+                'symbol': bingx_symbol,
+                'interval': timeframe,  
                 'limit': limit
             }
             
