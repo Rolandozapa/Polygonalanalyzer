@@ -3392,8 +3392,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🔧 FIX RR: Always prioritize calculated RR over IA1 JSON response for accuracy
             # Calculate RR using optimized method with real market data
-                try:
-                    rr_calculator = create_rr_calculator('swing')  # Use swing trading config
+            try:
+                rr_calculator = create_rr_calculator('swing')  # Use swing trading config
                     
                     # 🔧 COLUMN NORMALIZATION: Handle both uppercase and lowercase columns
                     close_col = 'Close' if 'Close' in historical_data.columns else 'close'
