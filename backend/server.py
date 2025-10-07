@@ -3429,8 +3429,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"   Risk-Reward Ratio: {ia1_risk_reward_ratio:.2f}")
                 logger.info(f"   Supports: {rr_setup.get('supports', [])}") 
                 logger.info(f"   Resistances: {rr_setup.get('resistances', [])}")
-                    
-                except Exception as rr_error:
+                
+            except Exception as rr_error:
                     logger.error(f"❌ Error in optimized RR calculation for {opportunity.symbol}: {rr_error}")
                     # Fallback to simple calculation
                     ia1_entry = ia1_complete_json.get('entry_price', real_current_price)
