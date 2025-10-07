@@ -1673,6 +1673,21 @@ class UltraProfessionalIA1TechnicalAnalyst:
         else:
             return f"RSI {rsi_value:.1f} in normal range - moderate momentum"
     
+    def _extract_tf_signal(self, multi_tf_result, timeframe: str) -> str:
+        """Extract signal for specific timeframe from multi-timeframe result"""
+        if not multi_tf_result or not hasattr(multi_tf_result, 'timeframe_signals'):
+            return "NEUTRAL"
+        
+        timeframe_signals = getattr(multi_tf_result, 'timeframe_signals', {})
+        if timeframe in timeframe_signals:
+            signal_data = timeframe_signals[timeframe]
+            if isinstance(signal_data, dict):
+                return signal_data.get('signal', 'NEUTRAL')
+            else:
+                return str(signal_data) if signal_data else "NEUTRAL"
+        
+        return "NEUTRAL"
+    
     def analyze_multi_timeframe_hierarchy(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> dict:
         """
         🎯 ANALYSE RÉGRESSIVE MULTI-TIMEFRAME : Long terme → Court terme
