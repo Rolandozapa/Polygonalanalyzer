@@ -5302,25 +5302,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.error(f"Error calculating Market Cap bonus/malus: {e}")
             return 0.0
 
-    def _calculate_enhanced_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
+    def _calculate_enhanced_institutional_validation(self, vwap_position: float, vwap_price: float, 
                                                    sma50_vs_price: float, market_cap_24h: float, primary_signal: str,
                                                    dune_data=None) -> float:
         """
         🔮 ENHANCED INSTITUTIONAL VALIDATION with Dune Analytics
-        Combines traditional indicators (MFI, VWAP, SMA50) with on-chain validation data
+        Combines traditional indicators (VWAP, SMA50) with on-chain validation data
         """
         try:
             # For IA1 class, we'll provide a simplified institutional validation
             # since the full method is in the orchestrator class
-            base_score = 60.0  # Start with neutral score
-            
-            # MFI validation (20 points max)
-            if mfi <= 20:  # Oversold
-                base_score += 15.0 if primary_signal == "long" else -5.0
-            elif mfi >= 80:  # Overbought  
-                base_score += 15.0 if primary_signal == "short" else -5.0
-            else:  # Neutral
-                base_score += 5.0
+            base_score = 65.0  # Start with slightly higher base score (no MFI penalty)
             
             # VWAP validation (15 points max)
             if vwap_position > 2.0:  # Strong above VWAP
