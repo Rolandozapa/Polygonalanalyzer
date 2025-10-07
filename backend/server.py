@@ -6144,6 +6144,11 @@ Your response MUST be ONLY a valid JSON object:
                 ia2_calculated_rr = rr_ratio
                 auto_execution = False
                 trade_ready = False
+                # Fallback values for missing dynamic fields
+                ia1_validation = "confirmed" 
+                volume_profile_bias = "neutral"
+                orderbook_quality = "good"
+                institutional_edge = "IA1 technical validation"
                 
                 logger.info(f"✅ IA2 STRATEGIC: {symbol} → {claude_signal.upper()} ({claude_confidence:.1%})")
                 logger.info(f"   📊 Market Regime: {market_regime}")
