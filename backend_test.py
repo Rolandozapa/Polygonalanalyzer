@@ -164,8 +164,8 @@ class MFIStochasticRemovalTestSuite:
                 'response_times': []
             }
             
-            logger.info("   🚀 Testing new field names: trade_type and minimum_rr_threshold...")
-            logger.info("   📊 Expected: New field names present, old field names absent")
+            logger.info("   🚀 Testing IA1 analysis with specific symbols to verify no MFI/Stochastic errors...")
+            logger.info("   📊 Expected: No NameError for 'mfi' or 'stochastic_k', successful analyses with valid JSON")
             
             # Get available symbols from scout system
             logger.info("   📞 Getting available symbols from scout system...")
@@ -178,23 +178,23 @@ class MFIStochasticRemovalTestSuite:
                     if isinstance(opportunities, dict) and 'opportunities' in opportunities:
                         opportunities = opportunities['opportunities']
                     
-                    # Get first 3 available symbols for testing
-                    available_symbols = [opp.get('symbol') for opp in opportunities[:10] if opp.get('symbol')]
+                    # Get available symbols for testing
+                    available_symbols = [opp.get('symbol') for opp in opportunities[:15] if opp.get('symbol')]
                     
-                    # Prefer symbols that might generate different trade types
-                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
+                    # Prefer specific symbols from review request
+                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT']
                     test_symbols = []
                     
                     for symbol in preferred_symbols:
                         if symbol in available_symbols:
                             test_symbols.append(symbol)
                     
-                    # Fill remaining slots with available symbols
+                    # Fill remaining slots with available symbols if needed
                     for symbol in available_symbols:
-                        if symbol not in test_symbols and len(test_symbols) < 3:
+                        if symbol not in test_symbols and len(test_symbols) < 4:
                             test_symbols.append(symbol)
                     
-                    self.actual_test_symbols = test_symbols[:3]  # Limit to 3 symbols
+                    self.actual_test_symbols = test_symbols[:4]  # Limit to 4 symbols as per review request
                     logger.info(f"      ✅ Test symbols selected: {self.actual_test_symbols}")
                     
                 else:
