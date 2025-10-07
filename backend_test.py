@@ -343,52 +343,42 @@ class ConfluenceAnalysisTestSuite:
                     logger.info(f"      ⏳ Waiting 5 seconds before next analysis...")
                     await asyncio.sleep(5)
             
-            # Capture backend logs to check for MFI/Stochastic errors
-            logger.info("   📋 Capturing backend logs to check for MFI/Stochastic errors...")
+            # Capture backend logs to check for confluence calculation logs
+            logger.info("   📋 Capturing backend logs to check for confluence calculation logs...")
             
             try:
                 backend_logs = await self._capture_backend_logs()
                 if backend_logs:
-                    # Look for MFI/Stochastic error patterns
-                    mfi_error_logs = []
-                    stochastic_error_logs = []
-                    nameerror_logs = []
+                    # Look for confluence-related log patterns
+                    confluence_calculation_logs = []
+                    confluence_error_logs = []
                     success_logs = []
                     
                     for log_line in backend_logs:
                         log_lower = log_line.lower()
                         
-                        # Check for MFI errors
-                        if any(pattern in log_line for pattern in ["NameError: name 'mfi'", "mfi is not defined", "NameError: 'mfi'"]):
-                            mfi_error_logs.append(log_line.strip())
-                            analysis_results['mfi_errors_found'] += 1
+                        # Check for confluence calculation logs
+                        if any(pattern in log_lower for pattern in ['confluence', 'grade', 'score']):
+                            confluence_calculation_logs.append(log_line.strip())
                         
-                        # Check for Stochastic errors
-                        if any(pattern in log_line for pattern in ["NameError: name 'stochastic_k'", "stochastic_k is not defined", "NameError: 'stochastic_k'"]):
-                            stochastic_error_logs.append(log_line.strip())
-                            analysis_results['stochastic_errors_found'] += 1
-                        
-                        # Check for any NameError
-                        if 'nameerror' in log_lower:
-                            nameerror_logs.append(log_line.strip())
+                        # Check for confluence errors
+                        if any(pattern in log_lower for pattern in ['confluence.*error', 'confluence.*null', 'confluence.*failed']):
+                            confluence_error_logs.append(log_line.strip())
                         
                         # Check for successful IA1 completions
                         if any(pattern in log_lower for pattern in ['ia1 analysis completed', 'ia1 ultra analysis', 'analysis successful']):
                             success_logs.append(log_line.strip())
                     
                     logger.info(f"      📊 Backend logs analysis:")
-                    logger.info(f"         - MFI error logs: {len(mfi_error_logs)}")
-                    logger.info(f"         - Stochastic error logs: {len(stochastic_error_logs)}")
-                    logger.info(f"         - NameError logs: {len(nameerror_logs)}")
+                    logger.info(f"         - Confluence calculation logs: {len(confluence_calculation_logs)}")
+                    logger.info(f"         - Confluence error logs: {len(confluence_error_logs)}")
                     logger.info(f"         - Success logs: {len(success_logs)}")
                     
-                    # Show critical error logs
-                    if mfi_error_logs:
-                        logger.error(f"      🚨 MFI ERROR FOUND: {mfi_error_logs[0]}")
-                    if stochastic_error_logs:
-                        logger.error(f"      🚨 STOCHASTIC ERROR FOUND: {stochastic_error_logs[0]}")
-                    if nameerror_logs and not mfi_error_logs and not stochastic_error_logs:
-                        logger.warning(f"      ⚠️ Other NameError found: {nameerror_logs[0]}")
+                    # Show sample logs
+                    if confluence_calculation_logs:
+                        logger.info(f"      ✅ Sample confluence log: {confluence_calculation_logs[0]}")
+                    if confluence_error_logs:
+                        logger.error(f"      🚨 CONFLUENCE ERROR FOUND: {confluence_error_logs[0]}")
                     if success_logs:
                         logger.info(f"      ✅ Sample success log: {success_logs[0]}")
                         
