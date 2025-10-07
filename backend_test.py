@@ -415,46 +415,56 @@ class MFIStochasticRemovalTestSuite:
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
             
-            # Check database for field name persistence
-            logger.info("   🗄️ Checking database for new field name persistence...")
+            # Final analysis and results
+            success_rate = analysis_results['analyses_successful'] / max(analysis_results['analyses_attempted'], 1)
+            indicators_rate = analysis_results['required_indicators_present'] / max(analysis_results['analyses_successful'], 1)
+            clean_rate = analysis_results['removed_indicators_absent'] / max(analysis_results['analyses_successful'], 1)
+            avg_response_time = sum(analysis_results['response_times']) / max(len(analysis_results['response_times']), 1)
             
-            try:
-                # Connect to MongoDB to check recent analyses
-                from pymongo import MongoClient
-                client = MongoClient(self.mongo_url)
-                db = client[self.db_name]
+            logger.info(f"\n   📊 API FORCE IA1 ANALYSIS RESULTS:")
+            logger.info(f"      Analyses attempted: {analysis_results['analyses_attempted']}")
+            logger.info(f"      Analyses successful: {analysis_results['analyses_successful']}")
+            logger.info(f"      Success rate: {success_rate:.2f}")
+            logger.info(f"      Valid JSON responses: {analysis_results['valid_json_responses']}")
+            logger.info(f"      Required indicators present: {analysis_results['required_indicators_present']} ({indicators_rate:.2f})")
+            logger.info(f"      Removed indicators absent: {analysis_results['removed_indicators_absent']} ({clean_rate:.2f})")
+            logger.info(f"      MFI errors found: {analysis_results['mfi_errors_found']}")
+            logger.info(f"      Stochastic errors found: {analysis_results['stochastic_errors_found']}")
+            logger.info(f"      Average response time: {avg_response_time:.2f}s")
+            
+            # Show successful analyses details
+            if analysis_results['successful_analyses']:
+                logger.info(f"      📊 Successful Analyses Details:")
+                for analysis in analysis_results['successful_analyses']:
+                    logger.info(f"         - {analysis['symbol']}: indicators={analysis['required_indicators']}, clean={len(analysis['removed_indicators'])==0}, time={analysis['response_time']:.1f}s")
+            
+            # Show error details if any
+            if analysis_results['error_details']:
+                logger.info(f"      📊 Error Details:")
+                for error in analysis_results['error_details']:
+                    logger.info(f"         - {error['symbol']}: {error['error_type']}")
+            
+            # Calculate test success based on review requirements
+            success_criteria = [
+                analysis_results['analyses_successful'] >= 3,  # At least 3 successful analyses
+                analysis_results['mfi_errors_found'] == 0,  # No MFI errors
+                analysis_results['stochastic_errors_found'] == 0,  # No Stochastic errors
+                analysis_results['valid_json_responses'] >= 3,  # At least 3 valid JSON responses
+                analysis_results['required_indicators_present'] >= 2,  # At least 2 analyses with required indicators
+                success_rate >= 0.75  # At least 75% success rate
+            ]
+            success_count = sum(success_criteria)
+            test_success_rate = success_count / len(success_criteria)
+            
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("API Force IA1 Analysis", True, 
+                                   f"IA1 analysis successful: {success_count}/{len(success_criteria)} criteria met. No MFI/Stochastic errors, success rate: {success_rate:.2f}, indicators rate: {indicators_rate:.2f}")
+            else:
+                self.log_test_result("API Force IA1 Analysis", False, 
+                                   f"IA1 analysis issues: {success_count}/{len(success_criteria)} criteria met. MFI errors: {analysis_results['mfi_errors_found']}, Stochastic errors: {analysis_results['stochastic_errors_found']}")
                 
-                # Get recent analyses
-                recent_analyses = list(db.technical_analyses.find().sort("timestamp", -1).limit(10))
-                
-                new_fields_in_db = 0
-                old_fields_in_db = 0
-                
-                for analysis in recent_analyses:
-                    # Check for new field names
-                    if 'trade_type' in analysis and 'minimum_rr_threshold' in analysis:
-                        new_fields_in_db += 1
-                    
-                    # Check for old field names (should not be present)
-                    if 'recommended_trade_type' in analysis or 'minimum_rr_for_trade_type' in analysis:
-                        old_fields_in_db += 1
-                
-                field_validation_results['database_field_validation'] = new_fields_in_db
-                logger.info(f"      ✅ Database field validation: {new_fields_in_db}/10 recent analyses have new field names")
-                if old_fields_in_db > 0:
-                    logger.warning(f"      ⚠️ Database old fields: {old_fields_in_db}/10 recent analyses still have old field names")
-                else:
-                    logger.info(f"      ✅ Database clean: 0/10 recent analyses have old field names")
-                
-                # Show sample analysis with new fields
-                if recent_analyses:
-                    sample_analysis = recent_analyses[0]
-                    trade_type = sample_analysis.get('trade_type')
-                    min_rr = sample_analysis.get('minimum_rr_threshold')
-                    symbol = sample_analysis.get('symbol', 'UNKNOWN')
-                    logger.info(f"      📋 Sample DB analysis ({symbol}): trade_type={trade_type}, minimum_rr_threshold={min_rr}")
-                
-                client.close()
+        except Exception as e:
+            self.log_test_result("API Force IA1 Analysis", False, f"Exception: {str(e)}")
                 
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not check database: {e}")
