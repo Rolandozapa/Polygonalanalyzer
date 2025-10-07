@@ -162,46 +162,113 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Testing IA1 analysis with specific symbols to verify confluence values are not null...")
-            logger.info("   📊 Expected: confluence_grade (A,B,C,D), confluence_score (0-100), should_trade (true/false)")
+            logger.info("   🚀 Vérification du contenu du prompt IA2 v3 Strategic Ultra...")
+            logger.info("   📊 Expected: market_regime_assessment, execution_priority, risk_level dans la section JSON output")
             
-            # Get available symbols from scout system
-            logger.info("   📞 Getting available symbols from scout system...")
+            # Check IA2 v3 Strategic Ultra prompt file
+            logger.info("   📞 Checking IA2 v3 Strategic Ultra prompt file...")
             
             try:
-                response = requests.get(f"{self.api_url}/opportunities", timeout=60)
-                
-                if response.status_code == 200:
-                    opportunities = response.json()
-                    if isinstance(opportunities, dict) and 'opportunities' in opportunities:
-                        opportunities = opportunities['opportunities']
+                with open('/app/prompts/ia2_v3_strategic_ultra.json', 'r') as f:
+                    ia2_v3_content = json.load(f)
+                    prompt_results['ia2_v3_prompt_exists'] = True
+                    logger.info(f"      ✅ IA2 v3 Strategic Ultra prompt file found")
                     
-                    # Get available symbols for testing
-                    available_symbols = [opp.get('symbol') for opp in opportunities[:15] if opp.get('symbol')]
+                    # Analyze prompt content
+                    prompt_template = ia2_v3_content.get('prompt_template', '')
                     
-                    # Prefer specific symbols from review request
-                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']
-                    test_symbols = []
+                    # Check for market_regime_assessment in JSON output
+                    if 'market_regime_assessment' in prompt_template:
+                        prompt_results['market_regime_assessment_found'] = True
+                        logger.info(f"      ✅ market_regime_assessment found in prompt template")
+                    else:
+                        logger.error(f"      ❌ market_regime_assessment NOT found in prompt template")
                     
-                    for symbol in preferred_symbols:
-                        if symbol in available_symbols:
-                            test_symbols.append(symbol)
+                    # Check for execution_priority in JSON output
+                    if 'execution_priority' in prompt_template:
+                        prompt_results['execution_priority_found'] = True
+                        logger.info(f"      ✅ execution_priority found in prompt template")
+                    else:
+                        logger.error(f"      ❌ execution_priority NOT found in prompt template")
                     
-                    # Fill remaining slots with available symbols if needed
-                    for symbol in available_symbols:
-                        if symbol not in test_symbols and len(test_symbols) < 3:
-                            test_symbols.append(symbol)
+                    # Check for risk_level in JSON output
+                    if 'risk_level' in prompt_template:
+                        prompt_results['risk_level_found'] = True
+                        logger.info(f"      ✅ risk_level found in prompt template")
+                    else:
+                        logger.error(f"      ❌ risk_level NOT found in prompt template")
                     
-                    self.actual_test_symbols = test_symbols[:3]  # Limit to 3 symbols as per review request
-                    logger.info(f"      ✅ Test symbols selected: {self.actual_test_symbols}")
+                    # Check JSON output section validity
+                    if '"market_regime_assessment": "bullish/bearish/neutral"' in prompt_template:
+                        prompt_results['json_output_section_valid'] = True
+                        logger.info(f"      ✅ JSON output section contains proper market_regime_assessment format")
+                    else:
+                        logger.warning(f"      ⚠️ JSON output section may not contain proper market_regime_assessment format")
                     
-                else:
-                    logger.warning(f"      ⚠️ Could not get opportunities, using default symbols")
-                    self.actual_test_symbols = self.test_symbols
+                    # Check required variables
+                    required_vars = ia2_v3_content.get('required_variables', [])
+                    if len(required_vars) >= 20:  # Should have many variables for comprehensive analysis
+                        prompt_results['required_variables_present'] = True
+                        logger.info(f"      ✅ Required variables present: {len(required_vars)} variables")
+                    else:
+                        logger.warning(f"      ⚠️ Limited required variables: {len(required_vars)} variables")
+                    
+                    # Store prompt content analysis
+                    prompt_results['prompt_content_analysis'] = {
+                        'name': ia2_v3_content.get('name', 'Unknown'),
+                        'version': ia2_v3_content.get('version', 'Unknown'),
+                        'description': ia2_v3_content.get('description', 'No description'),
+                        'model': ia2_v3_content.get('model', 'Unknown'),
+                        'required_variables_count': len(required_vars),
+                        'template_length': len(prompt_template),
+                        'enhancements_v3': ia2_v3_content.get('enhancements_v3', {})
+                    }
+                    
+                    logger.info(f"      📊 Prompt Analysis:")
+                    logger.info(f"         - Name: {prompt_results['prompt_content_analysis']['name']}")
+                    logger.info(f"         - Version: {prompt_results['prompt_content_analysis']['version']}")
+                    logger.info(f"         - Model: {prompt_results['prompt_content_analysis']['model']}")
+                    logger.info(f"         - Template Length: {prompt_results['prompt_content_analysis']['template_length']} chars")
+                    logger.info(f"         - Required Variables: {prompt_results['prompt_content_analysis']['required_variables_count']}")
+                    
+                    # Check enhancements v3
+                    enhancements = prompt_results['prompt_content_analysis']['enhancements_v3']
+                    if enhancements:
+                        logger.info(f"      ✅ V3 Enhancements found:")
+                        for key, value in enhancements.items():
+                            logger.info(f"         - {key}: {value}")
+                    
+            except FileNotFoundError:
+                logger.error(f"      ❌ IA2 v3 Strategic Ultra prompt file not found")
+                prompt_results['error_details'].append("IA2 v3 prompt file not found")
+            except json.JSONDecodeError as e:
+                logger.error(f"      ❌ IA2 v3 prompt file invalid JSON: {e}")
+                prompt_results['error_details'].append(f"IA2 v3 prompt JSON error: {e}")
+            except Exception as e:
+                logger.error(f"      ❌ Error reading IA2 v3 prompt: {e}")
+                prompt_results['error_details'].append(f"IA2 v3 prompt read error: {e}")
+            
+            # Also check the regular IA2 strategic prompt for comparison
+            try:
+                with open('/app/prompts/ia2_strategic.json', 'r') as f:
+                    ia2_strategic_content = json.load(f)
+                    prompt_results['ia2_strategic_prompt_exists'] = True
+                    logger.info(f"      ✅ IA2 Strategic prompt file found for comparison")
+                    
+                    strategic_template = ia2_strategic_content.get('prompt_template', '')
+                    
+                    # Check if strategic prompt has the new fields (it shouldn't)
+                    has_market_regime = 'market_regime_assessment' in strategic_template
+                    has_execution_priority = 'execution_priority' in strategic_template
+                    has_risk_level = 'risk_level' in strategic_template
+                    
+                    logger.info(f"      📊 IA2 Strategic (v2.0) comparison:")
+                    logger.info(f"         - market_regime_assessment: {'✅ Present' if has_market_regime else '❌ Not present'}")
+                    logger.info(f"         - execution_priority: {'✅ Present' if has_execution_priority else '❌ Not present'}")
+                    logger.info(f"         - risk_level: {'✅ Present' if has_risk_level else '❌ Not present'}")
                     
             except Exception as e:
-                logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
-                self.actual_test_symbols = self.test_symbols
+                logger.warning(f"      ⚠️ Could not read IA2 strategic prompt for comparison: {e}")
             
             # Test each symbol for confluence analysis validation
             for symbol in self.actual_test_symbols:
