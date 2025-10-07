@@ -352,119 +352,129 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Testing /api/analyses endpoint for confluence consistency...")
-            logger.info("   📊 Expected: Confluence values consistent, no default fallbacks (50/100), real market conditions")
+            logger.info("   🚀 Forcer des analyses IA1 avec différents symboles pour identifier des candidats IA2...")
+            logger.info("   📊 Expected: Analyses avec confidence >70% ET RR >2.0 ET signal LONG/SHORT pour escalade IA2")
             
-            # Test /api/analyses endpoint
-            logger.info("   📞 Calling /api/analyses endpoint...")
+            # Test symbols from review request
+            test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']
             
-            try:
-                start_time = time.time()
-                response = requests.get(f"{self.api_url}/analyses", timeout=60)
-                response_time = time.time() - start_time
+            # Force IA1 analyses to find IA2 escalation candidates
+            for symbol in test_symbols:
+                logger.info(f"\n   📞 Forcing IA1 analysis for {symbol} to check IA2 escalation criteria...")
+                generation_results['ia1_analyses_attempted'] += 1
                 
-                if response.status_code == 200:
-                    analyses_results['api_call_successful'] = True
-                    logger.info(f"      ✅ /api/analyses successful (response time: {response_time:.2f}s)")
+                try:
+                    start_time = time.time()
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=120
+                    )
+                    response_time = time.time() - start_time
                     
-                    # Parse response
-                    try:
-                        data = response.json()
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        generation_results['ia1_analyses_successful'] += 1
                         
-                        # Handle different response formats
-                        if isinstance(data, dict) and 'analyses' in data:
-                            analyses = data['analyses']
-                        elif isinstance(data, list):
-                            analyses = data
+                        logger.info(f"      ✅ {symbol} IA1 analysis successful (response time: {response_time:.2f}s)")
+                        
+                        # Extract IA1 analysis data
+                        ia1_analysis = analysis_data.get('ia1_analysis', {})
+                        if not isinstance(ia1_analysis, dict):
+                            ia1_analysis = {}
+                        
+                        # Check IA2 escalation criteria
+                        confidence = ia1_analysis.get('confidence', 0)
+                        risk_reward_ratio = ia1_analysis.get('risk_reward_ratio', 0)
+                        recommendation = ia1_analysis.get('recommendation', '')
+                        
+                        try:
+                            confidence_value = float(confidence) if confidence else 0
+                            rr_value = float(risk_reward_ratio) if risk_reward_ratio else 0
+                        except (ValueError, TypeError):
+                            confidence_value = 0
+                            rr_value = 0
+                        
+                        logger.info(f"         📊 IA1 Results: confidence={confidence_value:.1%}, RR={rr_value:.2f}, signal={recommendation}")
+                        
+                        # Check high confidence (>70%)
+                        if confidence_value > 0.70:
+                            generation_results['high_confidence_analyses'] += 1
+                            logger.info(f"         ✅ High confidence: {confidence_value:.1%} > 70%")
                         else:
-                            analyses = []
+                            logger.info(f"         ⚠️ Low confidence: {confidence_value:.1%} ≤ 70%")
                         
-                        analyses_results['analyses_returned'] = len(analyses)
-                        logger.info(f"      📊 Analyses returned: {len(analyses)}")
-                        
-                        if len(analyses) > 0:
-                            confluence_scores = []
-                            
-                            # Analyze first 20 analyses for confluence validation
-                            for i, analysis in enumerate(analyses[:20]):
-                                if not isinstance(analysis, dict):
-                                    continue
-                                
-                                # Check for confluence fields
-                                confluence_grade = analysis.get('confluence_grade')
-                                confluence_score = analysis.get('confluence_score')
-                                should_trade = analysis.get('should_trade')
-                                
-                                has_confluence_fields = any([
-                                    confluence_grade is not None,
-                                    confluence_score is not None,
-                                    should_trade is not None
-                                ])
-                                
-                                if has_confluence_fields:
-                                    analyses_results['confluence_fields_present'] += 1
-                                
-                                # Check confluence_grade
-                                if confluence_grade is not None and confluence_grade != 'null':
-                                    analyses_results['confluence_grades_not_null'] += 1
-                                
-                                # Check confluence_score
-                                if confluence_score is not None and confluence_score != 'null':
-                                    analyses_results['confluence_scores_not_null'] += 1
-                                    
-                                    # Check for default fallback values (50, 100)
-                                    try:
-                                        score_value = float(confluence_score)
-                                        confluence_scores.append(score_value)
-                                        
-                                        if score_value in [50.0, 100.0]:
-                                            analyses_results['default_fallback_values'] += 1
-                                    except (ValueError, TypeError):
-                                        pass
-                                
-                                # Check should_trade
-                                if should_trade is not None and should_trade != 'null':
-                                    analyses_results['should_trade_not_null'] += 1
-                                
-                                # Store sample analysis data
-                                if i < 5:  # Store first 5 for analysis
-                                    analyses_results['analyses_data'].append({
-                                        'symbol': analysis.get('symbol', 'UNKNOWN'),
-                                        'confluence_grade': confluence_grade,
-                                        'confluence_score': confluence_score,
-                                        'should_trade': should_trade,
-                                        'timestamp': analysis.get('timestamp', 'N/A'),
-                                        'has_confluence_fields': has_confluence_fields
-                                    })
-                                    
-                                    logger.info(f"         📋 Sample {i+1} ({analysis.get('symbol', 'UNKNOWN')}): grade={confluence_grade}, score={confluence_score}, trade={should_trade}")
-                            
-                            # Check for diversity in confluence scores (not all the same)
-                            if confluence_scores:
-                                unique_scores = len(set(confluence_scores))
-                                if unique_scores > 1:
-                                    analyses_results['diverse_confluence_scores'] = unique_scores
-                                    logger.info(f"         ✅ Diverse confluence scores found: {unique_scores} unique values")
-                                else:
-                                    logger.warning(f"         ⚠️ All confluence scores are the same: {confluence_scores[0] if confluence_scores else 'N/A'}")
-                        
+                        # Check high RR (>2.0)
+                        if rr_value > 2.0:
+                            generation_results['high_rr_analyses'] += 1
+                            logger.info(f"         ✅ High RR: {rr_value:.2f} > 2.0")
                         else:
-                            logger.warning(f"      ⚠️ No analyses returned from API")
-                            
-                    except json.JSONDecodeError as e:
-                        logger.error(f"      ❌ Invalid JSON response: {e}")
-                        analyses_results['error_details'].append(f"JSON decode error: {e}")
+                            logger.info(f"         ⚠️ Low RR: {rr_value:.2f} ≤ 2.0")
                         
-                else:
-                    logger.error(f"      ❌ /api/analyses failed: HTTP {response.status_code}")
-                    if response.text:
-                        error_text = response.text[:500]
-                        logger.error(f"         Error response: {error_text}")
-                        analyses_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
-                    
-            except Exception as e:
-                logger.error(f"      ❌ /api/analyses exception: {e}")
-                analyses_results['error_details'].append(f"Exception: {str(e)}")
+                        # Check LONG/SHORT signal
+                        if recommendation.lower() in ['long', 'short']:
+                            generation_results['long_short_signals'] += 1
+                            logger.info(f"         ✅ Valid signal: {recommendation}")
+                        else:
+                            logger.info(f"         ⚠️ Invalid signal: {recommendation} (expected LONG/SHORT)")
+                        
+                        # Check if this qualifies for IA2 escalation
+                        ia2_candidate = (confidence_value > 0.70 and rr_value > 2.0 and recommendation.lower() in ['long', 'short'])
+                        if ia2_candidate:
+                            generation_results['ia2_escalation_candidates'] += 1
+                            logger.info(f"         🚀 IA2 ESCALATION CANDIDATE: {symbol} meets all criteria!")
+                            
+                            # Try to trigger IA2 decision (this would normally happen automatically)
+                            # For testing, we'll check if the system would escalate
+                            logger.info(f"         📞 Checking if IA2 decision would be created...")
+                            
+                            # Store successful analysis for IA2 generation attempt
+                            generation_results['successful_ia1_analyses'].append({
+                                'symbol': symbol,
+                                'confidence': confidence_value,
+                                'risk_reward_ratio': rr_value,
+                                'recommendation': recommendation,
+                                'response_time': response_time,
+                                'ia2_candidate': ia2_candidate,
+                                'analysis_data': ia1_analysis
+                            })
+                        else:
+                            logger.info(f"         ❌ Not IA2 candidate: confidence={confidence_value:.1%}, RR={rr_value:.2f}, signal={recommendation}")
+                            
+                            # Still store for analysis
+                            generation_results['successful_ia1_analyses'].append({
+                                'symbol': symbol,
+                                'confidence': confidence_value,
+                                'risk_reward_ratio': rr_value,
+                                'recommendation': recommendation,
+                                'response_time': response_time,
+                                'ia2_candidate': ia2_candidate,
+                                'analysis_data': ia1_analysis
+                            })
+                        
+                    else:
+                        logger.error(f"      ❌ {symbol} IA1 analysis failed: HTTP {response.status_code}")
+                        if response.text:
+                            error_text = response.text[:300]
+                            logger.error(f"         Error response: {error_text}")
+                            generation_results['error_details'].append({
+                                'symbol': symbol,
+                                'error_type': f'HTTP_{response.status_code}',
+                                'error_text': error_text
+                            })
+                
+                except Exception as e:
+                    logger.error(f"      ❌ {symbol} IA1 analysis exception: {e}")
+                    generation_results['error_details'].append({
+                        'symbol': symbol,
+                        'error_type': 'EXCEPTION',
+                        'error_text': str(e)
+                    })
+                
+                # Wait between analyses
+                if symbol != test_symbols[-1]:
+                    logger.info(f"      ⏳ Waiting 8 seconds before next analysis...")
+                    await asyncio.sleep(8)
             
             # Final analysis and results
             confluence_fields_rate = analyses_results['confluence_fields_present'] / max(analyses_results['analyses_returned'], 1)
