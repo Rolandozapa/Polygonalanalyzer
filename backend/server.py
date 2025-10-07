@@ -3748,14 +3748,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"🔍 DEBUG: About to call _validate_analysis_data for {opportunity.symbol}")
             validated_data = self._validate_analysis_data(analysis_data)
             
-            # 🔍 DEBUG CONFLUENCE AFTER VALIDATION
-            confluence_after_validation = {
-                'confluence_grade': validated_data.get('confluence_grade', 'MISSING'),
-                'confluence_score': validated_data.get('confluence_score', 'MISSING'), 
-                'should_trade': validated_data.get('should_trade', 'MISSING')
-            }
-            logger.info(f"🔍 CONFLUENCE DEBUG after validation: {confluence_after_validation}")
-            
             # Créer l'analyse finale directement (SYSTEM SIMPLIFIÉ)
             analysis = TechnicalAnalysis(
                 symbol=opportunity.symbol,
