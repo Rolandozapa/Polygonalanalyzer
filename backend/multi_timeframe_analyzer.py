@@ -95,6 +95,10 @@ class MultiTimeframeAnalyzer:
         if historical_data is None or len(historical_data) < 50:
             raise ValueError(f"Insufficient data for {timeframe}: {len(historical_data) if historical_data else 0} periods")
         
+        # 🔍 DEBUG: Log data structure for troubleshooting
+        logger.info(f"🔍 {timeframe} data for {symbol}: {len(historical_data)} periods, columns: {list(historical_data.columns)}")
+        logger.info(f"🔍 Sample data: {historical_data.tail(2).to_dict()}")
+        
         # Calculer indicateurs TALib pour ce timeframe
         talib_analysis = await talib_calculator(historical_data)
         
