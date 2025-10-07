@@ -603,21 +603,21 @@ class MultiPhaseStrategicFrameworkTestSuite:
                             endpoint_results['multi_phase_fields_present'] = fields_present
                             
                             # Validate specific field values
-                            market_regime = decision_data.get('market_regime_assessment')
+                            market_regime = actual_decision.get('market_regime_assessment')
                             if market_regime in self.valid_market_regime_values:
                                 endpoint_results['market_regime_assessment_valid'] = True
                                 logger.info(f"         ✅ market_regime_assessment valid: {market_regime}")
                             else:
                                 logger.warning(f"         ⚠️ market_regime_assessment invalid: {market_regime} (expected: {self.valid_market_regime_values})")
                             
-                            execution_priority = decision_data.get('execution_priority')
+                            execution_priority = actual_decision.get('execution_priority')
                             if execution_priority in self.valid_execution_priority_values:
                                 endpoint_results['execution_priority_valid'] = True
                                 logger.info(f"         ✅ execution_priority valid: {execution_priority}")
                             else:
                                 logger.warning(f"         ⚠️ execution_priority invalid: {execution_priority} (expected: {self.valid_execution_priority_values})")
                             
-                            risk_level = decision_data.get('risk_level')
+                            risk_level = actual_decision.get('risk_level')
                             if risk_level in self.valid_risk_level_values:
                                 endpoint_results['risk_level_valid'] = True
                                 logger.info(f"         ✅ risk_level valid: {risk_level}")
@@ -626,11 +626,11 @@ class MultiPhaseStrategicFrameworkTestSuite:
                             
                             # Show additional decision details
                             logger.info(f"      📊 IA2 Decision Details:")
-                            logger.info(f"         - Symbol: {decision_data.get('symbol', 'N/A')}")
-                            logger.info(f"         - Signal: {decision_data.get('signal', 'N/A')}")
-                            logger.info(f"         - Confidence: {decision_data.get('confidence', 'N/A')}")
-                            logger.info(f"         - Strategy Type: {decision_data.get('strategy_type', 'N/A')}")
-                            logger.info(f"         - IA1 Validation: {decision_data.get('ia1_validation', 'N/A')}")
+                            logger.info(f"         - Symbol: {actual_decision.get('symbol', 'N/A')}")
+                            logger.info(f"         - Signal: {actual_decision.get('signal', 'N/A')}")
+                            logger.info(f"         - Confidence: {actual_decision.get('confidence', 'N/A')}")
+                            logger.info(f"         - Strategy Type: {actual_decision.get('strategy_type', 'N/A')}")
+                            logger.info(f"         - IA1 Validation: {actual_decision.get('ia1_validation', 'N/A')}")
                         
                         else:
                             logger.error(f"      ❌ Invalid decision data structure: {type(decision_data)}")
