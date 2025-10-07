@@ -6075,6 +6075,12 @@ Your response MUST be ONLY a valid JSON object:
                 ia2_tp3 = decision_data.get("ia2_take_profit_3", current_price * 1.12)  # Default 12% TP
                 trade_ready = decision_data.get("trade_execution_ready", False)
                 
+                # 🔧 EXTRACT MISSING DYNAMIC FIELDS FOR FRONTEND DISPLAY
+                ia1_validation = decision_data.get("ia1_validation", "confirmed")
+                volume_profile_bias = decision_data.get("volume_profile_bias", "neutral")
+                orderbook_quality = decision_data.get("orderbook_quality", "good")
+                institutional_edge = decision_data.get("institutional_edge", "Multi-timeframe confluence")
+                
                 # 🚀 CALCULATE IA2 RR WITH CORRECT FORMULA
                 if claude_signal == "long":
                     ia2_calculated_rr = (ia2_tp1 - ia2_entry) / (ia2_entry - ia2_sl) if (ia2_entry - ia2_sl) != 0 else 0
