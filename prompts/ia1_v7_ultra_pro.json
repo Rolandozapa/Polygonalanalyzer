@@ -16,7 +16,7 @@
     "vwap", "vwap_distance", "sma_20", "sma_20_slope", "sma_20_slope_pct", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
     "confidence", "base_confidence", "technical_consistency", "combined_confidence",
     "regime_persistence", "fresh_regime", "stability_score", "regime_transition_alert",
-    "confluence_grade", "confluence_score", "combined_multiplier", "should_trade", "above_sma_20", "detected_patterns", "pattern_count", "primary_pattern", "pattern_strength", "pattern_direction"
+    "confluence_grade", "confluence_score", "combined_multiplier", "should_trade", "above_sma_20", "detected_patterns", "pattern_count", "primary_pattern", "pattern_strength", "pattern_direction", "mtf_primary_signal", "mtf_confluence_score", "mtf_confidence_grade", "mtf_recommended_action", "mtf_risk_reward_ratio", "mtf_key_insights", "tf_15m_signal", "tf_1h_signal", "tf_4h_signal", "tf_1d_signal"
   ],
   "enhancements_v7": {
     "ml_confidence_framework": "4-component technical consistency calculation with regime persistence bonuses",
