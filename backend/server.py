@@ -9974,7 +9974,7 @@ async def automatic_scout_refresh_loop():
     """Background loop to refresh scout data every 4 hours"""
     # Configuration: Use shorter interval for testing, 4h for production
     import os
-    refresh_interval = int(os.environ.get('SCOUT_REFRESH_INTERVAL', '14400'))  # Default 4h, can be overridden
+    refresh_interval = int(os.environ.get('SCOUT_REFRESH_INTERVAL', '120'))  # Temporary: 2 minutes for testing
     logger.info(f"🔄 Scout refresh interval: {refresh_interval} seconds ({refresh_interval/3600:.1f} hours)")
     
     while True:
