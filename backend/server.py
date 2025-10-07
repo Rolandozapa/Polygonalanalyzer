@@ -4754,10 +4754,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"💰 PRIX VALIDÉS {analysis_data.get('symbol', 'UNKNOWN')}: Entry=${cleaned_data['entry_price']:.6f} | SL=${cleaned_data['stop_loss_price']:.6f} | TP=${cleaned_data['take_profit_price']:.6f} | RR={cleaned_data['risk_reward_ratio']:.2f}:1")
             logger.info(f"🔧 CRITICAL FIELDS FIXED: CurrentPrice=${cleaned_data['current_price']:.4f} | SMA20=${cleaned_data['sma_20']:.4f} | ATR={cleaned_data['atr']:.6f} | ATR%={cleaned_data['atr_percentage']:.2f}%")
             # ✅ SAFE LOGGING FOR VALIDATION - Handle None values  
-            mfi_val_disp = f"{cleaned_data['mfi_value']:.1f}" if cleaned_data['mfi_value'] is not None else "N/A"
             vwap_val_disp = f"{cleaned_data['vwap_position']:+.2f}%" if cleaned_data['vwap_position'] is not None else "N/A"
             ema_strength_disp = f"{cleaned_data['ema_strength']*100:.0f}%" if cleaned_data['ema_strength'] is not None else "N/A"
-            logger.info(f"🔥 ADVANCED INDICATORS VALIDÉS: MFI={mfi_val_disp} ({cleaned_data['mfi_signal']}), VWAP={vwap_val_disp} ({cleaned_data['vwap_signal']}), EMA={cleaned_data['ema_hierarchy']} ({ema_strength_disp})")
+            logger.info(f"🔥 ADVANCED INDICATORS VALIDÉS: VWAP={vwap_val_disp} ({cleaned_data['vwap_signal']}), EMA={cleaned_data['ema_hierarchy']} ({ema_strength_disp})")
             
             return cleaned_data
         except Exception as e:
