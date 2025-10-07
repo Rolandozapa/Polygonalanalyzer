@@ -170,17 +170,152 @@ class VolumeRatioFixDiagnosticTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Vérification du contenu du prompt IA2 v3 Strategic Ultra...")
-            logger.info("   📊 Expected: market_regime_assessment, execution_priority, risk_level dans la section JSON output")
+            logger.info("   🚀 Forcer des analyses IA1 avec différents symboles pour tester la fix volume_ratio...")
+            logger.info("   📊 Expected: confluence grades différents de D, confluence scores > 0")
             
-            # Check IA2 v3 Strategic Ultra prompt file
-            logger.info("   📞 Checking IA2 v3 Strategic Ultra prompt file...")
+            # Test symbols from review request
+            test_symbols = ['ETHUSDT', 'BTCUSDT', 'LINKUSDT']
             
-            try:
-                with open('/app/prompts/ia2_v3_strategic_ultra.json', 'r') as f:
-                    ia2_v3_content = json.load(f)
-                    prompt_results['ia2_v3_prompt_exists'] = True
-                    logger.info(f"      ✅ IA2 v3 Strategic Ultra prompt file found")
+            # Force IA1 analyses to test volume_ratio fix
+            for symbol in test_symbols:
+                logger.info(f"\n   📞 Forcing IA1 analysis for {symbol} to test volume_ratio fix...")
+                volume_ratio_results['ia1_analyses_attempted'] += 1
+                
+                try:
+                    start_time = time.time()
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=120
+                    )
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        volume_ratio_results['ia1_analyses_successful'] += 1
+                        
+                        logger.info(f"      ✅ {symbol} IA1 analysis successful (response time: {response_time:.2f}s)")
+                        
+                        # Extract IA1 analysis data
+                        ia1_analysis = analysis_data.get('ia1_analysis', {})
+                        if not isinstance(ia1_analysis, dict):
+                            ia1_analysis = {}
+                        
+                        # Check confluence fields
+                        confluence_grade = ia1_analysis.get('confluence_grade')
+                        confluence_score = ia1_analysis.get('confluence_score', 0)
+                        should_trade = ia1_analysis.get('should_trade')
+                        
+                        # Check mandatory requirements
+                        confidence = ia1_analysis.get('confidence', 0)
+                        adx = ia1_analysis.get('adx', 0)
+                        bb_squeeze = ia1_analysis.get('bb_squeeze', False)
+                        volume_ratio = ia1_analysis.get('volume_ratio', 0)
+                        
+                        try:
+                            confidence_value = float(confidence) if confidence else 0
+                            adx_value = float(adx) if adx else 0
+                            confluence_score_value = float(confluence_score) if confluence_score else 0
+                            volume_ratio_value = float(volume_ratio) if volume_ratio else 0
+                        except (ValueError, TypeError):
+                            confidence_value = 0
+                            adx_value = 0
+                            confluence_score_value = 0
+                            volume_ratio_value = 0
+                        
+                        logger.info(f"         📊 Confluence Results: grade={confluence_grade}, score={confluence_score_value}, should_trade={should_trade}")
+                        logger.info(f"         📊 Mandatory Requirements: confidence={confidence_value:.3f}, adx={adx_value:.1f}, bb_squeeze={bb_squeeze}, volume_ratio={volume_ratio_value:.3f}")
+                        
+                        # Check if confluence grade is not D
+                        if confluence_grade and confluence_grade != 'D':
+                            volume_ratio_results['confluence_grades_not_d'] += 1
+                            logger.info(f"         ✅ Confluence grade improved: {confluence_grade} (not D)")
+                        else:
+                            logger.info(f"         ⚠️ Confluence grade still D: {confluence_grade}")
+                        
+                        # Check if confluence score is above zero
+                        if confluence_score_value > 0:
+                            volume_ratio_results['confluence_scores_above_zero'] += 1
+                            logger.info(f"         ✅ Confluence score above zero: {confluence_score_value}")
+                        else:
+                            logger.info(f"         ⚠️ Confluence score still zero: {confluence_score_value}")
+                        
+                        # Check volume_ratio in new range (0.1-1.0)
+                        if 0.1 <= volume_ratio_value <= 1.0:
+                            volume_ratio_results['volume_ratio_in_range'] += 1
+                            logger.info(f"         ✅ Volume ratio in fixed range: {volume_ratio_value:.3f} (0.1-1.0)")
+                        else:
+                            logger.info(f"         ⚠️ Volume ratio outside range: {volume_ratio_value:.3f} (expected 0.1-1.0)")
+                        
+                        # Check other mandatory requirements
+                        if confidence_value > 0.65:
+                            volume_ratio_results['confidence_above_threshold'] += 1
+                            logger.info(f"         ✅ Confidence above threshold: {confidence_value:.3f} > 0.65")
+                        else:
+                            logger.info(f"         ⚠️ Confidence below threshold: {confidence_value:.3f} ≤ 0.65")
+                        
+                        if adx_value > 18:
+                            volume_ratio_results['adx_above_threshold'] += 1
+                            logger.info(f"         ✅ ADX above threshold: {adx_value:.1f} > 18")
+                        else:
+                            logger.info(f"         ⚠️ ADX below threshold: {adx_value:.1f} ≤ 18")
+                        
+                        if bb_squeeze:
+                            volume_ratio_results['bb_squeeze_active'] += 1
+                            logger.info(f"         ✅ BB squeeze active: {bb_squeeze}")
+                        else:
+                            logger.info(f"         ⚠️ BB squeeze inactive: {bb_squeeze}")
+                        
+                        # Store analysis data
+                        volume_ratio_results['successful_analyses'].append({
+                            'symbol': symbol,
+                            'confluence_grade': confluence_grade,
+                            'confluence_score': confluence_score_value,
+                            'should_trade': should_trade,
+                            'confidence': confidence_value,
+                            'adx': adx_value,
+                            'bb_squeeze': bb_squeeze,
+                            'volume_ratio': volume_ratio_value,
+                            'response_time': response_time,
+                            'analysis_data': ia1_analysis
+                        })
+                        
+                        # Store confluence data for analysis
+                        volume_ratio_results['confluence_data'].append({
+                            'symbol': symbol,
+                            'grade': confluence_grade,
+                            'score': confluence_score_value,
+                            'should_trade': should_trade,
+                            'mandatory_requirements_met': {
+                                'confidence': confidence_value > 0.65,
+                                'adx_or_squeeze': adx_value > 18 or bb_squeeze,
+                                'volume_ratio': 0.1 <= volume_ratio_value <= 1.0
+                            }
+                        })
+                        
+                    else:
+                        logger.error(f"      ❌ {symbol} IA1 analysis failed: HTTP {response.status_code}")
+                        if response.text:
+                            error_text = response.text[:300]
+                            logger.error(f"         Error response: {error_text}")
+                            volume_ratio_results['error_details'].append({
+                                'symbol': symbol,
+                                'error_type': f'HTTP_{response.status_code}',
+                                'error_text': error_text
+                            })
+                
+                except Exception as e:
+                    logger.error(f"      ❌ {symbol} IA1 analysis exception: {e}")
+                    volume_ratio_results['error_details'].append({
+                        'symbol': symbol,
+                        'error_type': 'EXCEPTION',
+                        'error_text': str(e)
+                    })
+                
+                # Wait between analyses
+                if symbol != test_symbols[-1]:
+                    logger.info(f"      ⏳ Waiting 8 seconds before next analysis...")
+                    await asyncio.sleep(8)
                     
                     # Analyze prompt content
                     prompt_template = ia2_v3_content.get('prompt_template', '')
