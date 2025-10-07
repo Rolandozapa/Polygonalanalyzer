@@ -221,10 +221,14 @@ class RiskRewardCalculator:
             # Si aucun TP level trouvé, calculer RR directement avec les niveaux calculés
             if not best_tp:
                 if direction.upper() == "LONG":
-                    fallback_tp = resistances[0] if resistances else entry_price * 1.02
+                    # 🔧 FIX RR: Choisir résistance suffisamment éloignée pour RR décent
+                    valid_resistances = [r for r in resistances if r > entry_price * 1.005]  # Au moins 0.5% au-dessus
+                    fallback_tp = valid_resistances[-1] if valid_resistances else entry_price * 1.03  # Prendre la plus éloignée ou 3%
                     fallback_rr = (fallback_tp - entry_price) / (entry_price - stop_loss) if (entry_price - stop_loss) > 0 else 1.0
                 else:  # SHORT  
-                    fallback_tp = supports[0] if supports else entry_price * 0.98
+                    # 🔧 FIX RR: Choisir support suffisamment éloigné pour RR décent
+                    valid_supports = [s for s in supports if s < entry_price * 0.995]  # Au moins 0.5% en dessous
+                    fallback_tp = valid_supports[-1] if valid_supports else entry_price * 0.97  # Prendre le plus éloigné ou -3%
                     fallback_rr = (entry_price - fallback_tp) / (stop_loss - entry_price) if (stop_loss - entry_price) > 0 else 1.0
                 
                 best_tp = {
