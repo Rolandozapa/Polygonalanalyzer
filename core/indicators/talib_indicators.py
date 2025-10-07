@@ -232,14 +232,7 @@ class TALibIndicators:
                 minus_di=trend_indicators['minus_di'],
                 adx_strength=trend_indicators['adx_strength'],
                 
-                # 🆕 NOUVEAUX INDICATEURS TREND
-                aroon_up=trend_indicators['aroon_up'],
-                aroon_down=trend_indicators['aroon_down'],
-                aroon_diff=trend_indicators['aroon_diff'],
-                aroon_signal=trend_indicators['aroon_signal'],
-                sar=trend_indicators['sar'],
-                sar_signal=trend_indicators['sar_signal'],
-                sar_distance=trend_indicators['sar_distance'],
+                # ❌ INDICATEURS TREND REDONDANTS SUPPRIMÉS
                 
                 # Bollinger Bands
                 bb_upper=bb_indicators['bb_upper'],
