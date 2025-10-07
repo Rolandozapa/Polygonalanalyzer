@@ -151,16 +151,17 @@ class MFIStochasticRemovalTestSuite:
         logger.info("\n🔍 TEST 1: API Force IA1 Analysis - MFI/Stochastic Removal Validation")
         
         try:
-            field_validation_results = {
+            analysis_results = {
                 'analyses_attempted': 0,
                 'analyses_successful': 0,
-                'new_field_names_present': 0,
-                'old_field_names_absent': 0,
-                'trade_type_valid': 0,
-                'minimum_rr_threshold_valid': 0,
-                'database_field_validation': 0,
+                'mfi_errors_found': 0,
+                'stochastic_errors_found': 0,
+                'valid_json_responses': 0,
+                'required_indicators_present': 0,
+                'removed_indicators_absent': 0,
                 'successful_analyses': [],
-                'field_validation_details': []
+                'error_details': [],
+                'response_times': []
             }
             
             logger.info("   🚀 Testing new field names: trade_type and minimum_rr_threshold...")
