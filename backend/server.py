@@ -7,6 +7,7 @@ import logging
 import asyncio
 import json
 import time
+import aiohttp
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional, Tuple
