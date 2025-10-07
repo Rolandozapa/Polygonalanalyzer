@@ -3637,6 +3637,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "primary_pattern": detected_pattern_names[0] if detected_pattern_names else "Aucune",
                 "pattern_strength": all_detected_patterns[0].strength if all_detected_patterns else 0,
                 "pattern_direction": all_detected_patterns[0].trading_direction if all_detected_patterns else "NEUTRAL",
+                
+                # 🚀 MULTI-TIMEFRAME RESULTS (pour sauvegarde DB)
+                "mtf_primary_signal": multi_tf_result.primary_signal if multi_tf_result else "NEUTRAL",
+                "mtf_confluence_score": multi_tf_result.confluence_score if multi_tf_result else 0.5,
+                "mtf_confidence_grade": multi_tf_result.confidence_grade if multi_tf_result else "C",
+                "mtf_recommended_action": multi_tf_result.recommended_action if multi_tf_result else "HOLD",
+                "mtf_risk_reward_ratio": multi_tf_result.risk_reward_ratio if multi_tf_result else 1.0,
+                "tf_15m_signal": self._extract_tf_signal(multi_tf_result, "15m") if multi_tf_result else "NEUTRAL",
+                "tf_1h_signal": self._extract_tf_signal(multi_tf_result, "1h") if multi_tf_result else "NEUTRAL",
+                "tf_4h_signal": self._extract_tf_signal(multi_tf_result, "4h") if multi_tf_result else "NEUTRAL",
+                "tf_1d_signal": self._extract_tf_signal(multi_tf_result, "1d") if multi_tf_result else "NEUTRAL",
                 "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
                 "bb_squeeze": "ACTIVE" if getattr(talib_analysis, 'bb_squeeze', False) else "INACTIVE",
                 "squeeze_intensity": getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
