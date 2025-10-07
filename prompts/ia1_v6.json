@@ -14,7 +14,7 @@
     
     "regime_analysis": "🎯 RÉGIME MARCHÉ: {regime} (Confiance ML: {confidence:.1%}, Consistance technique: {technical_consistency:.1%})",
     
-    "technical_data": "📈 DONNÉES TECHNIQUES TALIB:\n🎯 MOMENTUM CORE: RSI 14: {rsi:.1f} [{rsi_zone}] | MACD H: {macd_histogram:.6f} [{macd_trend}]\n🆕 MOMENTUM AVANCÉ: WillR: {willr:.1f} [{willr_zone}] | CCI: {cci:.1f} [{cci_zone}] | ROC: {roc:.2f}% [{roc_strength}]\n📊 TREND ANALYSIS: ADX: {adx:.1f} [{adx_strength}] | +DI: {plus_di:.1f} | -DI: {minus_di:.1f}\n🆕 TREND AVANCÉ: Aroon: ↑{aroon_up:.0f} ↓{aroon_down:.0f} ({aroon_signal}) | SAR: {sar:.4f} ({sar_signal}, {sar_distance:+.1f}%)\n💰 FLOW & VOLATILITY: MFI: {mfi:.1f} [{mfi_signal}] | BB Position: {bb_position:.1%} | Squeeze: {bb_squeeze} ({squeeze_intensity})\nVWAP Distance: {vwap_distance:+.2f}%",
+    "technical_data": "📈 DONNÉES TECHNIQUES ÉPURÉES:\n🎯 MOMENTUM: RSI 14: {rsi:.1f} [{rsi_zone}] | MACD H: {macd_histogram:.6f} [{macd_trend}]\n📊 TREND: ADX: {adx:.1f} [{adx_strength}] | +DI: {plus_di:.1f} | -DI: {minus_di:.1f} | SMA20 Slope: {sma_20_slope_pct:+.2f}%\n💰 VOLUME: Ratio: {volume_ratio:.2f}x | Surge: {volume_surge}\n🔵 VOLATILITY: ATR: {atr_pct:.2f}% | BB Position: {bb_position:.1%} | Squeeze: {bb_squeeze}\n💹 NIVEAUX: VWAP Distance: {vwap_distance:+.2f}% | Prix vs SMA20: {above_sma_20}\n🎯 FIGURES CHARTISTES: {pattern_count} patterns détectés | Principal: {primary_pattern} (Force: {pattern_strength}, Direction: {pattern_direction})",
     
     "confluence_grade": "🏆 CONFLUENCE: Grade {confluence_grade} (Score: {confluence_score}/100) - Conviction: {conviction_level}",
     
