@@ -216,6 +216,58 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def normalize_ohlcv_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """🔧 COLUMN NORMALIZATION: Standardize OHLCV column names to lowercase
+    
+    This function handles inconsistencies where some data sources return
+    uppercase columns ('Open', 'High', 'Low', 'Close', 'Volume') while
+    others return lowercase ('open', 'high', 'low', 'close', 'volume').
+    """
+    if df is None or df.empty:
+        return df
+    
+    # Mapping from uppercase to lowercase
+    column_mapping = {
+        'Open': 'open',
+        'High': 'high', 
+        'Low': 'low',
+        'Close': 'close',
+        'Volume': 'volume'
+    }
+    
+    # Only rename columns that exist
+    rename_dict = {}
+    for old_col, new_col in column_mapping.items():
+        if old_col in df.columns:
+            rename_dict[old_col] = new_col
+    
+    if rename_dict:
+        df = df.rename(columns=rename_dict)
+        logger.debug(f"🔧 Normalized columns: {list(rename_dict.keys())} → {list(rename_dict.values())}")
+    
+    return df
+
+def get_ohlcv_column(df: pd.DataFrame, column_type: str) -> str:
+    """🔧 COLUMN HELPER: Get the correct OHLCV column name regardless of casing
+    
+    Args:
+        df: DataFrame to check
+        column_type: 'open', 'high', 'low', 'close', or 'volume'
+    
+    Returns:
+        Actual column name in the DataFrame
+    """
+    # Try lowercase first (preferred)
+    if column_type in df.columns:
+        return column_type
+    
+    # Try uppercase as fallback
+    uppercase_col = column_type.capitalize()
+    if uppercase_col in df.columns:
+        return uppercase_col
+        
+    raise KeyError(f"Column '{column_type}' (or '{uppercase_col}') not found in DataFrame columns: {list(df.columns)}")
+
 # 🆕 POSITION TRACKING SYSTEM FOR IA1→IA2 RESILIENCE
 async def create_position_tracking(analysis: TechnicalAnalysis) -> PositionTracking:
     """Create position tracking entry for IA1 analysis"""
