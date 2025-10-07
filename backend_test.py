@@ -533,9 +533,9 @@ class MultiPhaseStrategicFrameworkTestSuite:
         except Exception as e:
             self.log_test_result("API Analyses Confluence", False, f"Exception: {str(e)}")
 
-    async def test_3_confluence_calculation_logic(self):
-        """Test 3: Confluence Calculation Logic - Verify calculation consistency and diversity"""
-        logger.info("\n🔍 TEST 3: Confluence Calculation Logic - Validation and Diversity")
+    async def test_3_create_test_ia2_decision_endpoint(self):
+        """Test 3: Test endpoint de création IA2 - Tester /api/create-test-ia2-decision"""
+        logger.info("\n🔍 TEST 3: Test endpoint de création IA2 - /api/create-test-ia2-decision")
         
         try:
             calculation_results = {
