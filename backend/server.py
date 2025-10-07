@@ -3573,22 +3573,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "plus_di": getattr(talib_analysis, 'plus_di', 25.0),
                 "minus_di": getattr(talib_analysis, 'minus_di', 25.0),
                 
-                # 🆕 NOUVEAUX INDICATEURS MOMENTUM (High Priority)
-                "willr": getattr(talib_analysis, 'willr', -50.0),
-                "willr_zone": getattr(talib_analysis, 'willr_zone', 'NEUTRAL'),
-                "cci": getattr(talib_analysis, 'cci', 0.0),
-                "cci_zone": getattr(talib_analysis, 'cci_zone', 'NEUTRAL'),
-                "roc": getattr(talib_analysis, 'roc', 0.0),
-                "roc_strength": getattr(talib_analysis, 'roc_strength', 'WEAK'),
-                
-                # 🆕 NOUVEAUX INDICATEURS TREND (High Priority)
-                "aroon_up": getattr(talib_analysis, 'aroon_up', 50.0),
-                "aroon_down": getattr(talib_analysis, 'aroon_down', 50.0),
-                "aroon_diff": getattr(talib_analysis, 'aroon_diff', 0.0),
-                "aroon_signal": getattr(talib_analysis, 'aroon_signal', 'NEUTRAL'),
-                "sar": getattr(talib_analysis, 'sar', 0.0),
-                "sar_signal": getattr(talib_analysis, 'sar_signal', 'NEUTRAL'),
-                "sar_distance": getattr(talib_analysis, 'sar_distance', 0.0),
+                # 🎯 FIGURES CHARTISTES (remplace indicateurs redondants)
+                "detected_patterns": detected_pattern_names[:3] if detected_pattern_names else ["Aucune"],
+                "primary_pattern": detected_pattern_names[0] if detected_pattern_names else "Aucune",
+                "pattern_strength": all_detected_patterns[0].strength if all_detected_patterns else 0,
+                "pattern_direction": all_detected_patterns[0].trading_direction if all_detected_patterns else "NEUTRAL",
                 "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
                 "bb_squeeze": "ACTIVE" if getattr(talib_analysis, 'bb_squeeze', False) else "INACTIVE",
                 "squeeze_intensity": getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
