@@ -4367,22 +4367,25 @@ class ConfluenceAnalysisTestSuite:
 
 async def main():
     """Main test execution function"""
-    logger.info("🚀 Starting MFI and Stochastic Indicators Removal Testing Suite")
+    logger.info("🚀 Starting Confluence Analysis Fix Testing Suite")
     logger.info("=" * 80)
     
     # Initialize test suite
-    test_suite = MFIStochasticRemovalTestSuite()
+    test_suite = ConfluenceAnalysisTestSuite()
     
     try:
-        # Run all MFI/Stochastic removal tests
-        logger.info("Running Test 1: API Force IA1 Analysis")
-        await test_suite.test_1_api_force_ia1_analysis()
+        # Run all confluence analysis tests
+        logger.info("Running Test 1: API Force IA1 Analysis - Confluence Values")
+        await test_suite.test_1_api_force_ia1_analysis_confluence()
         
-        logger.info("Running Test 2: API Opportunities")
-        await test_suite.test_2_api_opportunities()
+        logger.info("Running Test 2: API Analyses Endpoint - Confluence Consistency")
+        await test_suite.test_2_api_analyses_confluence()
         
-        logger.info("Running Test 3: Backend Logs Validation")
-        await test_suite.test_3_backend_logs_validation()
+        logger.info("Running Test 3: Confluence Calculation Logic - Validation and Diversity")
+        await test_suite.test_3_confluence_calculation_logic()
+        
+        logger.info("Running Test 4: Backend Logs Confluence Validation")
+        await test_suite.test_4_backend_logs_confluence_validation()
         
         # Print final summary
         logger.info("\n" + "=" * 80)
