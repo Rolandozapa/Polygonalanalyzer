@@ -1,36 +1,32 @@
 #!/usr/bin/env python3
 """
-MFI AND STOCHASTIC INDICATORS REMOVAL TESTING SUITE
-Focus: Test the trading bot system after removal of MFI and Stochastic indicators.
+CONFLUENCE ANALYSIS FIX TESTING SUITE
+Focus: Test the confluence analysis fix to validate that confluence values are displaying correctly.
 
 CRITICAL VALIDATION POINTS:
 
-1. **API Force IA1 Analysis**:
-   - Test with 3-4 symbols (BTCUSDT, ETHUSDT, SOLUSDT, LINKUSDT) to verify:
-   - No "NameError: 'mfi' is not defined" errors
-   - No "NameError: 'stochastic_k' is not defined" errors
-   - IA1 analyses complete successfully
-   - Valid JSON responses with all required fields
+1. **API Force IA1 Analysis** - Test with 3 symbols (BTCUSDT, ETHUSDT, LINKUSDT):
+   - Verify confluence_grade is not null (should be A, B, C, or D)  
+   - Verify confluence_score is not null (should be 0-100)
+   - Verify should_trade is not null (should be true/false)
+   - Confirm values match IA1 reasoning
 
-2. **API Opportunities**:
-   - Verify scout system works: /api/opportunities returns data
-   - Opportunities contain correct technical indicators
-   - No MFI/stochastic references in responses
+2. **API Analyses Endpoint** - Check consistency:
+   - Confluence values in /api/analyses are consistent
+   - No default values (50/100) used as fallbacks
+   - Scores reflect real market conditions
 
-3. **Validation of Indicators**:
-   - In IA1 responses, verify RSI, MACD, ATR are present and calculated
-   - No MFI or stochastic fields in responses
-   - Values are realistic (not fallbacks like 50.0 everywhere)
+3. **Validation of Calculations** - Check logic:
+   - Confluence scores 0 correspond to Grade D and should_trade=false
+   - Values reflect real conditions (not fallbacks)
+   - Consistency between IA1 reasoning and API values
 
-4. **Backend Logs**:
-   - Verify no more MFI errors in logs
-   - No stochastic errors in logs
-   - No NameError in recent logs
+4. **Test Diversity** - Check with multiple symbols:
+   - Different confluence grades according to conditions
+   - Variety in scores (not always 0 or 50)
+   - Should_trade varies according to setup quality
 
-5. **Test IA2 Escalation**:
-   - If possible, test that high confidence or good RR triggers IA2
-
-FOCUS: Confirm all systems work correctly after MFI and stochastic removal.
+FOCUS: Confirm confluence analysis fix is complete and working correctly - real calculated values appear in API instead of null/fallbacks.
 """
 
 import asyncio
