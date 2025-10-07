@@ -930,24 +930,6 @@ class ConfluenceAnalysisTestSuite:
             self.log_test_result("Backend Logs Validation", False, f"Exception: {str(e)}")
 
     # Old test methods removed - replaced with confluence analysis tests
-            
-            # Get available symbols from scout system
-            logger.info("   📞 Getting available symbols from scout system...")
-            
-            try:
-                response = requests.get(f"{self.api_url}/opportunities", timeout=60)
-                
-                if response.status_code == 200:
-                    opportunities = response.json()
-                    if isinstance(opportunities, dict) and 'opportunities' in opportunities:
-                        opportunities = opportunities['opportunities']
-                    
-                    # Get first 3 available symbols for testing
-                    available_symbols = [opp.get('symbol') for opp in opportunities[:10] if opp.get('symbol')]
-                    
-                    # Prefer BTCUSDT, ETHUSDT, SOLUSDT if available, otherwise use first 3
-                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']
-                    test_symbols = []
                     
                     for symbol in preferred_symbols:
                         if symbol in available_symbols:
