@@ -551,95 +551,108 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Testing confluence calculation logic and diversity...")
-            logger.info("   📊 Expected: Grade D = score 0 = should_trade false, diverse grades/scores across symbols")
+            logger.info("   🚀 Testing /api/create-test-ia2-decision endpoint...")
+            logger.info("   📊 Expected: IA2 decision created with market_regime_assessment, execution_priority, risk_level values")
             
-            # Test multiple symbols to check for diversity
-            test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT', 'SOLUSDT', 'ADAUSDT']
+            # Test /api/create-test-ia2-decision endpoint
+            logger.info("   📞 Calling /api/create-test-ia2-decision endpoint...")
             
-            for symbol in test_symbols:
-                logger.info(f"\n   📞 Testing confluence calculation for {symbol}...")
-                calculation_results['analyses_tested'] += 1
+            try:
+                start_time = time.time()
+                response = requests.post(f"{self.api_url}/create-test-ia2-decision", timeout=60)
+                response_time = time.time() - start_time
+                endpoint_results['response_time'] = response_time
                 
-                try:
-                    start_time = time.time()
-                    response = requests.post(
-                        f"{self.api_url}/force-ia1-analysis",
-                        json={"symbol": symbol},
-                        timeout=120
-                    )
-                    response_time = time.time() - start_time
+                if response.status_code == 200:
+                    endpoint_results['endpoint_exists'] = True
+                    endpoint_results['api_call_successful'] = True
+                    logger.info(f"      ✅ /api/create-test-ia2-decision successful (response time: {response_time:.2f}s)")
                     
-                    if response.status_code == 200:
-                        analysis_data = response.json()
-                        ia1_analysis = analysis_data.get('ia1_analysis', {})
+                    # Parse response
+                    try:
+                        decision_data = response.json()
+                        endpoint_results['decision_data'] = decision_data
                         
-                        if isinstance(ia1_analysis, dict):
-                            confluence_grade = ia1_analysis.get('confluence_grade')
-                            confluence_score = ia1_analysis.get('confluence_score')
-                            should_trade = ia1_analysis.get('should_trade')
+                        if isinstance(decision_data, dict):
+                            endpoint_results['ia2_decision_created'] = True
+                            logger.info(f"      ✅ IA2 decision created successfully")
                             
-                            logger.info(f"      ✅ {symbol}: grade={confluence_grade}, score={confluence_score}, trade={should_trade}")
+                            # Check for Multi-Phase Strategic Framework fields
+                            multi_phase_fields = [
+                                'market_regime_assessment',
+                                'execution_priority', 
+                                'risk_level',
+                                'volume_profile_bias',
+                                'orderbook_quality',
+                                'multi_phase_score'
+                            ]
                             
-                            # Collect diversity data
-                            if confluence_grade:
-                                calculation_results['diverse_grades_found'].add(confluence_grade)
-                            if confluence_score is not None:
-                                try:
-                                    score_val = float(confluence_score)
-                                    calculation_results['diverse_scores_found'].add(score_val)
-                                except (ValueError, TypeError):
-                                    pass
-                            if should_trade is not None:
-                                calculation_results['should_trade_variations'].add(str(should_trade))
+                            fields_present = 0
+                            for field in multi_phase_fields:
+                                if field in decision_data and decision_data[field] is not None:
+                                    fields_present += 1
+                                    logger.info(f"         ✅ {field}: {decision_data[field]}")
+                                else:
+                                    logger.warning(f"         ⚠️ {field}: missing or null")
                             
-                            # Check Grade D logic
-                            if confluence_grade == 'D':
-                                try:
-                                    score_val = float(confluence_score) if confluence_score is not None else None
-                                    if score_val == 0 or score_val is None:
-                                        calculation_results['grade_d_with_score_0'] += 1
-                                        logger.info(f"         ✅ Grade D with score 0 logic correct")
-                                    else:
-                                        logger.warning(f"         ⚠️ Grade D but score not 0: {score_val}")
-                                    
-                                    if should_trade in [False, 'false', 'False']:
-                                        calculation_results['grade_d_with_should_trade_false'] += 1
-                                        logger.info(f"         ✅ Grade D with should_trade false logic correct")
-                                    else:
-                                        logger.warning(f"         ⚠️ Grade D but should_trade not false: {should_trade}")
-                                except (ValueError, TypeError):
-                                    logger.warning(f"         ⚠️ Grade D but score not numeric: {confluence_score}")
+                            endpoint_results['multi_phase_fields_present'] = fields_present
                             
-                            # Check general consistency
-                            if confluence_grade and confluence_score is not None and should_trade is not None:
-                                calculation_results['consistent_grade_score_mapping'] += 1
-                                logger.info(f"         ✅ All confluence fields present and consistent")
+                            # Validate specific field values
+                            market_regime = decision_data.get('market_regime_assessment')
+                            if market_regime in self.valid_market_regime_values:
+                                endpoint_results['market_regime_assessment_valid'] = True
+                                logger.info(f"         ✅ market_regime_assessment valid: {market_regime}")
+                            else:
+                                logger.warning(f"         ⚠️ market_regime_assessment invalid: {market_regime} (expected: {self.valid_market_regime_values})")
                             
-                            # Store sample data
-                            calculation_results['sample_data'].append({
-                                'symbol': symbol,
-                                'confluence_grade': confluence_grade,
-                                'confluence_score': confluence_score,
-                                'should_trade': should_trade,
-                                'response_time': response_time
-                            })
+                            execution_priority = decision_data.get('execution_priority')
+                            if execution_priority in self.valid_execution_priority_values:
+                                endpoint_results['execution_priority_valid'] = True
+                                logger.info(f"         ✅ execution_priority valid: {execution_priority}")
+                            else:
+                                logger.warning(f"         ⚠️ execution_priority invalid: {execution_priority} (expected: {self.valid_execution_priority_values})")
+                            
+                            risk_level = decision_data.get('risk_level')
+                            if risk_level in self.valid_risk_level_values:
+                                endpoint_results['risk_level_valid'] = True
+                                logger.info(f"         ✅ risk_level valid: {risk_level}")
+                            else:
+                                logger.warning(f"         ⚠️ risk_level invalid: {risk_level} (expected: {self.valid_risk_level_values})")
+                            
+                            # Show additional decision details
+                            logger.info(f"      📊 IA2 Decision Details:")
+                            logger.info(f"         - Symbol: {decision_data.get('symbol', 'N/A')}")
+                            logger.info(f"         - Signal: {decision_data.get('signal', 'N/A')}")
+                            logger.info(f"         - Confidence: {decision_data.get('confidence', 'N/A')}")
+                            logger.info(f"         - Strategy Type: {decision_data.get('strategy_type', 'N/A')}")
+                            logger.info(f"         - IA1 Validation: {decision_data.get('ia1_validation', 'N/A')}")
                         
                         else:
-                            logger.warning(f"      ⚠️ {symbol}: Invalid IA1 analysis structure")
+                            logger.error(f"      ❌ Invalid decision data structure: {type(decision_data)}")
+                            endpoint_results['error_details'].append("Invalid decision data structure")
+                            
+                    except json.JSONDecodeError as e:
+                        logger.error(f"      ❌ Invalid JSON response: {e}")
+                        endpoint_results['error_details'].append(f"JSON decode error: {e}")
+                        
+                elif response.status_code == 404:
+                    logger.error(f"      ❌ /api/create-test-ia2-decision endpoint not found (HTTP 404)")
+                    endpoint_results['error_details'].append("Endpoint not found - may not be implemented")
                     
-                    else:
-                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
-                        calculation_results['error_details'].append(f"{symbol}: HTTP {response.status_code}")
+                else:
+                    logger.error(f"      ❌ /api/create-test-ia2-decision failed: HTTP {response.status_code}")
+                    if response.text:
+                        error_text = response.text[:500]
+                        logger.error(f"         Error response: {error_text}")
+                        endpoint_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
+                    
+            except requests.exceptions.Timeout:
+                logger.error(f"      ❌ /api/create-test-ia2-decision timeout after 60s")
+                endpoint_results['error_details'].append("Request timeout")
                 
-                except Exception as e:
-                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
-                    calculation_results['error_details'].append(f"{symbol}: {str(e)}")
-                
-                # Wait between analyses
-                if symbol != test_symbols[-1]:
-                    logger.info(f"      ⏳ Waiting 8 seconds before next analysis...")
-                    await asyncio.sleep(8)
+            except Exception as e:
+                logger.error(f"      ❌ /api/create-test-ia2-decision exception: {e}")
+                endpoint_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
             diversity_grade_count = len(calculation_results['diverse_grades_found'])
