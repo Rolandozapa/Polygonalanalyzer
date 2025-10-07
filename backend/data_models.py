@@ -139,6 +139,17 @@ class TechnicalAnalysis(BaseModel):
     primary_pattern: Optional[str] = "Aucune"  # Pattern principal
     pattern_strength: Optional[float] = 0.0  # Force du pattern principal  
     pattern_direction: Optional[str] = "NEUTRAL"  # Direction du pattern
+    
+    # 🚀 MULTI-TIMEFRAME ANALYSIS (Professional Enhancement)
+    mtf_primary_signal: Optional[str] = "NEUTRAL"  # Signal primary multi-TF
+    mtf_confluence_score: Optional[float] = 0.5  # Score de confluence
+    mtf_confidence_grade: Optional[str] = "C"  # Grade de confiance (A+ à D)
+    mtf_recommended_action: Optional[str] = "HOLD"  # Action recommandée
+    mtf_risk_reward_ratio: Optional[float] = 1.0  # Ratio risque/récompense
+    tf_15m_signal: Optional[str] = "NEUTRAL"  # Signal 15 minutes
+    tf_1h_signal: Optional[str] = "NEUTRAL"  # Signal 1 heure  
+    tf_4h_signal: Optional[str] = "NEUTRAL"  # Signal 4 heures
+    tf_1d_signal: Optional[str] = "NEUTRAL"  # Signal journalier
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
