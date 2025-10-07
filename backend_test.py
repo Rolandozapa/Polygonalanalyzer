@@ -831,37 +831,56 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 api_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
-            confluence_presence_rate = 1.0 if logs_results['confluence_calculation_logs'] > 0 else 0.0
-            error_free_rate = 1.0 if logs_results['confluence_error_logs'] == 0 else 0.0
-            success_rate = 1.0 if logs_results['success_indicators'] > 0 else 0.0
+            avg_fields_per_decision = api_results['multi_phase_fields_coverage'] / max(api_results['decisions_returned'], 1)
+            market_regime_rate = api_results['market_regime_not_null'] / max(api_results['decisions_returned'], 1)
+            execution_priority_rate = api_results['execution_priority_not_null'] / max(api_results['decisions_returned'], 1)
+            risk_level_rate = api_results['risk_level_not_null'] / max(api_results['decisions_returned'], 1)
             
-            logger.info(f"\n   📊 BACKEND LOGS CONFLUENCE VALIDATION RESULTS:")
-            logger.info(f"      Logs captured: {logs_results['logs_captured']}")
-            logger.info(f"      Total log lines: {logs_results['total_log_lines']}")
-            logger.info(f"      Confluence calculation logs: {logs_results['confluence_calculation_logs']}")
-            logger.info(f"      Confluence error logs: {logs_results['confluence_error_logs']}")
-            logger.info(f"      Success indicators: {logs_results['success_indicators']}")
-            logger.info(f"      Confluence presence rate: {confluence_presence_rate:.2f}")
-            logger.info(f"      Error-free rate: {error_free_rate:.2f}")
-            logger.info(f"      Success indicators rate: {success_rate:.2f}")
+            diversity_market_regimes = len(api_results['diverse_market_regimes'])
+            diversity_execution_priorities = len(api_results['diverse_execution_priorities'])
+            diversity_risk_levels = len(api_results['diverse_risk_levels'])
+            
+            logger.info(f"\n   📊 IA2 DECISIONS API VALIDATION RESULTS:")
+            logger.info(f"      API call successful: {api_results['api_call_successful']}")
+            logger.info(f"      Decisions returned: {api_results['decisions_returned']}")
+            logger.info(f"      Average Multi-Phase fields per decision: {avg_fields_per_decision:.1f}/6")
+            logger.info(f"      market_regime_assessment not null: {api_results['market_regime_not_null']} ({market_regime_rate:.2f})")
+            logger.info(f"      execution_priority not null: {api_results['execution_priority_not_null']} ({execution_priority_rate:.2f})")
+            logger.info(f"      risk_level not null: {api_results['risk_level_not_null']} ({risk_level_rate:.2f})")
+            logger.info(f"      Diverse market regimes: {sorted(api_results['diverse_market_regimes'])} ({diversity_market_regimes})")
+            logger.info(f"      Diverse execution priorities: {sorted(api_results['diverse_execution_priorities'])} ({diversity_execution_priorities})")
+            logger.info(f"      Diverse risk levels: {sorted(api_results['diverse_risk_levels'])} ({diversity_risk_levels})")
+            
+            # Show sample decisions data
+            if api_results['decisions_data']:
+                logger.info(f"      📊 Sample IA2 Decisions Data:")
+                for decision in api_results['decisions_data']:
+                    logger.info(f"         - {decision['symbol']}: regime={decision['market_regime_assessment']}, priority={decision['execution_priority']}, risk={decision['risk_level']}, fields={decision['fields_present']}/6")
+            
+            # Show error details if any
+            if api_results['error_details']:
+                logger.info(f"      📊 Error Details:")
+                for error in api_results['error_details']:
+                    logger.info(f"         - {error}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                logs_results['logs_captured'],  # Logs captured successfully
-                logs_results['confluence_calculation_logs'] > 0,  # Some confluence logs found
-                logs_results['confluence_error_logs'] == 0,  # No confluence errors
-                logs_results['success_indicators'] > 0,  # Some success indicators
-                logs_results['total_log_lines'] > 50  # Sufficient log data
+                api_results['api_call_successful'],  # API call successful
+                api_results['decisions_returned'] > 0,  # Returns decisions
+                api_results['market_regime_not_null'] > 0,  # Some market regime values not null
+                api_results['execution_priority_not_null'] > 0,  # Some execution priority values not null
+                api_results['risk_level_not_null'] > 0,  # Some risk level values not null
+                diversity_market_regimes >= 2 or diversity_execution_priorities >= 2 or diversity_risk_levels >= 2  # Some diversity in values
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
-            if test_success_rate >= 0.8:  # 80% success threshold (4/5 criteria)
-                self.log_test_result("Backend Logs Confluence Validation", True, 
-                                   f"Backend logs confluence validation successful: {success_count}/{len(success_criteria)} criteria met. Confluence logs: {logs_results['confluence_calculation_logs']}, No errors: {logs_results['confluence_error_logs'] == 0}")
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("IA2 Decisions API Validation", True, 
+                                   f"IA2 decisions API validation successful: {success_count}/{len(success_criteria)} criteria met. Avg fields: {avg_fields_per_decision:.1f}/6, Diversity: regimes={diversity_market_regimes}, priorities={diversity_execution_priorities}, risks={diversity_risk_levels}")
             else:
-                self.log_test_result("Backend Logs Confluence Validation", False, 
-                                   f"Backend logs confluence validation issues: {success_count}/{len(success_criteria)} criteria met. May have missing confluence logs or errors")
+                self.log_test_result("IA2 Decisions API Validation", False, 
+                                   f"IA2 decisions API validation issues: {success_count}/{len(success_criteria)} criteria met. Multi-Phase fields may be null or lack diversity")
                 
         except Exception as e:
             self.log_test_result("Backend Logs Confluence Validation", False, f"Exception: {str(e)}")
