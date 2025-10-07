@@ -515,31 +515,8 @@ class TALibIndicators:
             else:
                 macd_signal_type = "NEUTRAL"
             
-            # 🆕 NOUVEAUX INDICATEURS MOMENTUM POUR IA1
-            
-            # Williams %R (plus réactif que Stochastic) 
-            if len(high) >= 14:
-                willr = talib.WILLR(high, low, close, timeperiod=14)
-                willr_value = float(willr[-1]) if not np.isnan(willr[-1]) else -50.0
-                willr_zone = "OVERSOLD" if willr_value < -80 else "OVERBOUGHT" if willr_value > -20 else "NEUTRAL"
-            else:
-                willr_value, willr_zone = -50.0, "NEUTRAL"
-            
-            # CCI (Commodity Channel Index) - Détecte les extrêmes
-            if len(high) >= 20:
-                cci = talib.CCI(high, low, close, timeperiod=20)
-                cci_value = float(cci[-1]) if not np.isnan(cci[-1]) else 0.0
-                cci_zone = "OVERSOLD" if cci_value < -100 else "OVERBOUGHT" if cci_value > 100 else "NEUTRAL"
-            else:
-                cci_value, cci_zone = 0.0, "NEUTRAL"
-            
-            # ROC (Rate of Change) - Momentum en pourcentage
-            if len(close) >= 10:
-                roc = talib.ROC(close, timeperiod=10)
-                roc_value = float(roc[-1]) if not np.isnan(roc[-1]) else 0.0
-                roc_strength = "STRONG" if abs(roc_value) > 5 else "MODERATE" if abs(roc_value) > 2 else "WEAK"
-            else:
-                roc_value, roc_strength = 0.0, "WEAK"
+            # ✅ INDICATEURS MOMENTUM ESSENTIELS SEULEMENT (RSI + MACD)
+            # Williams %R, CCI, ROC supprimés pour éviter redondance avec RSI
             
             return {
                 'rsi': rsi_value,
