@@ -67,13 +67,13 @@ class MFIStochasticRemovalTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Externalized Prompt Migration at: {self.api_url}")
+        logger.info(f"Testing MFI and Stochastic Indicators Removal at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
-        # Test symbols for analysis (will be dynamically determined from available opportunities)
-        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT']  # Preferred symbols from review request
+        # Test symbols for analysis (from review request)
+        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT']  # Specific symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
         # Prompt files to validate
