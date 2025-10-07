@@ -250,6 +250,7 @@
     "KAVA-USDT",
     "KDA-USDT",
     "KERNEL-USDT",
+    "KGEN-USDT",
     "KMNO-USDT",
     "KNC-USDT",
     "KOMA-USDT",
@@ -512,7 +513,7 @@
     "ZRO-USDT",
     "ZRX-USDT"
   ],
-  "count": 511,
-  "updated_at": "2025-10-07T07:15:07.707974",
+  "count": 512,
+  "updated_at": "2025-10-07T22:32:13.226701",
   "source": "BingX Futures API"
 }
