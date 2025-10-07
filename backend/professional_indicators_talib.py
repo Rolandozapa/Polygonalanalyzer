@@ -679,7 +679,7 @@ class ProfessionalIndicatorsTALib:
         mandatory_met = (
             combined_confidence > 0.65 and
             (adx > 18 or bb_squeeze) and
-            volume_ratio > 1.0
+            0.1 <= volume_ratio <= 1.0  # Fixed: Normal volume range instead of abnormally high
         )
         
         if not mandatory_met:
