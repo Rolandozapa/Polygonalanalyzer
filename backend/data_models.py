@@ -134,21 +134,11 @@ class TechnicalAnalysis(BaseModel):
     adx_strength: Optional[str] = "MODERATE"  # ADX strength interpretation  
     plus_di: Optional[float] = 25.0  # +DI directional indicator
     minus_di: Optional[float] = 25.0  # -DI directional indicator
-    # 🆕 NOUVEAUX INDICATEURS MOMENTUM (High Priority)
-    willr: Optional[float] = -50.0  # Williams %R (-100 to 0)
-    willr_zone: Optional[str] = "NEUTRAL"  # OVERSOLD, OVERBOUGHT, NEUTRAL
-    cci: Optional[float] = 0.0  # Commodity Channel Index 
-    cci_zone: Optional[str] = "NEUTRAL"  # OVERSOLD, OVERBOUGHT, NEUTRAL
-    roc: Optional[float] = 0.0  # Rate of Change (%)
-    roc_strength: Optional[str] = "WEAK"  # WEAK, MODERATE, STRONG
-    # 🆕 NOUVEAUX INDICATEURS TREND (High Priority)  
-    aroon_up: Optional[float] = 50.0  # Aroon Up (0-100)
-    aroon_down: Optional[float] = 50.0  # Aroon Down (0-100)
-    aroon_diff: Optional[float] = 0.0  # Difference (trend strength)
-    aroon_signal: Optional[str] = "NEUTRAL"  # BULLISH, BEARISH, NEUTRAL
-    sar: Optional[float] = 0.0  # Parabolic SAR price level
-    sar_signal: Optional[str] = "NEUTRAL"  # BULLISH, BEARISH
-    sar_distance: Optional[float] = 0.0  # Distance from price (%)
+    # 🎯 FIGURES CHARTISTES (remplace indicateurs redondants)
+    detected_patterns: Optional[List[str]] = []  # Liste des patterns détectés
+    primary_pattern: Optional[str] = "Aucune"  # Pattern principal
+    pattern_strength: Optional[float] = 0.0  # Force du pattern principal  
+    pattern_direction: Optional[str] = "NEUTRAL"  # Direction du pattern
 
 class TradingDecision(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
