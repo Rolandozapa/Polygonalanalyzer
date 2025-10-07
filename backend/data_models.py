@@ -3,7 +3,7 @@ Common data models used across the trading system
 """
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import Optional, List, Dict, Any
 import uuid
 from datetime import datetime
 from enum import Enum
