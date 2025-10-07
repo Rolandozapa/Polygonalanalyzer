@@ -156,16 +156,17 @@ class VolumeRatioFixDiagnosticTestSuite:
         logger.info("\n🔍 TEST 1: Validation de la fix volume_ratio - Analyses IA1 avec symboles spécifiques")
         
         try:
-            prompt_results = {
-                'ia2_v3_prompt_exists': False,
-                'ia2_strategic_prompt_exists': False,
-                'market_regime_assessment_found': False,
-                'execution_priority_found': False,
-                'risk_level_found': False,
-                'json_output_section_valid': False,
-                'required_variables_present': False,
-                'multi_phase_framework_complete': False,
-                'prompt_content_analysis': {},
+            volume_ratio_results = {
+                'ia1_analyses_attempted': 0,
+                'ia1_analyses_successful': 0,
+                'confluence_grades_not_d': 0,
+                'confluence_scores_above_zero': 0,
+                'volume_ratio_in_range': 0,
+                'confidence_above_threshold': 0,
+                'adx_above_threshold': 0,
+                'bb_squeeze_active': 0,
+                'successful_analyses': [],
+                'confluence_data': [],
                 'error_details': []
             }
             
