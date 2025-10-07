@@ -3695,7 +3695,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "tf_1h_signal": self._extract_tf_signal(multi_tf_result, "1h") if multi_tf_result else "NEUTRAL",
                 "tf_4h_signal": self._extract_tf_signal(multi_tf_result, "4h") if multi_tf_result else "NEUTRAL",
                 "tf_1d_signal": self._extract_tf_signal(multi_tf_result, "1d") if multi_tf_result else "NEUTRAL",
-                "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL'),
+                # MFI signal removed from streamlined indicator set
                 "bb_squeeze": "ACTIVE" if getattr(talib_analysis, 'bb_squeeze', False) else "INACTIVE",
                 "squeeze_intensity": getattr(talib_analysis, 'squeeze_intensity', 'NONE'),
                 "vwap_strength": "price strength" if getattr(talib_analysis, 'vwap_distance', 0.0) > 0 else "price weakness" if getattr(talib_analysis, 'vwap_distance', 0.0) < 0 else "neutral positioning",
