@@ -4941,9 +4941,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # Calcul sur les 30 derniers jours pour plus de précision
             recent_data = historical_data.tail(30)
-            high = recent_data['High'].max()
-            low = recent_data['Low'].min()
-            current = historical_data['Close'].iloc[-1]
+            high_col = get_ohlcv_column(historical_data, 'high')
+            low_col = get_ohlcv_column(historical_data, 'low')
+            close_col = get_ohlcv_column(historical_data, 'close')
+            high = recent_data[high_col].max()
+            low = recent_data[low_col].min()
+            current = historical_data[close_col].iloc[-1]
             
             if high == low:  # Évite division par zéro
                 return {
