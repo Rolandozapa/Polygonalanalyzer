@@ -514,9 +514,9 @@ class MFIStochasticRemovalTestSuite:
         except Exception as e:
             self.log_test_result("Field Name Validation", False, f"Exception: {str(e)}")
 
-    async def test_2_dynamic_rr_escalation_logic(self):
-        """Test 2: Dynamic RR Escalation Logic - Test _should_send_to_ia2 method uses new field names and dynamic thresholds"""
-        logger.info("\n🔍 TEST 2: Dynamic RR Escalation Logic")
+    async def test_2_api_opportunities(self):
+        """Test 2: API Opportunities - Verify scout system works without MFI/Stochastic references"""
+        logger.info("\n🔍 TEST 2: API Opportunities - Scout System Validation")
         
         try:
             escalation_results = {
