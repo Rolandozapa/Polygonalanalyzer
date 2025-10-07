@@ -363,46 +363,54 @@ class MFIStochasticRemovalTestSuite:
                     logger.info(f"      ⏳ Waiting 10 seconds before next analysis...")
                     await asyncio.sleep(10)
             
-            # Capture backend logs to check for field name usage
-            logger.info("   📋 Capturing backend logs to check for field name usage...")
+            # Capture backend logs to check for MFI/Stochastic errors
+            logger.info("   📋 Capturing backend logs to check for MFI/Stochastic errors...")
             
             try:
                 backend_logs = await self._capture_backend_logs()
                 if backend_logs:
-                    # Look for new field name usage in logs
-                    trade_type_logs = []
-                    minimum_rr_threshold_logs = []
-                    old_field_logs = []
-                    validation_logs = []
+                    # Look for MFI/Stochastic error patterns
+                    mfi_error_logs = []
+                    stochastic_error_logs = []
+                    nameerror_logs = []
+                    success_logs = []
                     
                     for log_line in backend_logs:
                         log_lower = log_line.lower()
                         
-                        if 'trade_type' in log_lower and 'recommended_trade_type' not in log_lower:
-                            trade_type_logs.append(log_line.strip())
+                        # Check for MFI errors
+                        if any(pattern in log_line for pattern in ["NameError: name 'mfi'", "mfi is not defined", "NameError: 'mfi'"]):
+                            mfi_error_logs.append(log_line.strip())
+                            analysis_results['mfi_errors_found'] += 1
                         
-                        if 'minimum_rr_threshold' in log_lower:
-                            minimum_rr_threshold_logs.append(log_line.strip())
+                        # Check for Stochastic errors
+                        if any(pattern in log_line for pattern in ["NameError: name 'stochastic_k'", "stochastic_k is not defined", "NameError: 'stochastic_k'"]):
+                            stochastic_error_logs.append(log_line.strip())
+                            analysis_results['stochastic_errors_found'] += 1
                         
-                        if any(old_field in log_lower for old_field in ['recommended_trade_type', 'minimum_rr_for_trade_type']):
-                            old_field_logs.append(log_line.strip())
+                        # Check for any NameError
+                        if 'nameerror' in log_lower:
+                            nameerror_logs.append(log_line.strip())
                         
-                        if '_validate_analysis_data' in log_lower:
-                            validation_logs.append(log_line.strip())
+                        # Check for successful IA1 completions
+                        if any(pattern in log_lower for pattern in ['ia1 analysis completed', 'ia1 ultra analysis', 'analysis successful']):
+                            success_logs.append(log_line.strip())
                     
                     logger.info(f"      📊 Backend logs analysis:")
-                    logger.info(f"         - trade_type mentions: {len(trade_type_logs)}")
-                    logger.info(f"         - minimum_rr_threshold mentions: {len(minimum_rr_threshold_logs)}")
-                    logger.info(f"         - Old field mentions: {len(old_field_logs)}")
-                    logger.info(f"         - Validation logs: {len(validation_logs)}")
+                    logger.info(f"         - MFI error logs: {len(mfi_error_logs)}")
+                    logger.info(f"         - Stochastic error logs: {len(stochastic_error_logs)}")
+                    logger.info(f"         - NameError logs: {len(nameerror_logs)}")
+                    logger.info(f"         - Success logs: {len(success_logs)}")
                     
-                    # Show sample logs
-                    if trade_type_logs:
-                        logger.info(f"      📋 Sample trade_type log: {trade_type_logs[0]}")
-                    if minimum_rr_threshold_logs:
-                        logger.info(f"      📋 Sample minimum_rr_threshold log: {minimum_rr_threshold_logs[0]}")
-                    if old_field_logs:
-                        logger.warning(f"      ⚠️ Old field usage detected: {old_field_logs[0]}")
+                    # Show critical error logs
+                    if mfi_error_logs:
+                        logger.error(f"      🚨 MFI ERROR FOUND: {mfi_error_logs[0]}")
+                    if stochastic_error_logs:
+                        logger.error(f"      🚨 STOCHASTIC ERROR FOUND: {stochastic_error_logs[0]}")
+                    if nameerror_logs and not mfi_error_logs and not stochastic_error_logs:
+                        logger.warning(f"      ⚠️ Other NameError found: {nameerror_logs[0]}")
+                    if success_logs:
+                        logger.info(f"      ✅ Sample success log: {success_logs[0]}")
                         
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
