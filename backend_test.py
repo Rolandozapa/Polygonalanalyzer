@@ -697,107 +697,151 @@ class MFIStochasticRemovalTestSuite:
                         logger.info(f"         📊 Escalation Logic: should_escalate={should_escalate}, ia2_escalated={ia2_escalated}, match={should_escalate == ia2_escalated}")
                         
                     else:
-                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
-                        if response.text:
-                            logger.error(f"         Error response: {response.text[:300]}")
-                
-                except Exception as e:
-                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
-                
-                # Wait between analyses
-                if symbol != self.actual_test_symbols[-1]:
-                    logger.info(f"      ⏳ Waiting 10 seconds before next analysis...")
-                    await asyncio.sleep(10)
+        try:
+            logs_results = {
+                'logs_captured': False,
+                'total_log_lines': 0,
+                'mfi_errors_found': 0,
+                'stochastic_errors_found': 0,
+                'nameerror_count': 0,
+                'success_indicators': 0,
+                'error_patterns_found': [],
+                'success_patterns_found': [],
+                'sample_errors': [],
+                'sample_successes': []
+            }
             
-            # Capture backend logs to check for escalation logic
-            logger.info("   📋 Capturing backend logs to check for escalation logic...")
+            logger.info("   🚀 Analyzing backend logs for MFI/Stochastic errors...")
+            logger.info("   📊 Expected: No MFI/Stochastic NameError patterns, successful IA1 completions")
+            
+            # Capture backend logs
+            logger.info("   📋 Capturing recent backend logs...")
             
             try:
                 backend_logs = await self._capture_backend_logs()
                 if backend_logs:
-                    # Look for escalation-related logs
-                    escalation_logs = []
-                    should_send_logs = []
-                    dynamic_threshold_logs = []
+                    logs_results['logs_captured'] = True
+                    logs_results['total_log_lines'] = len(backend_logs)
+                    logger.info(f"      ✅ Captured {len(backend_logs)} log lines")
                     
+                    # Analyze each log line for error patterns
                     for log_line in backend_logs:
                         log_lower = log_line.lower()
                         
-                        if 'ia2 accepted' in log_lower or 'ia2 rejected' in log_lower:
-                            escalation_logs.append(log_line.strip())
+                        # Check for specific MFI error patterns
+                        for pattern in self.error_patterns:
+                            if pattern.lower() in log_line:
+                                if 'mfi' in pattern.lower():
+                                    logs_results['mfi_errors_found'] += 1
+                                    logs_results['error_patterns_found'].append(pattern)
+                                    if len(logs_results['sample_errors']) < 3:
+                                        logs_results['sample_errors'].append(log_line.strip())
+                                    logger.error(f"      🚨 MFI ERROR PATTERN FOUND: {pattern}")
+                                    logger.error(f"         Log: {log_line.strip()}")
+                                
+                                elif 'stochastic' in pattern.lower():
+                                    logs_results['stochastic_errors_found'] += 1
+                                    logs_results['error_patterns_found'].append(pattern)
+                                    if len(logs_results['sample_errors']) < 3:
+                                        logs_results['sample_errors'].append(log_line.strip())
+                                    logger.error(f"      🚨 STOCHASTIC ERROR PATTERN FOUND: {pattern}")
+                                    logger.error(f"         Log: {log_line.strip()}")
                         
-                        if '_should_send_to_ia2' in log_lower:
-                            should_send_logs.append(log_line.strip())
+                        # Check for general NameError patterns
+                        if 'nameerror' in log_lower:
+                            logs_results['nameerror_count'] += 1
                         
-                        if any(term in log_lower for term in ['minimum_rr_threshold', 'trade_type', 'scalp', 'intraday', 'swing']):
-                            dynamic_threshold_logs.append(log_line.strip())
-                    
-                    escalation_results['backend_escalation_logs'] = escalation_logs
-                    
-                    logger.info(f"      📊 Backend escalation logs analysis:")
-                    logger.info(f"         - Escalation decision logs: {len(escalation_logs)}")
-                    logger.info(f"         - _should_send_to_ia2 logs: {len(should_send_logs)}")
-                    logger.info(f"         - Dynamic threshold logs: {len(dynamic_threshold_logs)}")
-                    
-                    # Show sample logs
-                    if escalation_logs:
-                        logger.info(f"      📋 Sample escalation log: {escalation_logs[0]}")
-                    if dynamic_threshold_logs:
-                        logger.info(f"      📋 Sample dynamic threshold log: {dynamic_threshold_logs[0]}")
+                        # Check for success indicators
+                        success_patterns = [
+                            'ia1 analysis completed successfully',
+                            'ia1 ultra analysis completed',
+                            'analysis successful for',
+                            'technical analysis completed',
+                            'force-ia1-analysis completed'
+                        ]
                         
+                        for pattern in success_patterns:
+                            if pattern in log_lower:
+                                logs_results['success_indicators'] += 1
+                                if pattern not in logs_results['success_patterns_found']:
+                                    logs_results['success_patterns_found'].append(pattern)
+                                if len(logs_results['sample_successes']) < 3:
+                                    logs_results['sample_successes'].append(log_line.strip())
+                                break
+                    
+                    logger.info(f"      📊 Log analysis completed:")
+                    logger.info(f"         - Total log lines analyzed: {logs_results['total_log_lines']}")
+                    logger.info(f"         - MFI errors found: {logs_results['mfi_errors_found']}")
+                    logger.info(f"         - Stochastic errors found: {logs_results['stochastic_errors_found']}")
+                    logger.info(f"         - Total NameErrors: {logs_results['nameerror_count']}")
+                    logger.info(f"         - Success indicators: {logs_results['success_indicators']}")
+                    
+                    # Show error patterns found
+                    if logs_results['error_patterns_found']:
+                        logger.error(f"      🚨 ERROR PATTERNS DETECTED:")
+                        for pattern in set(logs_results['error_patterns_found']):
+                            logger.error(f"         - {pattern}")
+                    else:
+                        logger.info(f"      ✅ No MFI/Stochastic error patterns found")
+                    
+                    # Show success patterns found
+                    if logs_results['success_patterns_found']:
+                        logger.info(f"      ✅ SUCCESS PATTERNS FOUND:")
+                        for pattern in logs_results['success_patterns_found']:
+                            logger.info(f"         - {pattern}")
+                    
+                    # Show sample errors
+                    if logs_results['sample_errors']:
+                        logger.error(f"      📋 Sample Error Logs:")
+                        for i, error in enumerate(logs_results['sample_errors']):
+                            logger.error(f"         {i+1}. {error}")
+                    
+                    # Show sample successes
+                    if logs_results['sample_successes']:
+                        logger.info(f"      📋 Sample Success Logs:")
+                        for i, success in enumerate(logs_results['sample_successes']):
+                            logger.info(f"         {i+1}. {success}")
+                
+                else:
+                    logger.warning(f"      ⚠️ No backend logs captured")
+                    
             except Exception as e:
-                logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
+                logger.error(f"      ❌ Failed to capture backend logs: {e}")
             
-            # Final analysis
-            success_rate = escalation_results['analyses_successful'] / max(escalation_results['analyses_attempted'], 1)
-            dynamic_threshold_rate = escalation_results['dynamic_threshold_usage'] / max(escalation_results['analyses_successful'], 1)
-            escalation_rate = escalation_results['ia2_escalations_triggered'] / max(escalation_results['analyses_successful'], 1)
+            # Final analysis and results
+            error_free_rate = 1.0 if (logs_results['mfi_errors_found'] == 0 and logs_results['stochastic_errors_found'] == 0) else 0.0
+            success_rate = 1.0 if logs_results['success_indicators'] > 0 else 0.0
             
-            logger.info(f"\n   📊 DYNAMIC RR ESCALATION LOGIC RESULTS:")
-            logger.info(f"      Analyses attempted: {escalation_results['analyses_attempted']}")
-            logger.info(f"      Analyses successful: {escalation_results['analyses_successful']}")
-            logger.info(f"      Success rate: {success_rate:.2f}")
-            logger.info(f"      IA2 escalations triggered: {escalation_results['ia2_escalations_triggered']}")
-            logger.info(f"      Escalation rate: {escalation_rate:.2f}")
-            logger.info(f"      Dynamic threshold usage: {escalation_results['dynamic_threshold_usage']}")
-            logger.info(f"      Dynamic threshold rate: {dynamic_threshold_rate:.2f}")
-            logger.info(f"      Trade type distribution:")
-            logger.info(f"         - SCALP: {escalation_results['trade_type_scalp_count']}")
-            logger.info(f"         - INTRADAY: {escalation_results['trade_type_intraday_count']}")
-            logger.info(f"         - SWING: {escalation_results['trade_type_swing_count']}")
-            logger.info(f"         - POSITION: {escalation_results['trade_type_position_count']}")
-            
-            # Show escalation details
-            if escalation_results['escalation_details']:
-                logger.info(f"      📊 Escalation Logic Details:")
-                for detail in escalation_results['escalation_details']:
-                    logger.info(f"         - {detail['symbol']}: {detail['trade_type']} (threshold={detail['minimum_rr_threshold']:.1f}, rr={detail['risk_reward_ratio']:.2f}, escalated={detail['ia2_escalated']}, match={detail['escalation_match']})")
+            logger.info(f"\n   📊 BACKEND LOGS VALIDATION RESULTS:")
+            logger.info(f"      Logs captured: {logs_results['logs_captured']}")
+            logger.info(f"      Total log lines: {logs_results['total_log_lines']}")
+            logger.info(f"      MFI errors found: {logs_results['mfi_errors_found']}")
+            logger.info(f"      Stochastic errors found: {logs_results['stochastic_errors_found']}")
+            logger.info(f"      Total NameErrors: {logs_results['nameerror_count']}")
+            logger.info(f"      Success indicators: {logs_results['success_indicators']}")
+            logger.info(f"      Error-free rate: {error_free_rate:.2f}")
+            logger.info(f"      Success indicators rate: {success_rate:.2f}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                escalation_results['analyses_successful'] >= 3,  # At least 3 successful analyses
-                escalation_results['dynamic_threshold_usage'] >= 2,  # At least 2 correct dynamic thresholds
-                dynamic_threshold_rate >= 0.6,  # At least 60% correct dynamic threshold usage
-                len(set([detail['trade_type'] for detail in escalation_results['escalation_details']])) >= 2,  # At least 2 different trade types
-                success_rate >= 0.6  # At least 60% success rate
+                logs_results['logs_captured'],  # Logs captured successfully
+                logs_results['mfi_errors_found'] == 0,  # No MFI errors
+                logs_results['stochastic_errors_found'] == 0,  # No Stochastic errors
+                logs_results['success_indicators'] > 0,  # Some success indicators
+                logs_results['total_log_lines'] > 50  # Sufficient log data
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
-            if test_success_rate >= 0.8:  # 80% success threshold
-                self.log_test_result("Dynamic RR Escalation Logic", True, 
-                                   f"Dynamic RR escalation successful: {success_count}/{len(success_criteria)} criteria met. Dynamic threshold rate: {dynamic_threshold_rate:.2f}, Escalation rate: {escalation_rate:.2f}, Success rate: {success_rate:.2f}")
+            if test_success_rate >= 0.8:  # 80% success threshold (4/5 criteria)
+                self.log_test_result("Backend Logs Validation", True, 
+                                   f"Backend logs clean: {success_count}/{len(success_criteria)} criteria met. No MFI/Stochastic errors, {logs_results['success_indicators']} success indicators found")
             else:
-                self.log_test_result("Dynamic RR Escalation Logic", False, 
-                                   f"Dynamic RR escalation issues: {success_count}/{len(success_criteria)} criteria met. May not be using dynamic thresholds correctly or missing trade type diversity")
+                self.log_test_result("Backend Logs Validation", False, 
+                                   f"Backend logs issues: {success_count}/{len(success_criteria)} criteria met. MFI errors: {logs_results['mfi_errors_found']}, Stochastic errors: {logs_results['stochastic_errors_found']}")
                 
         except Exception as e:
-            self.log_test_result("Dynamic RR Escalation Logic", False, f"Exception: {str(e)}")
-
-    async def test_3_backend_logs_validation(self):
-        """Test 3: Backend Logs Validation - Verify no MFI/Stochastic errors in recent logs"""
-        logger.info("\n🔍 TEST 3: Backend Logs Validation")
-        
+            self.log_test_result("Backend Logs Validation", False, f"Exception: {str(e)}")
         try:
             db_persistence_results = {
                 'database_connection_success': False,
