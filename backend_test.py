@@ -655,50 +655,53 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 endpoint_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
-            diversity_grade_count = len(calculation_results['diverse_grades_found'])
-            diversity_score_count = len(calculation_results['diverse_scores_found'])
-            diversity_trade_count = len(calculation_results['should_trade_variations'])
-            consistency_rate = calculation_results['consistent_grade_score_mapping'] / max(calculation_results['analyses_tested'], 1)
+            multi_phase_coverage = endpoint_results['multi_phase_fields_present'] / 6  # 6 expected fields
             
-            logger.info(f"\n   📊 CONFLUENCE CALCULATION LOGIC RESULTS:")
-            logger.info(f"      Analyses tested: {calculation_results['analyses_tested']}")
-            logger.info(f"      Grade D with score 0: {calculation_results['grade_d_with_score_0']}")
-            logger.info(f"      Grade D with should_trade false: {calculation_results['grade_d_with_should_trade_false']}")
-            logger.info(f"      Consistent grade-score mapping: {calculation_results['consistent_grade_score_mapping']} ({consistency_rate:.2f})")
-            logger.info(f"      Diverse grades found: {sorted(calculation_results['diverse_grades_found'])} ({diversity_grade_count})")
-            logger.info(f"      Diverse scores found: {sorted(calculation_results['diverse_scores_found'])} ({diversity_score_count})")
-            logger.info(f"      Should trade variations: {sorted(calculation_results['should_trade_variations'])} ({diversity_trade_count})")
+            logger.info(f"\n   📊 CREATE TEST IA2 DECISION ENDPOINT RESULTS:")
+            logger.info(f"      Endpoint exists: {endpoint_results['endpoint_exists']}")
+            logger.info(f"      API call successful: {endpoint_results['api_call_successful']}")
+            logger.info(f"      IA2 decision created: {endpoint_results['ia2_decision_created']}")
+            logger.info(f"      Multi-Phase fields present: {endpoint_results['multi_phase_fields_present']}/6 ({multi_phase_coverage:.2f})")
+            logger.info(f"      market_regime_assessment valid: {endpoint_results['market_regime_assessment_valid']}")
+            logger.info(f"      execution_priority valid: {endpoint_results['execution_priority_valid']}")
+            logger.info(f"      risk_level valid: {endpoint_results['risk_level_valid']}")
+            logger.info(f"      Response time: {endpoint_results['response_time']:.2f}s")
             
-            # Show sample data
-            if calculation_results['sample_data']:
-                logger.info(f"      📊 Sample Calculation Data:")
-                for data in calculation_results['sample_data']:
-                    logger.info(f"         - {data['symbol']}: grade={data['confluence_grade']}, score={data['confluence_score']}, trade={data['should_trade']}")
+            # Show decision data summary
+            if endpoint_results['decision_data']:
+                decision = endpoint_results['decision_data']
+                logger.info(f"      📊 Decision Data Summary:")
+                logger.info(f"         - Symbol: {decision.get('symbol', 'N/A')}")
+                logger.info(f"         - Signal: {decision.get('signal', 'N/A')}")
+                logger.info(f"         - Confidence: {decision.get('confidence', 'N/A')}")
+                logger.info(f"         - Market Regime: {decision.get('market_regime_assessment', 'N/A')}")
+                logger.info(f"         - Execution Priority: {decision.get('execution_priority', 'N/A')}")
+                logger.info(f"         - Risk Level: {decision.get('risk_level', 'N/A')}")
             
             # Show error details if any
-            if calculation_results['error_details']:
+            if endpoint_results['error_details']:
                 logger.info(f"      📊 Error Details:")
-                for error in calculation_results['error_details']:
+                for error in endpoint_results['error_details']:
                     logger.info(f"         - {error}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                calculation_results['analyses_tested'] >= 3,  # At least 3 analyses tested
-                diversity_grade_count >= 2,  # At least 2 different grades
-                diversity_score_count >= 3,  # At least 3 different scores
-                diversity_trade_count >= 1,  # At least some should_trade variation
-                calculation_results['consistent_grade_score_mapping'] >= 2,  # At least 2 consistent mappings
-                consistency_rate >= 0.6  # At least 60% consistency
+                endpoint_results['endpoint_exists'],  # Endpoint exists
+                endpoint_results['api_call_successful'],  # API call successful
+                endpoint_results['ia2_decision_created'],  # Decision created
+                endpoint_results['multi_phase_fields_present'] >= 3,  # At least 3 Multi-Phase fields
+                endpoint_results['market_regime_assessment_valid'],  # Valid market regime
+                endpoint_results['execution_priority_valid'] or endpoint_results['risk_level_valid']  # At least one other field valid
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
             if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("Confluence Calculation Logic", True, 
-                                   f"Calculation logic successful: {success_count}/{len(success_criteria)} criteria met. Diversity: {diversity_grade_count} grades, {diversity_score_count} scores, consistency: {consistency_rate:.2f}")
+                self.log_test_result("Create Test IA2 Decision Endpoint", True, 
+                                   f"Create test IA2 decision successful: {success_count}/{len(success_criteria)} criteria met. Multi-Phase fields: {endpoint_results['multi_phase_fields_present']}/6, Valid fields: market_regime={endpoint_results['market_regime_assessment_valid']}, execution={endpoint_results['execution_priority_valid']}, risk={endpoint_results['risk_level_valid']}")
             else:
-                self.log_test_result("Confluence Calculation Logic", False, 
-                                   f"Calculation logic issues: {success_count}/{len(success_criteria)} criteria met. Limited diversity or consistency problems")
+                self.log_test_result("Create Test IA2 Decision Endpoint", False, 
+                                   f"Create test IA2 decision issues: {success_count}/{len(success_criteria)} criteria met. Endpoint may not exist or Multi-Phase fields missing/invalid")
                 
         except Exception as e:
             self.log_test_result("Confluence Calculation Logic", False, f"Exception: {str(e)}")
