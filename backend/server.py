@@ -3930,6 +3930,24 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "reasoning": "❌ Erreur calcul R:R",
                 "quality": "error"
             }
+    
+    async def _calculate_talib_for_timeframe(self, historical_data: pd.DataFrame) -> Optional[Any]:
+        """Calcule les indicateurs TALib pour données multi-timeframe"""
+        try:
+            if historical_data is None or len(historical_data) < 50:
+                return None
+                
+            # Utiliser le système TALib existant 
+            talib_result = self.talib_indicators.calculate_all_indicators(
+                historical_data, 
+                symbol="MULTI_TF"  # Symbol générique pour multi-timeframe
+            )
+            
+            return talib_result
+            
+        except Exception as e:
+            logger.error(f"Error calculating TALib for multi-timeframe: {e}")
+            return None
 
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 60, timeframe: str = "15m") -> Optional[pd.DataFrame]:  # 🎯 FIX MACD: Utilise 15m pour des valeurs normales
         """Get enhanced historical data for technical analysis with specified timeframe"""
