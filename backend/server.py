@@ -10443,7 +10443,7 @@ class UltraProfessionalOrchestrator:
                 market_score = 5.0
             
             # Final institutional validation score
-            final_validation = validation_score + mfi_score + vwap_score + sma_score + market_score
+            final_validation = validation_score + vwap_score + sma_score + market_score
             final_validation = max(0.0, min(100.0, final_validation))  # Clamp to 0-100
             
             return final_validation
