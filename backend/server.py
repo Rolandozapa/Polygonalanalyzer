@@ -3755,14 +3755,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 **validated_data
             )
             
-            # 🔍 DEBUG CONFLUENCE IN FINAL ANALYSIS OBJECT
-            final_confluence_debug = {
-                'confluence_grade': analysis.confluence_grade,
-                'confluence_score': analysis.confluence_score,
-                'should_trade': analysis.should_trade
-            }
-            logger.info(f"🔍 CONFLUENCE DEBUG in final analysis object: {final_confluence_debug}")
-            
             # 🧠 NOUVEAU: AI PERFORMANCE ENHANCEMENT
             # Apply AI training insights to improve IA1 analysis accuracy
             try:
