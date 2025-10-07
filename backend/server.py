@@ -2392,15 +2392,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"   📊 ADX (Wilder): {adx:.1f} [{talib_analysis.adx_strength}], ATR: {atr:.6f}, Vol: {volume_ratio:.2f}")
             logger.info(f"   🎯 Regime: {talib_analysis.regime} (Confidence: {talib_analysis.confidence:.1%})")
             logger.info(f"   🏆 Confluence: {talib_analysis.confluence_grade} (Score: {talib_analysis.confluence_score}) - {talib_analysis.conviction_level}")
-            # 🔍 DEBUG CONFLUENCE EXTRACTION
-            try:
-                debug_confluence_grade = getattr(talib_analysis, 'confluence_grade', 'MISSING')
-                debug_confluence_score = getattr(talib_analysis, 'confluence_score', 'MISSING') 
-                debug_should_trade = getattr(talib_analysis, 'should_trade', 'MISSING')
-                logger.info(f"🔍 DEBUG CONFLUENCE VALUES: Grade={debug_confluence_grade}, Score={debug_confluence_score}, ShouldTrade={debug_should_trade}")
-                logger.info(f"🔍 DEBUG TALIB OBJECT TYPE: {type(talib_analysis)} - Has confluence_grade: {hasattr(talib_analysis, 'confluence_grade')}")
-            except Exception as e:
-                logger.error(f"❌ DEBUG CONFLUENCE ERROR: {e}")
             # ✅ BB bands from TALib - SAFE ACCESS
             current_price_for_fallback = opportunity.current_price
             bb_upper = getattr(talib_analysis, 'bb_upper', current_price_for_fallback * 1.02) if talib_analysis else current_price_for_fallback * 1.02
