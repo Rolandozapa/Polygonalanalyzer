@@ -3436,25 +3436,25 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 ia1_entry = ia1_complete_json.get('entry_price', real_current_price)
                 ia1_sl = ia1_complete_json.get('stop_loss_price')
                 ia1_tp = ia1_complete_json.get('take_profit_price')
-                    
-                    if ia1_sl and ia1_tp and isinstance(ia1_sl, (int, float)) and isinstance(ia1_tp, (int, float)):
-                        if str(ia1_signal).lower() == "long":
-                            if ia1_entry > ia1_sl and ia1_tp > ia1_entry:
-                                ia1_risk_reward_ratio = (ia1_tp - ia1_entry) / (ia1_entry - ia1_sl)
-                                logger.info(f"🎯 FALLBACK RR for LONG {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
-                            else:
-                                ia1_risk_reward_ratio = 1.0
-                        elif str(ia1_signal).lower() == "short":
-                            if ia1_sl > ia1_entry and ia1_tp < ia1_entry:
-                                ia1_risk_reward_ratio = (ia1_entry - ia1_tp) / (ia1_sl - ia1_entry)
-                                logger.info(f"🎯 FALLBACK RR for SHORT {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
-                            else:
-                                ia1_risk_reward_ratio = 1.0
+                
+                if ia1_sl and ia1_tp and isinstance(ia1_sl, (int, float)) and isinstance(ia1_tp, (int, float)):
+                    if str(ia1_signal).lower() == "long":
+                        if ia1_entry > ia1_sl and ia1_tp > ia1_entry:
+                            ia1_risk_reward_ratio = (ia1_tp - ia1_entry) / (ia1_entry - ia1_sl)
+                            logger.info(f"🎯 FALLBACK RR for LONG {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
+                        else:
+                            ia1_risk_reward_ratio = 1.0
+                    elif str(ia1_signal).lower() == "short":
+                        if ia1_sl > ia1_entry and ia1_tp < ia1_entry:
+                            ia1_risk_reward_ratio = (ia1_entry - ia1_tp) / (ia1_sl - ia1_entry)
+                            logger.info(f"🎯 FALLBACK RR for SHORT {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
                         else:
                             ia1_risk_reward_ratio = 1.0
                     else:
                         ia1_risk_reward_ratio = 1.0
-                        logger.warning(f"⚠️ No valid levels for {opportunity.symbol}, using fallback RR 1.0")
+                else:
+                    ia1_risk_reward_ratio = 1.0
+                    logger.warning(f"⚠️ No valid levels for {opportunity.symbol}, using fallback RR 1.0")
             
             # 🔧 FIX RR: Cap RR pour éviter valeurs aberrantes mais permettre les RR élevés réalistes
             logger.info(f"🔍 DEBUG RR BEFORE CLAMP for {opportunity.symbol}: {ia1_risk_reward_ratio}")
