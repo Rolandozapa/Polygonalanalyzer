@@ -362,15 +362,7 @@ class TALibIndicators:
                 'above_sma_20': above_sma_20,
                 'above_sma_50': above_sma_50,
                 'distance_sma_20': distance_sma_20,
-                'distance_sma_50': distance_sma_50,
-                # 🆕 NOUVEAUX INDICATEURS TREND
-                'aroon_up': aroon_up_value,
-                'aroon_down': aroon_down_value,
-                'aroon_diff': aroon_diff,
-                'aroon_signal': aroon_signal,
-                'sar': sar_value,
-                'sar_signal': sar_signal,
-                'sar_distance': sar_distance
+                'distance_sma_50': distance_sma_50
             }
             
         except Exception as e:
