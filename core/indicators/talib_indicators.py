@@ -180,11 +180,10 @@ class TALibIndicators:
             # 🔥 5. INDICATEURS DE VOLUME
             volume_indicators = self._calculate_volume_indicators(volume)
             
-            # 🔥 6. STOCHASTIC
-            stoch_indicators = self._calculate_stochastic_indicators(high_prices, low_prices, close_prices)
-            
-            # 🔥 7. MFI (Money Flow Index)
-            mfi_indicators = self._calculate_mfi_indicators(high_prices, low_prices, close_prices, volume)
+            # ❌ STOCHASTIC ET MFI SUPPRIMÉS (redondants avec RSI)
+            # Utilisation de valeurs par défaut pour maintenir la compatibilité
+            stoch_indicators = {'stoch_k': 50.0, 'stoch_d': 50.0}
+            mfi_indicators = {'mfi': 50.0, 'mfi_signal': 'NEUTRAL'}
             
             # 🔥 8. VWAP
             vwap_indicators = self._calculate_vwap_indicators(high_prices, low_prices, close_prices, volume, current_price)
