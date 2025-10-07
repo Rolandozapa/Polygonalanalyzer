@@ -333,9 +333,9 @@ class MultiPhaseStrategicFrameworkTestSuite:
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis Confluence", False, f"Exception: {str(e)}")
 
-    async def test_2_api_analyses_confluence(self):
-        """Test 2: API Analyses Endpoint - Check confluence consistency in stored analyses"""
-        logger.info("\n🔍 TEST 2: API Analyses Endpoint - Confluence Consistency Validation")
+    async def test_2_ia2_generation_real_decision(self):
+        """Test 2: Test de génération IA2 - Essayer de créer une décision IA2 réelle"""
+        logger.info("\n🔍 TEST 2: Test de génération IA2 - Création d'une décision IA2 réelle")
         
         try:
             analyses_results = {
