@@ -375,9 +375,9 @@ class VolumeRatioFixDiagnosticTestSuite:
         except Exception as e:
             self.log_test_result("Volume Ratio Fix Validation", False, f"Exception: {str(e)}")
 
-    async def test_2_ia2_generation_real_decision(self):
-        """Test 2: Test de génération IA2 - Essayer de créer une décision IA2 réelle"""
-        logger.info("\n🔍 TEST 2: Test de génération IA2 - Création d'une décision IA2 réelle")
+    async def test_2_mandatory_requirements_investigation(self):
+        """Test 2: Investigation des mandatory requirements - Analyser pourquoi les analyses continuent d'avoir Grade D Score 0"""
+        logger.info("\n🔍 TEST 2: Investigation des mandatory requirements - Analyse des conditions échouées")
         
         try:
             generation_results = {
