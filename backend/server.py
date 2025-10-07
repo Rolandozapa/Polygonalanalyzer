@@ -3404,29 +3404,29 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 close_prices = historical_data[close_col].tolist()[-50:]  # Last 50 periods
                 high_prices = historical_data[high_col].tolist()[-50:]
                 low_prices = historical_data[low_col].tolist()[-50:]
-                    
-                    # Get optimal RR setup using advanced method
-                    rr_setup = rr_calculator.optimal_rr_setup(
-                        entry_price=real_current_price,
-                        direction=ia1_signal,
-                        price_history=close_prices,
-                        high_history=high_prices,
-                        low_history=low_prices,
-                        close_history=close_prices
-                    )
-                    
-                    ia1_risk_reward_ratio = rr_setup['best_rr_ratio']
-                    
-                    # Update price levels with calculated levels
-                    entry_price = real_current_price
-                    stop_loss_price = rr_setup['stop_loss']
-                    take_profit_price = rr_setup['best_take_profit']
-                    
-                    logger.info(f"🎯 OPTIMIZED RR CALCULATION for {ia1_signal} {opportunity.symbol}:")
-                    logger.info(f"   Entry: ${entry_price:.6f}")
-                    logger.info(f"   Stop-Loss: ${stop_loss_price:.6f} (ATR-based + Support/Resistance)")
-                    logger.info(f"   Take-Profit: ${take_profit_price:.6f} (Nearest resistance/support)")
-                    logger.info(f"   Risk-Reward: {ia1_risk_reward_ratio:.2f}")
+                
+                # Get optimal RR setup using advanced method
+                rr_setup = rr_calculator.optimal_rr_setup(
+                    entry_price=real_current_price,
+                    direction=ia1_signal,
+                    price_history=close_prices,
+                    high_history=high_prices,
+                    low_history=low_prices,
+                    close_history=close_prices
+                )
+                
+                ia1_risk_reward_ratio = rr_setup['best_rr_ratio']
+                
+                # Update price levels with calculated levels
+                entry_price = real_current_price
+                stop_loss_price = rr_setup['stop_loss']
+                take_profit_price = rr_setup['best_take_profit']
+                
+                logger.info(f"🎯 OPTIMIZED RR CALCULATION for {ia1_signal} {opportunity.symbol}:")
+                logger.info(f"   Entry: ${entry_price:.6f}")
+                logger.info(f"   Stop-Loss: ${stop_loss_price:.6f} (ATR-based + Support/Resistance)")
+                logger.info(f"   Take-Profit: ${take_profit_price:.6f} (Nearest resistance/support)")
+                logger.info(f"   Risk-Reward Ratio: {ia1_risk_reward_ratio:.2f}")
                     logger.info(f"   Supports: {rr_setup.get('supports', [])}") 
                     logger.info(f"   Resistances: {rr_setup.get('resistances', [])}")
                     
