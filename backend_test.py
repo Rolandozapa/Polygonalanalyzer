@@ -728,12 +728,12 @@ class MultiPhaseStrategicFrameworkTestSuite:
             logger.info("   🚀 Testing /api/ia2-decisions endpoint for Multi-Phase Strategic Framework fields...")
             logger.info("   📊 Expected: IA2 decisions with market_regime_assessment, execution_priority, risk_level not null, diverse values")
             
-            # Test /api/ia2-decisions endpoint
-            logger.info("   📞 Calling /api/ia2-decisions endpoint...")
+            # Test /api/decisions endpoint
+            logger.info("   📞 Calling /api/decisions endpoint...")
             
             try:
                 start_time = time.time()
-                response = requests.get(f"{self.api_url}/ia2-decisions", timeout=60)
+                response = requests.get(f"{self.api_url}/decisions", timeout=60)
                 response_time = time.time() - start_time
                 
                 if response.status_code == 200:
