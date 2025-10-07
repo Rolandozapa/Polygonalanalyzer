@@ -329,39 +329,6 @@ class MFIStochasticRemovalTestSuite:
                 if symbol != self.actual_test_symbols[-1]:
                     logger.info(f"      ⏳ Waiting 5 seconds before next analysis...")
                     await asyncio.sleep(5)
-                            logger.warning(f"         ⚠️ Old field names still present: recommended_trade_type={old_trade_type}, minimum_rr_for_trade_type={old_rr_threshold}")
-                        
-                        # Store analysis details
-                        field_validation_results['successful_analyses'].append({
-                            'symbol': symbol,
-                            'trade_type': trade_type,
-                            'minimum_rr_threshold': minimum_rr_threshold,
-                            'old_trade_type': old_trade_type,
-                            'old_rr_threshold': old_rr_threshold,
-                            'response_time': response_time
-                        })
-                        
-                        # Store field validation details
-                        field_validation_results['field_validation_details'].append({
-                            'symbol': symbol,
-                            'new_fields_present': trade_type is not None and minimum_rr_threshold is not None,
-                            'old_fields_absent': old_trade_type is None and old_rr_threshold is None,
-                            'trade_type_valid': trade_type in self.valid_trade_types if trade_type else False,
-                            'rr_threshold_valid': isinstance(minimum_rr_threshold, (int, float)) and minimum_rr_threshold > 0 if minimum_rr_threshold else False
-                        })
-                        
-                    else:
-                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
-                        if response.text:
-                            logger.error(f"         Error response: {response.text[:300]}")
-                
-                except Exception as e:
-                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
-                
-                # Wait between analyses
-                if symbol != self.actual_test_symbols[-1]:
-                    logger.info(f"      ⏳ Waiting 10 seconds before next analysis...")
-                    await asyncio.sleep(10)
             
             # Capture backend logs to check for MFI/Stochastic errors
             logger.info("   📋 Capturing backend logs to check for MFI/Stochastic errors...")
