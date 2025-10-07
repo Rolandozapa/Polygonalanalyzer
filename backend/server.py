@@ -4230,9 +4230,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                             break
                 
                 # Vérifier High >= Low
-                if 'High' in historical_data.columns and 'Low' in historical_data.columns:
-                    if (historical_data['High'] < historical_data['Low']).any():
+                try:
+                    high_col = get_ohlcv_column(historical_data, 'high')
+                    low_col = get_ohlcv_column(historical_data, 'low')
+                    if (historical_data[high_col] < historical_data[low_col]).any():
                         price_consistency = False
+                except KeyError:
+                    # If columns not found, skip this validation
+                    pass
                 
                 if price_consistency:
                     # Source unique mais données cohérentes - acceptable avec scoring réduit
