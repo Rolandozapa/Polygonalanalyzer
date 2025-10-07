@@ -3701,6 +3701,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "vwap_strength": "price strength" if getattr(talib_analysis, 'vwap_distance', 0.0) > 0 else "price weakness" if getattr(talib_analysis, 'vwap_distance', 0.0) < 0 else "neutral positioning",
                 "confluence_grade": getattr(talib_analysis, 'confluence_grade', 'C'),
                 "confluence_score": getattr(talib_analysis, 'confluence_score', 50),
+                "should_trade": getattr(talib_analysis, 'should_trade', False),
                 "conviction_level": getattr(talib_analysis, 'conviction_level', 'FAIBLE'),
                 "macd_histogram": macd_histogram,  # Keep MACD histogram
                 "stochastic": stochastic_k,
