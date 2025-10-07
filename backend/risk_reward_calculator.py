@@ -88,28 +88,148 @@ class RiskRewardCalculator:
             logger.error(f"Error calculating ATR: {e}")
             return 0.01  # Fallback ATR
     
-    def find_key_levels(self, prices: List[float], current_price: float) -> Tuple[List[float], List[float]]:
-        """Trouve les niveaux clés les plus proches"""
+    def find_key_levels(self, prices: List[float], current_price: float, high_prices: List[float] = None, low_prices: List[float] = None) -> Tuple[List[float], List[float]]:
+        """🎯 ENHANCED: Trouve les niveaux clés avec méthodes avancées (Pivots + Clusters + Psychologiques)"""
         try:
-            # Niveaux de prix ronds (psychologiques)
-            round_levels = []
-            for i in range(3):
-                rounded = round(current_price, max(0, 1 - i))
-                round_levels.append(rounded)
+            # 🔧 ENHANCEMENT: Utiliser high/low si disponibles, sinon fallback sur prices
+            highs = high_prices[-20:] if high_prices and len(high_prices) >= 20 else [max(prices)] if prices else [current_price]
+            lows = low_prices[-20:] if low_prices and len(low_prices) >= 20 else [min(prices)] if prices else [current_price]
+            closes = prices[-20:] if len(prices) >= 20 else prices
             
-            # Highs/Lows récents
-            recent_high = max(prices[-20:]) if len(prices) >= 20 else max(prices)
-            recent_low = min(prices[-20:]) if len(prices) >= 20 else min(prices)
+            # 1️⃣ PIVOT POINTS (méthode classique)
+            pivot_levels = self._calculate_pivot_points(highs, lows, closes)
             
-            # Combinaison des niveaux
-            resistances = sorted([recent_high] + [lvl for lvl in round_levels if lvl > current_price])
-            supports = sorted([recent_low] + [lvl for lvl in round_levels if lvl < current_price], reverse=True)
+            # 2️⃣ CLUSTERS DE PRIX (zones de rebond)
+            cluster_levels = self._calculate_price_clusters(highs + lows, tolerance=0.015)  # 1.5%
             
-            return supports, resistances
+            # 3️⃣ NIVEAUX PSYCHOLOGIQUES (nombres ronds)
+            psychological_levels = self._calculate_psychological_levels(current_price, highs, lows)
+            
+            # 4️⃣ COMBINER ET TRIER
+            all_resistance_candidates = []
+            all_support_candidates = []
+            
+            # Ajouter pivot points
+            all_resistance_candidates.extend([float(pivot_levels['r1']), float(pivot_levels['r2']), float(pivot_levels['r3'])])
+            all_support_candidates.extend([float(pivot_levels['s1']), float(pivot_levels['s2']), float(pivot_levels['s3'])])
+            
+            # Ajouter clusters
+            all_resistance_candidates.extend([c['level'] for c in cluster_levels if c['level'] > current_price])
+            all_support_candidates.extend([c['level'] for c in cluster_levels if c['level'] < current_price])
+            
+            # Ajouter niveaux psychologiques
+            all_resistance_candidates.extend([lvl for lvl in psychological_levels if lvl > current_price])
+            all_support_candidates.extend([lvl for lvl in psychological_levels if lvl < current_price])
+            
+            # 5️⃣ NETTOYER ET FILTRER
+            resistances = sorted(list(set(all_resistance_candidates)))
+            supports = sorted(list(set(all_support_candidates)), reverse=True)
+            
+            # Nettoyer les niveaux trop proches
+            resistances = self._clean_levels(resistances, current_price, min_distance_pct=0.008)  # 0.8%
+            supports = self._clean_levels(supports, current_price, min_distance_pct=0.008)
+            
+            # Assurer au moins 2 niveaux de chaque côté
+            if len(resistances) < 2:
+                resistances.extend([current_price * 1.02, current_price * 1.05])
+                resistances = sorted(list(set(resistances)))
+            
+            if len(supports) < 2:
+                supports.extend([current_price * 0.98, current_price * 0.95])
+                supports = sorted(list(set(supports)), reverse=True)
+            
+            return supports[:5], resistances[:5]  # Max 5 niveaux de chaque côté
             
         except Exception as e:
-            logger.error(f"Error finding key levels: {e}")
-            return [current_price * 0.98], [current_price * 1.02]
+            logger.error(f"Error finding enhanced key levels: {e}")
+            return [current_price * 0.98, current_price * 0.95], [current_price * 1.02, current_price * 1.05]
+    
+    def _calculate_pivot_points(self, highs: List[float], lows: List[float], closes: List[float]) -> Dict[str, float]:
+        """Calcul des Points Pivots classiques"""
+        if not highs or not lows or not closes:
+            return {'r1': 0, 'r2': 0, 'r3': 0, 's1': 0, 's2': 0, 's3': 0, 'pp': 0}
+        
+        high = max(highs)
+        low = min(lows) 
+        close = closes[-1]
+        
+        pp = (high + low + close) / 3
+        
+        return {
+            'pp': pp,
+            'r1': (2 * pp) - low,
+            'r2': pp + (high - low),
+            'r3': high + 2 * (pp - low),
+            's1': (2 * pp) - high,
+            's2': pp - (high - low),
+            's3': low - 2 * (high - pp)
+        }
+    
+    def _calculate_price_clusters(self, prices: List[float], tolerance: float = 0.015) -> List[Dict]:
+        """Détection de clusters de prix (zones de rebond)"""
+        if len(prices) < 3:
+            return []
+        
+        sorted_prices = sorted(prices)
+        clusters = []
+        current_cluster = [sorted_prices[0]]
+        
+        for i in range(1, len(sorted_prices)):
+            # Si le prix est dans la tolérance du cluster actuel
+            if abs(sorted_prices[i] - current_cluster[0]) / current_cluster[0] <= tolerance:
+                current_cluster.append(sorted_prices[i])
+            else:
+                # Sauvegarder cluster si assez de touches
+                if len(current_cluster) >= 2:
+                    avg_level = sum(current_cluster) / len(current_cluster)
+                    clusters.append({
+                        'level': avg_level,
+                        'touches': len(current_cluster),
+                        'strength': len(current_cluster)
+                    })
+                current_cluster = [sorted_prices[i]]
+        
+        # Traiter le dernier cluster
+        if len(current_cluster) >= 2:
+            avg_level = sum(current_cluster) / len(current_cluster)
+            clusters.append({
+                'level': avg_level,
+                'touches': len(current_cluster),
+                'strength': len(current_cluster)
+            })
+        
+        # Trier par force (nombre de touches)
+        return sorted(clusters, key=lambda x: x['strength'], reverse=True)[:4]
+    
+    def _calculate_psychological_levels(self, current_price: float, highs: List[float], lows: List[float]) -> List[float]:
+        """Calcul des niveaux psychologiques (nombres ronds)"""
+        if not highs or not lows:
+            return []
+        
+        min_price = min(lows)
+        max_price = max(highs)
+        
+        # Déterminer l'espacement selon la gamme de prix
+        if max_price > 1000:
+            round_to = 100
+        elif max_price > 100:
+            round_to = 10
+        elif max_price > 10:
+            round_to = 5
+        else:
+            round_to = 1
+        
+        levels = []
+        start_level = (int(min_price / round_to) - 1) * round_to
+        end_level = (int(max_price / round_to) + 2) * round_to
+        
+        current_level = start_level
+        while current_level <= end_level:
+            if min_price <= current_level <= max_price:
+                levels.append(float(current_level))
+            current_level += round_to
+        
+        return levels
     
     def calculate_rr_ratio(self, entry_price: float, direction: str, support_levels: List[float], resistance_levels: List[float]) -> Dict:
         """
