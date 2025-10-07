@@ -467,6 +467,16 @@ class TALibIndicators:
             macd_signal_value = float(macd_signal_line[-1]) if not np.isnan(macd_signal_line[-1]) else 0.0
             macd_histogram_value = float(macd_histogram[-1]) if not np.isnan(macd_histogram[-1]) else 0.0
             
+            # 🔍 DEBUG MACD CALCULATION
+            logger.info(f"🔍 MACD DEBUG for {close[-1]:.2f}: Line={macd_line_value:.6f}, Signal={macd_signal_value:.6f}, Histogram={macd_histogram_value:.6f}")
+            
+            # ✅ VALIDATION: Histogram = Line - Signal
+            expected_histogram = macd_line_value - macd_signal_value
+            if abs(expected_histogram - macd_histogram_value) > 0.001:
+                logger.warning(f"🚨 MACD INCONSISTENCY: Expected histogram {expected_histogram:.6f} but got {macd_histogram_value:.6f}")
+            else:
+                logger.info(f"✅ MACD consistency validated: {expected_histogram:.6f} = {macd_histogram_value:.6f}")
+            
             # MACD Trend (histogram slope)
             macd_trend = self._calculate_slope(macd_histogram[-10:]) if len(macd_histogram) >= 10 else 0.0
             
