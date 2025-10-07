@@ -2510,16 +2510,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'macd_line': macd_line or 0.0,
                 'macd_signal': macd_signal or 0.0,
                 'macd_histogram': macd_histogram or 0.0,
-                'stoch_k': getattr(talib_analysis, 'stoch_k', 50.0),
-                'stoch_d': getattr(talib_analysis, 'stoch_d', 50.0),
-                
-                # 🆕 NOUVEAUX INDICATEURS MOMENTUM (High Priority)
-                'willr': getattr(talib_analysis, 'willr', -50.0),
-                'willr_zone': getattr(talib_analysis, 'willr_zone', 'NEUTRAL'),
-                'cci': getattr(talib_analysis, 'cci', 0.0),
-                'cci_zone': getattr(talib_analysis, 'cci_zone', 'NEUTRAL'),
-                'roc': getattr(talib_analysis, 'roc', 0.0),
-                'roc_strength': getattr(talib_analysis, 'roc_strength', 'WEAK'),
+                # ❌ Stochastic, WillR, CCI, ROC supprimés (redondants avec RSI)
                 
                 # Trend indicators  
                 'adx': adx if adx is not None else 25.0,  # 🔧 FIX: Don't use "or" as it fails for 0.0 values
