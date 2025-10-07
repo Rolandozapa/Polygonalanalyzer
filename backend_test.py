@@ -674,14 +674,15 @@ class MultiPhaseStrategicFrameworkTestSuite:
             
             # Show decision data summary
             if endpoint_results['decision_data']:
-                decision = endpoint_results['decision_data']
+                decision_response = endpoint_results['decision_data']
+                actual_decision = decision_response.get('decision', decision_response)
                 logger.info(f"      📊 Decision Data Summary:")
-                logger.info(f"         - Symbol: {decision.get('symbol', 'N/A')}")
-                logger.info(f"         - Signal: {decision.get('signal', 'N/A')}")
-                logger.info(f"         - Confidence: {decision.get('confidence', 'N/A')}")
-                logger.info(f"         - Market Regime: {decision.get('market_regime_assessment', 'N/A')}")
-                logger.info(f"         - Execution Priority: {decision.get('execution_priority', 'N/A')}")
-                logger.info(f"         - Risk Level: {decision.get('risk_level', 'N/A')}")
+                logger.info(f"         - Symbol: {actual_decision.get('symbol', 'N/A')}")
+                logger.info(f"         - Signal: {actual_decision.get('signal', 'N/A')}")
+                logger.info(f"         - Confidence: {actual_decision.get('confidence', 'N/A')}")
+                logger.info(f"         - Market Regime: {actual_decision.get('market_regime_assessment', 'N/A')}")
+                logger.info(f"         - Execution Priority: {actual_decision.get('execution_priority', 'N/A')}")
+                logger.info(f"         - Risk Level: {actual_decision.get('risk_level', 'N/A')}")
             
             # Show error details if any
             if endpoint_results['error_details']:
