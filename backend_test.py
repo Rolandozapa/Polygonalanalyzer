@@ -577,6 +577,11 @@ class MultiPhaseStrategicFrameworkTestSuite:
                             endpoint_results['ia2_decision_created'] = True
                             logger.info(f"      ✅ IA2 decision created successfully")
                             
+                            # Check the actual decision object inside the response
+                            actual_decision = decision_data.get('decision', {})
+                            if not actual_decision:
+                                actual_decision = decision_data  # Fallback to root level
+                            
                             # Check for Multi-Phase Strategic Framework fields
                             multi_phase_fields = [
                                 'market_regime_assessment',
@@ -589,9 +594,9 @@ class MultiPhaseStrategicFrameworkTestSuite:
                             
                             fields_present = 0
                             for field in multi_phase_fields:
-                                if field in decision_data and decision_data[field] is not None:
+                                if field in actual_decision and actual_decision[field] is not None:
                                     fields_present += 1
-                                    logger.info(f"         ✅ {field}: {decision_data[field]}")
+                                    logger.info(f"         ✅ {field}: {actual_decision[field]}")
                                 else:
                                     logger.warning(f"         ⚠️ {field}: missing or null")
                             
