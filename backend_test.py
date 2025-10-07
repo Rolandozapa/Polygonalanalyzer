@@ -538,16 +538,16 @@ class MultiPhaseStrategicFrameworkTestSuite:
         logger.info("\n🔍 TEST 3: Test endpoint de création IA2 - /api/create-test-ia2-decision")
         
         try:
-            calculation_results = {
-                'analyses_tested': 0,
-                'grade_d_with_score_0': 0,
-                'grade_d_with_should_trade_false': 0,
-                'consistent_grade_score_mapping': 0,
-                'diverse_grades_found': set(),
-                'diverse_scores_found': set(),
-                'should_trade_variations': set(),
-                'calculation_consistency': 0,
-                'sample_data': [],
+            endpoint_results = {
+                'endpoint_exists': False,
+                'api_call_successful': False,
+                'ia2_decision_created': False,
+                'multi_phase_fields_present': 0,
+                'market_regime_assessment_valid': False,
+                'execution_priority_valid': False,
+                'risk_level_valid': False,
+                'decision_data': {},
+                'response_time': 0,
                 'error_details': []
             }
             
