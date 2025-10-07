@@ -676,13 +676,17 @@ class ProfessionalIndicatorsTALib:
         score = 0
         
         # Mandatory requirements check
-        mandatory_met = (
-            combined_confidence > 0.65 and
-            (adx > 18 or bb_squeeze) and
-            0.1 <= volume_ratio <= 1.0  # Fixed: Normal volume range instead of abnormally high
-        )
+        confidence_ok = combined_confidence > 0.65
+        adx_or_squeeze_ok = (adx > 18 or bb_squeeze)
+        volume_ok = 0.1 <= volume_ratio <= 1.0
+        
+        mandatory_met = confidence_ok and adx_or_squeeze_ok and volume_ok
+        
+        # Debug logging for confluence issues
+        logger.info(f"🔍 CONFLUENCE DEBUG for {regime_info.get('symbol', 'UNKNOWN')}: conf={combined_confidence:.2f} (ok={confidence_ok}), adx={adx:.1f}/squeeze={bb_squeeze} (ok={adx_or_squeeze_ok}), vol={volume_ratio:.3f} (ok={volume_ok})")
         
         if not mandatory_met:
+            logger.info(f"❌ CONFLUENCE FAILED: mandatory requirements not met")
             return {
                 'grade': 'D',
                 'score': 0,
