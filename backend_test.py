@@ -598,23 +598,11 @@ class MFIStochasticRemovalTestSuite:
                 
         except Exception as e:
             self.log_test_result("API Opportunities", False, f"Exception: {str(e)}")
-                        escalation_results['escalation_details'].append({
-                            'symbol': symbol,
-                            'trade_type': trade_type,
-                            'minimum_rr_threshold': minimum_rr_threshold,
-                            'expected_threshold': expected_threshold,
-                            'risk_reward_ratio': risk_reward_ratio,
-                            'ia1_signal': ia1_signal,
-                            'confidence': confidence,
-                            'should_escalate': should_escalate,
-                            'ia2_escalated': ia2_escalated,
-                            'escalation_match': should_escalate == ia2_escalated,
-                            'response_time': response_time
-                        })
-                        
-                        logger.info(f"         📊 Escalation Logic: should_escalate={should_escalate}, ia2_escalated={ia2_escalated}, match={should_escalate == ia2_escalated}")
-                        
-                    else:
+
+    async def test_3_backend_logs_validation(self):
+        """Test 3: Backend Logs Validation - Verify no MFI/Stochastic errors in recent logs"""
+        logger.info("\n🔍 TEST 3: Backend Logs Validation")
+        
         try:
             logs_results = {
                 'logs_captured': False,
