@@ -3427,8 +3427,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"   Stop-Loss: ${stop_loss_price:.6f} (ATR-based + Support/Resistance)")
                 logger.info(f"   Take-Profit: ${take_profit_price:.6f} (Nearest resistance/support)")
                 logger.info(f"   Risk-Reward Ratio: {ia1_risk_reward_ratio:.2f}")
-                    logger.info(f"   Supports: {rr_setup.get('supports', [])}") 
-                    logger.info(f"   Resistances: {rr_setup.get('resistances', [])}")
+                logger.info(f"   Supports: {rr_setup.get('supports', [])}") 
+                logger.info(f"   Resistances: {rr_setup.get('resistances', [])}")
                     
                 except Exception as rr_error:
                     logger.error(f"❌ Error in optimized RR calculation for {opportunity.symbol}: {rr_error}")
