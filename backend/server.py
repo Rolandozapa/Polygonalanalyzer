@@ -3900,47 +3900,109 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             }
 
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 60, timeframe: str = "15m") -> Optional[pd.DataFrame]:  # 🎯 FIX MACD: Utilise 15m pour des valeurs normales
-        """Get enhanced historical data using improved OHLCV fetcher - 4 semaines pour analyse technique IA1"""
+        """Get enhanced historical data for technical analysis with specified timeframe"""
+        
+        if timeframe == "15m":
+            # 🎯 NOUVELLE LOGIQUE: Récupérer données 15m via BingX API pour MACD optimal
+            return await self._fetch_bingx_intraday_data(symbol, timeframe, days)
+        else:
+            # 📊 FALLBACK: Utiliser enhanced_ohlcv_fetcher pour données journalières
+            return await self._get_daily_historical_data(symbol, days)
+    
+    async def _fetch_bingx_intraday_data(self, symbol: str, timeframe: str, days: int) -> Optional[pd.DataFrame]:
+        """Récupère des données intraday (15m, 1h, etc.) via BingX API"""
+        
+        # Calculer le nombre de périodes nécessaires
+        periods_per_day = {
+            "15m": 96,  # 24h * 4 (4 périodes de 15m par heure)
+            "1h": 24,   # 24h * 1
+            "4h": 6,    # 24h / 4
+            "1d": 1     # 1 par jour
+        }
+        
+        total_periods = days * periods_per_day.get(timeframe, 96)
+        # Limiter à 1000 périodes max (limite API)
+        limit = min(total_periods, 1000)
+        
+        logger.info(f"🔍 Fetching {timeframe} data for {symbol}: {limit} périodes (~{limit/periods_per_day.get(timeframe, 96):.1f} jours)")
+        
         try:
-            logger.info(f"🔍 Fetching IA1 OHLCV data for {symbol} ({days} jours pour analyse technique)")
+            # Utiliser BingX API pour données intraday
+            bingx_url = f"{self.bingx_base_url or 'https://open-api.bingx.com'}/openApi/spot/v1/market/kline"
             
-            # Créer une instance temporaire avec le bon nombre de jours
-            original_lookback = enhanced_ohlcv_fetcher.lookback_days
-            enhanced_ohlcv_fetcher.lookback_days = days
+            params = {
+                'symbol': symbol,
+                'interval': timeframe,
+                'limit': limit
+            }
             
-            try:
-                # Use the enhanced OHLCV fetcher avec 4 semaines pour IA1
-                real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
-            finally:
-                # Restaurer la valeur originale
-                enhanced_ohlcv_fetcher.lookback_days = original_lookback
-            
-            if real_data is not None and len(real_data) >= 20:  # Minimum pour indicateurs techniques (20 jours)
-                logger.info(f"✅ IA1 using ENHANCED OHLCV data for {symbol}: {len(real_data)} jours (4 semaines)")
-                
-                # Log multi-source info if available
-                if hasattr(real_data, 'attrs') and real_data.attrs:
-                    primary = real_data.attrs.get('primary_source', 'Unknown')
-                    secondary = real_data.attrs.get('secondary_source', 'None')
-                    validation = real_data.attrs.get('validation_rate', 0)
-                    logger.info(f"📊 Multi-source: {primary} + {secondary}, validation: {validation*100:.1f}%")
-                
-                # Return requested number of days or all available data
-                if len(real_data) >= days:
-                    return real_data.tail(days)  # Return requested number of days
-                else:
-                    logger.info(f"📊 Using all available data for {symbol}: {len(real_data)} days (requested: {days})")
-                    return real_data  # Return all available data
-                    
-            elif real_data is not None:
-                logger.warning(f"⚠️ Insufficient enhanced data for {symbol}: {len(real_data)} days (minimum: 100 for stable MACD)")
-                
-            logger.warning(f"❌ IA1 REJECTING {symbol} - insufficient enhanced multi-source OHLCV data")
-            return None  # No synthetic data fallback
-                
+            async with aiohttp.ClientSession() as session:
+                async with session.get(bingx_url, params=params) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        if data.get('code') == 0 and data.get('data'):
+                            # Convertir données BingX en DataFrame
+                            klines = data['data']
+                            
+                            df = pd.DataFrame(klines, columns=[
+                                'open_time', 'open', 'high', 'low', 'close', 'volume',
+                                'close_time', 'quote_volume', 'count', 'taker_buy_volume',
+                                'taker_buy_quote_volume', 'ignore'
+                            ])
+                            
+                            # Nettoyer et formater
+                            df['open'] = pd.to_numeric(df['open'])
+                            df['high'] = pd.to_numeric(df['high'])
+                            df['low'] = pd.to_numeric(df['low'])
+                            df['close'] = pd.to_numeric(df['close'])
+                            df['volume'] = pd.to_numeric(df['volume'])
+                            
+                            # Convertir timestamp
+                            df['timestamp'] = pd.to_datetime(df['open_time'], unit='ms')
+                            df = df.sort_values('timestamp')
+                            
+                            logger.info(f"✅ BingX {timeframe} data for {symbol}: {len(df)} périodes récupérées")
+                            logger.info(f"📊 Prix range: ${df['close'].min():.2f} - ${df['close'].max():.2f}")
+                            
+                            return df[['open', 'high', 'low', 'close', 'volume']]
+                            
+                        else:
+                            logger.warning(f"⚠️ BingX API error for {symbol}: {data}")
+                    else:
+                        logger.warning(f"⚠️ BingX API HTTP {response.status} for {symbol}")
+                        
         except Exception as e:
-            logger.warning(f"❌ IA1 REJECTING {symbol} - Enhanced multi-source OHLCV fetch error: {e}")
-            return None  # No fallback - real data only
+            logger.error(f"❌ Error fetching BingX {timeframe} data for {symbol}: {e}")
+            
+        # Fallback vers données journalières si échec
+        logger.info(f"🔄 Fallback to daily data for {symbol}")
+        return await self._get_daily_historical_data(symbol, days)
+    
+    async def _get_daily_historical_data(self, symbol: str, days: int) -> Optional[pd.DataFrame]:
+        """Récupère des données journalières via enhanced_ohlcv_fetcher (méthode originale)"""
+        if not enhanced_ohlcv_fetcher:
+            logger.warning(f"⚠️ Enhanced OHLCV fetcher not available for {symbol}")
+            return None
+            
+        logger.info(f"🔍 Fetching daily OHLCV data for {symbol} ({days} jours)")
+        
+        # Créer une instance temporaire avec le bon nombre de jours
+        original_lookback = enhanced_ohlcv_fetcher.lookback_days
+        enhanced_ohlcv_fetcher.lookback_days = days
+        
+        try:
+            real_data = await enhanced_ohlcv_fetcher.get_enhanced_ohlcv_data(symbol)
+        finally:
+            # Restaurer la valeur originale
+            enhanced_ohlcv_fetcher.lookback_days = original_lookback
+        
+        if real_data is not None and len(real_data) >= 20:
+            logger.info(f"✅ Daily data for {symbol}: {len(real_data)} jours")
+            return real_data
+        else:
+            logger.warning(f"⚠️ Insufficient daily data for {symbol}: {len(real_data) if real_data is not None else 0} jours")
+            return None
     
     def _validate_multi_source_quality(self, historical_data: pd.DataFrame, symbol: str) -> Dict[str, Any]:
         """Valide la cohérence entre sources multiples OHLCV pour garantir la qualité"""
