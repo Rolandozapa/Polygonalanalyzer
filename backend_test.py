@@ -76,32 +76,21 @@ class MFIStochasticRemovalTestSuite:
         self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT']  # Specific symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # Prompt files to validate
-        self.prompt_files = {
-            'ia1_v6_advanced': '/app/prompts/ia1_v6_advanced.json',
-            'ia2_strategic': '/app/prompts/ia2_strategic.json'
-        }
+        # Expected indicators that should be present (after MFI/Stochastic removal)
+        self.expected_indicators = ['RSI', 'MACD', 'ATR', 'VWAP', 'ADX', 'BB']
         
-        # Expected IA1 variables (19 variables as mentioned in review request)
-        self.expected_ia1_variables = [
-            "symbol", "market_cap", "market_cap_rank", "current_price", "price_change_24h", "volume_24h",
-            "global_market_context", "rsi", "rsi_zone", "rsi_interpretation", "macd_line", "macd_signal", 
-            "macd_histogram", "stoch_k", "stoch_d", "adx", "adx_strength", "plus_di", "minus_di",
-            "trend_hierarchy", "ema_cross_signal", "mfi", "mfi_signal", "volume_ratio", "volume_trend",
-            "volume_surge", "bb_position", "bb_squeeze", "squeeze_intensity", "atr", "atr_pct",
-            "vwap", "vwap_distance", "sma_20", "sma_50", "ema_9", "ema_21", "ema_200", "regime",
-            "confidence", "base_confidence", "technical_consistency", "combined_confidence",
-            "regime_persistence", "fresh_regime", "stability_score", "regime_transition_alert",
-            "confluence_grade", "confluence_score", "combined_multiplier", "should_trade"
-        ]
+        # Indicators that should NOT be present (removed indicators)
+        self.removed_indicators = ['MFI', 'stochastic', 'stoch_k', 'stoch_d', 'mfi']
         
-        # Expected IA2 variables (16 variables as mentioned in review request)
-        self.expected_ia2_variables = [
-            "symbol", "ia1_signal", "ia1_confidence", "ia1_rr", "ia1_reasoning", "current_price",
-            "price_change_24h", "volume_ratio", "ia1_entry", "ia1_stop", "ia1_target", "rsi",
-            "rsi_zone", "macd_histogram", "adx", "adx_strength", "bb_position", "vwap_distance",
-            "volume_surge", "regime", "regime_confidence", "regime_persistence", "fresh_regime",
-            "regime_transition_alert", "min_rr_threshold", "trade_type", "trade_duration"
+        # Error patterns to check for in logs
+        self.error_patterns = [
+            "NameError: name 'mfi' is not defined",
+            "NameError: name 'stochastic_k' is not defined", 
+            "NameError: name 'stochastic_d' is not defined",
+            "NameError: 'mfi' is not defined",
+            "NameError: 'stochastic_k' is not defined",
+            "mfi is not defined",
+            "stochastic_k is not defined"
         ]
         
         # Technical analysis data storage
