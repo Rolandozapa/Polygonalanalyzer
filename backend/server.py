@@ -5896,7 +5896,7 @@ IA2 STRATEGIC LEVELS (Confluence-based):
 - IA1 MACD: {analysis.macd_trend.upper()} | Line: {analysis.macd_line:.6f} | Histogram: {analysis.macd_histogram:.6f}
 
 💰 **INSTITUTIONAL INDICATORS**: 
-- IA1 MFI: {analysis.mfi_value:.1f} ({analysis.mfi_signal}) - Institution: {analysis.mfi_institution}
+- IA1 Indicators: Streamlined set (MFI removed)
 - IA1 VWAP: ${analysis.vwap_price:.4f} | Position: {analysis.vwap_position:+.2f}% ({analysis.vwap_signal})
 
 📈 **TREND & EMA STRUCTURE**:
