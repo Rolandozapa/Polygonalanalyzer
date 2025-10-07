@@ -989,10 +989,6 @@ const TradingDashboard = () => {
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-sm text-slate-600">Score:</span>
-                                <span className="font-bold text-slate-900">{analysis.confluence_score || 50}/100</span>
-                              </div>
-                              <div className="flex justify-between">
                                 <span className="text-sm text-slate-600">Should Trade:</span>
                                 <span className={`font-bold ${
                                   analysis.should_trade ? 'text-green-600' : 'text-red-600'
