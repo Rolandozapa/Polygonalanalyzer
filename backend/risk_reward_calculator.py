@@ -215,14 +215,29 @@ class RiskRewardCalculator:
                                 'level': i+1
                             })
             
-            # Sélectionner le meilleur TP (RR le plus élevé)
+            # 🔧 FIX RR: Calculer un RR même si aucun TP level ne satisfait min_rr
             best_tp = max(tp_levels, key=lambda x: x['rr_ratio']) if tp_levels else None
+            
+            # Si aucun TP level trouvé, calculer RR directement avec les niveaux calculés
+            if not best_tp:
+                if direction.upper() == "LONG":
+                    fallback_tp = resistances[0] if resistances else entry_price * 1.02
+                    fallback_rr = (fallback_tp - entry_price) / (entry_price - stop_loss) if (entry_price - stop_loss) > 0 else 1.0
+                else:  # SHORT  
+                    fallback_tp = supports[0] if supports else entry_price * 0.98
+                    fallback_rr = (entry_price - fallback_tp) / (stop_loss - entry_price) if (stop_loss - entry_price) > 0 else 1.0
+                
+                best_tp = {
+                    'price': fallback_tp,
+                    'rr_ratio': round(fallback_rr, 2),
+                    'level': 'fallback'
+                }
             
             result = {
                 'stop_loss': round(stop_loss, 6),
                 'take_profits': tp_levels,
-                'best_take_profit': best_tp['price'] if best_tp else entry_price * (1.02 if direction.upper() == "LONG" else 0.98),
-                'best_rr_ratio': best_tp['rr_ratio'] if best_tp else 1.0,
+                'best_take_profit': best_tp['price'],
+                'best_rr_ratio': best_tp['rr_ratio'],
                 'atr_value': round(atr, 6),
                 'direction': direction.upper(),
                 'supports': supports,
