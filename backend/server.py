@@ -3347,10 +3347,15 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 try:
                     rr_calculator = create_rr_calculator('swing')  # Use swing trading config
                     
+                    # 🔧 COLUMN NORMALIZATION: Handle both uppercase and lowercase columns
+                    close_col = 'Close' if 'Close' in historical_data.columns else 'close'
+                    high_col = 'High' if 'High' in historical_data.columns else 'high'
+                    low_col = 'Low' if 'Low' in historical_data.columns else 'low'
+                    
                     # Prepare price history from OHLCV data
-                    close_prices = historical_data['Close'].tolist()[-50:]  # Last 50 periods
-                    high_prices = historical_data['High'].tolist()[-50:]
-                    low_prices = historical_data['Low'].tolist()[-50:]
+                    close_prices = historical_data[close_col].tolist()[-50:]  # Last 50 periods
+                    high_prices = historical_data[high_col].tolist()[-50:]
+                    low_prices = historical_data[low_col].tolist()[-50:]
                     
                     # Get optimal RR setup using advanced method
                     rr_setup = rr_calculator.optimal_rr_setup(
