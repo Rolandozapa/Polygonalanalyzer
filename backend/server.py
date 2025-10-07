@@ -2561,7 +2561,14 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 'confluence_grade': getattr(talib_analysis, 'confluence_grade', 'C'),
                 'confluence_score': getattr(talib_analysis, 'confluence_score', 50),
                 'combined_multiplier': combined_multiplier,
-                'should_trade': getattr(talib_analysis, 'should_trade', False)
+                'should_trade': getattr(talib_analysis, 'should_trade', False),
+                
+                # 🆕 FIGURES CHARTISTES (remplace indicateurs redondants)
+                'detected_patterns': detected_pattern_names[:3] if detected_pattern_names else ["Aucune figure significative"],
+                'pattern_count': len(all_detected_patterns),
+                'primary_pattern': detected_pattern_names[0] if detected_pattern_names else "Aucune",
+                'pattern_strength': all_detected_patterns[0].strength if all_detected_patterns else 0,
+                'pattern_direction': all_detected_patterns[0].trading_direction if all_detected_patterns else "NEUTRAL"
             }
             
             # 🚀 USE EXTERNALIZED IA1 v7.0 ULTRA PROMPT
