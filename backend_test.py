@@ -316,38 +316,19 @@ class MFIStochasticRemovalTestSuite:
                                 'error_type': f'HTTP_{response.status_code}',
                                 'error_text': error_text
                             })
-                                field_validation_results['trade_type_valid'] += 1
-                                logger.info(f"         ✅ trade_type value valid: {trade_type}")
-                            else:
-                                logger.warning(f"         ⚠️ trade_type value invalid: {trade_type}")
-                        else:
-                            logger.error(f"         ❌ New field 'trade_type' missing")
-                        
-                        if minimum_rr_threshold is not None:
-                            field_validation_results['new_field_names_present'] += 1
-                            logger.info(f"         ✅ New field 'minimum_rr_threshold' present: {minimum_rr_threshold}")
-                            
-                            # Validate minimum_rr_threshold value
-                            if isinstance(minimum_rr_threshold, (int, float)) and minimum_rr_threshold > 0:
-                                field_validation_results['minimum_rr_threshold_valid'] += 1
-                                logger.info(f"         ✅ minimum_rr_threshold value valid: {minimum_rr_threshold}")
-                                
-                                # Check if it matches expected mapping
-                                expected_rr = self.trade_type_rr_mapping.get(trade_type, 2.0)
-                                if abs(minimum_rr_threshold - expected_rr) < 0.5:
-                                    logger.info(f"         ✅ minimum_rr_threshold matches expected for {trade_type}: {minimum_rr_threshold} ≈ {expected_rr}")
-                                else:
-                                    logger.warning(f"         ⚠️ minimum_rr_threshold doesn't match expected for {trade_type}: {minimum_rr_threshold} vs {expected_rr}")
-                            else:
-                                logger.warning(f"         ⚠️ minimum_rr_threshold value invalid: {minimum_rr_threshold}")
-                        else:
-                            logger.error(f"         ❌ New field 'minimum_rr_threshold' missing")
-                        
-                        # Validate old field names are absent
-                        if old_trade_type is None and old_rr_threshold is None:
-                            field_validation_results['old_field_names_absent'] += 1
-                            logger.info(f"         ✅ Old field names correctly absent")
-                        else:
+                
+                except Exception as e:
+                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
+                    analysis_results['error_details'].append({
+                        'symbol': symbol,
+                        'error_type': 'EXCEPTION',
+                        'error_text': str(e)
+                    })
+                
+                # Wait between analyses
+                if symbol != self.actual_test_symbols[-1]:
+                    logger.info(f"      ⏳ Waiting 5 seconds before next analysis...")
+                    await asyncio.sleep(5)
                             logger.warning(f"         ⚠️ Old field names still present: recommended_trade_type={old_trade_type}, minimum_rr_for_trade_type={old_rr_threshold}")
                         
                         # Store analysis details
