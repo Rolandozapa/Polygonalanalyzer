@@ -2423,22 +2423,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # MFI functionality now provided by vwap_position (already extracted above)
             logger.debug(f"✅ VWAP-based MFI available for {opportunity.symbol}: {mfi:.2f}% (from AdvancedTechnicalIndicators)")
             
-            # Calculate MFI thresholds from VWAP distance
-            if mfi is not None:
-                mfi_overbought = mfi > 5.0   # VWAP distance > 5% is like MFI > 70
-                mfi_oversold = mfi < -5.0    # VWAP distance < -5% is like MFI < 30
-            else:
-                mfi_overbought = False
-                mfi_oversold = False
-            # 🚨 MFI EXTREME ANALYSIS - NULL SAFE
-            if mfi is not None:
-                mfi_extreme_overbought = mfi > 90
-                mfi_extreme_oversold = mfi < 10
-                institutional_activity = ('distribution' if mfi > 80 else 'accumulation' if mfi < 20 else 'neutral')
-            else:
-                mfi_extreme_overbought = False
-                mfi_extreme_oversold = False
-                institutional_activity = 'neutral'
+            # MFI calculations removed - using streamlined indicator set
             
             # ✅ ALL INDICATORS EXTRACTED FROM simple_indicators_data
             # Volume analysis (already extracted above)
