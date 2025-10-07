@@ -707,8 +707,8 @@ class MultiPhaseStrategicFrameworkTestSuite:
             self.log_test_result("Confluence Calculation Logic", False, f"Exception: {str(e)}")
 
     async def test_4_ia2_decisions_api_validation(self):
-        """Test 4: Validation de la réponse API IA2 - Vérifier /api/ia2-decisions"""
-        logger.info("\n🔍 TEST 4: Validation de la réponse API IA2 - /api/ia2-decisions")
+        """Test 4: Validation de la réponse API IA2 - Vérifier /api/decisions"""
+        logger.info("\n🔍 TEST 4: Validation de la réponse API IA2 - /api/decisions")
         
         try:
             api_results = {
