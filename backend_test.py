@@ -439,9 +439,9 @@ class ConfluenceAnalysisTestSuite:
                 
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis", False, f"Exception: {str(e)}")
-    async def test_2_api_opportunities(self):
-        """Test 2: API Opportunities - Verify scout system works without MFI/Stochastic references"""
-        logger.info("\n🔍 TEST 2: API Opportunities - Scout System Validation")
+    async def test_2_api_analyses_confluence(self):
+        """Test 2: API Analyses Endpoint - Check confluence consistency in stored analyses"""
+        logger.info("\n🔍 TEST 2: API Analyses Endpoint - Confluence Consistency Validation")
         
         try:
             opportunities_results = {
