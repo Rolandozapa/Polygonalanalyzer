@@ -929,24 +929,7 @@ class ConfluenceAnalysisTestSuite:
         except Exception as e:
             self.log_test_result("Backend Logs Validation", False, f"Exception: {str(e)}")
 
-    async def test_removed_old_method_1(self):
-        """Test 0: detected_pattern_names Crash Fix Validation - Critical Bug Fix Test"""
-        logger.info("\n🔍 TEST 0: detected_pattern_names Crash Fix Validation")
-        
-        try:
-            crash_fix_results = {
-                'analyses_attempted': 0,
-                'analyses_successful': 0,
-                'crash_errors_detected': 0,
-                'variable_initialization_errors': 0,
-                'backend_stability': True,
-                'error_logs': [],
-                'successful_analyses': [],
-                'system_exceptions': 0
-            }
-            
-            logger.info("   🚀 Testing critical detected_pattern_names variable initialization fix...")
-            logger.info("   📊 Expected: 100% analyses complete without 'cannot access local variable detected_pattern_names' errors")
+    # Old test methods removed - replaced with confluence analysis tests
             
             # Get available symbols from scout system
             logger.info("   📞 Getting available symbols from scout system...")
