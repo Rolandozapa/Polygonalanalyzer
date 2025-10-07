@@ -444,20 +444,21 @@ class ConfluenceAnalysisTestSuite:
         logger.info("\n🔍 TEST 2: API Analyses Endpoint - Confluence Consistency Validation")
         
         try:
-            opportunities_results = {
+            analyses_results = {
                 'api_call_successful': False,
-                'opportunities_returned': 0,
-                'valid_opportunities': 0,
-                'technical_indicators_present': 0,
-                'mfi_references_found': 0,
-                'stochastic_references_found': 0,
-                'required_fields_present': 0,
-                'opportunities_data': [],
+                'analyses_returned': 0,
+                'confluence_fields_present': 0,
+                'confluence_grades_not_null': 0,
+                'confluence_scores_not_null': 0,
+                'should_trade_not_null': 0,
+                'default_fallback_values': 0,
+                'diverse_confluence_scores': 0,
+                'analyses_data': [],
                 'error_details': []
             }
             
-            logger.info("   🚀 Testing /api/opportunities endpoint for scout system functionality...")
-            logger.info("   📊 Expected: Returns data, contains correct technical indicators, no MFI/stochastic references")
+            logger.info("   🚀 Testing /api/analyses endpoint for confluence consistency...")
+            logger.info("   📊 Expected: Confluence values consistent, no default fallbacks (50/100), real market conditions")
             
             # Test /api/opportunities endpoint
             logger.info("   📞 Calling /api/opportunities endpoint...")
