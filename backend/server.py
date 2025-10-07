@@ -6626,12 +6626,7 @@ async def force_ia1_analysis(request: dict):
                 return {
                     "success": True, 
                     "message": f"IA1 analysis completed for {symbol}",
-                    "analysis": {
-                        "symbol": analysis.symbol,
-                        "confidence": analysis.analysis_confidence,
-                        "recommendation": analysis.ia1_signal,
-                        "reasoning": analysis.ia1_reasoning[:500] + "..." if len(analysis.ia1_reasoning) > 500 else analysis.ia1_reasoning
-                    }
+                    "analysis": analysis.dict()  # Retourner l'objet analysis complet au lieu d'un sous-ensemble
                 }
             else:
                 return {"success": False, "error": f"IA1 analysis failed for {symbol}"}
