@@ -3644,6 +3644,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "patterns_detected": self._ia1_analyzed_patterns if hasattr(self, '_ia1_analyzed_patterns') and self._ia1_analyzed_patterns else ([p.pattern_type.value for p in self._current_detected_patterns] if hasattr(self, '_current_detected_patterns') and self._current_detected_patterns else ([p.pattern_type.value for p in all_detected_patterns] if all_detected_patterns else self._detect_advanced_patterns(historical_data))),
                 "analysis_confidence": analysis_confidence,
                 "risk_reward_ratio": ia1_risk_reward_ratio,
+                "calculated_rr": ia1_risk_reward_ratio,  # 🎯 FIX RR: Add calculated_rr field for API consistency
                 "ia1_reasoning": reasoning,
                 "ia1_signal": ia1_signal,
                 "market_sentiment": self._determine_market_sentiment(opportunity),
