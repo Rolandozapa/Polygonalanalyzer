@@ -4374,14 +4374,21 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     return False
             
             # Vérifier que High >= Low pour chaque jour
-            invalid_highs_lows = (historical_data['High'] < historical_data['Low']).sum()
-            if invalid_highs_lows > 0:
-                logger.debug(f"❌ High < Low détecté pour {symbol}: {invalid_highs_lows} occurrences")
+            try:
+                high_col = get_ohlcv_column(historical_data, 'high')
+                low_col = get_ohlcv_column(historical_data, 'low')
+                invalid_highs_lows = (historical_data[high_col] < historical_data[low_col]).sum()
+                if invalid_highs_lows > 0:
+                    logger.debug(f"❌ High < Low détecté pour {symbol}: {invalid_highs_lows} occurrences")
+                    return False
+            except KeyError:
+                logger.debug(f"❌ Cannot validate High/Low columns for {symbol}: columns not found")
                 return False
             
             # Vérifier la variabilité des prix (pas de prix constants)
-            price_std = historical_data['Close'].std()
-            price_mean = historical_data['Close'].mean()
+            close_col = get_ohlcv_column(historical_data, 'close')
+            price_std = historical_data[close_col].std()
+            price_mean = historical_data[close_col].mean()
             if price_mean > 0:
                 coefficient_variation = price_std / price_mean
                 if coefficient_variation < 0.001:  # Moins de 0.1% de variation
