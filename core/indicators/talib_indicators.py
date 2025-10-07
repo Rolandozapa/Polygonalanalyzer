@@ -349,20 +349,8 @@ class TALibIndicators:
             distance_sma_20 = ((current_price / sma_20[-1]) - 1) * 100 if not np.isnan(sma_20[-1]) else 0.0
             distance_sma_50 = ((current_price / sma_50[-1]) - 1) * 100 if not np.isnan(sma_50[-1]) else 0.0
             
-            # 🆕 NOUVEAUX INDICATEURS TREND POUR IA1
-            
-            # Aroon (identifie les nouveaux trends)
-            aroon_down, aroon_up = talib.AROON(high, low, timeperiod=14)
-            aroon_up_value = float(aroon_up[-1]) if not np.isnan(aroon_up[-1]) else 50.0
-            aroon_down_value = float(aroon_down[-1]) if not np.isnan(aroon_down[-1]) else 50.0
-            aroon_diff = aroon_up_value - aroon_down_value  # Différence pour force trend
-            aroon_signal = "BULLISH" if aroon_diff > 25 else "BEARISH" if aroon_diff < -25 else "NEUTRAL"
-            
-            # Parabolic SAR (points de retournement précis)
-            sar = talib.SAR(high, low, acceleration=0.02, maximum=0.2)
-            sar_value = float(sar[-1]) if not np.isnan(sar[-1]) else current_price
-            sar_signal = "BULLISH" if current_price > sar_value else "BEARISH"
-            sar_distance = ((current_price / sar_value) - 1) * 100  # Distance en %
+            # ✅ INDICATEURS TREND ESSENTIELS SEULEMENT (ADX + Slopes)
+            # Aroon et Parabolic SAR supprimés pour éviter redondance avec ADX
             
             return {
                 'adx': adx_value,
