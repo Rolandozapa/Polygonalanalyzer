@@ -9972,10 +9972,15 @@ async def websocket_endpoint(websocket: WebSocket):
 # 🔄 Automatic Scout Refresh Loop - Every 4 hours
 async def automatic_scout_refresh_loop():
     """Background loop to refresh scout data every 4 hours"""
+    # Configuration: Use shorter interval for testing, 4h for production
+    import os
+    refresh_interval = int(os.environ.get('SCOUT_REFRESH_INTERVAL', '14400'))  # Default 4h, can be overridden
+    logger.info(f"🔄 Scout refresh interval: {refresh_interval} seconds ({refresh_interval/3600:.1f} hours)")
+    
     while True:
         try:
-            # Wait 4 hours (14400 seconds)
-            await asyncio.sleep(14400)  # 4 hours = 4 * 60 * 60 = 14400 seconds
+            # Wait for the configured interval
+            await asyncio.sleep(refresh_interval)
             
             logger.info("🔄 AUTOMATIC SCOUT REFRESH: Starting scheduled 4-hour refresh...")
             
