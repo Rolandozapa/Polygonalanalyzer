@@ -149,19 +149,17 @@ class MultiPhaseStrategicFrameworkTestSuite:
         logger.info("\n🔍 TEST 1: Test du prompt IA2 enrichi - Validation du Multi-Phase Strategic Framework")
         
         try:
-            analysis_results = {
-                'analyses_attempted': 0,
-                'analyses_successful': 0,
-                'confluence_grade_not_null': 0,
-                'confluence_score_not_null': 0,
-                'should_trade_not_null': 0,
-                'valid_confluence_grades': 0,
-                'valid_confluence_scores': 0,
-                'confluence_reasoning_present': 0,
-                'successful_analyses': [],
-                'error_details': [],
-                'response_times': [],
-                'confluence_data': []
+            prompt_results = {
+                'ia2_v3_prompt_exists': False,
+                'ia2_strategic_prompt_exists': False,
+                'market_regime_assessment_found': False,
+                'execution_priority_found': False,
+                'risk_level_found': False,
+                'json_output_section_valid': False,
+                'required_variables_present': False,
+                'multi_phase_framework_complete': False,
+                'prompt_content_analysis': {},
+                'error_details': []
             }
             
             logger.info("   🚀 Testing IA1 analysis with specific symbols to verify confluence values are not null...")
