@@ -10389,36 +10389,18 @@ class UltraProfessionalOrchestrator:
             )
 
 
-    def _calculate_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
+    def _calculate_institutional_validation(self, vwap_position: float, vwap_price: float, 
                                            sma50_vs_price: float, market_cap_24h: float, primary_signal: str) -> float:
         """
         🏛️ INSTITUTIONAL VALIDATION SCORE
-        Separate validation based on institutional indicators (MFI, VWAP, SMA50)
+        Separate validation based on institutional indicators (VWAP, SMA50)
         Does NOT modify IA1 confidence - provides independent validation
         """
         try:
-            # Base score starts at 50 (neutral)
-            validation_score = 50.0
+            # Base score starts at 55 (slightly higher without MFI)
+            validation_score = 55.0
             
-            # 1️⃣ MFI INSTITUTIONAL FLOW (35% weight)
-            mfi_score = 0.0
-            if mfi >= 80:
-                # Overbought - Institutional distribution 
-                mfi_score = 25.0 if primary_signal == "short" else 10.0
-            elif mfi >= 70:
-                # Strong buying - Institutional accumulation
-                mfi_score = 30.0 if primary_signal == "long" else 15.0  
-            elif mfi <= 20:
-                # Oversold - Institutional accumulation
-                mfi_score = 30.0 if primary_signal == "long" else 10.0
-            elif mfi <= 30:
-                # Weak selling - Institutional support
-                mfi_score = 25.0 if primary_signal == "long" else 15.0
-            else:
-                # Neutral MFI
-                mfi_score = 15.0
-            
-            # 2️⃣ VWAP INSTITUTIONAL POSITIONING (35% weight)
+            # 1️⃣ VWAP INSTITUTIONAL POSITIONING (50% weight - increased from 35%)
             vwap_score = 0.0
             if abs(vwap_position) > 2.0:
                 # Extreme deviation from institutional average
