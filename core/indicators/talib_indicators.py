@@ -534,11 +534,7 @@ class TALibIndicators:
             return {
                 'rsi': 50.0, 'rsi_zone': 'NEUTRAL', 'rsi_trend': 0.0,
                 'macd_line': 0.0, 'macd_signal_line': 0.0, 'macd_histogram': 0.0,
-                'macd_trend': 'NEUTRAL', 'macd_slope': 0.0,
-                # 🆕 NOUVEAUX INDICATEURS MOMENTUM (fallbacks)
-                'willr': -50.0, 'willr_zone': 'NEUTRAL',
-                'cci': 0.0, 'cci_zone': 'NEUTRAL',
-                'roc': 0.0, 'roc_strength': 'WEAK'
+                'macd_trend': 'NEUTRAL', 'macd_slope': 0.0
             }
     
     def _calculate_stochastic_indicators(self, high: np.array, low: np.array, close: np.array) -> Dict[str, Any]:
