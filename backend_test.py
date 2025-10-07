@@ -711,16 +711,18 @@ class MultiPhaseStrategicFrameworkTestSuite:
         logger.info("\n🔍 TEST 4: Validation de la réponse API IA2 - /api/ia2-decisions")
         
         try:
-            logs_results = {
-                'logs_captured': False,
-                'total_log_lines': 0,
-                'confluence_calculation_logs': 0,
-                'confluence_error_logs': 0,
-                'success_indicators': 0,
-                'confluence_patterns_found': [],
-                'success_patterns_found': [],
-                'sample_confluence_logs': [],
-                'sample_success_logs': []
+            api_results = {
+                'api_call_successful': False,
+                'decisions_returned': 0,
+                'multi_phase_fields_coverage': 0,
+                'market_regime_not_null': 0,
+                'execution_priority_not_null': 0,
+                'risk_level_not_null': 0,
+                'diverse_market_regimes': set(),
+                'diverse_execution_priorities': set(),
+                'diverse_risk_levels': set(),
+                'decisions_data': [],
+                'error_details': []
             }
             
             logger.info("   🚀 Analyzing backend logs for confluence calculation patterns...")
