@@ -1650,6 +1650,7 @@ class UltraProfessionalIA1TechnicalAnalyst:
         self.chat = get_ia1_chat()
         self.market_aggregator = advanced_market_aggregator
         self.advanced_indicators = AdvancedTechnicalIndicators()
+        self.bingx_base_url = "https://open-api.bingx.com"
     
     def _get_rsi_interpretation(self, rsi_value: float, rsi_zone: str) -> str:
         """Get RSI interpretation based on value and zone"""
