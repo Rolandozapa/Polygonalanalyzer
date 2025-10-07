@@ -192,6 +192,11 @@ class TradingDecision(BaseModel):
     actual_entry_price: Optional[float] = None
     actual_quantity: Optional[float] = None
     bingx_status: Optional[str] = None
+    # 🔧 NEW DYNAMIC FIELDS FOR FRONTEND DISPLAY 
+    ia1_validation: Optional[str] = "confirmed"
+    volume_profile_bias: Optional[str] = "neutral"
+    orderbook_quality: Optional[str] = "good"
+    institutional_edge: Optional[str] = "Multi-timeframe confluence"
     timestamp: datetime = Field(default_factory=get_paris_time)
 
 class TradingPerformance(BaseModel):
