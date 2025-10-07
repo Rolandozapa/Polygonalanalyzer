@@ -1146,28 +1146,39 @@ const TradingDashboard = () => {
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div className="text-center bg-white rounded-lg p-3 border">
                               <p className="text-xs text-slate-600">Phase 1</p>
-                              <p className="font-bold text-blue-700">Pressure-Momentum</p>
-                              <p className="text-xs text-slate-500">✅ Synthesized</p>
+                              <p className="font-bold text-blue-700">Market Regime</p>
+                              <p className="text-xs text-slate-500">
+                                {decision.market_regime_assessment === 'bullish' ? '🟢 Bullish' :
+                                 decision.market_regime_assessment === 'bearish' ? '🔴 Bearish' :
+                                 decision.market_regime_assessment === 'neutral' ? '⚪ Neutral' :
+                                 '⚖️ ' + (decision.market_regime_assessment || 'Neutral')}
+                              </p>
                             </div>
                             <div className="text-center bg-white rounded-lg p-3 border">
                               <p className="text-xs text-slate-600">Phase 2</p>
-                              <p className="font-bold text-green-700">Volume Profile</p>
+                              <p className="font-bold text-green-700">Execution</p>
                               <p className="text-xs text-slate-500">
-                                {decision.volume_profile_bias || '⚖️ Neutral'}
+                                {decision.execution_priority === 'immediate' ? '🔥 Immediate' :
+                                 decision.execution_priority === 'delayed' ? '⏰ Delayed' :
+                                 decision.execution_priority === 'wait' ? '⏸️ Wait' :
+                                 '📊 ' + (decision.execution_priority || 'Standard')}
                               </p>
                             </div>
                             <div className="text-center bg-white rounded-lg p-3 border">
                               <p className="text-xs text-slate-600">Phase 3</p>
-                              <p className="font-bold text-purple-700">Orderbook Intel</p>
+                              <p className="font-bold text-purple-700">Risk Level</p>
                               <p className="text-xs text-slate-500">
-                                {decision.orderbook_quality || '📊 Good'}
+                                {decision.risk_level === 'low' ? '🟢 Low' :
+                                 decision.risk_level === 'medium' ? '🟡 Medium' :
+                                 decision.risk_level === 'high' ? '🔴 High' :
+                                 '⚖️ ' + (decision.risk_level || 'Medium')}
                               </p>
                             </div>
                             <div className="text-center bg-white rounded-lg p-3 border">
                               <p className="text-xs text-slate-600">Phase 4</p>
-                              <p className="font-bold text-indigo-700">Risk-Optimized</p>
+                              <p className="font-bold text-indigo-700">Confidence</p>
                               <p className="text-xs text-slate-500">
-                                Score: {decision.multi_phase_score || '85'}/100
+                                {Math.round(decision.confidence || 85)}%
                               </p>
                             </div>
                           </div>
