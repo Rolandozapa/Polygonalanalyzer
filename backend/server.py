@@ -9969,7 +9969,40 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-# Ultra professional background trading loop with trending auto-update
+# 🔄 Automatic Scout Refresh Loop - Every 4 hours
+async def automatic_scout_refresh_loop():
+    """Background loop to refresh scout data every 4 hours"""
+    while True:
+        try:
+            # Wait 4 hours (14400 seconds)
+            await asyncio.sleep(14400)  # 4 hours = 4 * 60 * 60 = 14400 seconds
+            
+            logger.info("🔄 AUTOMATIC SCOUT REFRESH: Starting scheduled 4-hour refresh...")
+            
+            # Force scout refresh using the existing logic
+            from trending_auto_updater import trending_auto_updater
+            from advanced_market_aggregator import advanced_market_aggregator
+            
+            # Clear scout cache to force refresh
+            trending_auto_updater.current_trending = None
+            trending_auto_updater.last_update = None
+            
+            # Get fresh cryptos from BingX
+            fresh_cryptos = trending_auto_updater.get_cached_or_fetch_sync()
+            
+            if fresh_cryptos:
+                trending_auto_updater.current_trending = fresh_cryptos
+                trending_auto_updater.last_update = datetime.now()
+                logger.info(f"✅ AUTOMATIC REFRESH SUCCESS: {len(fresh_cryptos)} cryptos refreshed from BingX")
+            else:
+                logger.warning("⚠️ AUTOMATIC REFRESH: No fresh cryptos fetched - will retry in 4h")
+                
+        except Exception as e:
+            logger.error(f"❌ Automatic scout refresh error: {e}")
+            # Continue the loop even if there's an error
+            continue
+
+# Ultra professional background trading loop with trending auto-update  
 async def ultra_professional_trading_loop():
     """Ultra professional continuous trading loop with trending auto-update"""
     # Initialize the orchestrator
