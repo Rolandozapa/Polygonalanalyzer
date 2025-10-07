@@ -820,14 +820,14 @@ class MultiPhaseStrategicFrameworkTestSuite:
                         api_results['error_details'].append(f"JSON decode error: {e}")
                         
                 else:
-                    logger.error(f"      ❌ /api/ia2-decisions failed: HTTP {response.status_code}")
+                    logger.error(f"      ❌ /api/decisions failed: HTTP {response.status_code}")
                     if response.text:
                         error_text = response.text[:500]
                         logger.error(f"         Error response: {error_text}")
                         api_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
                     
             except Exception as e:
-                logger.error(f"      ❌ /api/ia2-decisions exception: {e}")
+                logger.error(f"      ❌ /api/decisions exception: {e}")
                 api_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
