@@ -10313,17 +10313,17 @@ class UltraProfessionalOrchestrator:
             logger.error(f"❌ Trading cycle error: {e}")
             return 0
     
-    def _calculate_enhanced_institutional_validation(self, mfi: float, vwap_position: float, vwap_price: float, 
+    def _calculate_enhanced_institutional_validation(self, vwap_position: float, vwap_price: float, 
                                                    sma50_vs_price: float, market_cap_24h: float, primary_signal: str,
                                                    dune_data=None) -> float:
         """
         🔮 ENHANCED INSTITUTIONAL VALIDATION with Dune Analytics
-        Combines traditional indicators (MFI, VWAP, SMA50) with on-chain validation data
+        Combines traditional indicators (VWAP, SMA50) with on-chain validation data
         """
         try:
             # Start with base traditional validation
             base_score = self._calculate_institutional_validation(
-                mfi, vwap_position, vwap_price, sma50_vs_price, market_cap_24h, primary_signal
+                vwap_position, vwap_price, sma50_vs_price, market_cap_24h, primary_signal
             )
             
             # If no Dune data, return base score
