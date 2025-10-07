@@ -3930,8 +3930,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         logger.info(f"🔍 Fetching {timeframe} data for {symbol}: {limit} périodes (~{limit/periods_per_day.get(timeframe, 96):.1f} jours)")
         
         try:
-            # Utiliser BingX API pour données intraday
-            bingx_url = f"{self.bingx_base_url or 'https://open-api.bingx.com'}/openApi/spot/v1/market/kline"
+            # Utiliser BingX Futures API pour données intraday (plus fiable que spot)
+            bingx_url = f"{self.bingx_base_url or 'https://open-api.bingx.com'}/openApi/swap/v2/quote/klines"
             
             # Convertir format symbole pour BingX API (ETHUSDT -> ETH-USDT)
             bingx_symbol = symbol.replace('USDT', '-USDT').replace('BTC', '-BTC') if 'USDT' in symbol else symbol
