@@ -3390,12 +3390,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # 🎯 NOUVEAU SYSTÈME RR OPTIMISÉ - Méthode "Niveaux Proches"
             from risk_reward_calculator import create_rr_calculator
             
-            # Try to extract RR from IA1 response first
-            if ia1_calculated_rr and isinstance(ia1_calculated_rr, (int, float)):
-                ia1_risk_reward_ratio = float(ia1_calculated_rr)
-                logger.info(f"🎯 IA1 PROVIDED RR for {opportunity.symbol}: {ia1_risk_reward_ratio:.2f}")
-            else:
-                # Calculate RR using optimized method with real market data
+            # 🔧 FIX RR: Always prioritize calculated RR over IA1 JSON response for accuracy
+            # Calculate RR using optimized method with real market data
                 try:
                     rr_calculator = create_rr_calculator('swing')  # Use swing trading config
                     
