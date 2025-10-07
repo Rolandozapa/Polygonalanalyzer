@@ -738,7 +738,7 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 
                 if response.status_code == 200:
                     api_results['api_call_successful'] = True
-                    logger.info(f"      ✅ /api/ia2-decisions successful (response time: {response_time:.2f}s)")
+                    logger.info(f"      ✅ /api/decisions successful (response time: {response_time:.2f}s)")
                     
                     # Parse response
                     try:
