@@ -7113,7 +7113,7 @@ async def test_ia2_rr_logic():
             ia1_signal="long", ia1_reasoning="Strong bullish pattern with RSI overbought confirmation",
             market_sentiment="bullish", data_sources=["test"],
             risk_reward_ratio=2.5, entry_price=100, stop_loss_price=95, take_profit_price=110,
-            mfi_value=75, mfi_signal="overbought", vwap_position=5.2, vwap_signal="overbought",
+            vwap_position=5.2, vwap_signal="overbought",
             ema_hierarchy="strong_bull", multi_timeframe_dominant="4H"
         )
         
