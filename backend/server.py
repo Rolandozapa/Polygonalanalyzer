@@ -5798,7 +5798,7 @@ class UltraProfessionalIA2DecisionAgent:
             vwap_price = analysis.vwap_price
             vwap_position = analysis.vwap_position
             ema_hierarchy = analysis.ema_hierarchy
-            mfi_value = analysis.mfi_value
+            # MFI value removed from streamlined system
             rsi = analysis.rsi
             
             # IA2 will calculate her own levels in the prompt, we just set defaults
