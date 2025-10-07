@@ -876,11 +876,11 @@ class MultiPhaseStrategicFrameworkTestSuite:
             test_success_rate = success_count / len(success_criteria)
             
             if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("IA2 Decisions API Validation", True, 
-                                   f"IA2 decisions API validation successful: {success_count}/{len(success_criteria)} criteria met. Avg fields: {avg_fields_per_decision:.1f}/6, Diversity: regimes={diversity_market_regimes}, priorities={diversity_execution_priorities}, risks={diversity_risk_levels}")
+                self.log_test_result("Decisions API Validation", True, 
+                                   f"Decisions API validation successful: {success_count}/{len(success_criteria)} criteria met. Avg fields: {avg_fields_per_decision:.1f}/6, Diversity: regimes={diversity_market_regimes}, priorities={diversity_execution_priorities}, risks={diversity_risk_levels}")
             else:
-                self.log_test_result("IA2 Decisions API Validation", False, 
-                                   f"IA2 decisions API validation issues: {success_count}/{len(success_criteria)} criteria met. Multi-Phase fields may be null or lack diversity")
+                self.log_test_result("Decisions API Validation", False, 
+                                   f"Decisions API validation issues: {success_count}/{len(success_criteria)} criteria met. Multi-Phase fields may be null or lack diversity")
                 
         except Exception as e:
             self.log_test_result("Backend Logs Confluence Validation", False, f"Exception: {str(e)}")
