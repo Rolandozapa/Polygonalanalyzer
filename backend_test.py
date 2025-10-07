@@ -205,10 +205,10 @@ class MFIStochasticRemovalTestSuite:
                 logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
                 self.actual_test_symbols = self.test_symbols
             
-            # Test each symbol for field name validation
+            # Test each symbol for MFI/Stochastic removal validation
             for symbol in self.actual_test_symbols:
-                logger.info(f"\n   📞 Testing field name validation for {symbol}...")
-                field_validation_results['analyses_attempted'] += 1
+                logger.info(f"\n   📞 Testing IA1 analysis for {symbol} - checking for MFI/Stochastic errors...")
+                analysis_results['analyses_attempted'] += 1
                 
                 try:
                     start_time = time.time()
@@ -218,10 +218,12 @@ class MFIStochasticRemovalTestSuite:
                         timeout=120
                     )
                     response_time = time.time() - start_time
+                    analysis_results['response_times'].append(response_time)
                     
                     if response.status_code == 200:
                         analysis_data = response.json()
-                        field_validation_results['analyses_successful'] += 1
+                        analysis_results['analyses_successful'] += 1
+                        analysis_results['valid_json_responses'] += 1
                         
                         logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
                         
@@ -230,24 +232,90 @@ class MFIStochasticRemovalTestSuite:
                         if not isinstance(ia1_analysis, dict):
                             ia1_analysis = {}
                         
-                        # Check for NEW field names (should be present)
-                        trade_type = ia1_analysis.get('trade_type')
-                        minimum_rr_threshold = ia1_analysis.get('minimum_rr_threshold')
+                        # Check for required indicators (should be present)
+                        required_indicators_found = []
+                        for indicator in self.expected_indicators:
+                            # Check various field patterns for each indicator
+                            if indicator == 'RSI':
+                                if any(key for key in ia1_analysis.keys() if 'rsi' in key.lower()):
+                                    required_indicators_found.append(indicator)
+                            elif indicator == 'MACD':
+                                if any(key for key in ia1_analysis.keys() if 'macd' in key.lower()):
+                                    required_indicators_found.append(indicator)
+                            elif indicator == 'ATR':
+                                if any(key for key in ia1_analysis.keys() if 'atr' in key.lower()):
+                                    required_indicators_found.append(indicator)
+                            elif indicator == 'VWAP':
+                                if any(key for key in ia1_analysis.keys() if 'vwap' in key.lower()):
+                                    required_indicators_found.append(indicator)
+                            elif indicator == 'ADX':
+                                if any(key for key in ia1_analysis.keys() if 'adx' in key.lower()):
+                                    required_indicators_found.append(indicator)
+                            elif indicator == 'BB':
+                                if any(key for key in ia1_analysis.keys() if 'bb' in key.lower() or 'bollinger' in key.lower()):
+                                    required_indicators_found.append(indicator)
                         
-                        # Check for OLD field names (should be absent)
-                        old_trade_type = ia1_analysis.get('recommended_trade_type')
-                        old_rr_threshold = ia1_analysis.get('minimum_rr_for_trade_type')
+                        if len(required_indicators_found) >= 4:  # At least 4 of 6 expected indicators
+                            analysis_results['required_indicators_present'] += 1
+                            logger.info(f"         ✅ Required indicators present: {required_indicators_found}")
+                        else:
+                            logger.warning(f"         ⚠️ Missing required indicators. Found: {required_indicators_found}")
                         
-                        logger.info(f"         📊 New Fields: trade_type={trade_type}, minimum_rr_threshold={minimum_rr_threshold}")
-                        logger.info(f"         📊 Old Fields: recommended_trade_type={old_trade_type}, minimum_rr_for_trade_type={old_rr_threshold}")
+                        # Check for removed indicators (should NOT be present)
+                        removed_indicators_found = []
+                        for indicator in self.removed_indicators:
+                            if any(key for key in ia1_analysis.keys() if indicator.lower() in key.lower()):
+                                removed_indicators_found.append(indicator)
                         
-                        # Validate new field names are present
-                        if trade_type is not None:
-                            field_validation_results['new_field_names_present'] += 1
-                            logger.info(f"         ✅ New field 'trade_type' present: {trade_type}")
-                            
-                            # Validate trade_type value
-                            if trade_type in self.valid_trade_types:
+                        if len(removed_indicators_found) == 0:
+                            analysis_results['removed_indicators_absent'] += 1
+                            logger.info(f"         ✅ Removed indicators correctly absent")
+                        else:
+                            logger.warning(f"         ❌ Removed indicators still present: {removed_indicators_found}")
+                        
+                        # Store successful analysis details
+                        analysis_results['successful_analyses'].append({
+                            'symbol': symbol,
+                            'response_time': response_time,
+                            'required_indicators': required_indicators_found,
+                            'removed_indicators': removed_indicators_found,
+                            'analysis_data': ia1_analysis
+                        })
+                        
+                    elif response.status_code == 500:
+                        # Check for specific MFI/Stochastic errors
+                        error_text = response.text
+                        logger.error(f"      ❌ {symbol} analysis failed: HTTP 500")
+                        logger.error(f"         Error response: {error_text[:500]}")
+                        
+                        # Check for MFI errors
+                        if any(pattern in error_text for pattern in ["mfi", "MFI"]):
+                            analysis_results['mfi_errors_found'] += 1
+                            logger.error(f"         🚨 MFI ERROR DETECTED in {symbol}")
+                        
+                        # Check for Stochastic errors  
+                        if any(pattern in error_text for pattern in ["stochastic", "stoch_k", "stoch_d"]):
+                            analysis_results['stochastic_errors_found'] += 1
+                            logger.error(f"         🚨 STOCHASTIC ERROR DETECTED in {symbol}")
+                        
+                        analysis_results['error_details'].append({
+                            'symbol': symbol,
+                            'error_type': 'HTTP_500',
+                            'error_text': error_text[:500],
+                            'has_mfi_error': any(pattern in error_text for pattern in ["mfi", "MFI"]),
+                            'has_stochastic_error': any(pattern in error_text for pattern in ["stochastic", "stoch_k", "stoch_d"])
+                        })
+                        
+                    else:
+                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
+                        if response.text:
+                            error_text = response.text[:300]
+                            logger.error(f"         Error response: {error_text}")
+                            analysis_results['error_details'].append({
+                                'symbol': symbol,
+                                'error_type': f'HTTP_{response.status_code}',
+                                'error_text': error_text
+                            })
                                 field_validation_results['trade_type_valid'] += 1
                                 logger.info(f"         ✅ trade_type value valid: {trade_type}")
                             else:
