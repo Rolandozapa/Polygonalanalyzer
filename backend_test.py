@@ -50,8 +50,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class ExternalizedPromptMigrationTestSuite:
-    """Comprehensive test suite for Externalized Prompt Migration validation"""
+class MFIStochasticRemovalTestSuite:
+    """Comprehensive test suite for MFI and Stochastic indicators removal validation"""
     
     def __init__(self):
         # Get backend URL from frontend env
