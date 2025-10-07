@@ -4658,6 +4658,17 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             cleaned_data["pattern_strength"] = self._ensure_json_safe(analysis_data.get("pattern_strength"), 0.0)
             cleaned_data["pattern_direction"] = str(analysis_data.get("pattern_direction", "NEUTRAL"))
             
+            # 🚀 MULTI-TIMEFRAME ANALYSIS RESULTS
+            cleaned_data["mtf_primary_signal"] = str(analysis_data.get("mtf_primary_signal", "NEUTRAL"))
+            cleaned_data["mtf_confluence_score"] = self._ensure_json_safe(analysis_data.get("mtf_confluence_score"), 0.5)
+            cleaned_data["mtf_confidence_grade"] = str(analysis_data.get("mtf_confidence_grade", "C"))
+            cleaned_data["mtf_recommended_action"] = str(analysis_data.get("mtf_recommended_action", "HOLD"))
+            cleaned_data["mtf_risk_reward_ratio"] = self._ensure_json_safe(analysis_data.get("mtf_risk_reward_ratio"), 1.0)
+            cleaned_data["tf_15m_signal"] = str(analysis_data.get("tf_15m_signal", "NEUTRAL"))
+            cleaned_data["tf_1h_signal"] = str(analysis_data.get("tf_1h_signal", "NEUTRAL"))
+            cleaned_data["tf_4h_signal"] = str(analysis_data.get("tf_4h_signal", "NEUTRAL"))
+            cleaned_data["tf_1d_signal"] = str(analysis_data.get("tf_1d_signal", "NEUTRAL"))
+            
             # 🚨 CRITICAL FIX: Add missing VWAP distance and volume fields
             cleaned_data["vwap_distance"] = self._ensure_json_safe(analysis_data.get("vwap_distance"), 0.0)
             cleaned_data["volume_ratio"] = self._ensure_json_safe(analysis_data.get("volume_ratio"), 1.0)
