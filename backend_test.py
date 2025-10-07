@@ -1,36 +1,36 @@
 #!/usr/bin/env python3
 """
-EXTERNALIZED PROMPT MIGRATION TESTING SUITE
-Focus: Test the externalized prompt migration for the AI trading bot system.
+MFI AND STOCHASTIC INDICATORS REMOVAL TESTING SUITE
+Focus: Test the trading bot system after removal of MFI and Stochastic indicators.
 
 CRITICAL VALIDATION POINTS:
 
-1. **Prompt Loading Verification**:
-   - Test that externalized prompts are loaded correctly from `/app/prompts/` directory
-   - Verify ia1_v6_advanced.json and ia2_strategic.json are properly formatted and accessible
-   - Check backend logs for prompt loading success messages
+1. **API Force IA1 Analysis**:
+   - Test with 3-4 symbols (BTCUSDT, ETHUSDT, SOLUSDT, LINKUSDT) to verify:
+   - No "NameError: 'mfi' is not defined" errors
+   - No "NameError: 'stochastic_k' is not defined" errors
+   - IA1 analyses complete successfully
+   - Valid JSON responses with all required fields
 
-2. **IA1 Prompt Testing**:
-   - Test `/api/force-ia1-analysis` with various symbols to ensure IA1 externalized prompt works
-   - Verify prompt formatting with all required variables (19 variables for IA1)
-   - Check response quality and JSON parsing success
-   - Monitor backend logs for "Prompt formatted: ia1_v6_advanced" messages
+2. **API Opportunities**:
+   - Verify scout system works: /api/opportunities returns data
+   - Opportunities contain correct technical indicators
+   - No MFI/stochastic references in responses
 
-3. **IA2 Prompt Testing**:
-   - Test IA2 escalation scenarios to validate ia2_strategic prompt works
-   - Verify JSON format handling (ensure double braces fix resolved formatting issues)
-   - Check IA2 strategic analysis responses
+3. **Validation of Indicators**:
+   - In IA1 responses, verify RSI, MACD, ATR are present and calculated
+   - No MFI or stochastic fields in responses
+   - Values are realistic (not fallbacks like 50.0 everywhere)
 
-4. **System Integration**:
-   - Test full IA1 cycle with `/api/run-ia1-cycle` to ensure no prompt-related errors
-   - Verify system performance is maintained (no degradation from externalized prompts)
-   - Check that all technical indicators and ML regime data flows correctly to prompts
+4. **Backend Logs**:
+   - Verify no more MFI errors in logs
+   - No stochastic errors in logs
+   - No NameError in recent logs
 
-5. **Error Handling**:
-   - Verify system gracefully handles any prompt loading failures
-   - Test fallback mechanisms if externalized prompts are unavailable
+5. **Test IA2 Escalation**:
+   - If possible, test that high confidence or good RR triggers IA2
 
-FOCUS: Validate the prompt migration is 100% functional and maintains all existing functionality.
+FOCUS: Confirm all systems work correctly after MFI and stochastic removal.
 """
 
 import asyncio
