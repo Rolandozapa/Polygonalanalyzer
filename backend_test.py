@@ -148,18 +148,20 @@ class ConfluenceAnalysisTestSuite:
             analysis_results = {
                 'analyses_attempted': 0,
                 'analyses_successful': 0,
-                'mfi_errors_found': 0,
-                'stochastic_errors_found': 0,
-                'valid_json_responses': 0,
-                'required_indicators_present': 0,
-                'removed_indicators_absent': 0,
+                'confluence_grade_not_null': 0,
+                'confluence_score_not_null': 0,
+                'should_trade_not_null': 0,
+                'valid_confluence_grades': 0,
+                'valid_confluence_scores': 0,
+                'confluence_reasoning_present': 0,
                 'successful_analyses': [],
                 'error_details': [],
-                'response_times': []
+                'response_times': [],
+                'confluence_data': []
             }
             
-            logger.info("   🚀 Testing IA1 analysis with specific symbols to verify no MFI/Stochastic errors...")
-            logger.info("   📊 Expected: No NameError for 'mfi' or 'stochastic_k', successful analyses with valid JSON")
+            logger.info("   🚀 Testing IA1 analysis with specific symbols to verify confluence values are not null...")
+            logger.info("   📊 Expected: confluence_grade (A,B,C,D), confluence_score (0-100), should_trade (true/false)")
             
             # Get available symbols from scout system
             logger.info("   📞 Getting available symbols from scout system...")
