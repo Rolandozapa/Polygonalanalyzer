@@ -7122,7 +7122,12 @@ async def create_test_ia2_decision():
             market_regime_assessment="bullish",
             execution_priority="immediate",
             risk_level="medium",
-            calculated_rr=3.2
+            calculated_rr=3.2,
+            # Test the new dynamic fields
+            ia1_validation="enhanced",
+            volume_profile_bias="bullish",
+            orderbook_quality="excellent",
+            institutional_edge="Volume profile breakout with orderbook depth"
         )
         
         # Save to database
