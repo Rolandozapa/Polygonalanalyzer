@@ -3488,6 +3488,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 ia1_signal=SignalType(str(ia1_signal).lower()),
                 ia1_reasoning=reasoning,
                 risk_reward_ratio=ia1_risk_reward_ratio,
+                calculated_rr=ia1_risk_reward_ratio,  # 🎯 FIX RR: Add calculated_rr field
                 entry_price=entry_price,
                 stop_loss_price=stop_loss_price,
                 take_profit_price=take_profit_price,
