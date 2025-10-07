@@ -7305,6 +7305,11 @@ async def get_opportunities(limit: int = 50):
                 if 'bingx_scout_filtered' in opp.data_sources:
                     scout_filtered_opportunities.append(opp)
             
+            # 🔧 TEMPORARY FALLBACK: If no scout-filtered opportunities, use all fresh opportunities for timestamp testing
+            if not scout_filtered_opportunities and fresh_opportunities:
+                scout_filtered_opportunities = fresh_opportunities[:limit]
+                logger.info(f"⚠️ FALLBACK: Using all fresh opportunities ({len(scout_filtered_opportunities)}) - scout filtering may be incomplete")
+            
             # 🎯 SORT BY TIMESTAMP DESCENDING (most recent first) then limit results
             scout_filtered_opportunities.sort(key=lambda x: x.timestamp, reverse=True)
             
