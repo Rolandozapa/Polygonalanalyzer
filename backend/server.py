@@ -5081,7 +5081,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
         """Detect advanced chart patterns"""
         patterns = []
         try:
-            prices = historical_data['Close']
+            close_col = get_ohlcv_column(historical_data, 'close')
+            prices = historical_data[close_col]
             
             if len(prices) >= 20:
                 # Trend analysis
