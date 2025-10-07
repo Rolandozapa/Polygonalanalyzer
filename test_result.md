@@ -236,9 +236,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "MFI and Stochastic Indicators Removal"
+    - "Confluence Analysis Fix - Display Real Values Instead of Null"
   stuck_tasks:
-    []
+    - "Confluence Analysis Fix - Display Real Values Instead of Null"
   test_all: false
   test_priority: "high_first"
 
