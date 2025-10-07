@@ -338,16 +338,17 @@ class MultiPhaseStrategicFrameworkTestSuite:
         logger.info("\n🔍 TEST 2: Test de génération IA2 - Création d'une décision IA2 réelle")
         
         try:
-            analyses_results = {
-                'api_call_successful': False,
-                'analyses_returned': 0,
-                'confluence_fields_present': 0,
-                'confluence_grades_not_null': 0,
-                'confluence_scores_not_null': 0,
-                'should_trade_not_null': 0,
-                'default_fallback_values': 0,
-                'diverse_confluence_scores': 0,
-                'analyses_data': [],
+            generation_results = {
+                'ia1_analyses_attempted': 0,
+                'ia1_analyses_successful': 0,
+                'high_confidence_analyses': 0,
+                'high_rr_analyses': 0,
+                'long_short_signals': 0,
+                'ia2_escalation_candidates': 0,
+                'ia2_decisions_created': 0,
+                'multi_phase_fields_present': 0,
+                'successful_ia1_analyses': [],
+                'ia2_decisions_data': [],
                 'error_details': []
             }
             
