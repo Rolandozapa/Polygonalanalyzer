@@ -3690,9 +3690,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "technical_consistency": getattr(talib_analysis, 'technical_consistency', 0.5),
                 "rsi_zone": getattr(talib_analysis, 'rsi_zone', 'NEUTRAL'),
                 "rsi_interpretation": self._get_rsi_interpretation(getattr(talib_analysis, 'rsi_14', 50.0), getattr(talib_analysis, 'rsi_zone', 'NEUTRAL')),
-                # 🔧 FIX PROMPT VARIABLES: Add missing stoch_k and stoch_d for prompt
-                "stoch_k": getattr(talib_analysis, 'stoch_k', 50.0),
-                "stoch_d": getattr(talib_analysis, 'stoch_d', 50.0),
                 "macd_trend": getattr(talib_analysis, 'macd_trend', 'NEUTRAL'),
                 "macd_direction": "bullish" if getattr(talib_analysis, 'macd_histogram', 0.0) > 0 else "bearish" if getattr(talib_analysis, 'macd_histogram', 0.0) < 0 else "neutral",
                 "adx": adx if adx is not None else 25.0,  # 🆕 ADD MISSING ADX VALUE
