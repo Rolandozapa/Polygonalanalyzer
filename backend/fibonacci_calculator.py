@@ -86,9 +86,15 @@ class FibonacciCalculator:
             
             # Get recent high and low for Fibonacci calculation
             recent_data = df.tail(lookback_period)
-            high_price = recent_data['High'].max()
-            low_price = recent_data['Low'].min()
-            current_price = df['Close'].iloc[-1]
+            
+            # 🔧 NORMALIZE COLUMN NAMES (handle both uppercase and lowercase)
+            high_col = 'High' if 'High' in df.columns else 'high'
+            low_col = 'Low' if 'Low' in df.columns else 'low'
+            close_col = 'Close' if 'Close' in df.columns else 'close'
+            
+            high_price = recent_data[high_col].max()
+            low_price = recent_data[low_col].min()
+            current_price = df[close_col].iloc[-1]
             
             # Determine trend direction
             trend_direction = self._determine_trend_direction(df, lookback_period)
