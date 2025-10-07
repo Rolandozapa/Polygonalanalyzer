@@ -4276,7 +4276,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 return result
             
             # Calcul de la tendance sur différentes périodes
-            close_prices = historical_data['Close']
+            close_col = get_ohlcv_column(historical_data, 'close')
+            close_prices = historical_data[close_col]
             
             # Tendance court terme (5 jours)
             short_trend = (close_prices.iloc[-1] - close_prices.iloc[-5]) / close_prices.iloc[-5] * 100
