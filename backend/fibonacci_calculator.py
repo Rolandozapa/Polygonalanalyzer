@@ -175,13 +175,16 @@ class FibonacciCalculator:
         try:
             recent_data = df.tail(lookback_period)
             
+            # 🔧 NORMALIZE COLUMN NAMES (handle both uppercase and lowercase)
+            close_col = 'Close' if 'Close' in df.columns else 'close'
+            
             # Use simple trend analysis
-            first_close = recent_data['Close'].iloc[0]
-            last_close = recent_data['Close'].iloc[-1]
+            first_close = recent_data[close_col].iloc[0]
+            last_close = recent_data[close_col].iloc[-1]
             
             # Also consider EMA for trend confirmation
-            ema_short = recent_data['Close'].ewm(span=5).mean().iloc[-1]
-            ema_long = recent_data['Close'].ewm(span=10).mean().iloc[-1]
+            ema_short = recent_data[close_col].ewm(span=5).mean().iloc[-1]
+            ema_long = recent_data[close_col].ewm(span=10).mean().iloc[-1]
             
             price_trend = "bullish" if last_close > first_close else "bearish"
             ema_trend = "bullish" if ema_short > ema_long else "bearish"
