@@ -5823,11 +5823,9 @@ class UltraProfessionalIA2DecisionAgent:
                 tp3 = entry_price * 1.04
                 
             # ✅ STRICT LOGGING - Show real values or None, no fallbacks
-            logger.info(f"🎯 IA2 CONFLUENCE DATA for {symbol}: VWAP={vwap_position}, MFI={mfi_value}, EMA={ema_hierarchy}")
+            logger.info(f"🎯 IA2 CONFLUENCE DATA for {symbol}: VWAP={vwap_position}, EMA={ema_hierarchy}")
             if vwap_position is None:
                 logger.warning(f"⚠️ VWAP position not calculated for {symbol}")
-            if mfi_value is None:
-                logger.warning(f"⚠️ MFI value not calculated for {symbol}")
             
             # Store IA1 signal strength for Claude override logic
             ia1_signal_strength = 0
