@@ -3557,8 +3557,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
                 # ✅ TALIB PROFESSIONAL INDICATORS v6.0 - All variables for enhanced IA1 reasoning
                 "rsi": rsi,
-                "macd_signal": macd_line,  # 🎯 FIX: Use MACD line (corrected again)
-                "macd_line": macd_line,    # Keep MACD line for completeness
+                "macd_signal": macd_signal,  # 🔧 CORRECT: Use real MACD signal, not line!
+                "macd_line": macd_line,
+                "macd_histogram": macd_histogram,  # 🆕 Add missing MACD histogram
                 
                 # 🚀 NEW IA1 v6.0 Variables for Enhanced Prompt Reasoning  
                 "regime": getattr(talib_analysis, 'regime', 'CONSOLIDATION'),
