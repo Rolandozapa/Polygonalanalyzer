@@ -3195,7 +3195,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 
                 # Enhanced institutional validation with Dune data
                 institutional_validation_score = self._calculate_enhanced_institutional_validation(
-                    mfi=mfi,
                     vwap_position=vwap_position, 
                     vwap_price=vwap,
                     sma50_vs_price=(opportunity.current_price / vwap) if vwap > 0 else 1.0,
