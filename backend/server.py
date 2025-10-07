@@ -3600,8 +3600,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 # Volume and advanced indicators (REAL TALIB VALUES with safe access)
                 "volume_ratio": getattr(talib_analysis, 'volume_ratio', 1.0) if talib_analysis else volume_ratio or 1.0,
                 "volume_analysis": f"{volume_trend} ({volume_ratio:.1f}x)" if volume_trend else "1.0x",
-                "mfi_value": mfi or 50.0,  # Real MFI from TALib (already extracted safely)
-                "mfi_signal": getattr(talib_analysis, 'mfi_signal', 'NEUTRAL') if talib_analysis else 'NEUTRAL',
+                # MFI removed from streamlined indicator set
                 # ATR Volatility indicators (CRITICAL - WAS MISSING!)
                 "atr": atr or 0.02,  # Real ATR absolute (already extracted safely)
                 "atr_percentage": (atr / opportunity.current_price * 100) if atr and opportunity.current_price > 0 else 2.0,  # Calculate ATR % 
