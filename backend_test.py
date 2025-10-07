@@ -519,59 +519,117 @@ class MFIStochasticRemovalTestSuite:
         logger.info("\n🔍 TEST 2: API Opportunities - Scout System Validation")
         
         try:
-            escalation_results = {
-                'analyses_attempted': 0,
-                'analyses_successful': 0,
-                'ia2_escalations_triggered': 0,
-                'trade_type_scalp_count': 0,
-                'trade_type_intraday_count': 0,
-                'trade_type_swing_count': 0,
-                'trade_type_position_count': 0,
-                'dynamic_threshold_usage': 0,
-                'escalation_details': [],
-                'backend_escalation_logs': []
+            opportunities_results = {
+                'api_call_successful': False,
+                'opportunities_returned': 0,
+                'valid_opportunities': 0,
+                'technical_indicators_present': 0,
+                'mfi_references_found': 0,
+                'stochastic_references_found': 0,
+                'required_fields_present': 0,
+                'opportunities_data': [],
+                'error_details': []
             }
             
-            logger.info("   🚀 Testing dynamic RR escalation logic with trade type adaptation...")
-            logger.info("   📊 Expected: Different RR thresholds based on trade type (SCALP: 1.0, INTRADAY: 1.5, SWING: 2.0)")
+            logger.info("   🚀 Testing /api/opportunities endpoint for scout system functionality...")
+            logger.info("   📊 Expected: Returns data, contains correct technical indicators, no MFI/stochastic references")
             
-            # Get available symbols from scout system
-            logger.info("   📞 Getting available symbols from scout system...")
+            # Test /api/opportunities endpoint
+            logger.info("   📞 Calling /api/opportunities endpoint...")
             
             try:
+                start_time = time.time()
                 response = requests.get(f"{self.api_url}/opportunities", timeout=60)
+                response_time = time.time() - start_time
                 
                 if response.status_code == 200:
-                    opportunities = response.json()
-                    if isinstance(opportunities, dict) and 'opportunities' in opportunities:
-                        opportunities = opportunities['opportunities']
+                    opportunities_results['api_call_successful'] = True
+                    logger.info(f"      ✅ /api/opportunities successful (response time: {response_time:.2f}s)")
                     
-                    # Get more symbols to increase chance of different trade types
-                    available_symbols = [opp.get('symbol') for opp in opportunities[:15] if opp.get('symbol')]
-                    
-                    # Select diverse symbols that might generate different trade types
-                    test_symbols = []
-                    preferred_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'ADAUSDT', 'DOTUSDT']
-                    
-                    for symbol in preferred_symbols:
-                        if symbol in available_symbols:
-                            test_symbols.append(symbol)
-                    
-                    # Fill remaining slots with available symbols
-                    for symbol in available_symbols:
-                        if symbol not in test_symbols and len(test_symbols) < 5:
-                            test_symbols.append(symbol)
-                    
-                    self.actual_test_symbols = test_symbols[:5]  # Test up to 5 symbols
-                    logger.info(f"      ✅ Test symbols selected: {self.actual_test_symbols}")
-                    
+                    # Parse response
+                    try:
+                        data = response.json()
+                        
+                        # Handle different response formats
+                        if isinstance(data, dict) and 'opportunities' in data:
+                            opportunities = data['opportunities']
+                        elif isinstance(data, list):
+                            opportunities = data
+                        else:
+                            opportunities = []
+                        
+                        opportunities_results['opportunities_returned'] = len(opportunities)
+                        logger.info(f"      📊 Opportunities returned: {len(opportunities)}")
+                        
+                        if len(opportunities) > 0:
+                            # Analyze first 10 opportunities for validation
+                            for i, opp in enumerate(opportunities[:10]):
+                                if not isinstance(opp, dict):
+                                    continue
+                                
+                                opportunities_results['valid_opportunities'] += 1
+                                
+                                # Check for required fields
+                                required_fields = ['symbol', 'current_price', 'volume_24h', 'price_change_24h']
+                                has_required_fields = all(field in opp for field in required_fields)
+                                
+                                if has_required_fields:
+                                    opportunities_results['required_fields_present'] += 1
+                                
+                                # Check for technical indicators (should be present)
+                                technical_indicators_found = []
+                                for indicator in ['rsi', 'macd', 'atr', 'vwap', 'adx', 'bb', 'volatility']:
+                                    if any(key for key in opp.keys() if indicator in key.lower()):
+                                        technical_indicators_found.append(indicator)
+                                
+                                if len(technical_indicators_found) > 0:
+                                    opportunities_results['technical_indicators_present'] += 1
+                                
+                                # Check for MFI references (should NOT be present)
+                                mfi_found = any(key for key in opp.keys() if 'mfi' in key.lower())
+                                if mfi_found:
+                                    opportunities_results['mfi_references_found'] += 1
+                                    logger.warning(f"         ❌ MFI reference found in {opp.get('symbol', 'UNKNOWN')}")
+                                
+                                # Check for Stochastic references (should NOT be present)
+                                stochastic_found = any(key for key in opp.keys() if any(term in key.lower() for term in ['stochastic', 'stoch_k', 'stoch_d']))
+                                if stochastic_found:
+                                    opportunities_results['stochastic_references_found'] += 1
+                                    logger.warning(f"         ❌ Stochastic reference found in {opp.get('symbol', 'UNKNOWN')}")
+                                
+                                # Store sample opportunity data
+                                if i < 3:  # Store first 3 for analysis
+                                    opportunities_results['opportunities_data'].append({
+                                        'symbol': opp.get('symbol', 'UNKNOWN'),
+                                        'current_price': opp.get('current_price'),
+                                        'volume_24h': opp.get('volume_24h'),
+                                        'price_change_24h': opp.get('price_change_24h'),
+                                        'has_required_fields': has_required_fields,
+                                        'technical_indicators': technical_indicators_found,
+                                        'has_mfi': mfi_found,
+                                        'has_stochastic': stochastic_found,
+                                        'all_fields': list(opp.keys())
+                                    })
+                                    
+                                    logger.info(f"         📋 Sample {i+1} ({opp.get('symbol', 'UNKNOWN')}): price=${opp.get('current_price', 'N/A')}, indicators={technical_indicators_found}, clean={not mfi_found and not stochastic_found}")
+                        
+                        else:
+                            logger.warning(f"      ⚠️ No opportunities returned from API")
+                            
+                    except json.JSONDecodeError as e:
+                        logger.error(f"      ❌ Invalid JSON response: {e}")
+                        opportunities_results['error_details'].append(f"JSON decode error: {e}")
+                        
                 else:
-                    logger.warning(f"      ⚠️ Could not get opportunities, using default symbols")
-                    self.actual_test_symbols = self.test_symbols
+                    logger.error(f"      ❌ /api/opportunities failed: HTTP {response.status_code}")
+                    if response.text:
+                        error_text = response.text[:500]
+                        logger.error(f"         Error response: {error_text}")
+                        opportunities_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
                     
             except Exception as e:
-                logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
-                self.actual_test_symbols = self.test_symbols
+                logger.error(f"      ❌ /api/opportunities exception: {e}")
+                opportunities_results['error_details'].append(f"Exception: {str(e)}")
             
             # Test each symbol for dynamic RR escalation
             for symbol in self.actual_test_symbols:
