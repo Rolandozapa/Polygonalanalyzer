@@ -725,7 +725,7 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Testing /api/ia2-decisions endpoint for Multi-Phase Strategic Framework fields...")
+            logger.info("   🚀 Testing /api/decisions endpoint for Multi-Phase Strategic Framework fields...")
             logger.info("   📊 Expected: IA2 decisions with market_regime_assessment, execution_priority, risk_level not null, diverse values")
             
             # Test /api/decisions endpoint
