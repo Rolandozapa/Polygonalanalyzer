@@ -63,30 +63,28 @@ class ConfluenceAnalysisTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing MFI and Stochastic Indicators Removal at: {self.api_url}")
+        logger.info(f"Testing Confluence Analysis Fix at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
         # Test symbols for analysis (from review request)
-        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'LINKUSDT']  # Specific symbols from review request
+        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']  # Specific symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # Expected indicators that should be present (after MFI/Stochastic removal)
-        self.expected_indicators = ['RSI', 'MACD', 'ATR', 'VWAP', 'ADX', 'BB']
+        # Expected confluence fields that should be present and not null
+        self.expected_confluence_fields = ['confluence_grade', 'confluence_score', 'should_trade']
         
-        # Indicators that should NOT be present (removed indicators)
-        self.removed_indicators = ['MFI', 'stochastic', 'stoch_k', 'stoch_d', 'mfi']
+        # Valid confluence grades
+        self.valid_confluence_grades = ['A', 'B', 'C', 'D']
         
         # Error patterns to check for in logs
         self.error_patterns = [
-            "NameError: name 'mfi' is not defined",
-            "NameError: name 'stochastic_k' is not defined", 
-            "NameError: name 'stochastic_d' is not defined",
-            "NameError: 'mfi' is not defined",
-            "NameError: 'stochastic_k' is not defined",
-            "mfi is not defined",
-            "stochastic_k is not defined"
+            "confluence_grade.*null",
+            "confluence_score.*null", 
+            "should_trade.*null",
+            "confluence.*fallback",
+            "confluence.*default"
         ]
         
         # Technical analysis data storage
