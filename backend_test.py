@@ -840,7 +840,7 @@ class MultiPhaseStrategicFrameworkTestSuite:
             diversity_execution_priorities = len(api_results['diverse_execution_priorities'])
             diversity_risk_levels = len(api_results['diverse_risk_levels'])
             
-            logger.info(f"\n   📊 IA2 DECISIONS API VALIDATION RESULTS:")
+            logger.info(f"\n   📊 DECISIONS API VALIDATION RESULTS:")
             logger.info(f"      API call successful: {api_results['api_call_successful']}")
             logger.info(f"      Decisions returned: {api_results['decisions_returned']}")
             logger.info(f"      Average Multi-Phase fields per decision: {avg_fields_per_decision:.1f}/6")
