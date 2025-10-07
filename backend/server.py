@@ -1674,19 +1674,24 @@ class UltraProfessionalIA1TechnicalAnalyst:
             return f"RSI {rsi_value:.1f} in normal range - moderate momentum"
     
     def _extract_tf_signal(self, multi_tf_result, timeframe: str) -> str:
-        """Extract signal for specific timeframe from multi-timeframe result"""
-        if not multi_tf_result or not hasattr(multi_tf_result, 'timeframe_signals'):
+        """Extrait le signal d'un timeframe spécifique du résultat multi-timeframe"""
+        if not multi_tf_result or not multi_tf_result.timeframe_analyses:
             return "NEUTRAL"
+            
+        tf_analysis = multi_tf_result.timeframe_analyses.get(timeframe)
+        if not tf_analysis or not tf_analysis.signals:
+            return "NEUTRAL"
+            
+        # Compter signaux par direction pour ce timeframe
+        bullish_count = sum(1 for signal in tf_analysis.signals.values() if "BULLISH" in signal or signal == "OVERSOLD")
+        bearish_count = sum(1 for signal in tf_analysis.signals.values() if "BEARISH" in signal or signal == "OVERBOUGHT")
         
-        timeframe_signals = getattr(multi_tf_result, 'timeframe_signals', {})
-        if timeframe in timeframe_signals:
-            signal_data = timeframe_signals[timeframe]
-            if isinstance(signal_data, dict):
-                return signal_data.get('signal', 'NEUTRAL')
-            else:
-                return str(signal_data) if signal_data else "NEUTRAL"
-        
-        return "NEUTRAL"
+        if bullish_count > bearish_count:
+            return "BULLISH"
+        elif bearish_count > bullish_count:
+            return "BEARISH"
+        else:
+            return "NEUTRAL"
     
     def analyze_multi_timeframe_hierarchy(self, opportunity: MarketOpportunity, analysis: TechnicalAnalysis) -> dict:
         """
