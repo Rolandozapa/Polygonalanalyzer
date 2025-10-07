@@ -2421,7 +2421,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🚀 MFI REPLACED BY VWAP DISTANCE FROM AdvancedTechnicalIndicators - No calculation needed
             # MFI functionality now provided by vwap_position (already extracted above)
-            logger.debug(f"✅ VWAP-based MFI available for {opportunity.symbol}: {mfi:.2f}% (from AdvancedTechnicalIndicators)")
+            logger.debug(f"✅ VWAP-based analysis available for {opportunity.symbol}: {vwap_position:.2f}% (from AdvancedTechnicalIndicators)")
             
             # MFI calculations removed - using streamlined indicator set
             
