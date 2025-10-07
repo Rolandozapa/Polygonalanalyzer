@@ -432,12 +432,6 @@ class MFIStochasticRemovalTestSuite:
                 
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis", False, f"Exception: {str(e)}")
-                
-            except Exception as e:
-                logger.warning(f"      ⚠️ Could not check database: {e}")
-            
-            # Final analysis
-            success_rate = field_validation_results['analyses_successful'] / max(field_validation_results['analyses_attempted'], 1)
             new_fields_rate = field_validation_results['new_field_names_present'] / max(field_validation_results['analyses_successful'] * 2, 1)  # 2 new fields per analysis
             old_fields_absent_rate = field_validation_results['old_field_names_absent'] / max(field_validation_results['analyses_successful'], 1)
             
