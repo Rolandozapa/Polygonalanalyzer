@@ -2382,8 +2382,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             volume_trend = getattr(talib_analysis, 'volume_trend', 0.0) if talib_analysis else 0.0
             volume_surge = getattr(talib_analysis, 'volume_surge', False) if talib_analysis else False
             
-            # ✅ USE REAL MFI from TALib (not VWAP replacement) - SAFE ACCESS
-            mfi = getattr(talib_analysis, 'mfi', 50.0) if talib_analysis else 50.0  # Real Money Flow Index from TALib
+            # MFI removed from streamlined indicators
             
             logger.info(f"✅ ALL PROFESSIONAL INDICATORS EXTRACTED from TALib for {opportunity.symbol}")
             logger.info(f"   📊 RSI: {rsi:.1f} [{talib_analysis.rsi_zone}], MACD H: {macd_histogram:.6f} [{talib_analysis.macd_trend}]")
