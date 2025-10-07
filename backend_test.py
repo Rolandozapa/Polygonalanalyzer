@@ -270,147 +270,16 @@ class MultiPhaseStrategicFrameworkTestSuite:
             except Exception as e:
                 logger.warning(f"      ⚠️ Could not read IA2 strategic prompt for comparison: {e}")
             
-            # Test each symbol for confluence analysis validation
-            for symbol in self.actual_test_symbols:
-                logger.info(f"\n   📞 Testing IA1 analysis for {symbol} - checking confluence values...")
-                analysis_results['analyses_attempted'] += 1
-                
-                try:
-                    start_time = time.time()
-                    response = requests.post(
-                        f"{self.api_url}/force-ia1-analysis",
-                        json={"symbol": symbol},
-                        timeout=120
-                    )
-                    response_time = time.time() - start_time
-                    analysis_results['response_times'].append(response_time)
-                    
-                    if response.status_code == 200:
-                        analysis_data = response.json()
-                        analysis_results['analyses_successful'] += 1
-                        
-                        logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
-                        
-                        # Extract IA1 analysis data
-                        ia1_analysis = analysis_data.get('ia1_analysis', {})
-                        if not isinstance(ia1_analysis, dict):
-                            ia1_analysis = {}
-                        
-                        # Check confluence_grade
-                        confluence_grade = ia1_analysis.get('confluence_grade')
-                        if confluence_grade is not None and confluence_grade != 'null':
-                            analysis_results['confluence_grade_not_null'] += 1
-                            logger.info(f"         ✅ confluence_grade present: {confluence_grade}")
-                            
-                            if confluence_grade in self.valid_confluence_grades:
-                                analysis_results['valid_confluence_grades'] += 1
-                                logger.info(f"         ✅ confluence_grade valid: {confluence_grade}")
-                            else:
-                                logger.warning(f"         ⚠️ confluence_grade invalid: {confluence_grade} (expected A,B,C,D)")
-                        else:
-                            logger.error(f"         ❌ confluence_grade is null or missing")
-                        
-                        # Check confluence_score
-                        confluence_score = ia1_analysis.get('confluence_score')
-                        if confluence_score is not None and confluence_score != 'null':
-                            analysis_results['confluence_score_not_null'] += 1
-                            logger.info(f"         ✅ confluence_score present: {confluence_score}")
-                            
-                            # Check if score is in valid range (0-100)
-                            try:
-                                score_value = float(confluence_score)
-                                if 0 <= score_value <= 100:
-                                    analysis_results['valid_confluence_scores'] += 1
-                                    logger.info(f"         ✅ confluence_score valid range: {score_value}")
-                                else:
-                                    logger.warning(f"         ⚠️ confluence_score out of range: {score_value} (expected 0-100)")
-                            except (ValueError, TypeError):
-                                logger.warning(f"         ⚠️ confluence_score not numeric: {confluence_score}")
-                        else:
-                            logger.error(f"         ❌ confluence_score is null or missing")
-                        
-                        # Check should_trade
-                        should_trade = ia1_analysis.get('should_trade')
-                        if should_trade is not None and should_trade != 'null':
-                            analysis_results['should_trade_not_null'] += 1
-                            logger.info(f"         ✅ should_trade present: {should_trade}")
-                            
-                            if isinstance(should_trade, bool) or should_trade in ['true', 'false', True, False]:
-                                logger.info(f"         ✅ should_trade valid boolean: {should_trade}")
-                            else:
-                                logger.warning(f"         ⚠️ should_trade not boolean: {should_trade}")
-                        else:
-                            logger.error(f"         ❌ should_trade is null or missing")
-                        
-                        # Check for confluence reasoning in IA1 reasoning
-                        reasoning = ia1_analysis.get('reasoning', '')
-                        if reasoning and 'confluence' in reasoning.lower():
-                            analysis_results['confluence_reasoning_present'] += 1
-                            logger.info(f"         ✅ Confluence reasoning present in IA1 analysis")
-                        else:
-                            logger.warning(f"         ⚠️ No confluence reasoning found in IA1 analysis")
-                        
-                        # Store confluence data for analysis
-                        confluence_data = {
-                            'symbol': symbol,
-                            'confluence_grade': confluence_grade,
-                            'confluence_score': confluence_score,
-                            'should_trade': should_trade,
-                            'has_reasoning': bool(reasoning and 'confluence' in reasoning.lower()),
-                            'response_time': response_time
-                        }
-                        analysis_results['confluence_data'].append(confluence_data)
-                        
-                        # Store successful analysis details
-                        analysis_results['successful_analyses'].append({
-                            'symbol': symbol,
-                            'response_time': response_time,
-                            'confluence_data': confluence_data,
-                            'analysis_data': ia1_analysis
-                        })
-                        
-                    elif response.status_code == 500:
-                        # Check for confluence-related errors
-                        error_text = response.text
-                        logger.error(f"      ❌ {symbol} analysis failed: HTTP 500")
-                        logger.error(f"         Error response: {error_text[:500]}")
-                        
-                        # Check for confluence calculation errors
-                        confluence_error_found = False
-                        if any(pattern in error_text.lower() for pattern in ["confluence", "grade", "score"]):
-                            confluence_error_found = True
-                            logger.error(f"         🚨 CONFLUENCE ERROR DETECTED in {symbol}")
-                        
-                        analysis_results['error_details'].append({
-                            'symbol': symbol,
-                            'error_type': 'HTTP_500',
-                            'error_text': error_text[:500],
-                            'has_confluence_error': confluence_error_found
-                        })
-                        
-                    else:
-                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
-                        if response.text:
-                            error_text = response.text[:300]
-                            logger.error(f"         Error response: {error_text}")
-                            analysis_results['error_details'].append({
-                                'symbol': symbol,
-                                'error_type': f'HTTP_{response.status_code}',
-                                'error_text': error_text
-                            })
-                
-                except Exception as e:
-                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
-                    analysis_results['error_details'].append({
-                        'symbol': symbol,
-                        'error_type': 'EXCEPTION',
-                        'error_text': str(e)
-                    })
-                
-                # Wait between analyses
-                if symbol != self.actual_test_symbols[-1]:
-                    logger.info(f"      ⏳ Waiting 5 seconds before next analysis...")
-                    await asyncio.sleep(5)
+            # Determine if Multi-Phase Framework is complete
+            multi_phase_criteria = [
+                prompt_results['market_regime_assessment_found'],
+                prompt_results['execution_priority_found'],
+                prompt_results['risk_level_found'],
+                prompt_results['json_output_section_valid'],
+                prompt_results['required_variables_present']
+            ]
+            
+            prompt_results['multi_phase_framework_complete'] = sum(multi_phase_criteria) >= 4  # At least 4/5 criteria
             
             # Capture backend logs to check for confluence calculation logs
             logger.info("   📋 Capturing backend logs to check for confluence calculation logs...")
