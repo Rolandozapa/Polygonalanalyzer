@@ -3221,9 +3221,8 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"   🧠 IA1 Final Confidence: {original_analysis_confidence:.1%} (PRESERVED)")
                 logger.info(f"   🏛️ Institutional Score: {institutional_validation_score:.1f}/100 ({validation_risk} risk)")
                 # ✅ SAFE LOGGING - Handle None values
-                mfi_display = f"{mfi:.1f}" if mfi is not None else "N/A"
                 vwap_display = f"{vwap_position:+.1f}%" if vwap_position is not None else "N/A"
-                logger.info(f"   📊 Components: MFI={mfi_display}, VWAP={vwap_display}, Market={market_cap_change_24h:+.1f}%")
+                logger.info(f"   📊 Components: VWAP={vwap_display}, Market={market_cap_change_24h:+.1f}%")
                 if dune_validation:
                     logger.info(f"   🔮 Dune: DEX_Vol=${dune_validation.dex_volume_24h:,.0f}, Liquidity=${dune_validation.dex_liquidity:,.0f}, Flow={dune_validation.institutional_flow}")
                 logger.info(f"   🎯 {validation_status}")
