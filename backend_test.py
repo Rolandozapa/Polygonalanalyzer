@@ -432,49 +432,6 @@ class MFIStochasticRemovalTestSuite:
                 
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis", False, f"Exception: {str(e)}")
-            new_fields_rate = field_validation_results['new_field_names_present'] / max(field_validation_results['analyses_successful'] * 2, 1)  # 2 new fields per analysis
-            old_fields_absent_rate = field_validation_results['old_field_names_absent'] / max(field_validation_results['analyses_successful'], 1)
-            
-            logger.info(f"\n   📊 FIELD NAME VALIDATION RESULTS:")
-            logger.info(f"      Analyses attempted: {field_validation_results['analyses_attempted']}")
-            logger.info(f"      Analyses successful: {field_validation_results['analyses_successful']}")
-            logger.info(f"      Success rate: {success_rate:.2f}")
-            logger.info(f"      New field names present: {field_validation_results['new_field_names_present']}")
-            logger.info(f"      New fields rate: {new_fields_rate:.2f}")
-            logger.info(f"      Old field names absent: {field_validation_results['old_field_names_absent']}")
-            logger.info(f"      Old fields absent rate: {old_fields_absent_rate:.2f}")
-            logger.info(f"      Trade type valid: {field_validation_results['trade_type_valid']}")
-            logger.info(f"      Minimum RR threshold valid: {field_validation_results['minimum_rr_threshold_valid']}")
-            logger.info(f"      Database field validation: {field_validation_results['database_field_validation']}")
-            
-            # Show field validation details
-            if field_validation_results['field_validation_details']:
-                logger.info(f"      📊 Field Validation Details:")
-                for detail in field_validation_results['field_validation_details']:
-                    logger.info(f"         - {detail['symbol']}: new_fields={detail['new_fields_present']}, old_fields_absent={detail['old_fields_absent']}, trade_type_valid={detail['trade_type_valid']}, rr_valid={detail['rr_threshold_valid']}")
-            
-            # Calculate test success based on review requirements
-            success_criteria = [
-                field_validation_results['analyses_successful'] >= 2,  # At least 2 successful analyses
-                field_validation_results['new_field_names_present'] >= 4,  # At least 4 new field instances (2 per analysis)
-                field_validation_results['old_field_names_absent'] >= 2,  # At least 2 analyses without old fields
-                field_validation_results['trade_type_valid'] >= 2,  # At least 2 valid trade types
-                field_validation_results['minimum_rr_threshold_valid'] >= 2,  # At least 2 valid RR thresholds
-                success_rate >= 0.67  # At least 67% success rate
-            ]
-            success_count = sum(success_criteria)
-            test_success_rate = success_count / len(success_criteria)
-            
-            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("Field Name Validation", True, 
-                                   f"Field name validation successful: {success_count}/{len(success_criteria)} criteria met. New fields rate: {new_fields_rate:.2f}, Old fields absent rate: {old_fields_absent_rate:.2f}, Success rate: {success_rate:.2f}")
-            else:
-                self.log_test_result("Field Name Validation", False, 
-                                   f"Field name validation issues: {success_count}/{len(success_criteria)} criteria met. May still be using old field names or missing new field names")
-                
-        except Exception as e:
-            self.log_test_result("Field Name Validation", False, f"Exception: {str(e)}")
-
     async def test_2_api_opportunities(self):
         """Test 2: API Opportunities - Verify scout system works without MFI/Stochastic references"""
         logger.info("\n🔍 TEST 2: API Opportunities - Scout System Validation")
