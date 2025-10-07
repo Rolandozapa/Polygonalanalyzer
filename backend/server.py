@@ -2105,9 +2105,10 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             logger.info(f"📊 SOURCING: Récupération OHLCV 15m pour {opportunity.symbol}")
             historical_data = await self._get_enhanced_historical_data(opportunity.symbol, days=60, timeframe="15m")
             
-            # Validation données minimales pour calculs techniques (MACD nécessite 35+)
-            if historical_data is None or len(historical_data) < 35:
-                logger.warning(f"⚠️ DONNÉES INSUFFISANTES: {opportunity.symbol} - {len(historical_data) if historical_data is not None else 0} jours (min: 35 pour MACD)")
+            # Validation données minimales pour calculs techniques (MACD 15m nécessite ~100+ périodes)
+            min_periods = 100  # Pour 15m: 26 périodes + 9 + buffer = ~100 périodes minimum
+            if historical_data is None or len(historical_data) < min_periods:
+                logger.warning(f"⚠️ DONNÉES INSUFFISANTES: {opportunity.symbol} - {len(historical_data) if historical_data is not None else 0} périodes 15m (min: {min_periods} pour MACD)")
                 return None
             
             # ÉTAPE 3: Validation qualité multi-sources (si on a des données)
