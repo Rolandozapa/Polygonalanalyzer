@@ -3674,6 +3674,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "stop_loss_price": stop_loss_price,
                 "take_profit_price": take_profit_price,
                 "risk_reward_ratio": ia1_risk_reward_ratio,
+                "calculated_rr": ia1_risk_reward_ratio,  # 🎯 FIX RR: Add calculated_rr field for API consistency
                 "rr_reasoning": f"Calculated prices - Entry: ${entry_price:.6f}, SL: ${stop_loss_price:.6f}, TP: ${take_profit_price:.6f}",
                 # ✅ TALIB PROFESSIONAL INDICATORS v6.0 - All variables for enhanced IA1 reasoning
                 "rsi": rsi,
