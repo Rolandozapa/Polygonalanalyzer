@@ -221,7 +221,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Externalized Prompt Migration Complete"
+    - "MFI and Stochastic Indicators Removal"
   stuck_tasks:
     []
   test_all: false
