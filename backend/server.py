@@ -2347,7 +2347,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 macd_signal = getattr(talib_analysis, 'macd_signal', 0.0)
                 macd_line = getattr(talib_analysis, 'macd_line', 0.0)
                 macd_histogram = getattr(talib_analysis, 'macd_histogram', 0.0)
-                # Stochastic removed from streamlined indicators
+                # Stochastic removed from streamlined indicators but variables still needed for legacy code
+                stochastic_k = getattr(talib_analysis, 'stoch_k', 50.0)
+                stochastic_d = getattr(talib_analysis, 'stoch_d', 50.0)
                 bb_position = getattr(talib_analysis, 'bb_position', 0.5)
                 adx = getattr(talib_analysis, 'adx', 25.0)
                 atr = getattr(talib_analysis, 'atr', 0.02)
