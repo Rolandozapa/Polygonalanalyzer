@@ -3431,11 +3431,11 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.info(f"   Resistances: {rr_setup.get('resistances', [])}")
                 
             except Exception as rr_error:
-                    logger.error(f"❌ Error in optimized RR calculation for {opportunity.symbol}: {rr_error}")
-                    # Fallback to simple calculation
-                    ia1_entry = ia1_complete_json.get('entry_price', real_current_price)
-                    ia1_sl = ia1_complete_json.get('stop_loss_price')
-                    ia1_tp = ia1_complete_json.get('take_profit_price')
+                logger.error(f"❌ Error in optimized RR calculation for {opportunity.symbol}: {rr_error}")
+                # Fallback to simple calculation
+                ia1_entry = ia1_complete_json.get('entry_price', real_current_price)
+                ia1_sl = ia1_complete_json.get('stop_loss_price')
+                ia1_tp = ia1_complete_json.get('take_profit_price')
                     
                     if ia1_sl and ia1_tp and isinstance(ia1_sl, (int, float)) and isinstance(ia1_tp, (int, float)):
                         if str(ia1_signal).lower() == "long":
