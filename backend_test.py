@@ -45,8 +45,8 @@ from pymongo import MongoClient
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-class ConfluenceAnalysisTestSuite:
-    """Comprehensive test suite for confluence analysis fix validation"""
+class MultiPhaseStrategicFrameworkTestSuite:
+    """Comprehensive test suite for Multi-Phase Strategic Framework validation"""
     
     def __init__(self):
         # Get backend URL from frontend env
