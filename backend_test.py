@@ -144,9 +144,9 @@ class MultiPhaseStrategicFrameworkTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_1_api_force_ia1_analysis_confluence(self):
-        """Test 1: API Force IA1 Analysis - Test confluence values with 3 symbols (BTCUSDT, ETHUSDT, LINKUSDT)"""
-        logger.info("\n🔍 TEST 1: API Force IA1 Analysis - Confluence Analysis Fix Validation")
+    async def test_1_ia2_prompt_enriched_validation(self):
+        """Test 1: Test du prompt IA2 enrichi - Vérifier que le nouveau champ `market_regime_assessment` est bien dans la configuration"""
+        logger.info("\n🔍 TEST 1: Test du prompt IA2 enrichi - Validation du Multi-Phase Strategic Framework")
         
         try:
             analysis_results = {
