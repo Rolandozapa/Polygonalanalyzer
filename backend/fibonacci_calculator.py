@@ -169,7 +169,8 @@ class FibonacciCalculator:
             
         except Exception as e:
             logger.error(f"Error calculating Fibonacci levels: {e}")
-            return self._create_fallback_fibonacci(df['Close'].iloc[-1] if len(df) > 0 else 100.0)
+            close_col = 'Close' if 'Close' in df.columns else 'close'
+            return self._create_fallback_fibonacci(df[close_col].iloc[-1] if len(df) > 0 else 100.0)
     
     def _determine_trend_direction(self, df: pd.DataFrame, lookback_period: int) -> str:
         """Determine overall trend direction for Fibonacci calculation"""
