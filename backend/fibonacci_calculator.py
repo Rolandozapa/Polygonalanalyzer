@@ -82,7 +82,8 @@ class FibonacciCalculator:
         try:
             if len(df) < lookback_period:
                 logger.warning(f"Insufficient data for Fibonacci calculation: {len(df)} < {lookback_period}")
-                return self._create_fallback_fibonacci(df['Close'].iloc[-1] if len(df) > 0 else 100.0)
+                close_col = 'Close' if 'Close' in df.columns else 'close'
+                return self._create_fallback_fibonacci(df[close_col].iloc[-1] if len(df) > 0 else 100.0)
             
             # Get recent high and low for Fibonacci calculation
             recent_data = df.tail(lookback_period)
