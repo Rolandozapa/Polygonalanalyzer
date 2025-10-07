@@ -794,9 +794,9 @@ class MFIStochasticRemovalTestSuite:
         except Exception as e:
             self.log_test_result("Dynamic RR Escalation Logic", False, f"Exception: {str(e)}")
 
-    async def test_3_database_persistence_validation(self):
-        """Test 3: Database Persistence - Verify analyses stored in MongoDB with new field names and sensible values"""
-        logger.info("\n🔍 TEST 3: Database Persistence Validation")
+    async def test_3_backend_logs_validation(self):
+        """Test 3: Backend Logs Validation - Verify no MFI/Stochastic errors in recent logs"""
+        logger.info("\n🔍 TEST 3: Backend Logs Validation")
         
         try:
             db_persistence_results = {
