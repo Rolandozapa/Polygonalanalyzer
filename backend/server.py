@@ -3728,14 +3728,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 "optimal_timeframe": '4H/1D'
             })
             
-            # 🔍 DEBUG CONFLUENCE IN ANALYSIS_DATA
-            confluence_debug = {
-                'confluence_grade': analysis_data.get('confluence_grade', 'MISSING'),
-                'confluence_score': analysis_data.get('confluence_score', 'MISSING'),
-                'should_trade': analysis_data.get('should_trade', 'MISSING')
-            }
-            logger.info(f"🔍 CONFLUENCE DEBUG in analysis_data: {confluence_debug}")
-            
             logger.info(f"📋 Analysis data built from IA1 JSON for {opportunity.symbol}: analysis={len(analysis_data.get('analysis', ''))} chars")
             logger.info(f"🔧 DONNÉES COMPLÈTES AJOUTÉES À ANALYSIS_DATA {opportunity.symbol}:")
             logger.info(f"   💰 Prix: Entry=${entry_price:.6f} | SL=${stop_loss_price:.6f} | TP=${take_profit_price:.6f} | RR={ia1_risk_reward_ratio:.2f}:1")
