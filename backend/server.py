@@ -7327,7 +7327,7 @@ async def get_opportunities(limit: int = 50):
                     "market_cap_rank": opp.market_cap_rank,
                     "data_sources": opp.data_sources,
                     "data_confidence": opp.data_confidence,
-                    "timestamp": current_time.isoformat(),  # Fix: Use fresh timestamp instead of cached
+                    "timestamp": opp.timestamp.isoformat(),  # Correct: Keep original timestamp
                     # 🎯 Additional scout filter info
                     "scout_filtered": True,
                     "filter_criteria": "Volume >5%, Price >1%, Anti-lateral patterns"
