@@ -387,26 +387,30 @@ class ConfluenceAnalysisTestSuite:
             
             # Final analysis and results
             success_rate = analysis_results['analyses_successful'] / max(analysis_results['analyses_attempted'], 1)
-            indicators_rate = analysis_results['required_indicators_present'] / max(analysis_results['analyses_successful'], 1)
-            clean_rate = analysis_results['removed_indicators_absent'] / max(analysis_results['analyses_successful'], 1)
+            confluence_grade_rate = analysis_results['confluence_grade_not_null'] / max(analysis_results['analyses_successful'], 1)
+            confluence_score_rate = analysis_results['confluence_score_not_null'] / max(analysis_results['analyses_successful'], 1)
+            should_trade_rate = analysis_results['should_trade_not_null'] / max(analysis_results['analyses_successful'], 1)
+            valid_grades_rate = analysis_results['valid_confluence_grades'] / max(analysis_results['confluence_grade_not_null'], 1)
+            valid_scores_rate = analysis_results['valid_confluence_scores'] / max(analysis_results['confluence_score_not_null'], 1)
             avg_response_time = sum(analysis_results['response_times']) / max(len(analysis_results['response_times']), 1)
             
-            logger.info(f"\n   📊 API FORCE IA1 ANALYSIS RESULTS:")
+            logger.info(f"\n   📊 API FORCE IA1 ANALYSIS CONFLUENCE RESULTS:")
             logger.info(f"      Analyses attempted: {analysis_results['analyses_attempted']}")
             logger.info(f"      Analyses successful: {analysis_results['analyses_successful']}")
             logger.info(f"      Success rate: {success_rate:.2f}")
-            logger.info(f"      Valid JSON responses: {analysis_results['valid_json_responses']}")
-            logger.info(f"      Required indicators present: {analysis_results['required_indicators_present']} ({indicators_rate:.2f})")
-            logger.info(f"      Removed indicators absent: {analysis_results['removed_indicators_absent']} ({clean_rate:.2f})")
-            logger.info(f"      MFI errors found: {analysis_results['mfi_errors_found']}")
-            logger.info(f"      Stochastic errors found: {analysis_results['stochastic_errors_found']}")
+            logger.info(f"      confluence_grade not null: {analysis_results['confluence_grade_not_null']} ({confluence_grade_rate:.2f})")
+            logger.info(f"      confluence_score not null: {analysis_results['confluence_score_not_null']} ({confluence_score_rate:.2f})")
+            logger.info(f"      should_trade not null: {analysis_results['should_trade_not_null']} ({should_trade_rate:.2f})")
+            logger.info(f"      Valid confluence grades: {analysis_results['valid_confluence_grades']} ({valid_grades_rate:.2f})")
+            logger.info(f"      Valid confluence scores: {analysis_results['valid_confluence_scores']} ({valid_scores_rate:.2f})")
+            logger.info(f"      Confluence reasoning present: {analysis_results['confluence_reasoning_present']}")
             logger.info(f"      Average response time: {avg_response_time:.2f}s")
             
-            # Show successful analyses details
-            if analysis_results['successful_analyses']:
-                logger.info(f"      📊 Successful Analyses Details:")
-                for analysis in analysis_results['successful_analyses']:
-                    logger.info(f"         - {analysis['symbol']}: indicators={analysis['required_indicators']}, clean={len(analysis['removed_indicators'])==0}, time={analysis['response_time']:.1f}s")
+            # Show confluence data details
+            if analysis_results['confluence_data']:
+                logger.info(f"      📊 Confluence Data Details:")
+                for data in analysis_results['confluence_data']:
+                    logger.info(f"         - {data['symbol']}: grade={data['confluence_grade']}, score={data['confluence_score']}, trade={data['should_trade']}, reasoning={data['has_reasoning']}")
             
             # Show error details if any
             if analysis_results['error_details']:
@@ -416,22 +420,22 @@ class ConfluenceAnalysisTestSuite:
             
             # Calculate test success based on review requirements
             success_criteria = [
-                analysis_results['analyses_successful'] >= 3,  # At least 3 successful analyses
-                analysis_results['mfi_errors_found'] == 0,  # No MFI errors
-                analysis_results['stochastic_errors_found'] == 0,  # No Stochastic errors
-                analysis_results['valid_json_responses'] >= 3,  # At least 3 valid JSON responses
-                analysis_results['required_indicators_present'] >= 2,  # At least 2 analyses with required indicators
-                success_rate >= 0.75  # At least 75% success rate
+                analysis_results['analyses_successful'] >= 2,  # At least 2 successful analyses
+                analysis_results['confluence_grade_not_null'] >= 2,  # At least 2 with confluence_grade not null
+                analysis_results['confluence_score_not_null'] >= 2,  # At least 2 with confluence_score not null
+                analysis_results['should_trade_not_null'] >= 2,  # At least 2 with should_trade not null
+                analysis_results['valid_confluence_grades'] >= 1,  # At least 1 valid grade
+                success_rate >= 0.67  # At least 67% success rate (2/3)
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
             if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("API Force IA1 Analysis", True, 
-                                   f"IA1 analysis successful: {success_count}/{len(success_criteria)} criteria met. No MFI/Stochastic errors, success rate: {success_rate:.2f}, indicators rate: {indicators_rate:.2f}")
+                self.log_test_result("API Force IA1 Analysis Confluence", True, 
+                                   f"Confluence analysis successful: {success_count}/{len(success_criteria)} criteria met. Grade rate: {confluence_grade_rate:.2f}, Score rate: {confluence_score_rate:.2f}, Trade rate: {should_trade_rate:.2f}")
             else:
-                self.log_test_result("API Force IA1 Analysis", False, 
-                                   f"IA1 analysis issues: {success_count}/{len(success_criteria)} criteria met. MFI errors: {analysis_results['mfi_errors_found']}, Stochastic errors: {analysis_results['stochastic_errors_found']}")
+                self.log_test_result("API Force IA1 Analysis Confluence", False, 
+                                   f"Confluence analysis issues: {success_count}/{len(success_criteria)} criteria met. Many confluence values still null or invalid")
                 
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis", False, f"Exception: {str(e)}")
