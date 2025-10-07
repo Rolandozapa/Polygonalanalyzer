@@ -62,36 +62,43 @@ class VolumeRatioFixDiagnosticTestSuite:
             backend_url = "http://localhost:8001"
         
         self.api_url = f"{backend_url}/api"
-        logger.info(f"Testing Multi-Phase Strategic Framework at: {self.api_url}")
+        logger.info(f"Testing Volume Ratio Fix Diagnostic at: {self.api_url}")
         
         # Test results
         self.test_results = []
         
         # Test symbols for analysis (from review request)
-        self.test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT']  # Specific symbols from review request
+        self.test_symbols = ['ETHUSDT', 'BTCUSDT', 'LINKUSDT']  # Specific symbols from review request
         self.actual_test_symbols = []  # Will be populated from available opportunities
         
-        # Expected Multi-Phase Strategic Framework fields that should be present and not null
-        self.expected_ia2_fields = [
-            'market_regime_assessment', 'execution_priority', 'risk_level', 
-            'volume_profile_bias', 'orderbook_quality', 'multi_phase_score'
+        # Expected confluence fields that should be present and not null
+        self.expected_confluence_fields = [
+            'confluence_grade', 'confluence_score', 'should_trade'
         ]
         
-        # Valid values for Multi-Phase fields
-        self.valid_market_regime_values = ['bullish', 'bearish', 'neutral']
-        self.valid_execution_priority_values = ['immediate', 'delayed', 'wait']
-        self.valid_risk_level_values = ['low', 'medium', 'high']
+        # Valid values for confluence fields
+        self.valid_confluence_grades = ['A++', 'A+', 'A', 'B+', 'B', 'C', 'D']
+        self.valid_should_trade_values = [True, False]
+        
+        # Mandatory requirements for confluence grading (from system prompt)
+        self.mandatory_requirements = {
+            'confidence_threshold': 0.65,  # regime_confidence > 0.65
+            'adx_threshold': 18,           # adx > 18 OR bb_squeeze = true
+            'volume_ratio_min': 0.1,       # volume_ratio >= 0.1 (FIXED)
+            'volume_ratio_max': 1.0        # volume_ratio <= 1.0 (FIXED)
+        }
         
         # Error patterns to check for in logs
         self.error_patterns = [
-            "market_regime_assessment.*null",
-            "execution_priority.*null", 
-            "risk_level.*null",
-            "ia2.*fallback",
-            "ia2.*default"
+            "confluence_grade.*null",
+            "confluence_score.*null", 
+            "should_trade.*null",
+            "volume_ratio.*>.*1.0",  # Old broken logic
+            "Grade.*D.*Score.*0"     # Grade D Score 0 pattern
         ]
         
-        # IA2 decision data storage
+        # IA1 analysis data storage
+        self.ia1_analyses = []
         self.ia2_decisions = []
         self.backend_logs = []
         
