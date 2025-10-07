@@ -178,10 +178,11 @@ class RiskRewardCalculator:
             supports, resistances = self.find_key_levels(price_history, entry_price)
             
             if direction.upper() == "LONG":
-                # Stop-loss basé sur ATR ou support le plus proche
+                # Stop-loss basé sur ATR ou support le plus proche  
                 sl_candidate1 = entry_price - (atr * 1.5)
                 sl_candidate2 = supports[0] if supports else entry_price * 0.98
-                stop_loss = max(sl_candidate1, sl_candidate2)  # Plus conservateur
+                # 🔧 FIX RR: Pour LONG, prendre le SL le plus bas (plus de risk mais RR réaliste)
+                stop_loss = min(sl_candidate1, sl_candidate2)  # Stop-loss plus distant pour RR réaliste
                 
                 # Take-profit multiples (R1, R2, R3)
                 tp_levels = []
