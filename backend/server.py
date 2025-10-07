@@ -2385,7 +2385,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             logger.info(f"✅ ALL PROFESSIONAL INDICATORS EXTRACTED from TALib for {opportunity.symbol}")
             logger.info(f"   📊 RSI: {rsi:.1f} [{talib_analysis.rsi_zone}], MACD H: {macd_histogram:.6f} [{talib_analysis.macd_trend}]")
-            logger.info(f"   📊 Real MFI: {mfi:.1f} [{talib_analysis.mfi_signal}], BB Pos: {bb_position:.2f}")
+            logger.info(f"   📊 BB Pos: {bb_position:.2f}")
             logger.info(f"   📊 ADX (Wilder): {adx:.1f} [{talib_analysis.adx_strength}], ATR: {atr:.6f}, Vol: {volume_ratio:.2f}")
             logger.info(f"   🎯 Regime: {talib_analysis.regime} (Confidence: {talib_analysis.confidence:.1%})")
             logger.info(f"   🏆 Confluence: {talib_analysis.confluence_grade} (Score: {talib_analysis.confluence_score}) - {talib_analysis.conviction_level}")
