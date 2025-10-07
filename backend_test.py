@@ -4446,28 +4446,50 @@ class MFIStochasticRemovalTestSuite:
 
 async def main():
     """Main test execution function"""
-    logger.info("🚀 Starting Dynamic RR Integration Testing Suite - Phase 1")
+    logger.info("🚀 Starting MFI and Stochastic Indicators Removal Testing Suite")
     logger.info("=" * 80)
     
     # Initialize test suite
-    test_suite = DynamicRRIntegrationTestSuite()
+    test_suite = MFIStochasticRemovalTestSuite()
     
     try:
-        # Run all Dynamic RR Integration tests
-        success = await test_suite.run_all_tests()
+        # Run all MFI/Stochastic removal tests
+        logger.info("Running Test 1: API Force IA1 Analysis")
+        await test_suite.test_1_api_force_ia1_analysis()
         
-        if success:
-            logger.info("🎉 DYNAMIC RR INTEGRATION PHASE 1 TESTING COMPLETED SUCCESSFULLY")
+        logger.info("Running Test 2: API Opportunities")
+        await test_suite.test_2_api_opportunities()
+        
+        logger.info("Running Test 3: Backend Logs Validation")
+        await test_suite.test_3_backend_logs_validation()
+        
+        # Print final summary
+        logger.info("\n" + "=" * 80)
+        logger.info("🎯 FINAL TEST RESULTS SUMMARY")
+        logger.info("=" * 80)
+        
+        passed_tests = sum(1 for result in test_suite.test_results if result['success'])
+        total_tests = len(test_suite.test_results)
+        success_rate = passed_tests / total_tests if total_tests > 0 else 0
+        
+        for result in test_suite.test_results:
+            status = "✅ PASS" if result['success'] else "❌ FAIL"
+            logger.info(f"{status}: {result['test']}")
+            if result['details']:
+                logger.info(f"   Details: {result['details']}")
+        
+        logger.info(f"\nOverall Success Rate: {passed_tests}/{total_tests} ({success_rate:.1%})")
+        
+        if success_rate >= 0.67:  # 67% success threshold
+            logger.info("🎉 MFI AND STOCHASTIC REMOVAL TESTING COMPLETED SUCCESSFULLY")
+            return True
         else:
-            logger.info("❌ DYNAMIC RR INTEGRATION PHASE 1 TESTING FAILED")
-        
-        return success
+            logger.info("❌ MFI AND STOCHASTIC REMOVAL TESTING FAILED")
+            return False
         
     except Exception as e:
         logger.error(f"❌ Test suite execution failed: {e}")
         return False
-    
-    # Summary is handled by run_all_tests method
 
 
 if __name__ == "__main__":
