@@ -4389,7 +4389,7 @@ async def main():
         
         # Print final summary
         logger.info("\n" + "=" * 80)
-        logger.info("🎯 FINAL TEST RESULTS SUMMARY")
+        logger.info("🎯 CONFLUENCE ANALYSIS FIX TEST RESULTS SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in test_suite.test_results if result['success'])
