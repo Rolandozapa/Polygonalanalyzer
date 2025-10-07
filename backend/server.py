@@ -3829,7 +3829,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                     logger.warning(f"🚨 FALLBACK ANALYSIS for {opportunity.symbol}: fallback_macd={fallback_macd:.8f} (original macd_signal={macd_signal if 'macd_signal' in locals() else 'not_found'})")
                     
                     # ✅ STRICT VALIDATION: Use real calculated indicators or None  
-                    fallback_mfi = mfi if 'mfi' in locals() and mfi is not None else None
+                    # MFI removed from streamlined indicators
                     fallback_vwap = vwap if 'vwap' in locals() and vwap is not None else None
                     fallback_vwap_pos = vwap_position if 'vwap_position' in locals() and vwap_position is not None else None
                     fallback_ema_hier = trend_hierarchy if 'trend_hierarchy' in locals() and trend_hierarchy is not None else None
