@@ -2111,28 +2111,25 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.warning(f"⚠️ MICRO-PRIX EXTRÊME: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
                 return None
             
-            # 🎯 ÉTAPE 1: ANALYSE MULTI-TIMEFRAME (Nouvelle Approche Professionnelle)
+            # ÉTAPE 1: Récupération données 15m (pour compatibilité avec le code existant)
+            logger.info(f"📊 SOURCING: Récupération OHLCV 15m pour {opportunity.symbol}")
+            historical_data = await self._get_enhanced_historical_data(opportunity.symbol, days=60, timeframe="15m")
+            
+            # 🎯 ÉTAPE 1.5: ANALYSE MULTI-TIMEFRAME (En parallèle pour enrichissement IA1)
             logger.info(f"🚀 MULTI-TIMEFRAME: Starting comprehensive analysis for {opportunity.symbol}")
             
-            # Effectuer analyse multi-timeframe complète
-            multi_tf_result = await self.multi_timeframe_analyzer.analyze_symbol(
-                symbol=opportunity.symbol,
-                data_fetcher=self._get_enhanced_historical_data,
-                talib_calculator=self._calculate_talib_for_timeframe
-            )
-            
-            logger.info(f"✅ MULTI-TF COMPLETE: {opportunity.symbol} - {multi_tf_result.primary_signal} (Grade: {multi_tf_result.confidence_grade})")
-            
-            # FALLBACK: Si multi-timeframe échoue, utiliser méthode single timeframe
-            if not multi_tf_result.timeframe_analyses:
-                logger.warning(f"⚠️ Multi-timeframe failed, falling back to 15m analysis for {opportunity.symbol}")
-                historical_data = await self._get_enhanced_historical_data(opportunity.symbol, days=60, timeframe="15m")
-            else:
-                # Utiliser données 15m du multi-timeframe pour compatibilité avec le reste du code
-                historical_data = multi_tf_result.timeframe_analyses.get("15m")
-                if not historical_data:
-                    logger.warning(f"⚠️ No 15m data in multi-timeframe, fetching separately")
-                    historical_data = await self._get_enhanced_historical_data(opportunity.symbol, days=60, timeframe="15m")
+            try:
+                multi_tf_result = await self.multi_timeframe_analyzer.analyze_symbol(
+                    symbol=opportunity.symbol,
+                    data_fetcher=self._get_enhanced_historical_data,
+                    talib_calculator=self._calculate_talib_for_timeframe
+                )
+                
+                logger.info(f"✅ MULTI-TF COMPLETE: {opportunity.symbol} - {multi_tf_result.primary_signal} (Grade: {multi_tf_result.confidence_grade})")
+                
+            except Exception as e:
+                logger.error(f"❌ Multi-timeframe analysis failed for {opportunity.symbol}: {e}")
+                multi_tf_result = None
             
             # Validation données minimales pour calculs techniques (MACD 15m nécessite ~100+ périodes)
             min_periods = 100  # Pour 15m: 26 périodes + 9 + buffer = ~100 périodes minimum
