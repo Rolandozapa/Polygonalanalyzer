@@ -725,110 +725,110 @@ class MultiPhaseStrategicFrameworkTestSuite:
                 'error_details': []
             }
             
-            logger.info("   🚀 Analyzing backend logs for confluence calculation patterns...")
-            logger.info("   📊 Expected: Confluence calculation logs present, no confluence errors")
+            logger.info("   🚀 Testing /api/ia2-decisions endpoint for Multi-Phase Strategic Framework fields...")
+            logger.info("   📊 Expected: IA2 decisions with market_regime_assessment, execution_priority, risk_level not null, diverse values")
             
-            # Capture backend logs
-            logger.info("   📋 Capturing recent backend logs...")
+            # Test /api/ia2-decisions endpoint
+            logger.info("   📞 Calling /api/ia2-decisions endpoint...")
             
             try:
-                backend_logs = await self._capture_backend_logs()
-                if backend_logs:
-                    logs_results['logs_captured'] = True
-                    logs_results['total_log_lines'] = len(backend_logs)
-                    logger.info(f"      ✅ Captured {len(backend_logs)} log lines")
-                    
-                    # Analyze each log line for confluence patterns
-                    for log_line in backend_logs:
-                        log_lower = log_line.lower()
-                        
-                        # Check for confluence calculation patterns
-                        confluence_patterns = [
-                            'confluence',
-                            'grade',
-                            'score',
-                            'should_trade'
-                        ]
-                        
-                        for pattern in confluence_patterns:
-                            if pattern in log_lower:
-                                logs_results['confluence_calculation_logs'] += 1
-                                if pattern not in logs_results['confluence_patterns_found']:
-                                    logs_results['confluence_patterns_found'].append(pattern)
-                                if len(logs_results['sample_confluence_logs']) < 3:
-                                    logs_results['sample_confluence_logs'].append(log_line.strip())
-                                break
-                        
-                        # Check for confluence error patterns
-                        confluence_error_patterns = [
-                            'confluence.*error',
-                            'confluence.*null',
-                            'confluence.*failed',
-                            'grade.*error',
-                            'score.*error'
-                        ]
-                        
-                        for pattern in confluence_error_patterns:
-                            if re.search(pattern, log_lower):
-                                logs_results['confluence_error_logs'] += 1
-                                logger.error(f"      🚨 CONFLUENCE ERROR PATTERN FOUND: {pattern}")
-                                logger.error(f"         Log: {log_line.strip()}")
-                        
-                        # Check for success indicators
-                        success_patterns = [
-                            'ia1 analysis completed successfully',
-                            'ia1 ultra analysis completed',
-                            'analysis successful for',
-                            'technical analysis completed',
-                            'force-ia1-analysis completed'
-                        ]
-                        
-                        for pattern in success_patterns:
-                            if pattern in log_lower:
-                                logs_results['success_indicators'] += 1
-                                if pattern not in logs_results['success_patterns_found']:
-                                    logs_results['success_patterns_found'].append(pattern)
-                                if len(logs_results['sample_success_logs']) < 3:
-                                    logs_results['sample_success_logs'].append(log_line.strip())
-                                break
-                    
-                    logger.info(f"      📊 Log analysis completed:")
-                    logger.info(f"         - Total log lines analyzed: {logs_results['total_log_lines']}")
-                    logger.info(f"         - Confluence calculation logs: {logs_results['confluence_calculation_logs']}")
-                    logger.info(f"         - Confluence error logs: {logs_results['confluence_error_logs']}")
-                    logger.info(f"         - Success indicators: {logs_results['success_indicators']}")
-                    
-                    # Show confluence patterns found
-                    if logs_results['confluence_patterns_found']:
-                        logger.info(f"      ✅ CONFLUENCE PATTERNS FOUND:")
-                        for pattern in logs_results['confluence_patterns_found']:
-                            logger.info(f"         - {pattern}")
-                    else:
-                        logger.warning(f"      ⚠️ No confluence patterns found in logs")
-                    
-                    # Show success patterns found
-                    if logs_results['success_patterns_found']:
-                        logger.info(f"      ✅ SUCCESS PATTERNS FOUND:")
-                        for pattern in logs_results['success_patterns_found']:
-                            logger.info(f"         - {pattern}")
-                    
-                    # Show sample confluence logs
-                    if logs_results['sample_confluence_logs']:
-                        logger.info(f"      📋 Sample Confluence Logs:")
-                        for i, log in enumerate(logs_results['sample_confluence_logs']):
-                            logger.info(f"         {i+1}. {log}")
-                    
-                    # Show sample success logs
-                    if logs_results['sample_success_logs']:
-                        logger.info(f"      📋 Sample Success Logs:")
-                        for i, log in enumerate(logs_results['sample_success_logs']):
-                            logger.info(f"         {i+1}. {log}")
+                start_time = time.time()
+                response = requests.get(f"{self.api_url}/ia2-decisions", timeout=60)
+                response_time = time.time() - start_time
                 
+                if response.status_code == 200:
+                    api_results['api_call_successful'] = True
+                    logger.info(f"      ✅ /api/ia2-decisions successful (response time: {response_time:.2f}s)")
+                    
+                    # Parse response
+                    try:
+                        data = response.json()
+                        
+                        # Handle different response formats
+                        if isinstance(data, dict) and 'decisions' in data:
+                            decisions = data['decisions']
+                        elif isinstance(data, list):
+                            decisions = data
+                        else:
+                            decisions = []
+                        
+                        api_results['decisions_returned'] = len(decisions)
+                        logger.info(f"      📊 IA2 decisions returned: {len(decisions)}")
+                        
+                        if len(decisions) > 0:
+                            # Analyze decisions for Multi-Phase Strategic Framework fields
+                            for i, decision in enumerate(decisions[:10]):  # Analyze first 10 decisions
+                                if not isinstance(decision, dict):
+                                    continue
+                                
+                                # Check Multi-Phase Strategic Framework fields
+                                market_regime = decision.get('market_regime_assessment')
+                                execution_priority = decision.get('execution_priority')
+                                risk_level = decision.get('risk_level')
+                                volume_profile_bias = decision.get('volume_profile_bias')
+                                orderbook_quality = decision.get('orderbook_quality')
+                                multi_phase_score = decision.get('multi_phase_score')
+                                
+                                # Count fields present
+                                fields_present = sum([
+                                    market_regime is not None and market_regime != 'null',
+                                    execution_priority is not None and execution_priority != 'null',
+                                    risk_level is not None and risk_level != 'null',
+                                    volume_profile_bias is not None and volume_profile_bias != 'null',
+                                    orderbook_quality is not None and orderbook_quality != 'null',
+                                    multi_phase_score is not None and multi_phase_score != 'null'
+                                ])
+                                
+                                api_results['multi_phase_fields_coverage'] += fields_present
+                                
+                                # Check specific fields
+                                if market_regime is not None and market_regime != 'null':
+                                    api_results['market_regime_not_null'] += 1
+                                    api_results['diverse_market_regimes'].add(str(market_regime))
+                                
+                                if execution_priority is not None and execution_priority != 'null':
+                                    api_results['execution_priority_not_null'] += 1
+                                    api_results['diverse_execution_priorities'].add(str(execution_priority))
+                                
+                                if risk_level is not None and risk_level != 'null':
+                                    api_results['risk_level_not_null'] += 1
+                                    api_results['diverse_risk_levels'].add(str(risk_level))
+                                
+                                # Store sample decision data
+                                if i < 5:  # Store first 5 for analysis
+                                    api_results['decisions_data'].append({
+                                        'symbol': decision.get('symbol', 'UNKNOWN'),
+                                        'signal': decision.get('signal', 'N/A'),
+                                        'confidence': decision.get('confidence', 'N/A'),
+                                        'market_regime_assessment': market_regime,
+                                        'execution_priority': execution_priority,
+                                        'risk_level': risk_level,
+                                        'volume_profile_bias': volume_profile_bias,
+                                        'orderbook_quality': orderbook_quality,
+                                        'multi_phase_score': multi_phase_score,
+                                        'fields_present': fields_present,
+                                        'timestamp': decision.get('timestamp', 'N/A')
+                                    })
+                                    
+                                    logger.info(f"         📋 Sample {i+1} ({decision.get('symbol', 'UNKNOWN')}): regime={market_regime}, priority={execution_priority}, risk={risk_level}, fields={fields_present}/6")
+                        
+                        else:
+                            logger.warning(f"      ⚠️ No IA2 decisions returned from API")
+                            
+                    except json.JSONDecodeError as e:
+                        logger.error(f"      ❌ Invalid JSON response: {e}")
+                        api_results['error_details'].append(f"JSON decode error: {e}")
+                        
                 else:
-                    logger.warning(f"      ⚠️ No backend logs captured")
+                    logger.error(f"      ❌ /api/ia2-decisions failed: HTTP {response.status_code}")
+                    if response.text:
+                        error_text = response.text[:500]
+                        logger.error(f"         Error response: {error_text}")
+                        api_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
                     
             except Exception as e:
-                logger.error(f"      ❌ Failed to capture backend logs: {e}")
+                logger.error(f"      ❌ /api/ia2-decisions exception: {e}")
+                api_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
             confluence_presence_rate = 1.0 if logs_results['confluence_calculation_logs'] > 0 else 0.0
