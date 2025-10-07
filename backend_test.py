@@ -887,29 +887,29 @@ class MultiPhaseStrategicFrameworkTestSuite:
 
 async def main():
     """Main test execution function"""
-    logger.info("🚀 Starting Confluence Analysis Fix Testing Suite")
+    logger.info("🚀 Starting Multi-Phase Strategic Framework Testing Suite")
     logger.info("=" * 80)
     
     # Initialize test suite
-    test_suite = ConfluenceAnalysisTestSuite()
+    test_suite = MultiPhaseStrategicFrameworkTestSuite()
     
     try:
-        # Run all confluence analysis tests
-        logger.info("Running Test 1: API Force IA1 Analysis - Confluence Values")
-        await test_suite.test_1_api_force_ia1_analysis_confluence()
+        # Run all Multi-Phase Strategic Framework tests
+        logger.info("Running Test 1: IA2 Prompt Enriched Validation - Multi-Phase Framework Configuration")
+        await test_suite.test_1_ia2_prompt_enriched_validation()
         
-        logger.info("Running Test 2: API Analyses Endpoint - Confluence Consistency")
-        await test_suite.test_2_api_analyses_confluence()
+        logger.info("Running Test 2: IA2 Generation Real Decision - IA2 Escalation Criteria Testing")
+        await test_suite.test_2_ia2_generation_real_decision()
         
-        logger.info("Running Test 3: Confluence Calculation Logic - Validation and Diversity")
-        await test_suite.test_3_confluence_calculation_logic()
+        logger.info("Running Test 3: Create Test IA2 Decision Endpoint - Multi-Phase Fields Validation")
+        await test_suite.test_3_create_test_ia2_decision_endpoint()
         
-        logger.info("Running Test 4: Backend Logs Confluence Validation")
-        await test_suite.test_4_backend_logs_confluence_validation()
+        logger.info("Running Test 4: IA2 Decisions API Validation - Multi-Phase Framework Fields")
+        await test_suite.test_4_ia2_decisions_api_validation()
         
         # Print final summary
         logger.info("\n" + "=" * 80)
-        logger.info("🎯 CONFLUENCE ANALYSIS FIX TEST RESULTS SUMMARY")
+        logger.info("🎯 MULTI-PHASE STRATEGIC FRAMEWORK TEST RESULTS SUMMARY")
         logger.info("=" * 80)
         
         passed_tests = sum(1 for result in test_suite.test_results if result['success'])
@@ -927,11 +927,11 @@ async def main():
         logger.info(f"   Success Rate: {success_rate:.2%}")
         
         if success_rate >= 0.75:
-            logger.info("🎉 CONFLUENCE ANALYSIS FIX TESTING SUCCESSFUL!")
-            logger.info("   The confluence analysis fix appears to be working correctly.")
+            logger.info("🎉 MULTI-PHASE STRATEGIC FRAMEWORK TESTING SUCCESSFUL!")
+            logger.info("   The Multi-Phase Strategic Framework appears to be working correctly.")
         else:
-            logger.warning("⚠️ CONFLUENCE ANALYSIS FIX TESTING ISSUES DETECTED")
-            logger.warning("   Some confluence analysis functionality may still need attention.")
+            logger.warning("⚠️ MULTI-PHASE STRATEGIC FRAMEWORK TESTING ISSUES DETECTED")
+            logger.warning("   Some Multi-Phase Strategic Framework functionality may need attention.")
         
         logger.info("=" * 80)
         
