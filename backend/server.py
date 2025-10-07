@@ -3933,8 +3933,12 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             # Utiliser BingX Futures API pour données intraday (plus fiable que spot)
             bingx_url = f"{self.bingx_base_url or 'https://open-api.bingx.com'}/openApi/swap/v2/quote/klines"
             
-            # Format symbole pour BingX Futures API (garde ETHUSDT tel quel)
-            bingx_symbol = symbol  # Futures API utilise ETHUSDT directement
+            # Format symbole pour BingX API (ETHUSDT -> ETH-USDT)
+            if 'USDT' in symbol:
+                base = symbol.replace('USDT', '')
+                bingx_symbol = f"{base}-USDT"
+            else:
+                bingx_symbol = symbol
             
             params = {
                 'symbol': bingx_symbol,
