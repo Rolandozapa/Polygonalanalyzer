@@ -94,6 +94,7 @@ class TechnicalAnalysis(BaseModel):
     timestamp: datetime = Field(default_factory=get_paris_time)
     # NOUVEAUX CHAMPS RISK-REWARD IA1
     risk_reward_ratio: float = 0.0
+    calculated_rr: Optional[float] = 0.0  # 🎯 FIX RR: Exact field name for API consistency
     entry_price: float = 0.0
     stop_loss_price: float = 0.0
     take_profit_price: float = 0.0
