@@ -4682,9 +4682,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # 🚀 ADVANCED TECHNICAL INDICATORS - CRITICAL FIX FOR IA1 ANALYSIS
             # ✅ NO FALLBACK VALUES - Use real calculated MFI indicators
-            cleaned_data["mfi_value"] = self._ensure_json_safe(analysis_data.get("mfi_value"), None)  # ❌ NO 50.0 FALLBACK
-            cleaned_data["mfi_signal"] = str(analysis_data.get("mfi_signal", "neutral"))
-            cleaned_data["mfi_institution"] = str(analysis_data.get("mfi_institution", "neutral"))
+            # MFI indicators removed from streamlined system
             
             # ✅ VWAP indicators - NO FALLBACK to 0.0
             cleaned_data["vwap_price"] = self._ensure_json_safe(analysis_data.get("vwap_price"), None)  # ❌ NO 0.0 FALLBACK
