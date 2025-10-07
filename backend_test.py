@@ -281,99 +281,54 @@ class MultiPhaseStrategicFrameworkTestSuite:
             
             prompt_results['multi_phase_framework_complete'] = sum(multi_phase_criteria) >= 4  # At least 4/5 criteria
             
-            # Capture backend logs to check for confluence calculation logs
-            logger.info("   📋 Capturing backend logs to check for confluence calculation logs...")
-            
-            try:
-                backend_logs = await self._capture_backend_logs()
-                if backend_logs:
-                    # Look for confluence-related log patterns
-                    confluence_calculation_logs = []
-                    confluence_error_logs = []
-                    success_logs = []
-                    
-                    for log_line in backend_logs:
-                        log_lower = log_line.lower()
-                        
-                        # Check for confluence calculation logs
-                        if any(pattern in log_lower for pattern in ['confluence', 'grade', 'score']):
-                            confluence_calculation_logs.append(log_line.strip())
-                        
-                        # Check for confluence errors
-                        if any(pattern in log_lower for pattern in ['confluence.*error', 'confluence.*null', 'confluence.*failed']):
-                            confluence_error_logs.append(log_line.strip())
-                        
-                        # Check for successful IA1 completions
-                        if any(pattern in log_lower for pattern in ['ia1 analysis completed', 'ia1 ultra analysis', 'analysis successful']):
-                            success_logs.append(log_line.strip())
-                    
-                    logger.info(f"      📊 Backend logs analysis:")
-                    logger.info(f"         - Confluence calculation logs: {len(confluence_calculation_logs)}")
-                    logger.info(f"         - Confluence error logs: {len(confluence_error_logs)}")
-                    logger.info(f"         - Success logs: {len(success_logs)}")
-                    
-                    # Show sample logs
-                    if confluence_calculation_logs:
-                        logger.info(f"      ✅ Sample confluence log: {confluence_calculation_logs[0]}")
-                    if confluence_error_logs:
-                        logger.error(f"      🚨 CONFLUENCE ERROR FOUND: {confluence_error_logs[0]}")
-                    if success_logs:
-                        logger.info(f"      ✅ Sample success log: {success_logs[0]}")
-                        
-            except Exception as e:
-                logger.warning(f"      ⚠️ Could not analyze backend logs: {e}")
-            
             # Final analysis and results
-            success_rate = analysis_results['analyses_successful'] / max(analysis_results['analyses_attempted'], 1)
-            confluence_grade_rate = analysis_results['confluence_grade_not_null'] / max(analysis_results['analyses_successful'], 1)
-            confluence_score_rate = analysis_results['confluence_score_not_null'] / max(analysis_results['analyses_successful'], 1)
-            should_trade_rate = analysis_results['should_trade_not_null'] / max(analysis_results['analyses_successful'], 1)
-            valid_grades_rate = analysis_results['valid_confluence_grades'] / max(analysis_results['confluence_grade_not_null'], 1)
-            valid_scores_rate = analysis_results['valid_confluence_scores'] / max(analysis_results['confluence_score_not_null'], 1)
-            avg_response_time = sum(analysis_results['response_times']) / max(len(analysis_results['response_times']), 1)
+            logger.info(f"\n   📊 IA2 PROMPT ENRICHED VALIDATION RESULTS:")
+            logger.info(f"      IA2 v3 prompt exists: {prompt_results['ia2_v3_prompt_exists']}")
+            logger.info(f"      IA2 strategic prompt exists: {prompt_results['ia2_strategic_prompt_exists']}")
+            logger.info(f"      market_regime_assessment found: {prompt_results['market_regime_assessment_found']}")
+            logger.info(f"      execution_priority found: {prompt_results['execution_priority_found']}")
+            logger.info(f"      risk_level found: {prompt_results['risk_level_found']}")
+            logger.info(f"      JSON output section valid: {prompt_results['json_output_section_valid']}")
+            logger.info(f"      Required variables present: {prompt_results['required_variables_present']}")
+            logger.info(f"      Multi-Phase Framework complete: {prompt_results['multi_phase_framework_complete']}")
             
-            logger.info(f"\n   📊 API FORCE IA1 ANALYSIS CONFLUENCE RESULTS:")
-            logger.info(f"      Analyses attempted: {analysis_results['analyses_attempted']}")
-            logger.info(f"      Analyses successful: {analysis_results['analyses_successful']}")
-            logger.info(f"      Success rate: {success_rate:.2f}")
-            logger.info(f"      confluence_grade not null: {analysis_results['confluence_grade_not_null']} ({confluence_grade_rate:.2f})")
-            logger.info(f"      confluence_score not null: {analysis_results['confluence_score_not_null']} ({confluence_score_rate:.2f})")
-            logger.info(f"      should_trade not null: {analysis_results['should_trade_not_null']} ({should_trade_rate:.2f})")
-            logger.info(f"      Valid confluence grades: {analysis_results['valid_confluence_grades']} ({valid_grades_rate:.2f})")
-            logger.info(f"      Valid confluence scores: {analysis_results['valid_confluence_scores']} ({valid_scores_rate:.2f})")
-            logger.info(f"      Confluence reasoning present: {analysis_results['confluence_reasoning_present']}")
-            logger.info(f"      Average response time: {avg_response_time:.2f}s")
-            
-            # Show confluence data details
-            if analysis_results['confluence_data']:
-                logger.info(f"      📊 Confluence Data Details:")
-                for data in analysis_results['confluence_data']:
-                    logger.info(f"         - {data['symbol']}: grade={data['confluence_grade']}, score={data['confluence_score']}, trade={data['should_trade']}, reasoning={data['has_reasoning']}")
+            # Show prompt content analysis
+            if prompt_results['prompt_content_analysis']:
+                analysis = prompt_results['prompt_content_analysis']
+                logger.info(f"      📊 Prompt Content Analysis:")
+                logger.info(f"         - Name: {analysis['name']}")
+                logger.info(f"         - Version: {analysis['version']}")
+                logger.info(f"         - Model: {analysis['model']}")
+                logger.info(f"         - Template Length: {analysis['template_length']} chars")
+                logger.info(f"         - Required Variables: {analysis['required_variables_count']}")
+                
+                if analysis['enhancements_v3']:
+                    logger.info(f"         - V3 Enhancements: {len(analysis['enhancements_v3'])} features")
             
             # Show error details if any
-            if analysis_results['error_details']:
+            if prompt_results['error_details']:
                 logger.info(f"      📊 Error Details:")
-                for error in analysis_results['error_details']:
-                    logger.info(f"         - {error['symbol']}: {error['error_type']}")
+                for error in prompt_results['error_details']:
+                    logger.info(f"         - {error}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                analysis_results['analyses_successful'] >= 2,  # At least 2 successful analyses
-                analysis_results['confluence_grade_not_null'] >= 2,  # At least 2 with confluence_grade not null
-                analysis_results['confluence_score_not_null'] >= 2,  # At least 2 with confluence_score not null
-                analysis_results['should_trade_not_null'] >= 2,  # At least 2 with should_trade not null
-                analysis_results['valid_confluence_grades'] >= 1,  # At least 1 valid grade
-                success_rate >= 0.67  # At least 67% success rate (2/3)
+                prompt_results['ia2_v3_prompt_exists'],  # IA2 v3 prompt file exists
+                prompt_results['market_regime_assessment_found'],  # market_regime_assessment field found
+                prompt_results['execution_priority_found'],  # execution_priority field found
+                prompt_results['risk_level_found'],  # risk_level field found
+                prompt_results['required_variables_present'],  # Required variables present
+                prompt_results['multi_phase_framework_complete']  # Multi-Phase Framework complete
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
             if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("API Force IA1 Analysis Confluence", True, 
-                                   f"Confluence analysis successful: {success_count}/{len(success_criteria)} criteria met. Grade rate: {confluence_grade_rate:.2f}, Score rate: {confluence_score_rate:.2f}, Trade rate: {should_trade_rate:.2f}")
+                self.log_test_result("IA2 Prompt Enriched Validation", True, 
+                                   f"IA2 prompt enriched validation successful: {success_count}/{len(success_criteria)} criteria met. Multi-Phase Framework fields properly configured in IA2 v3 Strategic Ultra prompt.")
             else:
-                self.log_test_result("API Force IA1 Analysis Confluence", False, 
-                                   f"Confluence analysis issues: {success_count}/{len(success_criteria)} criteria met. Many confluence values still null or invalid")
+                self.log_test_result("IA2 Prompt Enriched Validation", False, 
+                                   f"IA2 prompt enriched validation issues: {success_count}/{len(success_criteria)} criteria met. Multi-Phase Framework may be incomplete or missing fields.")
                 
         except Exception as e:
             self.log_test_result("API Force IA1 Analysis Confluence", False, f"Exception: {str(e)}")
