@@ -16,7 +16,7 @@ def analyze_current_data():
     
     # Get current analyses
     try:
-        response = requests.get("https://bingx-trading-bot.preview.emergentagent.com/api/analyses", timeout=30)
+        response = requests.get("https://ai-trading-debug.preview.emergentagent.com/api/analyses", timeout=30)
         if response.status_code == 200:
             data = response.json()
             analyses = data.get('analyses', [])
