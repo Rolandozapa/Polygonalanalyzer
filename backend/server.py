@@ -3871,9 +3871,7 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                         market_sentiment="neutral",
                         data_sources=opportunity.data_sources,
                         # 🚀 Add advanced indicators to fallback analysis
-                        mfi_value=fallback_mfi,
-                        mfi_signal=('extreme_overbought' if fallback_mfi > 90 else 'overbought' if fallback_mfi > 80 else 'extreme_oversold' if fallback_mfi < 10 else 'oversold' if fallback_mfi < 20 else 'neutral'),
-                        mfi_institution=('distribution' if fallback_mfi > 80 else 'accumulation' if fallback_mfi < 20 else 'neutral'),
+                        # MFI fields removed from streamlined system
                         vwap_price=fallback_vwap,
                         vwap_position=fallback_vwap_pos,
                         vwap_signal=('extreme_overbought' if abs(fallback_vwap_pos) > 2.0 and fallback_vwap_pos > 0 else 'overbought' if abs(fallback_vwap_pos) > 1.0 and fallback_vwap_pos > 0 else 'extreme_oversold' if abs(fallback_vwap_pos) > 2.0 and fallback_vwap_pos < 0 else 'oversold' if abs(fallback_vwap_pos) > 1.0 and fallback_vwap_pos < 0 else 'neutral'),
