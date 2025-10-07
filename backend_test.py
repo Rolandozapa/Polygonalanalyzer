@@ -301,27 +301,22 @@ class ConfluenceAnalysisTestSuite:
                         })
                         
                     elif response.status_code == 500:
-                        # Check for specific MFI/Stochastic errors
+                        # Check for confluence-related errors
                         error_text = response.text
                         logger.error(f"      ❌ {symbol} analysis failed: HTTP 500")
                         logger.error(f"         Error response: {error_text[:500]}")
                         
-                        # Check for MFI errors
-                        if any(pattern in error_text for pattern in ["mfi", "MFI"]):
-                            analysis_results['mfi_errors_found'] += 1
-                            logger.error(f"         🚨 MFI ERROR DETECTED in {symbol}")
-                        
-                        # Check for Stochastic errors  
-                        if any(pattern in error_text for pattern in ["stochastic", "stoch_k", "stoch_d"]):
-                            analysis_results['stochastic_errors_found'] += 1
-                            logger.error(f"         🚨 STOCHASTIC ERROR DETECTED in {symbol}")
+                        # Check for confluence calculation errors
+                        confluence_error_found = False
+                        if any(pattern in error_text.lower() for pattern in ["confluence", "grade", "score"]):
+                            confluence_error_found = True
+                            logger.error(f"         🚨 CONFLUENCE ERROR DETECTED in {symbol}")
                         
                         analysis_results['error_details'].append({
                             'symbol': symbol,
                             'error_type': 'HTTP_500',
                             'error_text': error_text[:500],
-                            'has_mfi_error': any(pattern in error_text for pattern in ["mfi", "MFI"]),
-                            'has_stochastic_error': any(pattern in error_text for pattern in ["stochastic", "stoch_k", "stoch_d"])
+                            'has_confluence_error': confluence_error_found
                         })
                         
                     else:
