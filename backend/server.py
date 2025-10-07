@@ -1653,6 +1653,14 @@ class UltraProfessionalIA1TechnicalAnalyst:
         self.market_aggregator = advanced_market_aggregator
         self.advanced_indicators = AdvancedTechnicalIndicators()
         self.bingx_base_url = "https://open-api.bingx.com"
+        
+        # Initialize TALib indicators system
+        self.talib_indicators = TALibIndicators()
+        logger.info("✅ TALib indicators system initialized")
+        
+        # 🎯 Initialize Multi-Timeframe Analyzer
+        self.multi_timeframe_analyzer = MultiTimeframeAnalyzer()
+        logger.info("🚀 Multi-Timeframe Analyzer initialized")
     
     def _get_rsi_interpretation(self, rsi_value: float, rsi_zone: str) -> str:
         """Get RSI interpretation based on value and zone"""
