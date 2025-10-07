@@ -572,51 +572,52 @@ class ConfluenceAnalysisTestSuite:
                 analyses_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
-            opportunities_rate = opportunities_results['opportunities_returned'] / max(1, 1)  # At least 1 expected
-            valid_rate = opportunities_results['valid_opportunities'] / max(opportunities_results['opportunities_returned'], 1)
-            indicators_rate = opportunities_results['technical_indicators_present'] / max(opportunities_results['valid_opportunities'], 1)
-            clean_rate = (opportunities_results['valid_opportunities'] - opportunities_results['mfi_references_found'] - opportunities_results['stochastic_references_found']) / max(opportunities_results['valid_opportunities'], 1)
+            confluence_fields_rate = analyses_results['confluence_fields_present'] / max(analyses_results['analyses_returned'], 1)
+            confluence_grades_rate = analyses_results['confluence_grades_not_null'] / max(analyses_results['analyses_returned'], 1)
+            confluence_scores_rate = analyses_results['confluence_scores_not_null'] / max(analyses_results['analyses_returned'], 1)
+            should_trade_rate = analyses_results['should_trade_not_null'] / max(analyses_results['analyses_returned'], 1)
+            fallback_rate = analyses_results['default_fallback_values'] / max(analyses_results['confluence_scores_not_null'], 1)
             
-            logger.info(f"\n   📊 API OPPORTUNITIES RESULTS:")
-            logger.info(f"      API call successful: {opportunities_results['api_call_successful']}")
-            logger.info(f"      Opportunities returned: {opportunities_results['opportunities_returned']}")
-            logger.info(f"      Valid opportunities: {opportunities_results['valid_opportunities']} ({valid_rate:.2f})")
-            logger.info(f"      Technical indicators present: {opportunities_results['technical_indicators_present']} ({indicators_rate:.2f})")
-            logger.info(f"      Required fields present: {opportunities_results['required_fields_present']}")
-            logger.info(f"      MFI references found: {opportunities_results['mfi_references_found']}")
-            logger.info(f"      Stochastic references found: {opportunities_results['stochastic_references_found']}")
-            logger.info(f"      Clean rate (no MFI/Stochastic): {clean_rate:.2f}")
+            logger.info(f"\n   📊 API ANALYSES CONFLUENCE RESULTS:")
+            logger.info(f"      API call successful: {analyses_results['api_call_successful']}")
+            logger.info(f"      Analyses returned: {analyses_results['analyses_returned']}")
+            logger.info(f"      Confluence fields present: {analyses_results['confluence_fields_present']} ({confluence_fields_rate:.2f})")
+            logger.info(f"      Confluence grades not null: {analyses_results['confluence_grades_not_null']} ({confluence_grades_rate:.2f})")
+            logger.info(f"      Confluence scores not null: {analyses_results['confluence_scores_not_null']} ({confluence_scores_rate:.2f})")
+            logger.info(f"      Should trade not null: {analyses_results['should_trade_not_null']} ({should_trade_rate:.2f})")
+            logger.info(f"      Default fallback values (50/100): {analyses_results['default_fallback_values']} ({fallback_rate:.2f})")
+            logger.info(f"      Diverse confluence scores: {analyses_results['diverse_confluence_scores']}")
             
-            # Show sample opportunities data
-            if opportunities_results['opportunities_data']:
-                logger.info(f"      📊 Sample Opportunities Data:")
-                for opp in opportunities_results['opportunities_data']:
-                    logger.info(f"         - {opp['symbol']}: indicators={opp['technical_indicators']}, clean={not opp['has_mfi'] and not opp['has_stochastic']}")
+            # Show sample analyses data
+            if analyses_results['analyses_data']:
+                logger.info(f"      📊 Sample Analyses Data:")
+                for analysis in analyses_results['analyses_data']:
+                    logger.info(f"         - {analysis['symbol']}: grade={analysis['confluence_grade']}, score={analysis['confluence_score']}, trade={analysis['should_trade']}")
             
             # Show error details if any
-            if opportunities_results['error_details']:
+            if analyses_results['error_details']:
                 logger.info(f"      📊 Error Details:")
-                for error in opportunities_results['error_details']:
+                for error in analyses_results['error_details']:
                     logger.info(f"         - {error}")
             
             # Calculate test success based on review requirements
             success_criteria = [
-                opportunities_results['api_call_successful'],  # API call successful
-                opportunities_results['opportunities_returned'] > 0,  # Returns data
-                opportunities_results['technical_indicators_present'] > 0,  # Contains technical indicators
-                opportunities_results['mfi_references_found'] == 0,  # No MFI references
-                opportunities_results['stochastic_references_found'] == 0,  # No Stochastic references
-                opportunities_results['required_fields_present'] > 0  # Has required fields
+                analyses_results['api_call_successful'],  # API call successful
+                analyses_results['analyses_returned'] > 0,  # Returns data
+                analyses_results['confluence_fields_present'] > 0,  # Has confluence fields
+                analyses_results['confluence_grades_not_null'] > 0,  # Some grades not null
+                analyses_results['confluence_scores_not_null'] > 0,  # Some scores not null
+                analyses_results['default_fallback_values'] < analyses_results['confluence_scores_not_null'] * 0.5  # Less than 50% fallbacks
             ]
             success_count = sum(success_criteria)
             test_success_rate = success_count / len(success_criteria)
             
             if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
-                self.log_test_result("API Opportunities", True, 
-                                   f"Opportunities API successful: {success_count}/{len(success_criteria)} criteria met. Returns {opportunities_results['opportunities_returned']} opportunities, no MFI/Stochastic references, clean rate: {clean_rate:.2f}")
+                self.log_test_result("API Analyses Confluence", True, 
+                                   f"Analyses API confluence successful: {success_count}/{len(success_criteria)} criteria met. Grades rate: {confluence_grades_rate:.2f}, Scores rate: {confluence_scores_rate:.2f}, Fallback rate: {fallback_rate:.2f}")
             else:
-                self.log_test_result("API Opportunities", False, 
-                                   f"Opportunities API issues: {success_count}/{len(success_criteria)} criteria met. MFI refs: {opportunities_results['mfi_references_found']}, Stochastic refs: {opportunities_results['stochastic_references_found']}")
+                self.log_test_result("API Analyses Confluence", False, 
+                                   f"Analyses API confluence issues: {success_count}/{len(success_criteria)} criteria met. Too many null values or fallbacks")
                 
         except Exception as e:
             self.log_test_result("API Opportunities", False, f"Exception: {str(e)}")
