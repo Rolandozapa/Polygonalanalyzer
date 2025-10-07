@@ -460,102 +460,116 @@ class ConfluenceAnalysisTestSuite:
             logger.info("   🚀 Testing /api/analyses endpoint for confluence consistency...")
             logger.info("   📊 Expected: Confluence values consistent, no default fallbacks (50/100), real market conditions")
             
-            # Test /api/opportunities endpoint
-            logger.info("   📞 Calling /api/opportunities endpoint...")
+            # Test /api/analyses endpoint
+            logger.info("   📞 Calling /api/analyses endpoint...")
             
             try:
                 start_time = time.time()
-                response = requests.get(f"{self.api_url}/opportunities", timeout=60)
+                response = requests.get(f"{self.api_url}/analyses", timeout=60)
                 response_time = time.time() - start_time
                 
                 if response.status_code == 200:
-                    opportunities_results['api_call_successful'] = True
-                    logger.info(f"      ✅ /api/opportunities successful (response time: {response_time:.2f}s)")
+                    analyses_results['api_call_successful'] = True
+                    logger.info(f"      ✅ /api/analyses successful (response time: {response_time:.2f}s)")
                     
                     # Parse response
                     try:
                         data = response.json()
                         
                         # Handle different response formats
-                        if isinstance(data, dict) and 'opportunities' in data:
-                            opportunities = data['opportunities']
+                        if isinstance(data, dict) and 'analyses' in data:
+                            analyses = data['analyses']
                         elif isinstance(data, list):
-                            opportunities = data
+                            analyses = data
                         else:
-                            opportunities = []
+                            analyses = []
                         
-                        opportunities_results['opportunities_returned'] = len(opportunities)
-                        logger.info(f"      📊 Opportunities returned: {len(opportunities)}")
+                        analyses_results['analyses_returned'] = len(analyses)
+                        logger.info(f"      📊 Analyses returned: {len(analyses)}")
                         
-                        if len(opportunities) > 0:
-                            # Analyze first 10 opportunities for validation
-                            for i, opp in enumerate(opportunities[:10]):
-                                if not isinstance(opp, dict):
+                        if len(analyses) > 0:
+                            confluence_scores = []
+                            
+                            # Analyze first 20 analyses for confluence validation
+                            for i, analysis in enumerate(analyses[:20]):
+                                if not isinstance(analysis, dict):
                                     continue
                                 
-                                opportunities_results['valid_opportunities'] += 1
+                                # Check for confluence fields
+                                confluence_grade = analysis.get('confluence_grade')
+                                confluence_score = analysis.get('confluence_score')
+                                should_trade = analysis.get('should_trade')
                                 
-                                # Check for required fields
-                                required_fields = ['symbol', 'current_price', 'volume_24h', 'price_change_24h']
-                                has_required_fields = all(field in opp for field in required_fields)
+                                has_confluence_fields = any([
+                                    confluence_grade is not None,
+                                    confluence_score is not None,
+                                    should_trade is not None
+                                ])
                                 
-                                if has_required_fields:
-                                    opportunities_results['required_fields_present'] += 1
+                                if has_confluence_fields:
+                                    analyses_results['confluence_fields_present'] += 1
                                 
-                                # Check for technical indicators (should be present)
-                                technical_indicators_found = []
-                                for indicator in ['rsi', 'macd', 'atr', 'vwap', 'adx', 'bb', 'volatility']:
-                                    if any(key for key in opp.keys() if indicator in key.lower()):
-                                        technical_indicators_found.append(indicator)
+                                # Check confluence_grade
+                                if confluence_grade is not None and confluence_grade != 'null':
+                                    analyses_results['confluence_grades_not_null'] += 1
                                 
-                                if len(technical_indicators_found) > 0:
-                                    opportunities_results['technical_indicators_present'] += 1
+                                # Check confluence_score
+                                if confluence_score is not None and confluence_score != 'null':
+                                    analyses_results['confluence_scores_not_null'] += 1
+                                    
+                                    # Check for default fallback values (50, 100)
+                                    try:
+                                        score_value = float(confluence_score)
+                                        confluence_scores.append(score_value)
+                                        
+                                        if score_value in [50.0, 100.0]:
+                                            analyses_results['default_fallback_values'] += 1
+                                    except (ValueError, TypeError):
+                                        pass
                                 
-                                # Check for MFI references (should NOT be present)
-                                mfi_found = any(key for key in opp.keys() if 'mfi' in key.lower())
-                                if mfi_found:
-                                    opportunities_results['mfi_references_found'] += 1
-                                    logger.warning(f"         ❌ MFI reference found in {opp.get('symbol', 'UNKNOWN')}")
+                                # Check should_trade
+                                if should_trade is not None and should_trade != 'null':
+                                    analyses_results['should_trade_not_null'] += 1
                                 
-                                # Check for Stochastic references (should NOT be present)
-                                stochastic_found = any(key for key in opp.keys() if any(term in key.lower() for term in ['stochastic', 'stoch_k', 'stoch_d']))
-                                if stochastic_found:
-                                    opportunities_results['stochastic_references_found'] += 1
-                                    logger.warning(f"         ❌ Stochastic reference found in {opp.get('symbol', 'UNKNOWN')}")
-                                
-                                # Store sample opportunity data
-                                if i < 3:  # Store first 3 for analysis
-                                    opportunities_results['opportunities_data'].append({
-                                        'symbol': opp.get('symbol', 'UNKNOWN'),
-                                        'current_price': opp.get('current_price'),
-                                        'volume_24h': opp.get('volume_24h'),
-                                        'price_change_24h': opp.get('price_change_24h'),
-                                        'has_required_fields': has_required_fields,
-                                        'technical_indicators': technical_indicators_found,
-                                        'has_mfi': mfi_found,
-                                        'has_stochastic': stochastic_found,
-                                        'all_fields': list(opp.keys())
+                                # Store sample analysis data
+                                if i < 5:  # Store first 5 for analysis
+                                    analyses_results['analyses_data'].append({
+                                        'symbol': analysis.get('symbol', 'UNKNOWN'),
+                                        'confluence_grade': confluence_grade,
+                                        'confluence_score': confluence_score,
+                                        'should_trade': should_trade,
+                                        'timestamp': analysis.get('timestamp', 'N/A'),
+                                        'has_confluence_fields': has_confluence_fields
                                     })
                                     
-                                    logger.info(f"         📋 Sample {i+1} ({opp.get('symbol', 'UNKNOWN')}): price=${opp.get('current_price', 'N/A')}, indicators={technical_indicators_found}, clean={not mfi_found and not stochastic_found}")
+                                    logger.info(f"         📋 Sample {i+1} ({analysis.get('symbol', 'UNKNOWN')}): grade={confluence_grade}, score={confluence_score}, trade={should_trade}")
+                            
+                            # Check for diversity in confluence scores (not all the same)
+                            if confluence_scores:
+                                unique_scores = len(set(confluence_scores))
+                                if unique_scores > 1:
+                                    analyses_results['diverse_confluence_scores'] = unique_scores
+                                    logger.info(f"         ✅ Diverse confluence scores found: {unique_scores} unique values")
+                                else:
+                                    logger.warning(f"         ⚠️ All confluence scores are the same: {confluence_scores[0] if confluence_scores else 'N/A'}")
                         
                         else:
-                            logger.warning(f"      ⚠️ No opportunities returned from API")
+                            logger.warning(f"      ⚠️ No analyses returned from API")
                             
                     except json.JSONDecodeError as e:
                         logger.error(f"      ❌ Invalid JSON response: {e}")
-                        opportunities_results['error_details'].append(f"JSON decode error: {e}")
+                        analyses_results['error_details'].append(f"JSON decode error: {e}")
                         
                 else:
-                    logger.error(f"      ❌ /api/opportunities failed: HTTP {response.status_code}")
+                    logger.error(f"      ❌ /api/analyses failed: HTTP {response.status_code}")
                     if response.text:
                         error_text = response.text[:500]
                         logger.error(f"         Error response: {error_text}")
-                        opportunities_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
+                        analyses_results['error_details'].append(f"HTTP {response.status_code}: {error_text}")
                     
             except Exception as e:
-                logger.error(f"      ❌ /api/opportunities exception: {e}")
-                opportunities_results['error_details'].append(f"Exception: {str(e)}")
+                logger.error(f"      ❌ /api/analyses exception: {e}")
+                analyses_results['error_details'].append(f"Exception: {str(e)}")
             
             # Final analysis and results
             opportunities_rate = opportunities_results['opportunities_returned'] / max(1, 1)  # At least 1 expected
