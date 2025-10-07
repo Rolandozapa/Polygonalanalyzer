@@ -850,7 +850,7 @@ const TradingDashboard = () => {
                           {/* Row 1: Momentum Core */}
                           <div className="mb-4">
                             <h5 className="text-sm font-medium text-slate-700 mb-2">🎯 Momentum Core</h5>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                               <div className="bg-white rounded-lg p-3 text-center border">
                                 <p className="text-xs text-slate-600">RSI (14)</p>
                                 <p className={`font-bold text-lg ${
@@ -872,18 +872,6 @@ const TradingDashboard = () => {
                                   {(analysis.macd_histogram || 0).toFixed(4)}
                                 </p>
                                 <p className="text-xs text-slate-500">Histogram</p>
-                              </div>
-                              
-                              <div className="bg-white rounded-lg p-3 text-center border">
-                                <p className="text-xs text-slate-600">Stochastic</p>
-                                <p className={`font-bold text-lg ${
-                                  (analysis.stochastic || 50) >= 80 ? 'text-red-600' :
-                                  (analysis.stochastic || 50) <= 20 ? 'text-green-600' :
-                                  'text-slate-900'
-                                }`}>
-                                  {(analysis.stochastic || 50).toFixed(1)}
-                                </p>
-                                <p className="text-xs text-slate-500">%K</p>
                               </div>
                               
                               <div className="bg-white rounded-lg p-3 text-center border">
