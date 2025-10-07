@@ -10101,6 +10101,10 @@ async def startup_event():
         await orchestrator.initialize()
         logger.info("✅ Orchestrator initialized successfully")
         
+        # 🚀 START AUTOMATIC TRADING LOOP IN BACKGROUND
+        asyncio.create_task(ultra_professional_trading_loop())
+        logger.info("✅ Automatic trading loop started in background")
+        
         # 🚀 ASYNC OPTIMIZATION: Initialize BingX tradable symbols asynchronously
         logger.info("🔄 Initializing BingX tradable symbols (async optimized)...")
         try:
