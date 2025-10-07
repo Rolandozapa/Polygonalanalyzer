@@ -140,9 +140,9 @@ class ConfluenceAnalysisTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_1_api_force_ia1_analysis(self):
-        """Test 1: API Force IA1 Analysis - Test with 3-4 symbols to verify no MFI/Stochastic errors"""
-        logger.info("\n🔍 TEST 1: API Force IA1 Analysis - MFI/Stochastic Removal Validation")
+    async def test_1_api_force_ia1_analysis_confluence(self):
+        """Test 1: API Force IA1 Analysis - Test confluence values with 3 symbols (BTCUSDT, ETHUSDT, LINKUSDT)"""
+        logger.info("\n🔍 TEST 1: API Force IA1 Analysis - Confluence Analysis Fix Validation")
         
         try:
             analysis_results = {
