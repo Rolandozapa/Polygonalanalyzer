@@ -201,9 +201,9 @@ class ConfluenceAnalysisTestSuite:
                 logger.warning(f"      ⚠️ Error getting opportunities: {e}, using default symbols")
                 self.actual_test_symbols = self.test_symbols
             
-            # Test each symbol for MFI/Stochastic removal validation
+            # Test each symbol for confluence analysis validation
             for symbol in self.actual_test_symbols:
-                logger.info(f"\n   📞 Testing IA1 analysis for {symbol} - checking for MFI/Stochastic errors...")
+                logger.info(f"\n   📞 Testing IA1 analysis for {symbol} - checking confluence values...")
                 analysis_results['analyses_attempted'] += 1
                 
                 try:
@@ -219,7 +219,6 @@ class ConfluenceAnalysisTestSuite:
                     if response.status_code == 200:
                         analysis_data = response.json()
                         analysis_results['analyses_successful'] += 1
-                        analysis_results['valid_json_responses'] += 1
                         
                         logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
                         
@@ -228,53 +227,76 @@ class ConfluenceAnalysisTestSuite:
                         if not isinstance(ia1_analysis, dict):
                             ia1_analysis = {}
                         
-                        # Check for required indicators (should be present)
-                        required_indicators_found = []
-                        for indicator in self.expected_indicators:
-                            # Check various field patterns for each indicator
-                            if indicator == 'RSI':
-                                if any(key for key in ia1_analysis.keys() if 'rsi' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                            elif indicator == 'MACD':
-                                if any(key for key in ia1_analysis.keys() if 'macd' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                            elif indicator == 'ATR':
-                                if any(key for key in ia1_analysis.keys() if 'atr' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                            elif indicator == 'VWAP':
-                                if any(key for key in ia1_analysis.keys() if 'vwap' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                            elif indicator == 'ADX':
-                                if any(key for key in ia1_analysis.keys() if 'adx' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                            elif indicator == 'BB':
-                                if any(key for key in ia1_analysis.keys() if 'bb' in key.lower() or 'bollinger' in key.lower()):
-                                    required_indicators_found.append(indicator)
-                        
-                        if len(required_indicators_found) >= 4:  # At least 4 of 6 expected indicators
-                            analysis_results['required_indicators_present'] += 1
-                            logger.info(f"         ✅ Required indicators present: {required_indicators_found}")
+                        # Check confluence_grade
+                        confluence_grade = ia1_analysis.get('confluence_grade')
+                        if confluence_grade is not None and confluence_grade != 'null':
+                            analysis_results['confluence_grade_not_null'] += 1
+                            logger.info(f"         ✅ confluence_grade present: {confluence_grade}")
+                            
+                            if confluence_grade in self.valid_confluence_grades:
+                                analysis_results['valid_confluence_grades'] += 1
+                                logger.info(f"         ✅ confluence_grade valid: {confluence_grade}")
+                            else:
+                                logger.warning(f"         ⚠️ confluence_grade invalid: {confluence_grade} (expected A,B,C,D)")
                         else:
-                            logger.warning(f"         ⚠️ Missing required indicators. Found: {required_indicators_found}")
+                            logger.error(f"         ❌ confluence_grade is null or missing")
                         
-                        # Check for removed indicators (should NOT be present)
-                        removed_indicators_found = []
-                        for indicator in self.removed_indicators:
-                            if any(key for key in ia1_analysis.keys() if indicator.lower() in key.lower()):
-                                removed_indicators_found.append(indicator)
-                        
-                        if len(removed_indicators_found) == 0:
-                            analysis_results['removed_indicators_absent'] += 1
-                            logger.info(f"         ✅ Removed indicators correctly absent")
+                        # Check confluence_score
+                        confluence_score = ia1_analysis.get('confluence_score')
+                        if confluence_score is not None and confluence_score != 'null':
+                            analysis_results['confluence_score_not_null'] += 1
+                            logger.info(f"         ✅ confluence_score present: {confluence_score}")
+                            
+                            # Check if score is in valid range (0-100)
+                            try:
+                                score_value = float(confluence_score)
+                                if 0 <= score_value <= 100:
+                                    analysis_results['valid_confluence_scores'] += 1
+                                    logger.info(f"         ✅ confluence_score valid range: {score_value}")
+                                else:
+                                    logger.warning(f"         ⚠️ confluence_score out of range: {score_value} (expected 0-100)")
+                            except (ValueError, TypeError):
+                                logger.warning(f"         ⚠️ confluence_score not numeric: {confluence_score}")
                         else:
-                            logger.warning(f"         ❌ Removed indicators still present: {removed_indicators_found}")
+                            logger.error(f"         ❌ confluence_score is null or missing")
+                        
+                        # Check should_trade
+                        should_trade = ia1_analysis.get('should_trade')
+                        if should_trade is not None and should_trade != 'null':
+                            analysis_results['should_trade_not_null'] += 1
+                            logger.info(f"         ✅ should_trade present: {should_trade}")
+                            
+                            if isinstance(should_trade, bool) or should_trade in ['true', 'false', True, False]:
+                                logger.info(f"         ✅ should_trade valid boolean: {should_trade}")
+                            else:
+                                logger.warning(f"         ⚠️ should_trade not boolean: {should_trade}")
+                        else:
+                            logger.error(f"         ❌ should_trade is null or missing")
+                        
+                        # Check for confluence reasoning in IA1 reasoning
+                        reasoning = ia1_analysis.get('reasoning', '')
+                        if reasoning and 'confluence' in reasoning.lower():
+                            analysis_results['confluence_reasoning_present'] += 1
+                            logger.info(f"         ✅ Confluence reasoning present in IA1 analysis")
+                        else:
+                            logger.warning(f"         ⚠️ No confluence reasoning found in IA1 analysis")
+                        
+                        # Store confluence data for analysis
+                        confluence_data = {
+                            'symbol': symbol,
+                            'confluence_grade': confluence_grade,
+                            'confluence_score': confluence_score,
+                            'should_trade': should_trade,
+                            'has_reasoning': bool(reasoning and 'confluence' in reasoning.lower()),
+                            'response_time': response_time
+                        }
+                        analysis_results['confluence_data'].append(confluence_data)
                         
                         # Store successful analysis details
                         analysis_results['successful_analyses'].append({
                             'symbol': symbol,
                             'response_time': response_time,
-                            'required_indicators': required_indicators_found,
-                            'removed_indicators': removed_indicators_found,
+                            'confluence_data': confluence_data,
                             'analysis_data': ia1_analysis
                         })
                         
