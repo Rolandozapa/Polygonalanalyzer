@@ -295,7 +295,7 @@ class RiskRewardCalculator:
             close_hist = close_history or price_history
             
             atr = self.calculate_atr(high_hist, low_hist, close_hist)
-            supports, resistances = self.find_key_levels(price_history, entry_price)
+            supports, resistances = self.find_key_levels(price_history, entry_price, high_hist, low_hist)
             
             if direction.upper() == "LONG":
                 # Stop-loss basé sur ATR ou support le plus proche  
