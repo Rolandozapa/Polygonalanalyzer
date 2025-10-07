@@ -146,9 +146,9 @@ class MFIStochasticRemovalTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_1_prompt_loading_verification(self):
-        """Test 1: Prompt Loading Verification - Test that externalized prompts are loaded correctly"""
-        logger.info("\n🔍 TEST 1: Prompt Loading Verification")
+    async def test_1_api_force_ia1_analysis(self):
+        """Test 1: API Force IA1 Analysis - Test with 3-4 symbols to verify no MFI/Stochastic errors"""
+        logger.info("\n🔍 TEST 1: API Force IA1 Analysis - MFI/Stochastic Removal Validation")
         
         try:
             field_validation_results = {
