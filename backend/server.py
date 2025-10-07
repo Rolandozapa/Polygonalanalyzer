@@ -4051,12 +4051,20 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
     async def _get_enhanced_historical_data(self, symbol: str, days: int = 60, timeframe: str = "15m") -> Optional[pd.DataFrame]:  # 🎯 FIX MACD: Utilise 15m pour des valeurs normales
         """Get enhanced historical data for technical analysis with specified timeframe"""
         
+        result_data = None
+        
         if timeframe == "15m":
             # 🎯 NOUVELLE LOGIQUE: Récupérer données 15m via BingX API pour MACD optimal
-            return await self._fetch_bingx_intraday_data(symbol, timeframe, days)
+            result_data = await self._fetch_bingx_intraday_data(symbol, timeframe, days)
         else:
             # 📊 FALLBACK: Utiliser enhanced_ohlcv_fetcher pour données journalières
-            return await self._get_daily_historical_data(symbol, days)
+            result_data = await self._get_daily_historical_data(symbol, days)
+        
+        # 🔧 COLUMN NORMALIZATION: Ensure consistent column naming
+        if result_data is not None:
+            result_data = normalize_ohlcv_columns(result_data)
+            
+        return result_data
     
     async def _fetch_bingx_intraday_data(self, symbol: str, timeframe: str, days: int) -> Optional[pd.DataFrame]:
         """Récupère des données intraday (15m, 1h, etc.) via BingX API"""
