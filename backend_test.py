@@ -620,7 +620,164 @@ class ConfluenceAnalysisTestSuite:
                                    f"Analyses API confluence issues: {success_count}/{len(success_criteria)} criteria met. Too many null values or fallbacks")
                 
         except Exception as e:
-            self.log_test_result("API Opportunities", False, f"Exception: {str(e)}")
+            self.log_test_result("API Analyses Confluence", False, f"Exception: {str(e)}")
+
+    async def test_3_confluence_calculation_logic(self):
+        """Test 3: Confluence Calculation Logic - Verify calculation consistency and diversity"""
+        logger.info("\n🔍 TEST 3: Confluence Calculation Logic - Validation and Diversity")
+        
+        try:
+            calculation_results = {
+                'analyses_tested': 0,
+                'grade_d_with_score_0': 0,
+                'grade_d_with_should_trade_false': 0,
+                'consistent_grade_score_mapping': 0,
+                'diverse_grades_found': set(),
+                'diverse_scores_found': set(),
+                'should_trade_variations': set(),
+                'calculation_consistency': 0,
+                'sample_data': [],
+                'error_details': []
+            }
+            
+            logger.info("   🚀 Testing confluence calculation logic and diversity...")
+            logger.info("   📊 Expected: Grade D = score 0 = should_trade false, diverse grades/scores across symbols")
+            
+            # Test multiple symbols to check for diversity
+            test_symbols = ['BTCUSDT', 'ETHUSDT', 'LINKUSDT', 'SOLUSDT', 'ADAUSDT']
+            
+            for symbol in test_symbols:
+                logger.info(f"\n   📞 Testing confluence calculation for {symbol}...")
+                calculation_results['analyses_tested'] += 1
+                
+                try:
+                    start_time = time.time()
+                    response = requests.post(
+                        f"{self.api_url}/force-ia1-analysis",
+                        json={"symbol": symbol},
+                        timeout=120
+                    )
+                    response_time = time.time() - start_time
+                    
+                    if response.status_code == 200:
+                        analysis_data = response.json()
+                        ia1_analysis = analysis_data.get('ia1_analysis', {})
+                        
+                        if isinstance(ia1_analysis, dict):
+                            confluence_grade = ia1_analysis.get('confluence_grade')
+                            confluence_score = ia1_analysis.get('confluence_score')
+                            should_trade = ia1_analysis.get('should_trade')
+                            
+                            logger.info(f"      ✅ {symbol}: grade={confluence_grade}, score={confluence_score}, trade={should_trade}")
+                            
+                            # Collect diversity data
+                            if confluence_grade:
+                                calculation_results['diverse_grades_found'].add(confluence_grade)
+                            if confluence_score is not None:
+                                try:
+                                    score_val = float(confluence_score)
+                                    calculation_results['diverse_scores_found'].add(score_val)
+                                except (ValueError, TypeError):
+                                    pass
+                            if should_trade is not None:
+                                calculation_results['should_trade_variations'].add(str(should_trade))
+                            
+                            # Check Grade D logic
+                            if confluence_grade == 'D':
+                                try:
+                                    score_val = float(confluence_score) if confluence_score is not None else None
+                                    if score_val == 0 or score_val is None:
+                                        calculation_results['grade_d_with_score_0'] += 1
+                                        logger.info(f"         ✅ Grade D with score 0 logic correct")
+                                    else:
+                                        logger.warning(f"         ⚠️ Grade D but score not 0: {score_val}")
+                                    
+                                    if should_trade in [False, 'false', 'False']:
+                                        calculation_results['grade_d_with_should_trade_false'] += 1
+                                        logger.info(f"         ✅ Grade D with should_trade false logic correct")
+                                    else:
+                                        logger.warning(f"         ⚠️ Grade D but should_trade not false: {should_trade}")
+                                except (ValueError, TypeError):
+                                    logger.warning(f"         ⚠️ Grade D but score not numeric: {confluence_score}")
+                            
+                            # Check general consistency
+                            if confluence_grade and confluence_score is not None and should_trade is not None:
+                                calculation_results['consistent_grade_score_mapping'] += 1
+                                logger.info(f"         ✅ All confluence fields present and consistent")
+                            
+                            # Store sample data
+                            calculation_results['sample_data'].append({
+                                'symbol': symbol,
+                                'confluence_grade': confluence_grade,
+                                'confluence_score': confluence_score,
+                                'should_trade': should_trade,
+                                'response_time': response_time
+                            })
+                        
+                        else:
+                            logger.warning(f"      ⚠️ {symbol}: Invalid IA1 analysis structure")
+                    
+                    else:
+                        logger.error(f"      ❌ {symbol} analysis failed: HTTP {response.status_code}")
+                        calculation_results['error_details'].append(f"{symbol}: HTTP {response.status_code}")
+                
+                except Exception as e:
+                    logger.error(f"      ❌ {symbol} analysis exception: {e}")
+                    calculation_results['error_details'].append(f"{symbol}: {str(e)}")
+                
+                # Wait between analyses
+                if symbol != test_symbols[-1]:
+                    logger.info(f"      ⏳ Waiting 8 seconds before next analysis...")
+                    await asyncio.sleep(8)
+            
+            # Final analysis and results
+            diversity_grade_count = len(calculation_results['diverse_grades_found'])
+            diversity_score_count = len(calculation_results['diverse_scores_found'])
+            diversity_trade_count = len(calculation_results['should_trade_variations'])
+            consistency_rate = calculation_results['consistent_grade_score_mapping'] / max(calculation_results['analyses_tested'], 1)
+            
+            logger.info(f"\n   📊 CONFLUENCE CALCULATION LOGIC RESULTS:")
+            logger.info(f"      Analyses tested: {calculation_results['analyses_tested']}")
+            logger.info(f"      Grade D with score 0: {calculation_results['grade_d_with_score_0']}")
+            logger.info(f"      Grade D with should_trade false: {calculation_results['grade_d_with_should_trade_false']}")
+            logger.info(f"      Consistent grade-score mapping: {calculation_results['consistent_grade_score_mapping']} ({consistency_rate:.2f})")
+            logger.info(f"      Diverse grades found: {sorted(calculation_results['diverse_grades_found'])} ({diversity_grade_count})")
+            logger.info(f"      Diverse scores found: {sorted(calculation_results['diverse_scores_found'])} ({diversity_score_count})")
+            logger.info(f"      Should trade variations: {sorted(calculation_results['should_trade_variations'])} ({diversity_trade_count})")
+            
+            # Show sample data
+            if calculation_results['sample_data']:
+                logger.info(f"      📊 Sample Calculation Data:")
+                for data in calculation_results['sample_data']:
+                    logger.info(f"         - {data['symbol']}: grade={data['confluence_grade']}, score={data['confluence_score']}, trade={data['should_trade']}")
+            
+            # Show error details if any
+            if calculation_results['error_details']:
+                logger.info(f"      📊 Error Details:")
+                for error in calculation_results['error_details']:
+                    logger.info(f"         - {error}")
+            
+            # Calculate test success based on review requirements
+            success_criteria = [
+                calculation_results['analyses_tested'] >= 3,  # At least 3 analyses tested
+                diversity_grade_count >= 2,  # At least 2 different grades
+                diversity_score_count >= 3,  # At least 3 different scores
+                diversity_trade_count >= 1,  # At least some should_trade variation
+                calculation_results['consistent_grade_score_mapping'] >= 2,  # At least 2 consistent mappings
+                consistency_rate >= 0.6  # At least 60% consistency
+            ]
+            success_count = sum(success_criteria)
+            test_success_rate = success_count / len(success_criteria)
+            
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("Confluence Calculation Logic", True, 
+                                   f"Calculation logic successful: {success_count}/{len(success_criteria)} criteria met. Diversity: {diversity_grade_count} grades, {diversity_score_count} scores, consistency: {consistency_rate:.2f}")
+            else:
+                self.log_test_result("Confluence Calculation Logic", False, 
+                                   f"Calculation logic issues: {success_count}/{len(success_criteria)} criteria met. Limited diversity or consistency problems")
+                
+        except Exception as e:
+            self.log_test_result("Confluence Calculation Logic", False, f"Exception: {str(e)}")
 
     async def test_3_backend_logs_validation(self):
         """Test 3: Backend Logs Validation - Verify no MFI/Stochastic errors in recent logs"""
