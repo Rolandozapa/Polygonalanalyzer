@@ -780,8 +780,8 @@ class ConfluenceAnalysisTestSuite:
             self.log_test_result("Confluence Calculation Logic", False, f"Exception: {str(e)}")
 
     async def test_4_backend_logs_confluence_validation(self):
-        """Test 3: Backend Logs Validation - Verify no MFI/Stochastic errors in recent logs"""
-        logger.info("\n🔍 TEST 3: Backend Logs Validation")
+        """Test 4: Backend Logs Confluence Validation - Check for confluence calculation logs"""
+        logger.info("\n🔍 TEST 4: Backend Logs Confluence Validation")
         
         try:
             logs_results = {
