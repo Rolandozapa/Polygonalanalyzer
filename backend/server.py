@@ -2326,7 +2326,6 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
             
             # ✅ EXTRACT ALL INDICATORS from TALib Professional Analysis (IA1 v6.0 Complete System) with SAFE ACCESS
             # Check if talib_analysis is valid
-            logger.info(f"🔍 DEBUG TALIB ANALYSIS CHECK for {opportunity.symbol}: talib_analysis exists = {talib_analysis is not None}")
             if not talib_analysis:
                 logger.error(f"❌ TALib analysis is None for {opportunity.symbol}! Using fallback values.")
                 # Use safe fallbacks
