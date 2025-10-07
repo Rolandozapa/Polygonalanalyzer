@@ -631,73 +631,55 @@ class MFIStochasticRemovalTestSuite:
                 logger.error(f"      ❌ /api/opportunities exception: {e}")
                 opportunities_results['error_details'].append(f"Exception: {str(e)}")
             
-            # Test each symbol for dynamic RR escalation
-            for symbol in self.actual_test_symbols:
-                logger.info(f"\n   📞 Testing dynamic RR escalation for {symbol}...")
-                escalation_results['analyses_attempted'] += 1
+            # Final analysis and results
+            opportunities_rate = opportunities_results['opportunities_returned'] / max(1, 1)  # At least 1 expected
+            valid_rate = opportunities_results['valid_opportunities'] / max(opportunities_results['opportunities_returned'], 1)
+            indicators_rate = opportunities_results['technical_indicators_present'] / max(opportunities_results['valid_opportunities'], 1)
+            clean_rate = (opportunities_results['valid_opportunities'] - opportunities_results['mfi_references_found'] - opportunities_results['stochastic_references_found']) / max(opportunities_results['valid_opportunities'], 1)
+            
+            logger.info(f"\n   📊 API OPPORTUNITIES RESULTS:")
+            logger.info(f"      API call successful: {opportunities_results['api_call_successful']}")
+            logger.info(f"      Opportunities returned: {opportunities_results['opportunities_returned']}")
+            logger.info(f"      Valid opportunities: {opportunities_results['valid_opportunities']} ({valid_rate:.2f})")
+            logger.info(f"      Technical indicators present: {opportunities_results['technical_indicators_present']} ({indicators_rate:.2f})")
+            logger.info(f"      Required fields present: {opportunities_results['required_fields_present']}")
+            logger.info(f"      MFI references found: {opportunities_results['mfi_references_found']}")
+            logger.info(f"      Stochastic references found: {opportunities_results['stochastic_references_found']}")
+            logger.info(f"      Clean rate (no MFI/Stochastic): {clean_rate:.2f}")
+            
+            # Show sample opportunities data
+            if opportunities_results['opportunities_data']:
+                logger.info(f"      📊 Sample Opportunities Data:")
+                for opp in opportunities_results['opportunities_data']:
+                    logger.info(f"         - {opp['symbol']}: indicators={opp['technical_indicators']}, clean={not opp['has_mfi'] and not opp['has_stochastic']}")
+            
+            # Show error details if any
+            if opportunities_results['error_details']:
+                logger.info(f"      📊 Error Details:")
+                for error in opportunities_results['error_details']:
+                    logger.info(f"         - {error}")
+            
+            # Calculate test success based on review requirements
+            success_criteria = [
+                opportunities_results['api_call_successful'],  # API call successful
+                opportunities_results['opportunities_returned'] > 0,  # Returns data
+                opportunities_results['technical_indicators_present'] > 0,  # Contains technical indicators
+                opportunities_results['mfi_references_found'] == 0,  # No MFI references
+                opportunities_results['stochastic_references_found'] == 0,  # No Stochastic references
+                opportunities_results['required_fields_present'] > 0  # Has required fields
+            ]
+            success_count = sum(success_criteria)
+            test_success_rate = success_count / len(success_criteria)
+            
+            if test_success_rate >= 0.83:  # 83% success threshold (5/6 criteria)
+                self.log_test_result("API Opportunities", True, 
+                                   f"Opportunities API successful: {success_count}/{len(success_criteria)} criteria met. Returns {opportunities_results['opportunities_returned']} opportunities, no MFI/Stochastic references, clean rate: {clean_rate:.2f}")
+            else:
+                self.log_test_result("API Opportunities", False, 
+                                   f"Opportunities API issues: {success_count}/{len(success_criteria)} criteria met. MFI refs: {opportunities_results['mfi_references_found']}, Stochastic refs: {opportunities_results['stochastic_references_found']}")
                 
-                try:
-                    start_time = time.time()
-                    response = requests.post(
-                        f"{self.api_url}/force-ia1-analysis",
-                        json={"symbol": symbol},
-                        timeout=120
-                    )
-                    response_time = time.time() - start_time
-                    
-                    if response.status_code == 200:
-                        analysis_data = response.json()
-                        escalation_results['analyses_successful'] += 1
-                        
-                        logger.info(f"      ✅ {symbol} analysis successful (response time: {response_time:.2f}s)")
-                        
-                        # Extract IA1 analysis data
-                        ia1_analysis = analysis_data.get('ia1_analysis', {})
-                        if not isinstance(ia1_analysis, dict):
-                            ia1_analysis = {}
-                        
-                        # Extract key fields for escalation logic
-                        trade_type = ia1_analysis.get('trade_type', 'SWING')
-                        minimum_rr_threshold = ia1_analysis.get('minimum_rr_threshold', 2.0)
-                        risk_reward_ratio = ia1_analysis.get('risk_reward_ratio', 1.0)
-                        ia1_signal = ia1_analysis.get('ia1_signal', 'hold')
-                        confidence = ia1_analysis.get('analysis_confidence', 0.5)
-                        
-                        logger.info(f"         📊 Escalation Data: trade_type={trade_type}, min_rr_threshold={minimum_rr_threshold}, actual_rr={risk_reward_ratio}, signal={ia1_signal}, confidence={confidence:.2f}")
-                        
-                        # Count trade types
-                        if trade_type == 'SCALP':
-                            escalation_results['trade_type_scalp_count'] += 1
-                        elif trade_type == 'INTRADAY':
-                            escalation_results['trade_type_intraday_count'] += 1
-                        elif trade_type == 'SWING':
-                            escalation_results['trade_type_swing_count'] += 1
-                        elif trade_type == 'POSITION':
-                            escalation_results['trade_type_position_count'] += 1
-                        
-                        # Check if dynamic threshold is being used correctly
-                        expected_threshold = self.trade_type_rr_mapping.get(trade_type, 2.0)
-                        if abs(minimum_rr_threshold - expected_threshold) < 0.5:
-                            escalation_results['dynamic_threshold_usage'] += 1
-                            logger.info(f"         ✅ Dynamic threshold correct: {minimum_rr_threshold} ≈ {expected_threshold} for {trade_type}")
-                        else:
-                            logger.warning(f"         ⚠️ Dynamic threshold incorrect: {minimum_rr_threshold} vs expected {expected_threshold} for {trade_type}")
-                        
-                        # Determine if IA2 escalation should occur based on logic
-                        should_escalate_confidence = confidence > 0.95
-                        should_escalate_rr = risk_reward_ratio > minimum_rr_threshold
-                        should_escalate_signal = ia1_signal.lower() in ['long', 'short']
-                        should_escalate = should_escalate_signal and (should_escalate_confidence or should_escalate_rr)
-                        
-                        # Check if IA2 decision was actually created (check response for IA2 data)
-                        ia2_decision = analysis_data.get('ia2_decision')
-                        ia2_escalated = ia2_decision is not None and isinstance(ia2_decision, dict)
-                        
-                        if ia2_escalated:
-                            escalation_results['ia2_escalations_triggered'] += 1
-                            logger.info(f"         🚀 IA2 escalation triggered for {symbol}")
-                        
-                        # Store escalation details
+        except Exception as e:
+            self.log_test_result("API Opportunities", False, f"Exception: {str(e)}")
                         escalation_results['escalation_details'].append({
                             'symbol': symbol,
                             'trade_type': trade_type,
