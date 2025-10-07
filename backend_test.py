@@ -151,9 +151,9 @@ class VolumeRatioFixDiagnosticTestSuite:
             logger.warning(f"Could not capture backend logs: {e}")
             return []
     
-    async def test_1_ia2_prompt_enriched_validation(self):
-        """Test 1: Test du prompt IA2 enrichi - Vérifier que le nouveau champ `market_regime_assessment` est bien dans la configuration"""
-        logger.info("\n🔍 TEST 1: Test du prompt IA2 enrichi - Validation du Multi-Phase Strategic Framework")
+    async def test_1_volume_ratio_fix_validation(self):
+        """Test 1: Validation de la fix volume_ratio - Forcer des analyses IA1 avec différents symboles"""
+        logger.info("\n🔍 TEST 1: Validation de la fix volume_ratio - Analyses IA1 avec symboles spécifiques")
         
         try:
             prompt_results = {
