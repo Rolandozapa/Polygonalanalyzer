@@ -7313,12 +7313,11 @@ async def get_opportunities(limit: int = 50):
             # 🎯 SORT BY TIMESTAMP DESCENDING (most recent first) then limit results
             scout_filtered_opportunities.sort(key=lambda x: x.timestamp, reverse=True)
             
-            # Convert to JSON-serializable format and limit results  
-            current_time = get_paris_time()  # Force fresh timestamp
+            # Convert to JSON-serializable format and limit results
             opportunities = []
             for opp in scout_filtered_opportunities[:limit]:
                 opp_dict = {
-                    "id": opp.symbol + "_" + str(hash(current_time))[-8:],
+                    "id": opp.symbol + "_" + str(hash(opp.timestamp))[-8:],
                     "symbol": opp.symbol,
                     "current_price": opp.current_price,
                     "volume_24h": opp.volume_24h,
