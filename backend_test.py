@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 """
-MULTI-PHASE STRATEGIC FRAMEWORK TESTING SUITE
-Focus: Test du Multi-Phase Strategic Framework enrichi dans le prompt IA2.
+VOLUME_RATIO FIX DIAGNOSTIC TESTING SUITE
+Focus: Test de diagnostic du système de confluence après correction du volume_ratio.
 
 CRITICAL VALIDATION POINTS:
 
-1. **Test du prompt IA2 enrichi** - Vérifier que le nouveau champ `market_regime_assessment` est bien dans la configuration :
-   - Vérifier le contenu du prompt IA2 v3 Strategic Ultra  
-   - Confirmer que `market_regime_assessment` est dans la section JSON output
-   - Valider que les champs execution_priority, risk_level sont configurés correctement
+1. **Validation de la fix volume_ratio** :
+   - Forcer des analyses IA1 avec différents symboles (ETHUSDT, BTCUSDT, LINKUSDT)
+   - Vérifier si les confluence grades sont maintenant différents de D
+   - Documenter les confluence scores obtenus (devraient être > 0 maintenant)
 
-2. **Test de génération IA2** - Essayer de créer une décision IA2 réelle :
-   - Forcer des analyses IA1 avec différents symboles (BTCUSDT, ETHUSDT, LINKUSDT)
-   - Identifier s'il existe des analyses avec confidence >70% ET RR >2.0 ET signal LONG/SHORT
-   - Si aucune n'existe, documenter les conditions actuelles
+2. **Investigation des mandatory requirements** :
+   - Analyser pourquoi les analyses continuent d'avoir Grade D Score 0
+   - Identifier quelles conditions (confidence >0.65, ADX >18 OR bb_squeeze, volume 0.1-1.0) échouent
+   - Tester avec plusieurs symboles pour voir les patterns
 
-3. **Test endpoint de création IA2** :
-   - Tester /api/create-test-ia2-decision 
-   - Vérifier que la décision créée contient bien les champs attendus
-   - Valider que market_regime_assessment, execution_priority, risk_level ont des valeurs
+3. **Test escalation IA2 après fix** :
+   - Chercher des analyses avec signal LONG/SHORT + confidence >70% + RR >2.0  
+   - Vérifier si elles sont maintenant escalées vers IA2
+   - Documenter les nouvelles décisions IA2 créées
 
-4. **Validation de la réponse API IA2** :
-   - Vérifier /api/ia2-decisions retourne des décisions avec tous les champs Multi-Phase
-   - Confirmer que les valeurs ne sont plus null pour les nouveaux champs
-   - Tester la diversité des valeurs (bullish/bearish/neutral, immediate/delayed/wait, etc.)
+4. **Analyse historique confluence** :
+   - Comparer les confluence grades avant/après la fix
+   - Identifier si d'autres analyses précédentes auraient dû avoir de meilleurs grades
+   - Valider que la logique volume_ratio 0.1-1.0 est maintenant active
 
-OBJECTIF: Confirmer que le prompt IA2 enrichi génère correctement tous les signaux du Multi-Phase Strategic Framework et que ces données sont accessibles via l'API.
+OBJECTIF: Confirmer que la correction du volume_ratio (0.1 <= volume_ratio <= 1.0 au lieu de >1.0) améliore significativement le système de confluence et permet les escalations IA2 appropriées.
 """
 
 import asyncio
