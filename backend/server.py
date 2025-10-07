@@ -2101,9 +2101,9 @@ Provide final JSON with: signal, confidence, reasoning, entry_price, stop_loss_p
                 logger.warning(f"⚠️ MICRO-PRIX EXTRÊME: {opportunity.symbol} = ${opportunity.current_price:.10f} - Skip pour éviter erreurs calcul")
                 return None
             
-            # ÉTAPE 1: Tentative récupération OHLCV multi-sources (scout continue à fonctionner)
-            logger.info(f"📊 SOURCING: Récupération OHLCV multi-sources pour {opportunity.symbol}")
-            historical_data = await self._get_enhanced_historical_data(opportunity.symbol)
+            # ÉTAPE 1: Tentative récupération OHLCV multi-sources avec timeframe 15m (scout continue à fonctionner)
+            logger.info(f"📊 SOURCING: Récupération OHLCV 15m pour {opportunity.symbol}")
+            historical_data = await self._get_enhanced_historical_data(opportunity.symbol, days=60, timeframe="15m")
             
             # Validation données minimales pour calculs techniques (MACD nécessite 35+)
             if historical_data is None or len(historical_data) < 35:
