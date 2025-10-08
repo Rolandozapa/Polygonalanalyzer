@@ -467,45 +467,30 @@ class AdaptiveContextSystem:
             logger.warning(f"Regime detection failed: {e}, using safe fallback")
             return MarketRegime.ACCUMULATION  # Safe default
     
-    def _detect_precise_market_phase(self, price_change: float, volatility: float, 
-                                   rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketPhase:
-        """🎯 PRECISE MARKET PHASE DETECTION - 8 specific phases"""
+    def _detect_practical_market_regime(self, price_change: float, volatility: float, 
+                                       rsi: float, macd: float, stochastic: float) -> MarketRegime:
+        """🎯 PRACTICAL MARKET REGIME DETECTION - 5 robust regimes for AI backtest"""
         
-        # 1️⃣ ACCUMULATION: Low volatility, sideways, increasing volume, RSI neutral  
-        if self._detect_accumulation_phase(price_change, volatility, rsi, macd):
-            return MarketPhase.ACCUMULATION
+        # 1️⃣ VOLATILE: High volatility takes priority (any direction)
+        if volatility > 15:
+            return MarketRegime.VOLATILE
             
-        # 2️⃣ EARLY_BULL: Breakout from accumulation, momentum building
-        elif self._detect_early_bull_phase(price_change, volatility, rsi, macd, stochastic):
-            return MarketPhase.EARLY_BULL
+        # 2️⃣ BULL: Clear uptrend with confirmation
+        elif price_change > 3 and macd > 0.001 and rsi > 55:
+            return MarketRegime.BULL
             
-        # 3️⃣ BULL_RUN: Strong uptrend, high momentum, good volume
-        elif self._detect_bull_run_phase(price_change, volatility, rsi, macd):
-            return MarketPhase.BULL_RUN
+        # 3️⃣ BEAR: Clear downtrend with confirmation  
+        elif price_change < -3 and macd < -0.001 and rsi < 45:
+            return MarketRegime.BEAR
             
-        # 4️⃣ EUPHORIA: Extreme bullish conditions, overbought, high volatility
-        elif self._detect_euphoria_phase(price_change, volatility, rsi, stochastic):
-            return MarketPhase.EUPHORIA
+        # 4️⃣ TRANSITION: Mixed signals, changing regime
+        elif (abs(price_change) > 2 and 
+              ((macd > 0 and rsi < 50) or (macd < 0 and rsi > 50))):  # Divergence
+            return MarketRegime.TRANSITION
             
-        # 5️⃣ DISTRIBUTION: Topping process, divergences, selling pressure  
-        elif self._detect_distribution_phase(price_change, volatility, rsi, macd):
-            return MarketPhase.DISTRIBUTION
-            
-        # 6️⃣ EARLY_BEAR: Initial decline, momentum turning negative
-        elif self._detect_early_bear_phase(price_change, volatility, rsi, macd):
-            return MarketPhase.EARLY_BEAR
-            
-        # 7️⃣ BEAR_MARKET: Sustained downtrend, bearish momentum
-        elif self._detect_bear_market_phase(price_change, volatility, rsi, macd):
-            return MarketPhase.BEAR_MARKET
-            
-        # 8️⃣ CAPITULATION: Extreme bearish conditions, oversold
-        elif self._detect_capitulation_phase(price_change, volatility, rsi, stochastic):
-            return MarketPhase.CAPITULATION
-            
-        # Default: Use legacy logic as fallback
+        # 5️⃣ ACCUMULATION: Default - sideways/consolidation
         else:
-            return self._legacy_regime_to_market_phase(price_change, volatility)
+            return MarketRegime.ACCUMULATION
     
     def _legacy_regime_to_market_phase(self, price_change: float, volatility: float) -> MarketPhase:
         """Legacy fallback - map old logic to MarketPhase"""
