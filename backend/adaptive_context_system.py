@@ -562,6 +562,79 @@ class AdaptiveContextSystem:
         
         return base_regime
     
+    # 🎯 SPECIALIZED PHASE DETECTION METHODS
+    
+    def _detect_accumulation_phase(self, price_change: float, volatility: float, rsi: float, macd: float) -> bool:
+        """Detect ACCUMULATION phase: Sideways, low volatility, building base"""
+        return (
+            abs(price_change) < 3 and           # Sideways movement
+            volatility < 8 and                  # Low volatility
+            30 <= rsi <= 70 and                 # Neutral RSI
+            abs(macd) < 0.002                   # Weak momentum
+        )
+    
+    def _detect_early_bull_phase(self, price_change: float, volatility: float, rsi: float, macd: float, stochastic: float) -> bool:
+        """Detect EARLY_BULL phase: Breakout from base, momentum building"""
+        return (
+            2 < price_change <= 8 and           # Moderate positive move
+            volatility < 12 and                 # Controlled volatility
+            rsi > 50 and                        # Above neutral RSI
+            macd > 0.001 and                    # Positive momentum building
+            stochastic > 50                     # Momentum confirmation
+        )
+    
+    def _detect_bull_run_phase(self, price_change: float, volatility: float, rsi: float, macd: float) -> bool:
+        """Detect BULL_RUN phase: Strong sustained uptrend"""
+        return (
+            price_change > 5 and                # Strong positive move
+            volatility < 15 and                 # Manageable volatility
+            rsi > 60 and                        # Strong bullish RSI
+            macd > 0.003                        # Strong positive momentum
+        )
+    
+    def _detect_euphoria_phase(self, price_change: float, volatility: float, rsi: float, stochastic: float) -> bool:
+        """Detect EUPHORIA phase: Extreme bullish conditions, overbought"""
+        return (
+            price_change > 10 or               # Extreme move OR
+            (rsi > 80 and stochastic > 80) or  # Extremely overbought OR
+            volatility > 20                     # Very high volatility
+        )
+    
+    def _detect_distribution_phase(self, price_change: float, volatility: float, rsi: float, macd: float) -> bool:
+        """Detect DISTRIBUTION phase: Topping, momentum divergence"""
+        return (
+            -2 <= price_change <= 3 and        # Sideways to slight decline
+            volatility > 8 and                 # Increasing volatility  
+            rsi > 65 and                       # Still elevated RSI but
+            macd < 0.001                       # Momentum weakening (divergence)
+        )
+    
+    def _detect_early_bear_phase(self, price_change: float, volatility: float, rsi: float, macd: float) -> bool:
+        """Detect EARLY_BEAR phase: Initial decline, momentum turning"""
+        return (
+            -8 <= price_change < -2 and        # Moderate negative move
+            volatility < 15 and                # Controlled decline
+            rsi < 50 and                       # Below neutral RSI
+            macd < -0.001                      # Negative momentum
+        )
+    
+    def _detect_bear_market_phase(self, price_change: float, volatility: float, rsi: float, macd: float) -> bool:
+        """Detect BEAR_MARKET phase: Sustained downtrend"""
+        return (
+            price_change < -5 and              # Strong negative move
+            volatility < 15 and                # Sustained decline
+            rsi < 40 and                       # Bearish RSI
+            macd < -0.003                      # Strong negative momentum
+        )
+    
+    def _detect_capitulation_phase(self, price_change: float, volatility: float, rsi: float, stochastic: float) -> bool:
+        """Detect CAPITULATION phase: Extreme bearish conditions, oversold"""
+        return (
+            price_change < -10 or              # Extreme decline OR
+            (rsi < 20 and stochastic < 20) or  # Extremely oversold OR  
+            volatility > 25                     # Panic-level volatility
+        )
+    
     def _calculate_condition_similarity(self, current: Dict[str, float], 
                                       historical_condition) -> float:
         """Calculate similarity between current and historical market conditions"""
