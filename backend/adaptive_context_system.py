@@ -467,28 +467,38 @@ class AdaptiveContextSystem:
             logger.warning(f"Regime detection failed: {e}, using safe fallback")
             return MarketRegime.ACCUMULATION  # Safe default
     
-    def _detect_practical_market_regime(self, price_change: float, volatility: float, 
-                                       rsi: float, macd: float, stochastic: float) -> MarketRegime:
-        """🎯 PRACTICAL MARKET REGIME DETECTION - 5 robust regimes for AI backtest"""
+    def _detect_practical_market_regime(self, price_change: float, atr: float, 
+                                       rsi: float, macd: float, volume_ratio: float, vwap_distance: float) -> MarketRegime:
+        """🎯 ENHANCED MARKET REGIME DETECTION - Improved with volume, ATR, and S/R levels"""
         
-        # 1️⃣ VOLATILE: High volatility takes priority (any direction)
-        if volatility > 15:
+        # Get current support/resistance context
+        sr_context = self._get_support_resistance_context(vwap_distance)
+        
+        # 1️⃣ VOLATILE: ATR high OR volume spike OR near key S/R levels
+        if atr > 5.0 or volume_ratio > 2.5 or sr_context['near_key_level']:
             return MarketRegime.VOLATILE
             
-        # 2️⃣ BULL: Clear uptrend with confirmation
-        elif price_change > 3 and macd > 0.001 and rsi > 55:
+        # 2️⃣ BULL: Clear uptrend with volume confirmation and S/R breakout
+        elif (price_change > 3 and macd > 0.001 and rsi > 55 and 
+              volume_ratio > 1.2 and sr_context['resistance_broken']):
             return MarketRegime.BULL
             
-        # 3️⃣ BEAR: Clear downtrend with confirmation  
-        elif price_change < -3 and macd < -0.001 and rsi < 45:
+        # 3️⃣ BEAR: Clear downtrend with volume confirmation and S/R breakdown  
+        elif (price_change < -3 and macd < -0.001 and rsi < 45 and 
+              volume_ratio > 1.2 and sr_context['support_broken']):
             return MarketRegime.BEAR
             
-        # 4️⃣ TRANSITION: Mixed signals, changing regime
+        # 4️⃣ TRANSITION: Mixed signals OR approaching key S/R levels
         elif (abs(price_change) > 2 and 
-              ((macd > 0 and rsi < 50) or (macd < 0 and rsi > 50))):  # Divergence
+              ((macd > 0 and rsi < 50) or (macd < 0 and rsi > 50)) or
+              sr_context['approaching_level']):  # Divergence OR S/R approach
             return MarketRegime.TRANSITION
             
-        # 5️⃣ ACCUMULATION: Default - sideways/consolidation
+        # 5️⃣ ACCUMULATION: Low volatility + volume + range-bound
+        elif atr < 2.0 and abs(vwap_distance) < 1.0 and volume_ratio < 1.5:
+            return MarketRegime.ACCUMULATION
+            
+        # Default fallback
         else:
             return MarketRegime.ACCUMULATION
         
