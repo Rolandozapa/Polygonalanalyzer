@@ -18,9 +18,10 @@ from ai_performance_enhancer import MarketPhase
 logger = logging.getLogger(__name__)
 
 class MarketRegime(str, Enum):
+    """Legacy market regime - DEPRECATED, use MarketPhase instead"""
     BULL = "BULL"
     BEAR = "BEAR"
-    SIDEWAYS = "SIDEWAYS"
+    SIDEWAYS = "SIDEWAYS"  
     VOLATILE = "VOLATILE"
     TRANSITION = "TRANSITION"
 
