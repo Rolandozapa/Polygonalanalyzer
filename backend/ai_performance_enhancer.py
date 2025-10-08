@@ -814,6 +814,11 @@ class AIPerformanceEnhancer:
         if phase == MarketPhase.CAPITULATION and rec_direction == 'short':
             return False
             
+        # Phase distribution: prudence sur les LONG (distribution avant baisse)
+        if phase == MarketPhase.DISTRIBUTION and rec_direction == 'long':
+            # Ne pas rejeter complètement mais appliquer plus de prudence via RR réduit
+            return True  # Laissons passer mais sera ajusté plus tard
+            
         return True
     
     def _get_phase_effectiveness_multiplier(self, phase: MarketPhase, pattern_name: str) -> float:
