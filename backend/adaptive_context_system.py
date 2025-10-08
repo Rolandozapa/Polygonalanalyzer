@@ -36,7 +36,7 @@ class ContextAdjustmentType(str, Enum):
 @dataclass
 class MarketContext:
     """Current market context with enhanced AI-driven analysis and technical indicators integration"""
-    current_regime: MarketPhase  # Updated to use MarketPhase for precision
+    current_regime: MarketRegime  # Simplified regimes aligned with AI backtest capabilities
     regime_confidence: float
     volatility_level: float  # 0-1 scale
     trend_strength: float   # 0-1 scale
