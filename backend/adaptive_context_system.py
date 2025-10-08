@@ -18,12 +18,12 @@ from ai_performance_enhancer import MarketPhase
 logger = logging.getLogger(__name__)
 
 class MarketRegime(str, Enum):
-    """Legacy market regime - DEPRECATED, use MarketPhase instead"""
-    BULL = "BULL"
-    BEAR = "BEAR"
-    SIDEWAYS = "SIDEWAYS"  
-    VOLATILE = "VOLATILE"
-    TRANSITION = "TRANSITION"
+    """Simplified Market Regimes - aligned with AI backtest capabilities"""
+    ACCUMULATION = "accumulation"  # Sideways/consolidation phase
+    BULL = "bull"                  # Bullish phase  
+    BEAR = "bear"                  # Bearish phase
+    VOLATILE = "volatile"          # High volatility/unstable
+    TRANSITION = "transition"      # Regime change in progress
 
 class ContextAdjustmentType(str, Enum):
     POSITION_SIZING = "position_sizing"
