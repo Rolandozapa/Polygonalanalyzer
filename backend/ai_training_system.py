@@ -32,7 +32,7 @@ class MarketCondition:
     period_start: str
     period_end: str  
     symbol: str
-    condition_type: str  # "BULL", "BEAR", "SIDEWAYS", "VOLATILE"
+    condition_type: str  # "accumulation", "early_bull", "bull_run", "euphoria", "distribution", "early_bear", "bear_market", "capitulation"
     volatility: float
     trend_strength: float
     volume_trend: float
