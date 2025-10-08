@@ -554,7 +554,15 @@ class AdaptiveContextSystem:
                     best_regime = max(regime_weights.items(), key=lambda x: x[1])
                     if best_regime[1] > 0.4:  # Confidence threshold
                         try:
-                            return MarketRegime(best_regime[0])
+                            # Map legacy regime to MarketPhase
+                            legacy_mapping = {
+                                'BULL': MarketPhase.BULL_RUN,
+                                'BEAR': MarketPhase.BEAR_MARKET,
+                                'SIDEWAYS': MarketPhase.ACCUMULATION,
+                                'VOLATILE': MarketPhase.CAPITULATION,
+                                'TRANSITION': MarketPhase.DISTRIBUTION
+                            }
+                            return legacy_mapping.get(best_regime[0], MarketPhase.ACCUMULATION)
                         except ValueError as e:
                             logger.warning(f"Invalid market regime '{best_regime[0]}': {e}, falling back to base regime")
                         except Exception as e:
