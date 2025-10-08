@@ -24,6 +24,9 @@ from data_models import TechnicalAnalysis, MarketOpportunity, TradingDecision, S
 from advanced_technical_indicators import advanced_technical_indicators, TechnicalIndicators, IndicatorSignal
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
+# Import MarketPhase from ai_performance_enhancer for compatibility
+from ai_performance_enhancer import MarketPhase
+
 logger = logging.getLogger(__name__)
 
 @dataclass
