@@ -821,7 +821,7 @@ class AIPerformanceEnhancer:
             
         return True
     
-    def _get_directional_phase_modifier(self, phase: MarketPhase, signal_type: str) -> float:
+    def _get_directional_phase_modifier(self, regime: str, signal_type: str) -> float:
         """
         🎯 DIRECTIONAL PHASE RR MODIFIER
         Ajuste le RR selon la direction du trade ET la phase de marché
