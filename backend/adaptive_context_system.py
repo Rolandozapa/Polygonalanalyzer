@@ -491,19 +491,8 @@ class AdaptiveContextSystem:
         # 5️⃣ ACCUMULATION: Default - sideways/consolidation
         else:
             return MarketRegime.ACCUMULATION
-    
-    def _legacy_regime_to_market_phase(self, price_change: float, volatility: float) -> MarketPhase:
-        """Legacy fallback - map old logic to MarketPhase"""
-        if volatility > 15:
-            return MarketPhase.CAPITULATION  # High volatility -> likely extreme conditions
-        elif abs(price_change) < 2:
-            return MarketPhase.ACCUMULATION  # Sideways -> likely accumulation
-        elif price_change > 2:
-            return MarketPhase.BULL_RUN      # Bullish -> bull run 
-        else:
-            return MarketPhase.BEAR_MARKET   # Bearish -> bear market
         
-        # Enhance with trained patterns
+        # Enhance with trained patterns  
         if self.trained_market_conditions:
             # Find similar historical conditions
             similar_conditions = []
