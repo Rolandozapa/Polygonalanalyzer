@@ -941,6 +941,12 @@ class AIPerformanceEnhancer:
                     if enhancement.enhancement_type == 'risk_reward_adjustment':
                         optimal_rr = rule.enhancement_action.get('optimal_rr', 2.0)
                         
+                        # 🎯 DIRECTIONAL PHASE ADJUSTMENT: Apply phase-specific RR modifiers
+                        if hasattr(self, 'current_market_phase'):
+                            phase_rr_modifier = self._get_directional_phase_modifier(self.current_market_phase, signal_type)
+                            optimal_rr *= phase_rr_modifier
+                            logger.info(f"Phase {self.current_market_phase} + {signal_type.upper()} → RR modifier {phase_rr_modifier:.2f} → Final RR {optimal_rr:.2f}")
+                        
                         # Adjust take profit levels based on optimal R:R
                         entry_price = enhanced_decision.get('entry_price', 0)
                         stop_loss = enhanced_decision.get('stop_loss', 0)
