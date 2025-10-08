@@ -821,6 +821,42 @@ class AIPerformanceEnhancer:
             
         return True
     
+    def _get_directional_phase_modifier(self, phase: MarketPhase, signal_type: str) -> float:
+        """
+        🎯 DIRECTIONAL PHASE RR MODIFIER
+        Ajuste le RR selon la direction du trade ET la phase de marché
+        - Phases favorables à la direction → RR augmenté 
+        - Phases défavorables à la direction → RR réduit (prudence)
+        """
+        if phase == MarketPhase.DISTRIBUTION:
+            # Distribution généralement baissière
+            if signal_type == 'short':
+                return 1.3  # Favorise SHORT → RR augmenté
+            elif signal_type == 'long':
+                return 0.8  # Défavorise LONG → RR réduit (prudence)
+                
+        elif phase == MarketPhase.ACCUMULATION:
+            # Accumulation généralement haussière  
+            if signal_type == 'long':
+                return 1.2  # Favorise LONG → RR augmenté
+            elif signal_type == 'short':
+                return 0.8  # Défavorise SHORT → RR réduit
+                
+        elif phase == MarketPhase.BULL_RUN:
+            if signal_type == 'long':
+                return 1.4  # Très favorable aux LONG
+            elif signal_type == 'short':
+                return 0.6  # Très défavorable aux SHORT
+                
+        elif phase == MarketPhase.BEAR_MARKET:
+            if signal_type == 'short':
+                return 1.4  # Très favorable aux SHORT  
+            elif signal_type == 'long':
+                return 0.6  # Très défavorable aux LONG
+                
+        # Phases neutres ou autres
+        return 1.0  # Pas d'ajustement
+    
     def _get_phase_effectiveness_multiplier(self, phase: MarketPhase, pattern_name: str) -> float:
         """Retourne un multiplicateur d'efficacité basé sur la phase et le pattern"""
         
