@@ -458,17 +458,66 @@ class AdaptiveContextSystem:
             return "middle_band_environment"
 
     def _determine_regime_ai_enhanced(self, price_change: float, volatility: float, 
-                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketRegime:
-        """Determine market regime using AI-enhanced logic"""
-        # Base regime determination
-        if volatility > 15:
-            base_regime = MarketRegime.VOLATILE
-        elif abs(price_change) < 2:
-            base_regime = MarketRegime.SIDEWAYS
-        elif price_change > 2:
-            base_regime = MarketRegime.BULL
+                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketPhase:
+        """Determine market regime using AI-enhanced logic with precise phases"""
+        try:
+            # 🎯 NEW: Precise Market Phase Detection
+            return self._detect_precise_market_phase(price_change, volatility, rsi, macd, stochastic, bollinger_position)
+        except Exception as e:
+            logger.warning(f"Precise phase detection failed: {e}, using legacy fallback")
+            # Fallback to legacy logic and map to MarketPhase
+            return self._legacy_regime_to_market_phase(price_change, volatility)
+    
+    def _detect_precise_market_phase(self, price_change: float, volatility: float, 
+                                   rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketPhase:
+        """🎯 PRECISE MARKET PHASE DETECTION - 8 specific phases"""
+        
+        # 1️⃣ ACCUMULATION: Low volatility, sideways, increasing volume, RSI neutral  
+        if self._detect_accumulation_phase(price_change, volatility, rsi, macd):
+            return MarketPhase.ACCUMULATION
+            
+        # 2️⃣ EARLY_BULL: Breakout from accumulation, momentum building
+        elif self._detect_early_bull_phase(price_change, volatility, rsi, macd, stochastic):
+            return MarketPhase.EARLY_BULL
+            
+        # 3️⃣ BULL_RUN: Strong uptrend, high momentum, good volume
+        elif self._detect_bull_run_phase(price_change, volatility, rsi, macd):
+            return MarketPhase.BULL_RUN
+            
+        # 4️⃣ EUPHORIA: Extreme bullish conditions, overbought, high volatility
+        elif self._detect_euphoria_phase(price_change, volatility, rsi, stochastic):
+            return MarketPhase.EUPHORIA
+            
+        # 5️⃣ DISTRIBUTION: Topping process, divergences, selling pressure  
+        elif self._detect_distribution_phase(price_change, volatility, rsi, macd):
+            return MarketPhase.DISTRIBUTION
+            
+        # 6️⃣ EARLY_BEAR: Initial decline, momentum turning negative
+        elif self._detect_early_bear_phase(price_change, volatility, rsi, macd):
+            return MarketPhase.EARLY_BEAR
+            
+        # 7️⃣ BEAR_MARKET: Sustained downtrend, bearish momentum
+        elif self._detect_bear_market_phase(price_change, volatility, rsi, macd):
+            return MarketPhase.BEAR_MARKET
+            
+        # 8️⃣ CAPITULATION: Extreme bearish conditions, oversold
+        elif self._detect_capitulation_phase(price_change, volatility, rsi, stochastic):
+            return MarketPhase.CAPITULATION
+            
+        # Default: Use legacy logic as fallback
         else:
-            base_regime = MarketRegime.BEAR
+            return self._legacy_regime_to_market_phase(price_change, volatility)
+    
+    def _legacy_regime_to_market_phase(self, price_change: float, volatility: float) -> MarketPhase:
+        """Legacy fallback - map old logic to MarketPhase"""
+        if volatility > 15:
+            return MarketPhase.CAPITULATION  # High volatility -> likely extreme conditions
+        elif abs(price_change) < 2:
+            return MarketPhase.ACCUMULATION  # Sideways -> likely accumulation
+        elif price_change > 2:
+            return MarketPhase.BULL_RUN      # Bullish -> bull run 
+        else:
+            return MarketPhase.BEAR_MARKET   # Bearish -> bear market
         
         # Enhance with trained patterns
         if self.trained_market_conditions:
