@@ -53,7 +53,7 @@ class PatternTraining:
     entry_price: float
     exit_price: float
     hold_days: int
-    market_condition: str
+    market_condition: str  # Should match MarketPhase values from ai_performance_enhancer.py
     volume_confirmation: bool
     rsi_level: float
     macd_signal: float
