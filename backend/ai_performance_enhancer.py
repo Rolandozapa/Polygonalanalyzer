@@ -823,38 +823,38 @@ class AIPerformanceEnhancer:
     
     def _get_directional_phase_modifier(self, regime: str, signal_type: str) -> float:
         """
-        🎯 DIRECTIONAL PHASE RR MODIFIER
-        Ajuste le RR selon la direction du trade ET la phase de marché
-        - Phases favorables à la direction → RR augmenté 
-        - Phases défavorables à la direction → RR réduit (prudence)
+        🎯 DIRECTIONAL REGIME RR MODIFIER  
+        Ajuste le RR selon la direction du trade ET le régime de marché
+        - Régimes favorables à la direction → RR augmenté 
+        - Régimes défavorables à la direction → RR réduit (prudence)
         """
-        if phase == MarketPhase.DISTRIBUTION:
-            # Distribution généralement baissière
+        if regime == 'bull':
+            # Régime haussier
+            if signal_type == 'long':
+                return 1.3  # Favorise LONG → RR augmenté
+            elif signal_type == 'short':
+                return 0.7  # Défavorise SHORT → RR réduit (contre-tendance)
+                
+        elif regime == 'bear':
+            # Régime baissier  
             if signal_type == 'short':
                 return 1.3  # Favorise SHORT → RR augmenté
             elif signal_type == 'long':
-                return 0.8  # Défavorise LONG → RR réduit (prudence)
+                return 0.7  # Défavorise LONG → RR réduit (contre-tendance)
                 
-        elif phase == MarketPhase.ACCUMULATION:
-            # Accumulation généralement haussière  
-            if signal_type == 'long':
-                return 1.2  # Favorise LONG → RR augmenté
-            elif signal_type == 'short':
-                return 0.8  # Défavorise SHORT → RR réduit
+        elif regime == 'accumulation':
+            # Régime de consolidation - neutre mais prudent
+            return 0.9  # Légèrement conservateur
                 
-        elif phase == MarketPhase.BULL_RUN:
-            if signal_type == 'long':
-                return 1.4  # Très favorable aux LONG
-            elif signal_type == 'short':
-                return 0.6  # Très défavorable aux SHORT
+        elif regime == 'volatile':
+            # Régime volatile - très prudent
+            return 0.8  # Réduit RR car imprévisible
                 
-        elif phase == MarketPhase.BEAR_MARKET:
-            if signal_type == 'short':
-                return 1.4  # Très favorable aux SHORT  
-            elif signal_type == 'long':
-                return 0.6  # Très défavorable aux LONG
+        elif regime == 'transition':
+            # Régime de transition - très prudent
+            return 0.8  # Réduit RR car incertain
                 
-        # Phases neutres ou autres
+        # Régimes non reconnus
         return 1.0  # Pas d'ajustement
     
     def _get_phase_effectiveness_multiplier(self, phase: MarketPhase, pattern_name: str) -> float:
