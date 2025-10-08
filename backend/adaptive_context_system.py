@@ -12,6 +12,9 @@ from collections import defaultdict, deque
 import json
 from enum import Enum
 
+# Import MarketPhase from ai_performance_enhancer for compatibility
+from ai_performance_enhancer import MarketPhase
+
 logger = logging.getLogger(__name__)
 
 class MarketRegime(str, Enum):
