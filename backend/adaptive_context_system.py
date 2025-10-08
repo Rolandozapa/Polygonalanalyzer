@@ -458,15 +458,14 @@ class AdaptiveContextSystem:
             return "middle_band_environment"
 
     def _determine_regime_ai_enhanced(self, price_change: float, volatility: float, 
-                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketPhase:
-        """Determine market regime using AI-enhanced logic with precise phases"""
+                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketRegime:
+        """Determine market regime using AI-enhanced logic - simplified and robust"""
         try:
-            # 🎯 NEW: Precise Market Phase Detection
-            return self._detect_precise_market_phase(price_change, volatility, rsi, macd, stochastic, bollinger_position)
+            # 🎯 SIMPLIFIED: 5 practical regimes that backtest can handle
+            return self._detect_practical_market_regime(price_change, volatility, rsi, macd, stochastic)
         except Exception as e:
-            logger.warning(f"Precise phase detection failed: {e}, using legacy fallback")
-            # Fallback to legacy logic and map to MarketPhase
-            return self._legacy_regime_to_market_phase(price_change, volatility)
+            logger.warning(f"Regime detection failed: {e}, using safe fallback")
+            return MarketRegime.ACCUMULATION  # Safe default
     
     def _detect_precise_market_phase(self, price_change: float, volatility: float, 
                                    rsi: float, macd: float, stochastic: float, bollinger_position: float) -> MarketPhase:
